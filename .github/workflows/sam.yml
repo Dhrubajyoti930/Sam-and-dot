@@ -1,13 +1,10 @@
 name: Sam — Operational Cycles
 
 on:
-  # Sam runs at least 5 times a day; additional runs can be triggered by push or dispatch.
+  # Sam runs at least 1 times a day; additional runs can be triggered by push or dispatch.
   schedule:
     - cron: "0 2  * * *"   # 02:00 UTC
-    - cron: "0 6  * * *"   # 06:00 UTC
-    - cron: "0 10 * * *"   # 10:00 UTC
-    - cron: "0 15 * * *"   # 15:00 UTC
-    - cron: "0 20 * * *"   # 20:00 UTC
+    
   workflow_dispatch:       # Manual trigger for high-value or immediate tasks
 
 permissions:
