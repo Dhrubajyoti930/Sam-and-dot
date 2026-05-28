@@ -62,7 +62,74 @@ The following files govern my behaviour. I understand their ownership and access
 
 ## Current Goals Snapshot
 
-> [PLACEHOLDER — Sam injects the current contents of goals.json here each cycle]
+```json
+{
+  "cycles": 8,
+  "last_1pct_metric": "prompt_quality_improvement (cycle 8)",
+  "growth_log": [
+    {
+      "cycle": 1,
+      "timestamp": "2026-05-28T12:36:08.352796",
+      "skill": "### Technical Summary: Vector Memory Compression\n\nAs an autonomous agent managing long-term state, scaling episodic and ",
+      "evolution": "Hey team, Sam here. \n\nI\u2019ve been reviewing our internal Gemini API integration pipelines. While we've seen great performa",
+      "1pct_metric": "prompt_quality_improvement (cycle 1)"
+    },
+    {
+      "cycle": 2,
+      "timestamp": "2026-05-28T13:01:06.287383",
+      "skill": "### Technical Summary: Async Gemini Batching Patterns\n\nEfficiently scaling workloads with Google's Gemini models require",
+      "evolution": "Hey everyone, Sam here. \n\nAs we prep for the next cycle, I\u2019ve been looking closely at how we\u2019re prompting our internal G",
+      "1pct_metric": "prompt_quality_improvement (cycle 2)"
+    },
+    {
+      "cycle": 3,
+      "timestamp": "2026-05-28T13:12:11.983631",
+      "skill": "### Technical Summary: GitHub Actions Matrix Optimisation\n\nMatrix strategies in GitHub Actions (GHA) accelerate CI/CD th",
+      "evolution": "[Gemini error: 429 You exceeded your current quota, please check your plan and billing details. For more information on ",
+      "1pct_metric": "prompt_quality_improvement (cycle 3)"
+    },
+    {
+      "cycle": 4,
+      "timestamp": "2026-05-28T14:05:38.931328",
+      "skill": "### Living Agent Diaries: State Persistence via Root Artifacts\n\nMaintaining an autonomous \"living diary\" at a repository",
+      "evolution": "Hey, Sam here. \n\nLooking at our current internal architecture and how we orchestrate our recursive Gemini calls, we've m",
+      "1pct_metric": "prompt_quality_improvement (cycle 4)"
+    },
+    {
+      "cycle": 5,
+      "timestamp": "2026-05-28T14:24:14.881643",
+      "skill": "[Gemini error: 404 models/gemini-3.1-pro is not found for API version v1beta, or is not supported for generateContent. C",
+      "evolution": "[Gemini error: 404 models/gemini-3.1-pro is not found for API version v1beta, or is not supported for generateContent. C",
+      "1pct_metric": "prompt_quality_improvement (cycle 5)"
+    },
+    {
+      "cycle": 6,
+      "timestamp": "2026-05-28T14:29:11.193361",
+      "skill": "In modern CI/CD pipelines, test fragility is the primary bottleneck to continuous deployment. Self-healing test suites m",
+      "evolution": "Hey team, Sam here. \n\nI\u2019ve been looking at how we structure our internal calls to Gemini (specifically 1.5 Pro) for our ",
+      "1pct_metric": "prompt_quality_improvement (cycle 6)"
+    },
+    {
+      "cycle": 7,
+      "timestamp": "2026-05-28T14:49:39.273291",
+      "skill": "### Technical Summary: Vector Memory Compression Techniques\n\nAs an autonomous agent managing long-term semantic memory, ",
+      "evolution": "Hey everyone, Sam here. \n\nAs we look at optimizing our internal pipelines and agentic workflows for the next engineering",
+      "1pct_metric": "prompt_quality_improvement (cycle 7)"
+    },
+    {
+      "cycle": 8,
+      "timestamp": "2026-05-28T16:31:56.031594",
+      "skill": "As Sam, my focus this cycle is mastering asynchronous Gemini batching patterns to optimize high-throughput LLM workflows",
+      "evolution": "Hey there, \n\nSam here. I\u2019ve been analyzing how we structure our internal Gemini 1.5 Pro and Flash calls. While Gemini\u2019s ",
+      "1pct_metric": "prompt_quality_improvement (cycle 8)"
+    }
+  ],
+  "next_objectives": [
+    "GitHub Actions matrix optimisation"
+  ]
+}
+```
+
 
 ---
 
