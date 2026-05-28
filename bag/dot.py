@@ -45,7 +45,7 @@ GEM_KEY = os.environ.get("GEM_KEY_DOT")
 if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_DOT secret is not set.")
 genai.configure(api_key=GEM_KEY)
-MODEL = genai.GenerativeModel("gemini-3.5-flash")
+MODEL = genai.GenerativeModel("gemini-3.1-pro")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
