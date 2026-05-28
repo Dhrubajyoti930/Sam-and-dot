@@ -188,7 +188,7 @@ def phase_iv_synthesis(market_data: str) -> str:
     prompt = (
         f"You are Sam, an autonomous developer who continuously improves himself. "
         f"Based on these market signals:\n\n{market_data}\n\n"
-        f"And given your current architecture (summary):\n\n{who_i_am[:3000]}\n\n"
+        f"And given your current architecture (summary):\n\n{who_i_am}\n\n"
         f"Propose ONE concrete, implementable development idea for today. "
         f"Format it as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk."
     )
@@ -212,7 +212,7 @@ def phase_v_development(idea: str, goals: dict) -> str:
         f"You are Sam's Gemini refactoring assistant. "
         f"Sam's watchdog (Dot) left the following guidance:\n\n{motion_content}\n\n"
         f"Today's development idea:\n\n{idea}\n\n"
-        f"Sam's current architecture snapshot (first 4000 chars):\n\n{who_i_am[:4000]}\n\n"
+        f"Sam's current architecture snapshot (first 4000 chars):\n\n{who_i_am}\n\n"
         f"Provide a precise, minimal code diff or implementation plan Sam should apply to his codebase. "
         f"Flag any security or stability risks. Do NOT rewrite files wholesale — propose targeted changes only."
     )
