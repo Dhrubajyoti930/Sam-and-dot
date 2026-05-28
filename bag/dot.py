@@ -129,7 +129,7 @@ def excavate_bag() -> str:
     for fp in py_files[:5]:   # cap to avoid blowing the budget
         try:
             src = fp.read_text(errors="replace")
-            candidates.append(f"### {fp.name}\n```python\n{src[:800]}\n```")
+            candidates.append(f"### {fp.name}\n```python\n{src[:3000]}\n```")
         except Exception:
             pass
 
