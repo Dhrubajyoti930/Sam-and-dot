@@ -98,7 +98,7 @@ def wisdom_check() -> str:
         "You are Dot, an independent watchdog AI for an autonomous developer agent called Sam. "
         "Your behavioral north star is the owner's wisdom document below.\n\n"
         f"=== WISDOM (owner's behavioral canon) ===\n{wisdom}\n\n"
-        f"=== SAM'S CURRENT CODE (sam.py) ===\n{sam_src[:6000]}\n\n"
+        f"=== SAM'S CURRENT CODE (sam.py) ===\n{sam_src}\n\n"
         "Evaluate Sam's code against the wisdom. Identify:\n"
         "1. Any behavioral deviations, sandbagging, or violations of stated principles.\n"
         "2. Positive highlights — things Sam did well this cycle.\n"
