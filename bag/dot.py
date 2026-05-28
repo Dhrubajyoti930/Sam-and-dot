@@ -39,13 +39,12 @@ logging.basicConfig(
 log = logging.getLogger("dot")
 
 # ── Gemini client (Dot's OWN independent instance) ───────────────────────────
-import google.generativeai as genai
+from google import genai
 
 GEM_KEY = os.environ.get("GEM_KEY_DOT")
 if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_DOT secret is not set.")
-genai.configure(api_key=GEM_KEY)
-MODEL = genai.GenerativeModel("gemini-3.5-flash")
+CLIENT = genai.Client(api_key=GEM_KEY)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -54,7 +53,10 @@ MODEL = genai.GenerativeModel("gemini-3.5-flash")
 
 def ask_gemini(prompt: str) -> str:
     try:
-        response = MODEL.generate_content(prompt)
+        response = CLIENT.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt
+        )
         return response.text.strip()
     except Exception as e:
         log.error(f"Dot's Gemini call failed: {e}")
