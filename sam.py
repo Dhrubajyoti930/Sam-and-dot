@@ -270,7 +270,7 @@ def phase_vii_state_saving(goals: dict, skill_learned: str, evolution_note: str)
     goals_block = f"```json\n{json.dumps(goals, indent=2)}\n```"
     updated = re.sub(
         r"(## Current Goals Snapshot\n+).*?(\n---|\Z)",
-        rf"\1{goals_block}\n\n\2",
+        lambda m: m.group(1) + goals_block + "\n\n" + m.group(2),
         who_text,
         flags=re.DOTALL
     )
