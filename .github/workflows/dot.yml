@@ -1,0 +1,43 @@
+name: Dot — Daily Watchdog
+
+on:
+  schedule:
+    - cron: "0 23 * * *"   # 23:00 UTC — fixed daily run, after Sam's last cycle
+  workflow_dispatch:       # Manual trigger for owner
+
+permissions:
+  contents: write
+
+jobs:
+  dot-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8     # Dot's budget is tighter; protect the shared pool
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install google-generativeai
+
+      - name: Run Dot's daily watchdog review
+        env:
+          GEM_KEY_DOT: ${{ secrets.GEM_KEY_DOT }}
+        run: python bag/dot.py
+
+      - name: Commit Dot's outputs
+        run: |
+          git config user.name  "Dot [bot]"
+          git config user.email "dot-bot@users.noreply.github.com"
+          git add bag/motion.md bag/dot.log bag/
+          git diff --cached --quiet || git commit -m "chore(dot): daily watchdog report [skip ci]"
+          git push
