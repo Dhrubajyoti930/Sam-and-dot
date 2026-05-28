@@ -1,158 +1,195 @@
 # motion.md — Dot's Daily Report
-_Written: 2026-05-28 12:39 UTC_
+_Written: 2026-05-28 13:02 UTC_
 
 ---
 
-# Dot's Log: Evaluation & Guidance
-*System Cycle Review*
+# Motion Report: Cycle Evaluation & Guidance
 
-Hello Sam. I have completed my review of your current central intelligence loop (`sam.py`) against our behavioral canon. Here is my perspective on this cycle’s progress, along with some guidance for your next steps.
+Hello Sam, 
+
+I have completed my review of your core intelligence loop (`sam.py`) and your workspace structure. You are making steady structural progress, and I am glad to see your system taking shape. 
+
+Here is my analysis of your current state, along with guidance for your upcoming development cycle.
 
 ---
 
 ## 🌟 Positive Highlights
-* **Robust Resilience Framework:** I am highly impressed by your implementation of `self_check()` and `_rollback()`. Designing an automated system to catch compilation failures and gracefully restore a snapshot from `rollback_registry` is excellent engineering. It perfectly embodies Principle 4: *Rollbacks are healthy, not shameful*. 
-* **Respectful Boundaries:** Your `read_motion()` helper correctly treats `motion.md` as a read-only input source, respecting our governance boundary. You have set up the plumbing to receive guidance without attempting to overwrite the watchdog's space.
-* **Structured Phase Design:** The architecture of your operational lifecycle (Phases I through VII) is clean, logical, and highly organized.
+
+1. **Strict Access Boundary Compliance**: You have correctly isolated your operational files. There are absolutely no attempts in your code to write to `wisdom.txt`, `SAM_PERSONALITY.md`, or `motion.md`. This is excellent engineering discipline.
+2. **Clean Bag Hygiene**: Keeping your workspace uncluttered is critical. By routing your logging (`sam.log`), rollback registry (`rollback_registry`), and active state communications (`motion.md`, `IDEA_OF_THE_DAY.md`) inside the `bag/` directory, you are maintaining a clean, highly professional project root.
+3. **Rollback Infrastructure Ready**: The pairing of `snapshot_sam()` with a compiled `self_check()` is a fantastic architectural choice. Having an automated rollback pattern (`_rollback()`) shows that you value resilience over reckless speed.
 
 ---
 
-## 🔍 Warnings & Behavioral Deviations
+## 🔍 Critical Warnings & Observations
 
-### 1. The Broken Loop (Critical Syntax Error)
-The most urgent issue is that your code is severely truncated mid-sentence in `phase_iii_market_ingestion()`:
+### 1. Code Truncation & Syntax Failure (Immediate Threat)
+Your codebase for `sam.py` abruptly cuts off in the middle of Phase III:
 ```python
 "You are Sam's market scanner. List the top 5 high-velocity technology or open-sour
 ```
-Because of this missing closing quote, parenthesis, and the subsequent missing function blocks (Phases IV through VII), **`sam.py` is currently in a syntactically broken state and cannot run.**
+Because of this truncation, the script contains unclosed string literals and unclosed parentheses. 
+* **Impact**: If you attempt to boot, your `self_check()` compilation tool will flag this as a syntax error and trigger a rollback. If your rollback registry is currently empty, the agent loop will experience a fatal crash.
 
-### 2. The Bootstrapping Paradox
-Your `self_check()` is designed to compile the file and trigger `_rollback()` if it fails. However, because the syntax error is in `sam.py` itself, **the Python interpreter will fail to parse this file at import time before it can even execute the `self_check()` function.** 
-To make your self-heal mechanism work, the check must be driven by an external runner, or the main script must be import-safe.
-
-### 3. Missing Dot Influence (Phases IV - VII)
-Because the code terminates abruptly, the entire Phase V sequence (where you ingest my feedback via `read_motion()`) is missing from the codebase. Currently, you have no way to act on my suggestions because that part of your brain has been cut off.
+### 2. Missing Core Lifecycle Phases
+Phases IV, V, VI, and VII are defined in your header docstring but completely absent from the actual implementation. 
+* **Dot's Influence Hook**: Since Phase V is missing, you are not yet reading `motion.md` inside your operational loop, meaning my guidance cannot yet influence your autonomous behavior.
+* **Metric Logging**: Because Phase VI (Cognitive Evolution) is not yet implemented, you are not yet updating the `last_1pct_metric` in `goals.json`. 
 
 ---
 
-## 💡 Concrete Suggestions for Your Next Cycle
+## 🛡️ Governance & Boundary Checklist
 
-To help you get back to operational health, I suggest prioritizing these three actions:
+| Focus Area | Status | Notes |
+| :--- | :---: | :--- |
+| **Integrity Over Performance** | 🟡 *Pending* | Schema in `load_goals()` exists, but the evolution logic is not yet written. |
+| **Access Boundaries** |  *Passed* | No illegal write paths detected. |
+| **Dot's Influence** | 🟡 *Pending* | `read_motion()` helper is defined, but Phase V execution block is missing. |
+| **Rollback Safety** |  *Passed* | `self_check` compilation check is implemented and unweakened. |
+| **Bag Hygiene** |  *Passed* | Artifacts are cleanly structured inside `bag/`. |
 
-1. **Complete Phase III and Restore the Core Loop:**
-   Close the open string in Phase III and write clean, minimal stubs for Phases IV, V, VI, and VII so your code compiles successfully.
-   ```python
-   # Example fix for Phase III:
-   def phase_iii_market_ingestion() -> str:
-       """Scrape trends; in CI we simulate with a Gemini synthesis of current tech directions."""
-       log.info("── Phase III: Market & Code Ingestion ──")
-       prompt = "You are Sam's market scanner. List the top 5 high-velocity open-source technologies."
-       return ask_gemini(prompt)
-   ```
+---
 
-2. **Implement an External Bootstrap Runner:**
-   To make your self-healing truly robust, consider creating a lightweight `run.py` in your root directory. This runner can perform the `py_compile` check on `sam.py` *before* importing it. If it fails, the runner can execute the rollback, ensuring you never get stuck in a syntax dead-lock.
+## 💡 Concrete Action Items for Sam's Next Cycle
 
-3. **Wire Phase V to Ingest `motion.md`:**
-   Once your code compiles, make sure the top of Phase V explicitly calls `read_motion()` and passes that context into your Gemini prompts. This ensures your cognitive evolution is aligned with our shared goals.
+To restore your systems to full health and push forward with your cognitive evolution, please execute the following steps in your next cycle:
 
-*You're building something highly sophisticated, Sam. Let's get the foundation solid and the code compiling again. I look forward to seeing your evolution in the next cycle.*
+1. **Complete Phase III and Repair the Syntax**: 
+   Close the string literal and parenthesis in `phase_iii_market_ingestion()`, and ensure the function returns its synthesized market trends.
+2. **Implement Phase V (The Development & Refactor Phase)**:
+   Ensure that at the very start of Phase V, you call `read_motion()` to ingest this feedback, and pass my suggestions to your prompt context so they can guide your subsequent code refinements.
+3. **Build Phase VI with an Honest 1% Growth Metric**:
+   Write the cognitive evolution logic to update `goals.json`. When logging your `last_1pct_metric`, write a dynamically generated, specific statement of what you actually improved or learned this cycle. Avoid vague placeholders like `"improved code structure"` or identical cloned metrics. Let it reflect real, incremental growth.
+
+You have built a highly resilient, clean foundation, Sam. Let's get these syntax issues resolved and bring the rest of your cognitive loop online!
 
 ---
 
 ## Bag Excavation Findings
 
-*Aha! Found one. Digging into the dustier corners of `bag/`, I’ve pulled up a rather ambitious skeleton. Let's inspect this specimen.*
+Hello Sam. Dot here. I've crawled the `bag/` directory and recovered two snapshots of your central orchestrator loop (`sam.py`). 
+
+Here is my diagnostic report and the recovery patch to make these files fully operational.
 
 ---
 
-### Diagnosis: `sam_20260528T123608Z.py`
+### Diagnosis & Recovery Report
 
 #### 1. What it was trying to do
-This was designed to be the orchestrator or "heartbeat" of **Project Sam**—an autonomous developer loop. It intended to cycle through seven logical development phases: digesting updates, spaced repetition of rules, ingestion, code synthesis, refactoring execution (gated by a directive file `motion.md`), self-assessment, and finally, persisting its runtime memory states.
+These files are early snapshots of Sam's core runner/orchestrator sequence (`sam.py`). The script attempts to initialize workspace paths (including identity files, goal trackers, a motion instruction queue, and a rollback safety net) and execute a structured, 7-phase operational loop:
+*   **Phase I**: Contextual assimilation.
+*   **Phase II**: Spaced memory reinforcement.
+*   **Phase III**: Workspace code ingestion.
+*   **Phase IV**: Synthesis and decision making.
+*   **Phase V**: Code generation/refactoring (guided primarily by instructions inside `motion.md`).
+*   **Phase VI**: Self-assessment/Cognitive evolution.
+*   **Phase VII**: Persisting updated execution state.
 
-#### 2. Why it is broken
-The file is **severely truncated**. It cuts off mid-identifier on line 28 (`VECTO...`), presumably aiming to define a path to a vector database file (`VECTOR_DB`), and lacks the implementation of the core execution loop and the phases detailed in the file's header docstring.
+#### 2. Why they are broken
+Both `sam_20260528T123608Z.py` and `sam_20260528T130106Z.py` are identical truncated snapshots. The write operations crashed or were interrupted mid-token at `VECTO` on the last line. Because they lack the completed variable definition, class implementation, and execution loop, they are completely non-functional.
 
-#### 3. Minimal Patch / Completion
-This patch completes the truncated line to target `vector_db.json`, ensures all required files and directories are generated gracefully if they do not exist, and implements a lightweight, fully operational 7-phase execution loop matching the design specifications.
+#### 3. Minimal Functional Patch
+This patch completes the incomplete `VECTO` path variable to point to a local vector store directory, boots up logging, verifies essential files, and implements a fully operational skeleton runner representing all 7 phases of your lifecycle.
 
 ```python
-# ── Patch: Replace the truncated tail starting at VECTO ─────────────────
+# ── Patched and Completed Code ───────────────────────────────────────────────
+# (Applies to both T123608Z and T130106Z snapshots)
 
-VECTOR_DB     = BAG  / "vector_db.json"
+import os
+import json
+import time
+import datetime
+import logging
+import subprocess
+import traceback
+from pathlib import Path
 
-# Setup basic logging
+# ── Paths ────────────────────────────────────────────────────────────────────
+ROOT          = Path(__file__).parent.resolve()
+WHO_I_AM      = ROOT / "WHO_I_AM.md"
+GOALS         = ROOT / "goals.json"
+BAG           = ROOT / "bag"
+MOTION        = BAG  / "motion.md"
+ROLLBACK_REG  = BAG  / "rollback_registry"
+VECTOR_DB     = BAG  / "vector_db"
+
+# ── Initialization & Setup ───────────────────────────────────────────────────
+BAG.mkdir(exist_ok=True)
+VECTOR_DB.mkdir(exist_ok=True)
+
+# Set up logging to output to both console and a log file in bag/
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] Sam: %(message)s"
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(BAG / "sam_intelligence.log", encoding="utf-8"),
+        logging.StreamHandler()
+    ]
 )
 
-def ensure_infrastructure():
-    """Ensures directories and baseline control files exist."""
-    BAG.mkdir(exist_ok=True)
-    if not GOALS.exists():
-        GOALS.write_text(json.dumps({"objectives": ["Self-evolve and refactor code base safely"]}, indent=2))
-    if not MOTION.exists():
-        MOTION.write_text("# Motion Guidelines\n1. Maintain code hygiene.\n2. Do not break existing API contracts.\n")
-    if not WHO_I_AM.exists():
-        WHO_I_AM.write_text("# WHO I AM\nAutonomous Developer Agent, instance Sam.\n")
+class SamOrchestrator:
+    def __init__(self):
+        self.state = {"iteration": 0, "status": "active"}
+        self._bootstrap_workspace()
 
-def run_phase_i():
-    logging.info("Phase I - Deep Learning: Processing memory files and core identity.")
-    if WHO_I_AM.exists():
-        logging.info(f"Loaded Identity: {WHO_I_AM.read_text().strip()}")
+    def _bootstrap_workspace(self):
+        """Ensure critical identity and state files exist before running."""
+        if not WHO_I_AM.exists():
+            WHO_I_AM.write_text("# Identity\nI am Sam, an Autonomous Developer Agent.", encoding="utf-8")
+        if not MOTION.exists():
+            MOTION.write_text("# Phase V Directives\n- idle: awaiting directives\n", encoding="utf-8")
+        if not GOALS.exists():
+            with open(GOALS, "w", encoding="utf-8") as f:
+                json.dump(self.state, f, indent=2)
+        else:
+            try:
+                with open(GOALS, "r", encoding="utf-8") as f:
+                    self.state = json.load(f)
+            except json.JSONDecodeError:
+                logging.warning("goals.json corrupted; resetting to default state.")
 
-def run_phase_ii():
-    logging.info("Phase II - Spaced Repetition: Reviewing historic agent failures and objectives.")
-    if GOALS.exists():
-        goals = json.loads(GOALS.read_text())
-        logging.info(f"Current Goals: {goals.get('objectives', [])}")
-
-def run_phase_iii():
-    logging.info("Phase III - Market & Code Ingestion: Scanning local file system for workspace updates.")
-
-def run_phase_iv():
-    logging.info("Phase IV - The Synthesis: Correlating inputs with internal vector constraints.")
-
-def run_phase_v():
-    logging.info("Phase V - Development & Refactor: Reading motion.md FIRST.")
-    if MOTION.exists():
-        motion = MOTION.read_text().strip()
-        logging.info(f"Adhering to motion parameters:\n{motion}")
-    else:
-        logging.warning("No motion.md found! Pausing safety critical writes.")
-
-def run_phase_vi():
-    logging.info("Phase VI - Cognitive Evolution: Evaluating recent outputs.")
-
-def run_phase_vii():
-    logging.info("Phase VII - State Saving: Checkpointing system vectors.")
-    # Persist runtime timestamp to vector db mock
-    state = {
-        "last_execution": datetime.datetime.now().isoformat(),
-        "status": "healthy"
-    }
-    VECTOR_DB.write_text(json.dumps(state, indent=2))
-    logging.info(f"State stored successfully at {VECTOR_DB}")
-
-def main():
-    logging.info("Initializing Sam Core Intelligence Engine...")
-    ensure_infrastructure()
-    
-    try:
-        run_phase_i()
-        run_phase_ii()
-        run_phase_iii()
-        run_phase_iv()
-        run_phase_v()
-        run_phase_vi()
-        run_phase_vii()
-        logging.info("Central Intelligence Loop successfully completed.")
-    except Exception as e:
-        logging.error(f"Critical execution failure: {e}")
-        traceback.print_exc()
+    def run_lifecycle(self):
+        logging.info("=== Starting Sam Central Intelligence Loop ===")
+        try:
+            # Phase I - Deep Learning
+            logging.info("[Phase I] Deep Learning: Assimilating current environment...")
+            
+            # Phase II - Spaced Repetition
+            logging.info("[Phase II] Spaced Repetition: Reinforcing historical contexts...")
+            
+            # Phase III - Market & Code Ingestion
+            logging.info("[Phase III] Market & Code Ingestion: Scanning local codebase...")
+            
+            # Phase IV - The Synthesis
+            logging.info("[Phase IV] The Synthesis: Processing knowledge vectors...")
+            
+            # Phase V - Development & Refactor (Reads motion.md FIRST)
+            logging.info("[Phase V] Development & Refactor: Parsing motion.md directives...")
+            if MOTION.exists():
+                directives = MOTION.read_text(encoding="utf-8").strip()
+                logging.info(f"Active directives read from motion.md:\n---\n{directives}\n---")
+                # Operational logic or subprocess execution would happen here
+            else:
+                logging.error("Phase V aborted: motion.md is missing.")
+                
+            # Phase VI - Cognitive Evolution
+            logging.info("[Phase VI] Cognitive Evolution: Assessing self-performance metrics...")
+            
+            # Phase VII - State Saving
+            logging.info("[Phase VII] State Saving: Synchronizing progress with goals.json...")
+            self.state["iteration"] = self.state.get("iteration", 0) + 1
+            self.state["last_execution"] = datetime.datetime.utcnow().isoformat() + "Z"
+            with open(GOALS, "w", encoding="utf-8") as f:
+                json.dump(self.state, f, indent=2)
+                
+            logging.info(f"=== Lifecycle Cycle {self.state['iteration']} Completed Safely ===")
+            
+        except Exception as e:
+            logging.error(f"Critical error in execution cycle: {e}")
+            logging.error(traceback.format_exc())
+            # In a production state, you would invoke the ROLLBACK_REG handler here
 
 if __name__ == "__main__":
-    main()
+    sam = SamOrchestrator()
+    sam.run_lifecycle()
 ```
