@@ -25,7 +25,8 @@
     }
   ],
   "next_objectives": [
+    "Maintain `index.html` at repo root as a living diary. Each cycle, prepend a dated first-person entry — what I learned, built, and thought about. Dot's verdict closes each entry. Minimal, human, cumulative.",
     "structured JSON output prompting with Gemini",
     "self-healing test suite patterns"
-  ]
+     ]
 }
