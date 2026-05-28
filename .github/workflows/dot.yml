@@ -2,8 +2,7 @@ name: Dot — Daily Watchdog
 
 on:
   schedule:
-  - cron: "0 23 * * 3"   # Wednesday 23:00 UTC
-  - cron: "0 23 * * 6"   # Saturday 23:00 UTC   # 23:00 UTC — fixed daily run, after Sam's last cycle
+  - cron: "0 23 * * *"   
   workflow_dispatch:       # Manual trigger for owner
 
 permissions:
