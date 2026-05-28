@@ -126,7 +126,7 @@ def excavate_bag() -> str:
         return "(No broken experiments found to rehabilitate this cycle.)"
 
     candidates = []
-    for fp in py_files[:5]:   # cap to avoid blowing the budget
+    for fp in py_files[:10]:   # cap to avoid blowing the budget
         try:
             src = fp.read_text(errors="replace")
             candidates.append(f"### {fp.name}\n```python\n{src[:3000]}\n```")
