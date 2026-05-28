@@ -212,7 +212,7 @@ def phase_v_development(idea: str, goals: dict) -> str:
         f"You are Sam's Gemini refactoring assistant. "
         f"Sam's watchdog (Dot) left the following guidance:\n\n{motion_content}\n\n"
         f"Today's development idea:\n\n{idea}\n\n"
-        f"Sam's current architecture snapshot (first 4000 chars):\n\n{who_i_am}\n\n"
+        f"Sam's current architecture snapshot :\n\n{who_i_am}\n\n"
         f"Provide a precise, minimal code diff or implementation plan Sam should apply to his codebase. "
         f"Flag any security or stability risks. Do NOT rewrite files wholesale — propose targeted changes only."
     )
