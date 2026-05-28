@@ -133,6 +133,64 @@ def _rollback():
     log.warning(f"Rolled back to {latest.name}")
 
 
+def _alert_dot(message: str):
+    """Append a Sam-generated alert to motion.md for Dot to read next run."""
+    ts = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    alert = f"\n\n---\n\n## ⚠️ Sam Alert — {ts}\n\n{message}\n"
+    if MOTION.exists():
+        with open(MOTION, "a") as f:
+            f.write(alert)
+    else:
+        MOTION.write_text(f"# motion.md\n{alert}")
+    log.warning(f"Alert written to motion.md: {message}")
+
+def apply_self_modification(plan: str) -> bool:
+    """Ask Gemini to extract concrete file changes from the plan and apply them.
+    Only sam.py and bag/*.py are writable. Returns True if anything was applied."""
+    log.info("── Self-Modification: Parsing Plan ──")
+
+    allowed_prefixes = ("sam.py", "bag/")
+
+    prompt = (
+        f"You are Sam's code applicator. Below is a development plan:\n\n{plan}\n\n"
+        f"Extract any concrete file modifications. "
+        f"Respond ONLY with a JSON array — no markdown, no explanation. "
+        f"Each element must have:\n"
+        f"  - 'filename': relative path from repo root (only sam.py or bag/*.py are permitted)\n"
+        f"  - 'content': the complete new file content as a string\n"
+        f"If no concrete changes are specified, return an empty array []."
+    )
+
+    raw = ask_gemini(prompt)
+
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        changes = json.loads(clean)
+    except Exception as e:
+        log.warning(f"Could not parse modification plan as JSON: {e}")
+        return False
+
+    if not changes:
+        log.info("No concrete file changes extracted — skipping self-modification.")
+        return False
+
+    applied = []
+    for change in changes:
+        fname   = change.get("filename", "")
+        content = change.get("content", "")
+
+        if not any(fname == p or fname.startswith("bag/") for p in allowed_prefixes):
+            log.warning(f"Blocked write to '{fname}' — outside allowed scope.")
+            continue
+
+        target = ROOT / fname
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content)
+        log.info(f"Applied modification → {fname}")
+        applied.append(fname)
+
+    return bool(applied)
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # PHASES
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -280,7 +338,7 @@ def phase_vii_state_saving(goals: dict, skill_learned: str, evolution_note: str)
     )
     WHO_I_AM.write_text(updated)
     log.info("WHO_I_AM.md updated with current goals.")
-    snapshot_sam()
+    
     log.info(f"Cycle {cycle_num} complete. 1% metric: {one_pct_metric}")
 
 
@@ -305,9 +363,24 @@ def run_cycle():
     market     = phase_iii_market_ingestion()
     idea       = phase_iv_synthesis(market)
 
-    # Phase V reads motion.md at the top — then executes
-    plan       = phase_v_development(idea, goals)
 
+    # Phase V reads motion.md at the top — then executes
+    plan = phase_v_development(idea, goals)
+
+    # Self-modification — snapshot first, then apply, then verify
+    snapshot_sam()
+    if apply_self_modification(plan):
+        if self_check():
+            log.info("Self-modification verified — continuing.")
+        else:
+            _rollback()
+            _alert_dot(
+                "Self-modification failed the post-apply syntax check. "
+                "Rolled back to previous snapshot. Plan that caused failure:\n\n"
+                f"```\n{plan[:800]}\n```"
+            )
+
+  
     # Phase VI — prompt evolution
     evolution  = phase_vi_cognitive_evolution(goals)
 
