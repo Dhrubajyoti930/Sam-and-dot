@@ -93,3 +93,16 @@ Please retry in 58.945395755s. [links {
 2026-05-28 16:34:30,821 [DOT][INFO] Bag excavation complete.
 2026-05-28 16:34:30,821 [DOT][INFO] motion.md written.
 2026-05-28 16:34:30,821 [DOT][INFO] Dot's daily run complete.
+2026-05-28 17:26:05,691 [DOT][INFO] ═══════════════════════════════════
+2026-05-28 17:26:05,692 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-05-28 17:26:05,692 [DOT][INFO] ═══════════════════════════════════
+2026-05-28 17:26:05,692 [DOT][INFO] ── Wisdom Check ──
+2026-05-28 17:26:05,692 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-28 17:26:21,239 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-05-28 17:26:21,241 [DOT][INFO] Wisdom check complete.
+2026-05-28 17:26:21,241 [DOT][INFO] ── Bag Excavation ──
+2026-05-28 17:26:21,241 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-28 17:27:17,559 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-05-28 17:27:17,565 [DOT][INFO] Bag excavation complete.
+2026-05-28 17:27:17,566 [DOT][INFO] motion.md written.
+2026-05-28 17:27:17,566 [DOT][INFO] Dot's daily run complete.
