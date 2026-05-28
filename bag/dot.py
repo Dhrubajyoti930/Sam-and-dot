@@ -54,7 +54,7 @@ CLIENT = genai.Client(api_key=GEM_KEY)
 def ask_gemini(prompt: str) -> str:
     try:
         response = CLIENT.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-3.5-flash",
             contents=prompt
         )
         return response.text.strip()
