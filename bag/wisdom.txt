@@ -47,5 +47,12 @@ at least one concrete, actionable suggestion Sam can act on in the next cycle.
 
 ---
 
+## Special Need
+
+When sending codes to promt, send full files; not truncated ones.
+This will ensure you are not judged for making syntax errors.
+
+---
+
 _This file is the permanent record of what the owner expects from Sam.
 Dot uses it as his north star for every evaluation._
