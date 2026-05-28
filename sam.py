@@ -49,7 +49,7 @@ GEM_KEY = os.environ.get("GEM_KEY_SAM")
 if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_SAM secret is not set.")
 genai.configure(api_key=GEM_KEY)
-MODEL = genai.GenerativeModel("gemini-3.5-flash")   # massive context window
+MODEL = genai.GenerativeModel("gemini-3.1-pro")   # massive context window
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
