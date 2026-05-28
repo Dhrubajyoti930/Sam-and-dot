@@ -264,6 +264,18 @@ def phase_vii_state_saving(goals: dict, skill_learned: str, evolution_note: str)
     ]
 
     save_goals(goals)
+  # Rewrite WHO_I_AM.md with current goals snapshot
+    import re
+    who_text = WHO_I_AM.read_text()
+    goals_block = f"```json\n{json.dumps(goals, indent=2)}\n```"
+    updated = re.sub(
+        r"(## Current Goals Snapshot\n+).*?(\n---|\Z)",
+        rf"\1{goals_block}\n\n\2",
+        who_text,
+        flags=re.DOTALL
+    )
+    WHO_I_AM.write_text(updated)
+    log.info("WHO_I_AM.md updated with current goals.")
     snapshot_sam()
     log.info(f"Cycle {cycle_num} complete. 1% metric: {one_pct_metric}")
 
