@@ -25,3 +25,35 @@
 2026-05-28 13:09:52,996 [DOT][INFO] Bag excavation complete.
 2026-05-28 13:09:52,996 [DOT][INFO] motion.md written.
 2026-05-28 13:09:52,996 [DOT][INFO] Dot's daily run complete.
+2026-05-28 13:45:45,904 [DOT][INFO] ═══════════════════════════════════
+2026-05-28 13:45:45,905 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-05-28 13:45:45,905 [DOT][INFO] ═══════════════════════════════════
+2026-05-28 13:45:45,905 [DOT][INFO] ── Wisdom Check ──
+2026-05-28 13:46:00,987 [DOT][INFO] Wisdom check complete.
+2026-05-28 13:46:00,987 [DOT][INFO] ── Bag Excavation ──
+2026-05-28 13:46:01,064 [DOT][ERROR] Dot's Gemini call failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.5-flash
+Please retry in 58.945395755s. [links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerDayPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-3.5-flash"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+  quota_value: 20
+}
+, retry_delay {
+  seconds: 58
+}
+]
+2026-05-28 13:46:01,064 [DOT][INFO] Bag excavation complete.
+2026-05-28 13:46:01,064 [DOT][INFO] motion.md written.
+2026-05-28 13:46:01,064 [DOT][INFO] Dot's daily run complete.
