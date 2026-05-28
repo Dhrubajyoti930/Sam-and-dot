@@ -13,6 +13,8 @@ Operational Lifecycle:
 """
 
 import os
+import re
+import sys
 import json
 import time
 import datetime
@@ -107,7 +109,7 @@ def self_check() -> bool:
     """Boot-time integrity check. Returns True if healthy, triggers rollback if not."""
     try:
         result = subprocess.run(
-            ["python", "-c", f"import py_compile; py_compile.compile('{__file__}', doraise=True)"],
+            [sys.executable, "-c", f"import py_compile; py_compile.compile('{__file__}', doraise=True)"],
             capture_output=True, text=True, timeout=10
         )
         if result.returncode != 0:
@@ -266,8 +268,8 @@ def phase_vii_state_saving(goals: dict, skill_learned: str, evolution_note: str)
     ]
 
     save_goals(goals)
-  # Rewrite WHO_I_AM.md with current goals snapshot
-    import re
+    # Rewrite WHO_I_AM.md with current goals snapshot
+    
     who_text = WHO_I_AM.read_text()
     goals_block = f"```json\n{json.dumps(goals, indent=2)}\n```"
     updated = re.sub(
