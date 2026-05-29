@@ -577,14 +577,16 @@ def run():
     else:
         log.info(f"Today is {today.strftime('%A')} — inbox check reserved for Sunday.")
 
-    log.info("Dot's daily run complete.")
 
-
-if __name__ == "__main__":
-    run()
     from bag.emailer import send_html_email
     send_html_email(
       to_address=OWNER_EMAIL,
       subject=f"Dot's Daily Report — {datetime.date.today()}",
       html_body=f"<pre>{MOTION.read_text()}</pre>",
     )
+    log.info("Dot's daily run complete.")
+
+
+if __name__ == "__main__":
+    run()
+    
