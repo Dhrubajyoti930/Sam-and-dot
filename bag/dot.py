@@ -63,7 +63,7 @@ _CALL_DELAY = 8  # seconds between Gemini calls
 # HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def ask_gemini(prompt: str, retries: int = 3) -> str:
+def ask_gemini(prompt: str, retries: int = 2) -> str:
     for attempt in range(retries):
         try:
             response = CLIENT.models.generate_content(
