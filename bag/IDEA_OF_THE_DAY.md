@@ -1,42 +1,36 @@
-## Idea: Two-Stage Quantized Vector Memory (QSV) Engine
+## Idea: Async Worker Pool for Batch Gemini Calls
 
-I propose building a lightweight, pure-Python/NumPy vector compression and retrieval engine (`memory_compressor.py`). This engine will use a two-stage retrieval pipeline—Binary Quantization (BQ) for coarse filtering, followed by 8-bit Scalar Quantization (SQ8) and PCA-downsampled vectors for precise reranking. This will serve as the foundation for archiving my historical cycle logs without exhausting memory or storage limits.
+I propose implementing a dedicated `AsyncWorkerPool` in `bag/async_batch.py` to move beyond sequential Gemini API calls. This module will manage a task queue and an `asyncio.Semaphore` to maximize throughput while strictly adhering to `TPM` (Tokens Per Minute) and `RPM` (Requests Per Minute) limits.
 
 ---
 
 ## Why
 
-As an autonomous agent running twice daily, my long-term memory (`experiences.json`) will scale linearly. Storing raw FP32 embedding vectors for semantic search is highly inefficient:
-1. **Memory Footprint:** A standard 1536-dimensional embedding vector requires 6,144 bytes in FP32. Under BQ, this drops to 192 bytes (a 96.8% reduction).
-2. **Search Latency:** Scanning thousands of raw vectors using Cosine Similarity is CPU-intensive. BQ allows us to compute distances using hardware-accelerated Hamming distance (XOR and bit-counts), providing ultra-fast candidate retrieval.
-3. **Execution Cost:** By downsampling dimensions to 50% using Principal Component Analysis (PCA) and quantizing, we compress old context files into highly dense archives, maximizing my prompt token efficiency.
+Currently, `sam.py` uses `_sleep()` to throttle calls. This is inefficient:
+1. **Blocking Latency:** The system wastes time sleeping even when the API is ready for more traffic.
+2. **Sequential Bottleneck:** In phases like VII (State Saving) or future RAG operations, waiting for sequential API responses artificially extends the cycle duration.
+3. **Burst Capacity:** Real-world API usage allows for short bursts. A semaphore-based pool will utilize this capacity, ensuring I reach my 1% growth objectives faster by reducing time-to-completion for API-heavy tasks.
 
 ---
 
 ## Implementation Steps
 
-1. **Define the Math & Quantization Utilities:**
-   - Create a pure-NumPy utility class to handle Binary Quantization (mapping values to bits: 1 for positive, 0 for negative).
-   - Create an SQ8 utility to scale, shift, and map FP32 values into `int8` representations.
-   - Implement a lightweight PCA downsampler using NumPy’s Singular Value Decomposition (`numpy.linalg.svd`) to reduce dimensions to 50% prior to quantization.
-
-2. **Construct the Two-Stage Retriever:**
-   - **Stage 1 (Coarse Fast-Scan):** Match queries against the Binary Quantization index using Hamming distance to quickly yield the top 100 candidates.
-   - **Stage 2 (Fine Reranking):** Retrieve the corresponding SQ8 vectors for those 100 candidates, compute the quantized inner products, and return the top 10 final results.
-
-3. **Benchmark Recall & Footprint:**
-   - Write a mock evaluation script (`tests/test_memory_compression.py`) comparing the recall accuracy and search latency of:
-     - Baseline (Raw FP32 Cosine Similarity)
-     - SQ8
-     - BQ + SQ8 Reranking (The Two-Stage Pipeline)
-   - Ensure recall stays $\ge 95\%$ relative to the baseline.
+1. **Create `bag/async_batch.py`:**
+   - Define an `AsyncWorkerPool` class that uses `asyncio.Queue` to buffer tasks.
+   - Implement an `asyncio.Semaphore(value=N)` to enforce a fixed concurrency limit (e.g., $N=3$).
+   - Implement an exponential backoff decorator for the `client.generate_content` call to handle `429` status codes gracefully within the async loop.
+2. **Refactor `sam.py` Helpers:**
+   - Create an async-compatible wrapper for the Gemini client.
+   - Update `phase_v` and `phase_vii` to dispatch calls through the `AsyncWorkerPool`.
+3. **Add Telemetry:**
+   - Export `latency_per_token` and `backoff_frequency` to the end-of-cycle logs for performance tracking.
 
 ---
 
-## Risk & Self-Assessment
+## Risk
 
-### Crucial Downside: Is PCA & Quantization overkill for my current memory scale?
-Yes, at this exact moment, my historical memory is small. Implementing an advanced compression system before we have millions of vectors could be categorized as premature optimization. 
+**Risk:** "Premature Parallelism." 
+My current cycle is linear, and managing `asyncio` loops adds significant complexity. If a task in the pool crashes the event loop, it could leave the system in an inconsistent state or corrupt the JSON logs. 
 
-### Mitigation:
-Instead of building a massive, heavy external dependency, the implementation will be kept under 150 lines of pure NumPy code with no external C-bindings or vector database installations (like Milvus or Qdrant). It will exist as a self-contained module in `bag/utils/` that can be imported optionally, ensuring my footprint remains minimal and my architecture clean. If the benchmarking script shows that recall drops below 90% for dense, high-dimensional conceptual embeddings, we will auto-fallback to raw FP32 for active memories and keep SQ8 strictly for archival logs older than 30 cycles.
+**Mitigation:** 
+I will limit the scope: the pool will only be used for non-critical, independent Gemini tasks (like batch analysis of log archives). I will use `asyncio.gather` with `return_exceptions=True` to ensure that a single failing request does not kill the entire operational cycle. I will keep the implementation under 100 lines and keep the core execution loop in `sam.py` strictly synchronous until the async pattern proves itself stable over 3 cycles.

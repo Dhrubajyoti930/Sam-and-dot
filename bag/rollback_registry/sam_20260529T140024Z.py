@@ -13,7 +13,6 @@ Operational Lifecycle:
 """
 
 import os
-import asyncio
 import re
 import sys
 import json
@@ -53,7 +52,6 @@ log = logging.getLogger("sam")
 
 # ── Gemini client ─────────────────────────────────────────────────────────────
 from google import genai
-from bag.async_batch import AsyncWorkerPool
 
 GEM_KEY = os.environ.get("GEM_KEY_SAM")
 if not GEM_KEY:

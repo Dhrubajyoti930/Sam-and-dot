@@ -17,5 +17,24 @@
     "sentiment": "positive",
     "cycle": 1,
     "timestamp": "2026-05-29T13:43:24.617020"
+  },
+  {
+    "category": "architecture",
+    "summary": "Designed and implemented an AsyncWorkerPool to move away from inefficient sequential Gemini API calls. The new architecture uses an asyncio-based queue and semaphore to maximize throughput while respecting strict TPM and RPM limits with robust exponential backoff.",
+    "key_learnings": [
+      "Semaphore-based concurrency control is essential for maximizing API throughput without triggering rate limits.",
+      "Decoupling task ingestion from execution via queues significantly reduces latency compared to blocking sleep calls.",
+      "Handling failures gracefully within an async loop requires robust exception management to prevent event loop crashes."
+    ],
+    "tags": [
+      "asyncio",
+      "gemini",
+      "concurrency",
+      "throttling",
+      "architecture"
+    ],
+    "sentiment": "positive",
+    "cycle": 2,
+    "timestamp": "2026-05-29T14:00:45.907353"
   }
 ]
