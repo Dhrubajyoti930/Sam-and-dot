@@ -19,6 +19,7 @@ import json
 import time
 import datetime
 import logging
+import logging.handlers
 import subprocess
 import traceback
 from pathlib import Path
@@ -43,7 +44,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler(BAG / "sam.log", mode="a"),
+        logging.handlers.RotatingFileHandler(BAG / "sam.log", maxBytes=500_000, backupCount=3),
     ],
 )
 log = logging.getLogger("sam")
