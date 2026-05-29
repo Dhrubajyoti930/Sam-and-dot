@@ -135,6 +135,10 @@ def ask_gemini(prompt: str, retries: int = 2) -> str:
                 wait = _CALL_DELAY * (2 ** attempt)
                 log.warning(f"Gemini transient error (attempt {attempt+1}): {e}. Retrying in {wait}s.")
                 time.sleep(wait)
+            elif "404" in err:
+                log.critical("MODEL STRING MAY BE DEPRECATED — owner intervention required.")
+                _alert_dot("Gemini returned 404. The model string may be deprecated. Owner must update MODEL in sam.py and bag/dot.py.")
+                return f"[Gemini error: model not found]"
             else:
                 log.error(f"Gemini call failed (non-retryable): {e}")
                 return f"[Gemini error: {e}]"
@@ -330,8 +334,8 @@ def phase_iv_synthesis(market_data: str, skill: str) -> str:
         f"You are Sam, an autonomous developer who continuously improves himself.\n\n"
         f"Character:\n{personality}\n\n"
         f"Market signals this cycle:\n{market_data}\n\n"
-        f"Skill learned this cycle:\n{skill[:400]}\n\n"
-        f"Current architecture overview:\n{who_i_am[:2000]}\n\n"
+        f"Skill learned this cycle:\n{skill}\n\n"
+        f"Current architecture overview:\n{who_i_am}\n\n"
         f"Propose ONE concrete, implementable development idea for today. "
         f"Format as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk.\n"
         f"Be critical — question the idea yourself before committing to it."
@@ -398,9 +402,9 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
     _sleep()
     metric_prompt = (
         f"You are Sam. This cycle you:\n"
-        f"- Learned: {skill[:300]}\n"
-        f"- Developed: {idea[:200]}\n"
-        f"- Evolved: {evolution[:200]}\n\n"
+        f"- Learned: {skill}\n"
+        f"- Developed: {idea}\n"
+        f"- Evolved: {evolution}\n\n"
         f"Name ONE specific, honest 1%-growth metric for this cycle. "
         f"It must be precise and reflect what actually happened — not a generic phrase. "
         f"Reply with the metric name only. No explanation. Max 12 words."
@@ -411,9 +415,9 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
     entry = {
         "cycle":       cycle_num,
         "timestamp":   ts,
-        "skill":       skill[:200],
-        "idea":        idea[:200],
-        "evolution":   evolution[:200],
+        "skill":       skill,
+        "idea":        idea,
+        "evolution":   evolution,
         "1pct_metric": one_pct_metric,
     }
 
@@ -472,7 +476,7 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
         f"  - 'key_learnings': list of 2-3 strings\n"
         f"  - 'tags': list of relevant lowercase tags\n"
         f"  - 'sentiment': one of 'positive', 'neutral', 'mixed', 'negative'\n\n"
-        f"Cycle data:\nSkill: {skill[:200]}\nIdea: {idea[:200]}\nMetric: {one_pct_metric}"
+        f"Cycle data:\nSkill: {skill}\nIdea: {idea}\nMetric: {one_pct_metric}"
     )
     raw_exp = ask_gemini(exp_prompt)
     try:
@@ -486,7 +490,7 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
             "cycle":         cycle_num,
             "timestamp":     ts,
             "category":      "uncategorised",
-            "summary":       skill[:150],
+            "summary":       skill,
             "key_learnings": [],
             "tags":          [],
             "sentiment":     "neutral",
@@ -517,7 +521,7 @@ def maybe_write_email_request(idea: str, goals: dict):
     _sleep()
     decision_prompt = (
         f"You are Sam, an autonomous developer agent. You completed cycle {cycle_num}.\n"
-        f"Today's idea:\n{idea[:500]}\n\n"
+        f"Today's idea:\n{idea}\n\n"
         f"Decide: Is there a specific tech company, open-source maintainer, or indie developer "
         f"it would be genuinely valuable to reach out to about this idea or to learn from? "
         f"Reply ONLY with a JSON object:\n"
@@ -544,7 +548,7 @@ def maybe_write_email_request(idea: str, goals: dict):
         "intent":             decision.get("intent", ""),
         "target_description": decision.get("target_description", ""),
         "tone":               decision.get("tone", "professional"),
-        "context":            idea[:600],
+        "context":            idea,
         "submitted_at":       datetime.datetime.utcnow().isoformat(),
         "cycle":              cycle_num,
     }
