@@ -76,6 +76,10 @@ def ask_gemini(prompt: str, retries: int = 3) -> str:
                 wait = _CALL_DELAY * (2 ** attempt)
                 log.warning(f"Gemini transient error (attempt {attempt+1}): {e}. Retrying in {wait}s.")
                 time.sleep(wait)
+            elif "404" in err:
+                log.critical("MODEL STRING MAY BE DEPRECATED — owner intervention required.")
+                _alert_dot("Gemini returned 404. The model string may be deprecated. Owner must update MODEL in sam.py and bag/dot.py.")
+                return f"[Gemini error: model not found]"
             else:
                 log.error(f"Dot's Gemini call failed (non-retryable): {e}")
                 return f"[Gemini error: {e}]"
@@ -484,9 +488,10 @@ def sunday_inbox_check() -> str:
             else:
                 body = msg.get_payload(decode=True).decode(errors="replace")
 
-            summaries.append(
-                f"From: {sender}\nSubject: {subject}\nDate: {date}\nBody snippet: {body[:300]}"
-            )
+            if any(x in sender.lower() for x in ["mailer-daemon", "postmaster", "undeliverable"]):
+                summaries.append(f"⚠️ BOUNCE: {subject} — {sender}")
+            else:
+                summaries.append(f"From: {sender}\nSubject: {subject}\nDate: {date}\nBody snippet: {body}")
 
         mail.logout()
 
