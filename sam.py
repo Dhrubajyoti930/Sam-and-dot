@@ -60,7 +60,7 @@ MODEL = "gemini-3.5-flash"
 
 # ── Rate limiting ─────────────────────────────────────────────────────────────
 # Small pause between sequential Gemini calls to stay within RPM limits.
-_CALL_DELAY = 5   # seconds
+_CALL_DELAY = 8   # seconds
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
