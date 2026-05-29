@@ -254,7 +254,7 @@ def apply_self_modification(plan: str) -> bool:
     log.info("── Self-Modification: Parsing Surgical Patch ──")
 
     # Hard-coded forbidden files — never writable by Sam
-    FORBIDDEN = {"wisdom.txt", "motion.md", "SAM_PERSONALITY.md"}
+    FORBIDDEN = {"wisdom.txt", "motion.md", "SAM_PERSONALITY.md", "dot.py"}
 
     prompt = (
         f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
