@@ -462,6 +462,7 @@ def phase_v_development(idea: str, goals: dict) -> str:
     who_i_am    = load_who_i_am()
     personality = load_personality()
     sam_src     = Path(__file__).read_text()
+    tests_src = TESTS.read_text() if TESTS.exists() else "(tests.py not found)"
 
     _sleep()
     prompt = (
@@ -470,6 +471,7 @@ def phase_v_development(idea: str, goals: dict) -> str:
         f"Dot's guidance (motion.md — read carefully):\n{motion_content}\n\n"
         f"Today's development idea:\n{idea}\n\n"
         f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
+        f"Sam's current bag/tests.py (full source):\n```python\n{tests_src}\n```\n\n"
         f"Produce a surgical patch plan for Sam to apply. Rules:\n"
         f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
         f"  2. Prefer adding new functions to bag/ files over editing sam.py's core loop.\n"
@@ -481,6 +483,7 @@ def phase_v_development(idea: str, goals: dict) -> str:
         f"  4. Flag any security or stability risks before listing changes.\n"
         f"  5. If the idea requires no code change this cycle, say so explicitly.\n\n"
         f"Do NOT supply full file contents. Surgical diffs only."
+      
     )
     plan = ask_gemini(prompt)
     log.info("Phase V complete.")
