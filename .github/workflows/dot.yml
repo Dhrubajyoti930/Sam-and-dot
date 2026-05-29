@@ -34,6 +34,7 @@ jobs:
           GEM_KEY_DOT: ${{ secrets.GEM_KEY_DOT }}
           EMAIL:       ${{ secrets.EMAIL }}
           APP_PSWD:    ${{ secrets.APP_PSWD }}
+          OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
         run: python bag/dot.py
 
       - name: Commit Dot's outputs
