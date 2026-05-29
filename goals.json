@@ -5,6 +5,16 @@
   "next_objectives": [
     "vector memory compression techniques",
     "async Gemini batching patterns",
-    "GitHub Actions matrix optimisation"
+    "GitHub Actions matrix optimisation",
+    "semantic caching",
+    "retrieval-augmented generation (RAG)",
+    "semantic versioning automation",
+    "uvicorn + FastAPI async patterns",
+    "self-consistency sampling",
+    "grounding with external knowledge",
+    "Python 3.12 performance improvements",
+    "Python asyncio event loop internals",
+    "LLM hallucination mitigation",
+    "chain-of-thought prompting"
   ]
 }
