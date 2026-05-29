@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install google-genai
+          pip install --upgrade google-genai
 
       - name: Run Dot's daily watchdog review
         env:
