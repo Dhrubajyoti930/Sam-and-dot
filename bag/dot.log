@@ -106,3 +106,18 @@ Please retry in 58.945395755s. [links {
 2026-05-28 17:27:17,565 [DOT][INFO] Bag excavation complete.
 2026-05-28 17:27:17,566 [DOT][INFO] motion.md written.
 2026-05-28 17:27:17,566 [DOT][INFO] Dot's daily run complete.
+2026-05-29 00:15:45,400 [DOT][INFO] ═══════════════════════════════════
+2026-05-29 00:15:45,400 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-05-29 00:15:45,401 [DOT][INFO] ═══════════════════════════════════
+2026-05-29 00:15:45,401 [DOT][INFO] ── Wisdom Check ──
+2026-05-29 00:15:45,401 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-29 00:15:46,089 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-05-29 00:15:46,090 [DOT][ERROR] Dot's Gemini call failed: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-05-29 00:15:46,090 [DOT][INFO] Wisdom check complete.
+2026-05-29 00:15:46,090 [DOT][INFO] ── Bag Excavation ──
+2026-05-29 00:15:46,091 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-29 00:15:46,633 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-05-29 00:15:46,634 [DOT][ERROR] Dot's Gemini call failed: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-05-29 00:15:46,634 [DOT][INFO] Bag excavation complete.
+2026-05-29 00:15:46,635 [DOT][INFO] motion.md written.
+2026-05-29 00:15:46,635 [DOT][INFO] Dot's daily run complete.
