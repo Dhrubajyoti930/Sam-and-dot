@@ -39,9 +39,11 @@ jobs:
 
       - name: Commit Dot's outputs
         run: |
-          git pull --rebase origin main
           git config user.name  "Dot [bot]"
           git config user.email "dot-bot@users.noreply.github.com"
+          git stash --include-untracked
+          git pull --rebase origin main
+          git stash pop
           git add bag/motion.md bag/dot.log bag/experiences.json bag/sent_emails.json bag/request.json bag/
           git diff --cached --quiet || git commit -m "chore(dot): daily watchdog report [skip ci]"
           git push
