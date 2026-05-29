@@ -153,6 +153,11 @@ def snapshot_sam() -> Path:
     dest = ROLLBACK_REG / f"sam_{ts}.py"
     dest.write_text(Path(__file__).read_text())
     log.info(f"Snapshot saved → {dest.name}")
+    # ── Prune old snapshots — keep only the 20 most recent ──
+    snapshots = sorted(ROLLBACK_REG.glob("sam_*.py"), reverse=True)
+    for old in snapshots[20:]:
+        old.unlink()
+        log.info(f"Pruned old snapshot → {old.name}")
     return dest
 
 
@@ -581,7 +586,7 @@ def run_cycle():
             _alert_dot(
                 "Self-modification failed the post-apply syntax check. "
                 "Rolled back to previous snapshot. Plan that caused failure:\n\n"
-                f"```\n{plan[:800]}\n```"
+                f"```\n{plan}\n```"
             )
 
     # Phase VI — prompt evolution
