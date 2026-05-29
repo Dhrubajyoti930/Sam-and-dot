@@ -55,7 +55,7 @@ if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_DOT secret is not set.")
 CLIENT = genai.Client(api_key=GEM_KEY)
 
-MODEL = "gemini-3.5-flash"
+MODEL = "gemini-3.1-flash-lite"
 
 _CALL_DELAY = 8  # seconds between Gemini calls
 
