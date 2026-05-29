@@ -38,6 +38,7 @@ jobs:
 
       - name: Commit Dot's outputs
         run: |
+          git pull --rebase origin main
           git config user.name  "Dot [bot]"
           git config user.email "dot-bot@users.noreply.github.com"
           git add bag/motion.md bag/dot.log bag/experiences.json bag/sent_emails.json bag/request.json bag/
