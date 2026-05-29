@@ -542,6 +542,11 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
         "GitHub Actions matrix optimisation",
     ]
 
+    # Append today's idea heading to next_objectives
+    idea_heading = idea.strip().splitlines()[0].lstrip("#").strip()
+    if idea_heading:
+        goals["next_objectives"].append(f"{idea_heading} - with cutting edge research.")
+
     save_goals(goals)
 
     # ── Update WHO_I_AM.md with real sam.py content + current goals ──────────
