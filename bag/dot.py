@@ -34,6 +34,7 @@ SAM_PY      = ROOT / "sam.py"
 EXPERIENCES = BAG  / "experiences.json"
 REQUEST     = BAG  / "request.json"
 SENT_LOG    = BAG  / "sent_emails.json"
+OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "")
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -581,3 +582,9 @@ def run():
 
 if __name__ == "__main__":
     run()
+    from bag.emailer import send_html_email
+    send_html_email(
+      to_address=OWNER_EMAIL,
+      subject=f"Dot's Daily Report — {datetime.date.today()}",
+      html_body=f"<pre>{MOTION.read_text()}</pre>",
+    )
