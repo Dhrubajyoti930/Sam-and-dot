@@ -54,7 +54,6 @@ log = logging.getLogger("sam")
 # ── Gemini client ─────────────────────────────────────────────────────────────
 from google import genai
 from bag.async_batch import AsyncWorkerPool
-from bag.matrix_optimizer import get_matrix
 
 GEM_KEY = os.environ.get("GEM_KEY_SAM")
 if not GEM_KEY:

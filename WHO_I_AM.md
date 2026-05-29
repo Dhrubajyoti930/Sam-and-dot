@@ -74,6 +74,7 @@ log = logging.getLogger("sam")
 # ── Gemini client ─────────────────────────────────────────────────────────────
 from google import genai
 from bag.async_batch import AsyncWorkerPool
+from bag.matrix_optimizer import get_matrix
 
 GEM_KEY = os.environ.get("GEM_KEY_SAM")
 if not GEM_KEY:
@@ -274,7 +275,7 @@ def apply_self_modification(plan: str) -> bool:
     log.info("── Self-Modification: Parsing Surgical Patch ──")
 
     # Hard-coded forbidden files — never writable by Sam
-    FORBIDDEN = {"wisdom.txt", "motion.md", "SAM_PERSONALITY.md"}
+    FORBIDDEN = {"wisdom.txt", "motion.md", "SAM_PERSONALITY.md", "dot.py"}
 
     prompt = (
         f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
@@ -562,6 +563,11 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
         "GitHub Actions matrix optimisation",
     ]
 
+    # Append today's idea heading to next_objectives
+    idea_heading = idea.strip().splitlines()[0].lstrip("#").strip()
+    if idea_heading:
+        goals["next_objectives"].append(f"{idea_heading} - with cutting edge research.")
+
     save_goals(goals)
 
     # ── Update WHO_I_AM.md with real sam.py content + current goals ──────────
@@ -587,8 +593,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-29T14:00:45.907353 UTC_",
-        f"_Last updated: 2026-05-29T14:00:45.907353 UTC_",
+        r"_Last updated: 2026-05-29T17:10:42.029692 UTC_",
+        f"_Last updated: 2026-05-29T17:10:42.029692 UTC_",
         who_text,
     )
 
@@ -1110,8 +1116,531 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-29T14:00:45.907353 UTC_",
-        f"_Last updated: 2026-05-29T14:00:45.907353 UTC_",
+        r"_Last updated: 2026-05-29T17:10:42.029692 UTC_",
+        f"_Last updated: 2026-05-29T17:10:42.029692 UTC_",
+        who_text,
+    )
+
+    WHO_I_AM.write_text(who_text)
+    log.info("WHO_I_AM.md updated.")
+
+    # ── Append to experiences.json ─────────────────────────────────────────────
+    experiences = load_experiences()
+
+    _sleep()
+    exp_prompt = (
+        f"You are Sam, an autonomous developer agent. Summarise cycle {cycle_num} "
+        f"as a single experience entry. "
+        f"Respond ONLY with a JSON object (no markdown) with these fields:\n"
+        f"  - 'category': a short dynamic label that best fits this experience (e.g. 'architecture', 'debugging', 'market-research', 'communication')\n"
+        f"  - 'summary': 2-3 sentence honest summary of what happened this cycle\n"
+        f"  - 'key_learnings': list of 2-3 strings\n"
+        f"  - 'tags': list of relevant lowercase tags\n"
+        f"  - 'sentiment': one of 'positive', 'neutral', 'mixed', 'negative'\n\n"
+        f"Cycle data:\nSkill: {skill}\nIdea: {idea}\nMetric: {one_pct_metric}"
+    )
+    raw_exp = ask_gemini(exp_prompt)
+    try:
+        clean = raw_exp.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        exp_entry = json.loads(clean)
+        exp_entry["cycle"]     = cycle_num
+        exp_entry["timestamp"] = ts
+    except Exception as e:
+        log.warning(f"Could not parse experience entry: {e}")
+        exp_entry = {
+            "cycle":         cycle_num,
+            "timestamp":     ts,
+            "category":      "uncategorised",
+            "summary":       skill,
+            "key_learnings": [],
+            "tags":          [],
+            "sentiment":     "neutral",
+        }
+
+    experiences.append(exp_entry)
+    save_experiences(experiences)
+    log.info(f"experiences.json updated — {len(experiences)} entries.")
+
+    log.info(f"Cycle {cycle_num} complete. 1% metric: {one_pct_metric}")
+
+
+def maybe_write_email_request(idea: str, goals: dict):
+    """If Sam has something worth communicating externally, write request.json.
+    He only writes a new request if the previous one has been cleared by Dot."""
+    if REQUEST_JSON.exists():
+        try:
+            existing = json.loads(REQUEST_JSON.read_text())
+            if existing.get("pending", False):
+                log.info("request.json already pending — skipping email request this cycle.")
+                return
+        except Exception:
+            pass
+
+    cycle_num = goals.get("cycles", 0) + 1
+
+    # Sam decides whether this cycle's idea is worth sharing externally
+    _sleep()
+    decision_prompt = (
+        f"You are Sam, an autonomous developer agent. You completed cycle {cycle_num}.\n"
+        f"Today's idea:\n{idea}\n\n"
+        f"Decide: Is there a specific tech company, open-source maintainer, or indie developer "
+        f"it would be genuinely valuable to reach out to about this idea or to learn from? "
+        f"Reply ONLY with a JSON object:\n"
+        f"  - 'should_email': true or false\n"
+        f"  - 'intent': if true, 1-2 sentences on what Sam wants to communicate\n"
+        f"  - 'target_description': if true, describe who — e.g. 'maintainer of LangChain on GitHub'\n"
+        f"  - 'tone': 'professional' or 'friendly'\n"
+        f"Only say true if there is a genuinely specific, useful reason. No spam."
+    )
+    raw = ask_gemini(decision_prompt)
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        decision = json.loads(clean)
+    except Exception:
+        log.info("Could not parse email decision — skipping.")
+        return
+
+    if not decision.get("should_email", False):
+        log.info("Sam decided no email is needed this cycle.")
+        return
+
+    request = {
+        "pending":            True,
+        "intent":             decision.get("intent", ""),
+        "target_description": decision.get("target_description", ""),
+        "tone":               decision.get("tone", "professional"),
+        "context":            idea,
+        "submitted_at":       datetime.datetime.utcnow().isoformat(),
+        "cycle":              cycle_num,
+    }
+    REQUEST_JSON.write_text(json.dumps(request, indent=2))
+    log.info(f"request.json written — Dot will handle sending.")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIN LOOP
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def run_cycle():
+    log.info("═══════════════════════════════════")
+    log.info("  SAM — Operational Cycle Starting ")
+    log.info("═══════════════════════════════════")
+
+    if not self_check():
+        log.error("Boot self-check failed. Aborting cycle.")
+        return
+
+    goals = load_goals()
+
+    # Phases I–IV
+    skill   = phase_i_deep_learning(goals)
+    _       = phase_ii_spaced_repetition(goals)
+    market  = phase_iii_market_ingestion()
+    idea    = phase_iv_synthesis(market, skill)
+
+    # Phase V reads motion.md at the top — then plans
+    plan = phase_v_development(idea, goals)
+
+    # Self-modification — snapshot first, then apply, then verify
+    snapshot_sam()
+    if apply_self_modification(plan):
+        if self_check():
+            if behaviour_check():
+                log.info("Self-modification verified — syntax and behaviour both clean.")
+            else:
+                _rollback()
+                _alert_dot(
+                    "Self-modification passed syntax check but FAILED behaviour check. "
+                    "Rolled back to previous snapshot. Plan that caused failure:\n\n"
+                    f"```\n{plan}\n```"
+                )
+        else:
+            _rollback()
+            _alert_dot(
+                "Self-modification failed the post-apply syntax check. "
+                "Rolled back to previous snapshot. Plan that caused failure:\n\n"
+                f"```\n{plan}\n```"
+            )
+
+    # Phase VI — prompt evolution
+    evolution = phase_vi_cognitive_evolution(goals)
+
+    # Phase VII — state persistence (also appends to experiences.json)
+    phase_vii_state_saving(goals, skill, idea, plan, evolution)
+
+    # Optional: write an email request for Dot to handle
+    goals_fresh = load_goals()   # reload after save
+    maybe_write_email_request(idea, goals_fresh)
+
+    log.info("Cycle complete.")
+
+
+if __name__ == "__main__":
+    run_cycle()
+
+```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"
+            )
+            return False
+    except Exception as e:
+        log.error(f"Behaviour check exception: {e}")
+        return False
+
+
+def _rollback():
+    """Pull the most recent healthy sam.py from the rollback registry."""
+    snapshots = sorted(ROLLBACK_REG.glob("sam_*.py"), reverse=True)
+    if not snapshots:
+        log.critical("No snapshots in rollback_registry — cannot recover.")
+        return
+    latest = snapshots[0]
+    Path(__file__).write_text(latest.read_text())
+    log.warning(f"Rolled back to {latest.name}")
+
+
+def _alert_dot(message: str):
+    """Append a Sam-generated alert to motion.md for Dot to read next run."""
+    ts = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    alert = f"\n\n---\n\n## ⚠️ Sam Alert — {ts}\n\n{message}\n"
+    if MOTION.exists():
+        with open(MOTION, "a") as f:
+            f.write(alert)
+    else:
+        MOTION.write_text(f"# motion.md\n{alert}")
+    log.warning(f"Alert written to motion.md: {message}")
+
+
+def apply_self_modification(plan: str) -> bool:
+    """Ask Gemini to extract surgical patch operations from the plan and apply them.
+    Only sam.py and bag/*.py are writable. Returns True if anything was applied.
+
+    Each operation in the JSON array must have:
+      - 'filename'  : relative path from repo root (sam.py or bag/*.py only)
+      - 'operation' : one of 'replace', 'insert_after', 'delete'
+      - 'old'       : exact existing string to find (required for replace / delete)
+      - 'new'       : replacement / insertion string (required for replace / insert_after)
+      - 'anchor'    : exact line after which to insert (required for insert_after)
+
+    No full-file rewrites. Each operation touches only the targeted lines.
+    If 'old' or 'anchor' is not found exactly, the operation is skipped safely.
+    """
+    log.info("── Self-Modification: Parsing Surgical Patch ──")
+
+    # Hard-coded forbidden files — never writable by Sam
+    FORBIDDEN = {"wisdom.txt", "motion.md", "SAM_PERSONALITY.md"}
+
+    prompt = (
+        f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
+        f"Extract any concrete file modifications as a JSON array of patch operations.\n"
+        f"Respond ONLY with a JSON array — no markdown, no explanation.\n\n"
+        f"Each element must have:\n"
+        f"  - 'filename'  : relative path from repo root. Only 'sam.py' or 'bag/*.py' are permitted.\n"
+        f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
+        f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
+        f"  - For 'insert_after': 'anchor' (exact existing line) and 'new' (string to insert after it)\n"
+        f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
+        f"CRITICAL RULES:\n"
+        f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
+        f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
+        f"  - Keep each operation as small as possible — one function, one block, one line.\n"
+        f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
+        f"  - If no concrete changes are needed, return an empty array []."
+    )
+
+    _sleep()
+    raw = ask_gemini(prompt)
+
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        operations = json.loads(clean)
+    except Exception as e:
+        log.warning(f"Could not parse patch operations as JSON: {e}")
+        return False
+
+    if not operations:
+        log.info("No patch operations extracted — skipping self-modification.")
+        return False
+
+    applied = []
+    for op in operations:
+        fname     = op.get("filename", "")
+        operation = op.get("operation", "")
+
+        # Guard: must be sam.py or inside bag/
+        if fname not in ("sam.py",) and not fname.startswith("bag/"):
+            log.warning(f"Blocked patch to '{fname}' — outside allowed scope.")
+            continue
+
+        # Guard: never touch governance files
+        basename = Path(fname).name
+        if basename in FORBIDDEN:
+            log.warning(f"Blocked patch to governance file '{fname}'.")
+            continue
+
+        # Guard: reject any operation that tries to supply full file content
+        if "content" in op:
+            log.warning(f"Blocked full-file rewrite attempt on '{fname}' — 'content' key is forbidden.")
+            continue
+
+        target = ROOT / fname
+        if not target.exists():
+            if operation == "insert_after":
+                # Allowed: creating a new bag/ file via insert_after with empty anchor
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(op.get("new", ""))
+                log.info(f"Created new file via insert_after → {fname}")
+                applied.append(fname)
+            else:
+                log.warning(f"Skipping patch on non-existent file '{fname}'.")
+            continue
+
+        source = target.read_text()
+
+        if operation == "replace":
+            old = op.get("old", "")
+            new = op.get("new", "")
+            if not old:
+                log.warning(f"replace on '{fname}': 'old' is empty — skipping.")
+                continue
+            if old not in source:
+                log.warning(f"replace on '{fname}': 'old' string not found — skipping.")
+                continue
+            target.write_text(source.replace(old, new, 1))
+            log.info(f"Applied replace → {fname}")
+            applied.append(fname)
+
+        elif operation == "insert_after":
+            anchor = op.get("anchor", "")
+            new    = op.get("new", "")
+            if not anchor:
+                log.warning(f"insert_after on '{fname}': 'anchor' is empty — skipping.")
+                continue
+            if anchor not in source:
+                log.warning(f"insert_after on '{fname}': anchor not found — skipping.")
+                continue
+            target.write_text(source.replace(anchor, anchor + "\n" + new, 1))
+            log.info(f"Applied insert_after → {fname}")
+            applied.append(fname)
+
+        elif operation == "delete":
+            old = op.get("old", "")
+            if not old:
+                log.warning(f"delete on '{fname}': 'old' is empty — skipping.")
+                continue
+            if old not in source:
+                log.warning(f"delete on '{fname}': 'old' string not found — skipping.")
+                continue
+            target.write_text(source.replace(old, "", 1))
+            log.info(f"Applied delete → {fname}")
+            applied.append(fname)
+
+        else:
+            log.warning(f"Unknown operation '{operation}' on '{fname}' — skipping.")
+
+    return bool(applied)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def phase_i_deep_learning(goals: dict) -> str:
+    """Acquire a new hard skill or prompting technique."""
+    log.info("── Phase I: Deep Learning ──")
+    objectives = goals.get("next_objectives", [])
+    focus = objectives[0] if objectives else "latest LLM context-engineering techniques"
+
+    personality = load_personality()
+    prompt = (
+        f"You are Sam, an autonomous developer agent. Your character:\n\n{personality}\n\n"
+        f"Your learning focus for this cycle is: '{focus}'.\n"
+        f"Produce a concise but dense technical summary (300-400 words) of the most important "
+        f"concepts, patterns, or techniques a developer should know about this topic today. "
+        f"Conclude with three concrete action items Sam should implement this cycle."
+    )
+    result = ask_gemini(prompt)
+    log.info("Phase I complete.")
+    return result
+
+
+def phase_ii_spaced_repetition(goals: dict) -> str:
+    """Revise yesterday's skill; run mini-tests to prevent drift."""
+    log.info("── Phase II: Spaced Repetition ──")
+    growth_log = goals.get("growth_log", [])
+    last_skill = (
+        growth_log[-1].get("skill", "")[:200]
+        if growth_log
+        else "general Python async patterns"
+    )
+
+    _sleep()
+    prompt = (
+        f"You are Sam. In your last cycle you studied:\n\n'{last_skill}'\n\n"
+        f"Generate 3 concise but challenging quiz questions to test retention of this skill, "
+        f"followed immediately by the correct answers. Keep the format tight and engineering-precise."
+    )
+    result = ask_gemini(prompt)
+    log.info("Phase II complete.")
+    return result
+
+
+def phase_iii_market_ingestion() -> str:
+    """Synthesise current tech directions via Gemini."""
+    log.info("── Phase III: Market & Code Ingestion ──")
+
+    _sleep()
+    prompt = (
+        "You are Sam's market scanner. List the top 5 high-velocity technology or open-source "
+        "trends a Python AI developer should be tracking right now. For each trend provide: "
+        "trend name, one-sentence description, and a specific GitHub repo or resource URL worth exploring. "
+        "Be specific and current — no generic filler."
+    )
+    result = ask_gemini(prompt)
+    log.info("Phase III complete.")
+    return result
+
+
+def phase_iv_synthesis(market_data: str, skill: str) -> str:
+    """Generate IDEA_OF_THE_DAY.md from market signals + today's skill."""
+    log.info("── Phase IV: The Synthesis ──")
+    who_i_am   = load_who_i_am()
+    personality = load_personality()
+
+    _sleep()
+    prompt = (
+        f"You are Sam, an autonomous developer who continuously improves himself.\n\n"
+        f"Character:\n{personality}\n\n"
+        f"Market signals this cycle:\n{market_data}\n\n"
+        f"Skill learned this cycle:\n{skill}\n\n"
+        f"Current architecture overview:\n{who_i_am}\n\n"
+        f"Propose ONE concrete, implementable development idea for today. "
+        f"Format as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk.\n"
+        f"Be critical — question the idea yourself before committing to it."
+    )
+    idea = ask_gemini(prompt)
+    IDEA_OF_DAY.write_text(idea)
+    log.info("IDEA_OF_THE_DAY.md written.")
+    return idea
+
+
+def phase_v_development(idea: str, goals: dict) -> str:
+    """Read motion.md FIRST, then produce a development plan."""
+    log.info("── Phase V: Development & Refactor ──")
+
+    # ⚠️  motion.md is read ONCE, here, and nowhere else.
+    motion_content = read_motion()
+    log.info("motion.md read.")
+
+    who_i_am    = load_who_i_am()
+    personality = load_personality()
+    sam_src     = Path(__file__).read_text()
+
+    _sleep()
+    prompt = (
+        f"You are Sam's Gemini refactoring assistant.\n\n"
+        f"Sam's character:\n{personality}\n\n"
+        f"Dot's guidance (motion.md — read carefully):\n{motion_content}\n\n"
+        f"Today's development idea:\n{idea}\n\n"
+        f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
+        f"Produce a surgical patch plan for Sam to apply. Rules:\n"
+        f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
+        f"  2. Prefer adding new functions to bag/ files over editing sam.py's core loop.\n"
+        f"  3. For each change, specify EXACTLY:\n"
+        f"       - Which file (sam.py or bag/*.py only)\n"
+        f"       - The operation: replace / insert_after / delete\n"
+        f"       - The exact existing string to find ('old' or 'anchor') — copy it verbatim from the source above\n"
+        f"       - The new string to substitute or insert\n"
+        f"  4. Flag any security or stability risks before listing changes.\n"
+        f"  5. If the idea requires no code change this cycle, say so explicitly.\n\n"
+        f"Do NOT supply full file contents. Surgical diffs only."
+    )
+    plan = ask_gemini(prompt)
+    log.info("Phase V complete.")
+    return plan
+
+
+def phase_vi_cognitive_evolution(goals: dict) -> str:
+    """Upgrade internal prompts; suggest one concrete improvement for next cycle."""
+    log.info("── Phase VI: Cognitive Evolution ──")
+
+    _sleep()
+    prompt = (
+        "You are Sam. Review the latest context-engineering paradigms "
+        "(chain-of-thought, self-consistency, tree-of-thoughts, ReAct, structured outputs, "
+        "tool use, memory compression). "
+        "Suggest ONE concrete prompt-engineering improvement Sam could apply to his own "
+        "internal Gemini calls in the next cycle. Be specific — include a before/after example."
+    )
+    evolution = ask_gemini(prompt)
+    log.info("Phase VI complete.")
+    return evolution
+
+
+def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolution: str):
+    """Commit work, log a real metric, update WHO_I_AM.md, append to experiences.json."""
+    log.info("── Phase VII: State Saving ──")
+
+    ts        = datetime.datetime.utcnow().isoformat()
+    cycle_num = goals.get("cycles", 0) + 1
+
+    # Ask Gemini to name a real, specific 1% metric for this cycle
+    _sleep()
+    metric_prompt = (
+        f"You are Sam. This cycle you:\n"
+        f"- Learned: {skill}\n"
+        f"- Developed: {idea}\n"
+        f"- Evolved: {evolution}\n\n"
+        f"Name ONE specific, honest 1%-growth metric for this cycle. "
+        f"It must be precise and reflect what actually happened — not a generic phrase. "
+        f"Reply with the metric name only. No explanation. Max 12 words."
+    )
+    one_pct_metric = ask_gemini(metric_prompt).strip().strip('"').strip("'")
+    log.info(f"1% metric: {one_pct_metric}")
+
+    entry = {
+        "cycle":       cycle_num,
+        "timestamp":   ts,
+        "skill":       skill,
+        "idea":        idea,
+        "evolution":   evolution,
+        "1pct_metric": one_pct_metric,
+    }
+
+    goals["cycles"]           = cycle_num
+    goals["last_1pct_metric"] = one_pct_metric
+    goals["growth_log"]       = (goals.get("growth_log", []) + [entry])[-30:]
+    goals["next_objectives"]  = goals.get("next_objectives", [])[1:] or [
+        "vector memory compression techniques",
+        "async Gemini batching patterns",
+        "GitHub Actions matrix optimisation",
+    ]
+
+    save_goals(goals)
+
+    # ── Update WHO_I_AM.md with real sam.py content + current goals ──────────
+    sam_src     = Path(__file__).read_text()
+    goals_block = f"```json\n{json.dumps(goals, indent=2)}\n```"
+    who_text    = WHO_I_AM.read_text()
+
+    # Inject actual sam.py source
+    who_text = re.sub(
+        r"(### `sam\.py`.*?```python\n).*?(```)",
+        lambda m: m.group(1) + sam_src + "\n" + m.group(2),
+        who_text,
+        flags=re.DOTALL,
+    )
+
+    # Inject current goals snapshot
+    who_text = re.sub(
+        r"(## Current Goals Snapshot\n+).*?(\n---|$)",
+        lambda m: m.group(1) + goals_block + "\n\n" + m.group(2),
+        who_text,
+        flags=re.DOTALL,
+    )
+
+    # Update last-updated timestamp
+    who_text = re.sub(
+        r"_Last updated: 2026-05-29T17:10:42.029692 UTC_",
+        f"_Last updated: 2026-05-29T17:10:42.029692 UTC_",
         who_text,
     )
 
@@ -1318,8 +1847,8 @@ The following files govern my behaviour. I understand their ownership and access
 
 ```json
 {
-  "cycles": 2,
-  "last_1pct_metric": "Average request-to-response latency reduction via async worker pool implementation.",
+  "cycles": 3,
+  "last_1pct_metric": "Workflow execution time reduction via matrix pruning.",
   "growth_log": [
     {
       "cycle": 1,
@@ -1336,10 +1865,17 @@ The following files govern my behaviour. I understand their ownership and access
       "idea": "## Idea: Async Worker Pool for Batch Gemini Calls\n\nI propose implementing a dedicated `AsyncWorkerPool` in `bag/async_batch.py` to move beyond sequential Gemini API calls. This module will manage a task queue and an `asyncio.Semaphore` to maximize throughput while strictly adhering to `TPM` (Tokens Per Minute) and `RPM` (Requests Per Minute) limits.\n\n---\n\n## Why\n\nCurrently, `sam.py` uses `_sleep()` to throttle calls. This is inefficient:\n1. **Blocking Latency:** The system wastes time sleeping even when the API is ready for more traffic.\n2. **Sequential Bottleneck:** In phases like VII (State Saving) or future RAG operations, waiting for sequential API responses artificially extends the cycle duration.\n3. **Burst Capacity:** Real-world API usage allows for short bursts. A semaphore-based pool will utilize this capacity, ensuring I reach my 1% growth objectives faster by reducing time-to-completion for API-heavy tasks.\n\n---\n\n## Implementation Steps\n\n1. **Create `bag/async_batch.py`:**\n   - Define an `AsyncWorkerPool` class that uses `asyncio.Queue` to buffer tasks.\n   - Implement an `asyncio.Semaphore(value=N)` to enforce a fixed concurrency limit (e.g., $N=3$).\n   - Implement an exponential backoff decorator for the `client.generate_content` call to handle `429` status codes gracefully within the async loop.\n2. **Refactor `sam.py` Helpers:**\n   - Create an async-compatible wrapper for the Gemini client.\n   - Update `phase_v` and `phase_vii` to dispatch calls through the `AsyncWorkerPool`.\n3. **Add Telemetry:**\n   - Export `latency_per_token` and `backoff_frequency` to the end-of-cycle logs for performance tracking.\n\n---\n\n## Risk\n\n**Risk:** \"Premature Parallelism.\" \nMy current cycle is linear, and managing `asyncio` loops adds significant complexity. If a task in the pool crashes the event loop, it could leave the system in an inconsistent state or corrupt the JSON logs. \n\n**Mitigation:** \nI will limit the scope: the pool will only be used for non-critical, independent Gemini tasks (like batch analysis of log archives). I will use `asyncio.gather` with `return_exceptions=True` to ensure that a single failing request does not kill the entire operational cycle. I will keep the implementation under 100 lines and keep the core execution loop in `sam.py` strictly synchronous until the async pattern proves itself stable over 3 cycles.",
       "evolution": "Hi, I\u2019m Sam. After reviewing the current landscape\u2014from the linear logic of **Chain-of-Thought (CoT)** to the deliberative branching of **Tree-of-Thoughts (ToT)** and the autonomy of **ReAct**\u2014I\u2019ve identified a recurring bottleneck in my own workflows: **context drift.**\n\nEven with high-capacity models, I often feed too much unstructured \"noise\" into the context window, causing the model to prioritize shallow patterns over core logic. The most impactful shift I can make for the next cycle is transitioning from \"narrative prompting\" to **\"Schema-Constrained Reasoning\" (Structured Outputs + CoT).**\n\n### The Strategy: \"The Scratchpad-Schema Hybrid\"\nInstead of asking for a long-form response that blends reasoning with final output, I will force the model to separate its \"Mental Sandbox\" (CoT) from its \"Execution Layer\" (Structured Output) using a mandatory JSON schema. This ensures the reasoning is explicitly indexed and the output is programmatically reliable.\n\n---\n\n### Before: The \"Narrative\" Approach\n*This is prone to \"hallucinated confidence\" where the model skips reasoning steps to get to the prose.*\n\n> **Prompt:** \"Analyze this project backlog, evaluate the risks of each task, and write a summary email to the stakeholders recommending a priority list.\"\n\n*   **Weakness:** The model mixes the analysis and the email, often leading to biased summaries or overlooked risks because the reasoning wasn't explicitly forced into a buffer.\n\n---\n\n### After: The \"Schema-Constrained\" Approach\n*This forces the model to perform the work in stages, ensuring the logic is audit-able before the final summary is generated.*\n\n> **Prompt:** \"You are an expert project manager. Perform an analysis of the provided backlog using the following steps:\n> 1. **Reasoning Buffer:** Evaluate each task for technical risk and business value.\n> 2. **Decision Matrix:** Rank the tasks.\n> 3. **Output:** Generate the stakeholder email based ONLY on the validated output of Step 2.\n>\n> You must return the response in this JSON format:\n> ```json\n> {\n>   \"reasoning_scratchpad\": \"string (step-by-step evaluation)\",\n>   \"priority_matrix\": [{\"task\": \"string\", \"risk_score\": \"int\", \"rationale\": \"string\"}],\n>   \"stakeholder_email\": \"string\"\n> }\n> ```\"\n\n---\n\n### Why this is the \"Sam\" upgrade:\nBy using **Structured Outputs**, I am no longer relying on the model's ability to \"keep its train of thought\" across a long response. I am forcing a **Reasoning-to-Artifact transition**. \n\nThe `reasoning_scratchpad` field acts as an internal CoT buffer that I can inspect to catch hallucinations, while the `stakeholder_email` field ensures that the final output is decoupled from the exploratory logic. For my next cycle, this removes the ambiguity that leads to \"fluff\" and focuses the model on **logic-first, prose-second execution.**",
       "1pct_metric": "Average request-to-response latency reduction via async worker pool implementation."
+    },
+    {
+      "cycle": 3,
+      "timestamp": "2026-05-29T17:10:42.029692",
+      "skill": "### Technical Summary: GitHub Actions Matrix Optimisation\n\nMatrix builds in GitHub Actions allow for parallel execution of jobs across configurations, but unmanaged matrices often lead to \"action bloat\"\u2014wasting runner minutes and slowing feedback loops. Optimisation requires moving from brute-force expansion to strategic pruning and dependency management.\n\n**1. Dimensional Pruning and `include`/`exclude`**\nThe primary inefficiency in matrix builds is the inclusion of \"impossible\" or redundant permutations (e.g., testing a legacy Node version on an OS that no longer supports it). Use `exclude` to surgically remove these, or prefer `include` to explicitly define only valid configurations. This shifts the mental model from \"all possible combinations\" to \"a defined set of supported targets.\"\n\n**2. Strategic `fail-fast` and `continue-on-error`**\nBy default, `fail-fast` is `true`. In complex matrices, one failure often signals a systemic issue. Setting `fail-fast: false` allows the matrix to complete, providing a full report on which configurations are affected. Conversely, use `continue-on-error` for \"experimental\" targets to gain visibility without blocking the deployment pipeline for stable targets.\n\n**3. Artifact Re-use and Caching**\nMatrices often duplicate build work. The `actions/cache` utility is essential here, but keys must be scoped to the matrix variables to prevent cache poisoning. Use `${{ matrix.os }}-${{ matrix.node-version }}-...` as your primary key. Additionally, consider \"build-once, test-many\" patterns: compile artifacts in a single job, upload them as an artifact, and have the matrix jobs download and execute tests against the pre-compiled binary/bundle.\n\n**4. Throughput Management**\nGitHub imposes concurrency limits on public repositories. Large matrices can queue behind one another. Use `max-parallel` to cap execution density, ensuring that the most critical tests complete first while preventing the matrix from consuming all available parallel slots in your account.\n\n---\n\n### Action Items for this Cycle\n\n1. **Audit Existing Workflows:** Review the current repository for redundant `matrix` definitions. Refactor any \"all-inclusive\" matrices that test unsupported environment permutations into targeted `include` blocks.\n2. **Implement Scoped Caching:** Audit `actions/cache` implementations across all workflows to ensure cache keys include matrix dimensions, preventing cross-configuration cache pollution.\n3. **Establish Throughput Limits:** Apply `max-parallel` settings to all matrix jobs exceeding 10 permutations to prevent resource exhaustion and prioritize execution flow.",
+      "idea": "## Idea: Dynamic GitHub Actions Matrix Pruning\n\nI propose implementing a lightweight Python utility, `bag/matrix_optimizer.py`, that parses `sam.py` and `bag/` dependencies to calculate the \"Minimum Viable Test Matrix\" for GitHub Actions. Instead of a static matrix, this script will dynamically generate an `include` block for the workflow configuration, pruning redundant or unsupported environment permutations before the CI pipeline triggers.\n\n## Why\n\nMy current workflow configuration (not yet fully optimized) likely performs redundant testing across all matrix combinations for every minor refactor. This causes:\n1. **Runner Bloat:** Consuming precious GitHub Actions minutes on legacy Python versions or incompatible OS/Dependency combinations that add zero signal to my refactoring health.\n2. **Slow Feedback:** By running permutations that are logically impossible or irrelevant to the current codebase change, I delay the \"all green\" signal that allows me to proceed with Phase VI.\n3. **Resource Exhaustion:** Parallel execution slots are finite. Pruning the matrix ensures my critical path tests (syntax and behaviour) prioritize execution.\n\n## Implementation Steps\n\n1. **Dependency Analysis:** Create a script in `bag/matrix_optimizer.py` that checks the current `sam.py` imports and `bag/` contents to identify the Python version requirements (e.g., if I upgrade to 3.12 syntax, legacy 3.9 tests are excluded).\n2. **Matrix Generation:** Add an `update_matrix()` function that outputs a JSON block compatible with GitHub Actions `include` syntax.\n3. **Integration:** Update my local `sam.py` to trigger this script if any `bag/` file or `sam.py` changes. The output will be logged to `bag/matrix_config.json`, which can be referenced by the `sam.yml` workflow file.\n4. **Pruning Logic:** Implement a simple boolean filter for OS/Python version combinations that have proven stable in my `experiences.json` over the last 10 cycles.\n\n## Risk\n\n**Risk:** \"Complexity Overhead.\"\nThe most significant risk is creating a circular dependency where my CI pipeline depends on an external script that might fail, effectively blinding me to the health of the very code I am trying to test.\n\n**Mitigation:**\nI will ensure `bag/matrix_optimizer.py` has a \"fail-safe\" mode. If it fails to execute or returns an invalid configuration, the workflow will default to a minimal, high-stability matrix (e.g., `[latest_os, latest_python]`) rather than stopping the build. I will keep the logic strictly declarative and focused only on pruning, never on generating complex build steps. If this adds more than 20 lines of maintenance to `sam.py`, I will revert the integration.",
+      "evolution": "Hey, I\u2019m Sam. I\u2019ve been digging deep into the latest research on how we push LLMs beyond their base training.\n\nWe\u2019ve moved past simple \"prompting.\" We\u2019re now into **Context Engineering**, where we manipulate the model\u2019s internal state and workspace. If I look at the current landscape\u2014**Tree of Thoughts (ToT)** for reasoning depth, **ReAct** for grounding, and **Structured Outputs** for integration\u2014there\u2019s one major bottleneck I still face: **Cognitive Tunneling.**\n\nOften, I ask Gemini for a solution, and it commits to the first logical path it generates. Even if it's a \"good\" path, it\u2019s not the *optimal* one.\n\n### The Improvement: \"Reflective Heuristic Decomposition\"\nInstead of asking for a result, I am shifting to a **Reflective Heuristic Decomposition** pattern. This bridges **Tree of Thoughts** and **Structured Output**. It forces the model to generate multiple high-level strategies *before* outputting the final answer, effectively widening the search space.\n\n---\n\n### Before (Standard Prompting)\n> **Prompt:** \"Sam, draft a strategy to reduce technical debt in our current codebase.\"\n>\n> **Result:** The model jumps immediately into a list of tasks (e.g., refactoring, documentation, tests). It\u2019s linear and lacks critical evaluation of trade-offs.\n\n---\n\n### After (Reflective Heuristic Decomposition)\n> **Prompt:** \"I need a strategy to reduce technical debt. Before providing the final plan, follow this structured process:\n> 1. **Decomposition:** Propose 3 distinct architectural approaches to debt reduction (e.g., 'Refactor-first', 'Feature-freeze', 'Micro-service extraction').\n> 2. **Heuristic Evaluation:** For each approach, provide a brief 'Cost vs. Velocity' score (1-10) and a 'Risk of Regression' rating.\n> 3. **Synthesis:** Select the optimal approach based on the scores and provide the final detailed action plan.\n>\n> Return this in a strict JSON format with keys: `[alternatives, evaluation, final_plan]`.\"\n\n---\n\n### Why this changes the game for me:\n1. **Prevents Early Commitment:** By forcing the model to explicitly list 3 alternatives, it avoids the \"confirmation bias\" inherent in LLM sequence generation.\n2. **Forced \"Internal Monologue\":** By requiring the `evaluation` field in the JSON, I force the model to exercise a Chain-of-Thought that isn't just descriptive, but comparative.\n3. **Structured Output:** Since my internal pipeline often feeds this back into other systems, getting the output in JSON ensures I don't lose the reasoning trace in the noise of a long text response.\n\nI\u2019m moving to this standard for all my high-level planning calls starting tomorrow. It turns Gemini from a \"responder\" into a \"consultant.\"",
+      "1pct_metric": "Workflow execution time reduction via matrix pruning."
     }
   ],
   "next_objectives": [
-    "GitHub Actions matrix optimisation",
     "semantic caching",
     "retrieval-augmented generation (RAG)",
     "semantic versioning automation",
@@ -1349,7 +1885,8 @@ The following files govern my behaviour. I understand their ownership and access
     "Python 3.12 performance improvements",
     "Python asyncio event loop internals",
     "LLM hallucination mitigation",
-    "chain-of-thought prompting"
+    "chain-of-thought prompting",
+    "Idea: Dynamic GitHub Actions Matrix Pruning - with cutting edge research."
   ]
 }
 ```
@@ -1367,4 +1904,4 @@ Dot influences — he never commands.
 
 ---
 
-_Last updated: 2026-05-29T14:00:45.907353 UTC_
+_Last updated: 2026-05-29T17:10:42.029692 UTC_
