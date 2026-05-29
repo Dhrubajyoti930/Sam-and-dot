@@ -21,6 +21,7 @@ import imaplib
 import email as emaillib
 import datetime
 import logging
+import logging.handlers
 import traceback
 from pathlib import Path
 
@@ -40,7 +41,7 @@ logging.basicConfig(
     format="%(asctime)s [DOT][%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler(BAG / "dot.log", mode="a"),
+        logging.handlers.RotatingFileHandler(BAG / "dot.log", maxBytes=500_000, backupCount=3),
     ],
 )
 log = logging.getLogger("dot")
