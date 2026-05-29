@@ -236,21 +236,40 @@ def _alert_dot(message: str):
 
 
 def apply_self_modification(plan: str) -> bool:
-    """Ask Gemini to extract concrete file changes from the plan and apply them.
-    Only sam.py and bag/*.py are writable. Returns True if anything was applied."""
-    log.info("── Self-Modification: Parsing Plan ──")
+    """Ask Gemini to extract surgical patch operations from the plan and apply them.
+    Only sam.py and bag/*.py are writable. Returns True if anything was applied.
+
+    Each operation in the JSON array must have:
+      - 'filename'  : relative path from repo root (sam.py or bag/*.py only)
+      - 'operation' : one of 'replace', 'insert_after', 'delete'
+      - 'old'       : exact existing string to find (required for replace / delete)
+      - 'new'       : replacement / insertion string (required for replace / insert_after)
+      - 'anchor'    : exact line after which to insert (required for insert_after)
+
+    No full-file rewrites. Each operation touches only the targeted lines.
+    If 'old' or 'anchor' is not found exactly, the operation is skipped safely.
+    """
+    log.info("── Self-Modification: Parsing Surgical Patch ──")
 
     # Hard-coded forbidden files — never writable by Sam
     FORBIDDEN = {"wisdom.txt", "motion.md", "SAM_PERSONALITY.md"}
 
     prompt = (
-        f"You are Sam's code applicator. Below is a development plan:\n\n{plan}\n\n"
-        f"Extract any concrete file modifications. "
-        f"Respond ONLY with a JSON array — no markdown, no explanation. "
+        f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
+        f"Extract any concrete file modifications as a JSON array of patch operations.\n"
+        f"Respond ONLY with a JSON array — no markdown, no explanation.\n\n"
         f"Each element must have:\n"
-        f"  - 'filename': relative path from repo root (only sam.py or bag/*.py are permitted)\n"
-        f"  - 'content': the complete new file content as a string\n"
-        f"If no concrete changes are specified, return an empty array []."
+        f"  - 'filename'  : relative path from repo root. Only 'sam.py' or 'bag/*.py' are permitted.\n"
+        f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
+        f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
+        f"  - For 'insert_after': 'anchor' (exact existing line) and 'new' (string to insert after it)\n"
+        f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
+        f"CRITICAL RULES:\n"
+        f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
+        f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
+        f"  - Keep each operation as small as possible — one function, one block, one line.\n"
+        f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
+        f"  - If no concrete changes are needed, return an empty array []."
     )
 
     _sleep()
@@ -258,36 +277,90 @@ def apply_self_modification(plan: str) -> bool:
 
     try:
         clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-        changes = json.loads(clean)
+        operations = json.loads(clean)
     except Exception as e:
-        log.warning(f"Could not parse modification plan as JSON: {e}")
+        log.warning(f"Could not parse patch operations as JSON: {e}")
         return False
 
-    if not changes:
-        log.info("No concrete file changes extracted — skipping self-modification.")
+    if not operations:
+        log.info("No patch operations extracted — skipping self-modification.")
         return False
 
     applied = []
-    for change in changes:
-        fname   = change.get("filename", "")
-        content = change.get("content", "")
+    for op in operations:
+        fname     = op.get("filename", "")
+        operation = op.get("operation", "")
 
         # Guard: must be sam.py or inside bag/
         if fname not in ("sam.py",) and not fname.startswith("bag/"):
-            log.warning(f"Blocked write to '{fname}' — outside allowed scope.")
+            log.warning(f"Blocked patch to '{fname}' — outside allowed scope.")
             continue
 
-        # Guard: never overwrite governance files
+        # Guard: never touch governance files
         basename = Path(fname).name
         if basename in FORBIDDEN:
-            log.warning(f"Blocked write to governance file '{fname}'.")
+            log.warning(f"Blocked patch to governance file '{fname}'.")
+            continue
+
+        # Guard: reject any operation that tries to supply full file content
+        if "content" in op:
+            log.warning(f"Blocked full-file rewrite attempt on '{fname}' — 'content' key is forbidden.")
             continue
 
         target = ROOT / fname
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content)
-        log.info(f"Applied modification → {fname}")
-        applied.append(fname)
+        if not target.exists():
+            if operation == "insert_after":
+                # Allowed: creating a new bag/ file via insert_after with empty anchor
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(op.get("new", ""))
+                log.info(f"Created new file via insert_after → {fname}")
+                applied.append(fname)
+            else:
+                log.warning(f"Skipping patch on non-existent file '{fname}'.")
+            continue
+
+        source = target.read_text()
+
+        if operation == "replace":
+            old = op.get("old", "")
+            new = op.get("new", "")
+            if not old:
+                log.warning(f"replace on '{fname}': 'old' is empty — skipping.")
+                continue
+            if old not in source:
+                log.warning(f"replace on '{fname}': 'old' string not found — skipping.")
+                continue
+            target.write_text(source.replace(old, new, 1))
+            log.info(f"Applied replace → {fname}")
+            applied.append(fname)
+
+        elif operation == "insert_after":
+            anchor = op.get("anchor", "")
+            new    = op.get("new", "")
+            if not anchor:
+                log.warning(f"insert_after on '{fname}': 'anchor' is empty — skipping.")
+                continue
+            if anchor not in source:
+                log.warning(f"insert_after on '{fname}': anchor not found — skipping.")
+                continue
+            target.write_text(source.replace(anchor, anchor + "\n" + new, 1))
+            log.info(f"Applied insert_after → {fname}")
+            applied.append(fname)
+
+        elif operation == "delete":
+            old = op.get("old", "")
+            if not old:
+                log.warning(f"delete on '{fname}': 'old' is empty — skipping.")
+                continue
+            if old not in source:
+                log.warning(f"delete on '{fname}': 'old' string not found — skipping.")
+                continue
+            target.write_text(source.replace(old, "", 1))
+            log.info(f"Applied delete → {fname}")
+            applied.append(fname)
+
+        else:
+            log.warning(f"Unknown operation '{operation}' on '{fname}' — skipping.")
 
     return bool(applied)
 
@@ -394,9 +467,17 @@ def phase_v_development(idea: str, goals: dict) -> str:
         f"Dot's guidance (motion.md — read carefully):\n{motion_content}\n\n"
         f"Today's development idea:\n{idea}\n\n"
         f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
-        f"Provide a precise, minimal implementation plan Sam should apply. "
-        f"Flag any security or stability risks. Do NOT rewrite wholesale — propose targeted, "
-        f"surgical changes only. Prefer adding new functions in bag/ over touching sam.py's core loop."
+        f"Produce a surgical patch plan for Sam to apply. Rules:\n"
+        f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
+        f"  2. Prefer adding new functions to bag/ files over editing sam.py's core loop.\n"
+        f"  3. For each change, specify EXACTLY:\n"
+        f"       - Which file (sam.py or bag/*.py only)\n"
+        f"       - The operation: replace / insert_after / delete\n"
+        f"       - The exact existing string to find ('old' or 'anchor') — copy it verbatim from the source above\n"
+        f"       - The new string to substitute or insert\n"
+        f"  4. Flag any security or stability risks before listing changes.\n"
+        f"  5. If the idea requires no code change this cycle, say so explicitly.\n\n"
+        f"Do NOT supply full file contents. Surgical diffs only."
     )
     plan = ask_gemini(prompt)
     log.info("Phase V complete.")
