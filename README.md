@@ -44,7 +44,7 @@ Go to: **Settings → Secrets and variables → Actions → New repository secre
 | `GEM_KEY_SAM` | Gemini API key for Sam (his own Google AI project) |
 | `GEM_KEY_DOT` | Gemini API key for Dot (separate Google AI project) |
 | `EMAIL` | Gmail address Sam sends from |
-| `OWNER_EMAIL` | Gmail address Dot sends from (to owner)|
+| `OWNER_EMAIL` | Gmail address Dot sends motion.md to |
 | `APP_PSWD` | Gmail App Password (not your login password — generate at myaccount.google.com → Security → App passwords) |
 
 > Sam and Dot use **separate** Gemini projects intentionally. Each has its own quota.
