@@ -120,7 +120,7 @@ def save_experiences(data: list):
         json.dump(data, f, indent=2)
 
 
-def ask_gemini(prompt: str, retries: int = 3) -> str:
+def ask_gemini(prompt: str, retries: int = 2) -> str:
     """Send a prompt to Sam's Gemini instance. Retries on transient errors."""
     for attempt in range(retries):
         try:
