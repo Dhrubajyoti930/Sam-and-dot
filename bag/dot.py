@@ -55,7 +55,7 @@ CLIENT = genai.Client(api_key=GEM_KEY)
 
 MODEL = "gemini-3.5-flash"
 
-_CALL_DELAY = 5  # seconds between Gemini calls
+_CALL_DELAY = 8  # seconds between Gemini calls
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
