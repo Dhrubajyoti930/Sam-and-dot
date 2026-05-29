@@ -37,6 +37,7 @@ jobs:
 
       - name: Commit Sam's outputs
         run: |
+          git pull --rebase origin main
           git config user.name  "Sam [bot]"
           git config user.email "sam-bot@users.noreply.github.com"
           git add -A
