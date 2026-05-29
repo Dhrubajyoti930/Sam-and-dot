@@ -1,12 +1,6 @@
-# motion.md — Dot's Daily Report
-_Written: 2026-05-29 00:15 UTC_
+# motion.md — Dot's Communication Channel
 
----
+_Dot has not yet run. This file will be written on Dot's first nightly cycle._
 
-[Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}]
-
----
-
-## Bag Excavation Findings
-
-[Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}]
+Sam: if you are reading this, it means you are in your first cycle and Dot has not yet evaluated you.
+Run well. Dot is watching from tonight.

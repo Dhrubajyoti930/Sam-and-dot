@@ -1,6 +1,6 @@
 """
 sam.py — Central Intelligence Loop
-Project Sam: The Autonomous Developer Agent
+Project Sam-and-dot: The Autonomous Developer Agent
 
 Operational Lifecycle:
   Phase I   - Deep Learning
@@ -24,14 +24,18 @@ import traceback
 from pathlib import Path
 
 # ── Paths ────────────────────────────────────────────────────────────────────
-ROOT          = Path(__file__).parent.resolve()
-WHO_I_AM      = ROOT / "WHO_I_AM.md"
-GOALS         = ROOT / "goals.json"
-BAG           = ROOT / "bag"
-MOTION        = BAG  / "motion.md"
-ROLLBACK_REG  = BAG  / "rollback_registry"
-VECTOR_DB     = ROOT / "vector_db"
-IDEA_OF_DAY   = BAG  / "IDEA_OF_THE_DAY.md"
+ROOT            = Path(__file__).parent.resolve()
+WHO_I_AM        = ROOT / "WHO_I_AM.md"
+SAM_PERSONALITY = ROOT / "SAM_PERSONALITY.md"
+GOALS           = ROOT / "goals.json"
+BAG             = ROOT / "bag"
+MOTION          = BAG  / "motion.md"
+WISDOM          = BAG  / "wisdom.txt"
+ROLLBACK_REG    = BAG  / "rollback_registry"
+VECTOR_DB       = ROOT / "vector_db"
+IDEA_OF_DAY     = BAG  / "IDEA_OF_THE_DAY.md"
+EXPERIENCES     = BAG  / "experiences.json"
+REQUEST_JSON    = BAG  / "request.json"
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -52,6 +56,12 @@ if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_SAM secret is not set.")
 CLIENT = genai.Client(api_key=GEM_KEY)
 
+MODEL = "gemini-3.5-flash"
+
+# ── Rate limiting ─────────────────────────────────────────────────────────────
+# Small pause between sequential Gemini calls to stay within RPM limits.
+_CALL_DELAY = 5   # seconds
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # HELPERS
@@ -61,7 +71,16 @@ def load_goals() -> dict:
     if GOALS.exists():
         with open(GOALS) as f:
             return json.load(f)
-    return {"cycles": 0, "growth_log": [], "next_objectives": [], "last_1pct_metric": ""}
+    return {
+        "cycles": 0,
+        "growth_log": [],
+        "next_objectives": [
+            "vector memory compression techniques",
+            "async Gemini batching patterns",
+            "GitHub Actions matrix optimisation",
+        ],
+        "last_1pct_metric": "",
+    }
 
 
 def save_goals(data: dict):
@@ -76,6 +95,12 @@ def load_who_i_am() -> str:
     return "(WHO_I_AM.md not yet generated)"
 
 
+def load_personality() -> str:
+    if SAM_PERSONALITY.exists():
+        return SAM_PERSONALITY.read_text()
+    return "(SAM_PERSONALITY.md not found)"
+
+
 def read_motion() -> str:
     """Sam reads motion.md exactly once — at the top of Phase V."""
     if MOTION.exists():
@@ -83,17 +108,43 @@ def read_motion() -> str:
     return "(motion.md is empty — Dot has not yet written.)"
 
 
-def ask_gemini(prompt: str) -> str:
-    """Send a prompt to Sam's own Gemini instance and return the text response."""
-    try:
-        response = CLIENT.models.generate_content(
-            model="gemini-3.5-flash",
-            contents=prompt
-        )
-        return response.text.strip()
-    except Exception as e:
-        log.error(f"Gemini call failed: {e}")
-        return f"[Gemini error: {e}]"
+def load_experiences() -> list:
+    if EXPERIENCES.exists():
+        with open(EXPERIENCES) as f:
+            return json.load(f)
+    return []
+
+
+def save_experiences(data: list):
+    with open(EXPERIENCES, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+def ask_gemini(prompt: str, retries: int = 3) -> str:
+    """Send a prompt to Sam's Gemini instance. Retries on transient errors."""
+    for attempt in range(retries):
+        try:
+            response = CLIENT.models.generate_content(
+                model=MODEL,
+                contents=prompt,
+            )
+            return response.text.strip()
+        except Exception as e:
+            err = str(e)
+            if "429" in err or "503" in err or "UNAVAILABLE" in err or "RESOURCE_EXHAUSTED" in err:
+                wait = _CALL_DELAY * (2 ** attempt)
+                log.warning(f"Gemini transient error (attempt {attempt+1}): {e}. Retrying in {wait}s.")
+                time.sleep(wait)
+            else:
+                log.error(f"Gemini call failed (non-retryable): {e}")
+                return f"[Gemini error: {e}]"
+    log.error("Gemini call failed after all retries.")
+    return "[Gemini error: exhausted retries]"
+
+
+def _sleep():
+    """Pause between Gemini calls to respect RPM limits."""
+    time.sleep(_CALL_DELAY)
 
 
 def snapshot_sam() -> Path:
@@ -109,8 +160,9 @@ def self_check() -> bool:
     """Boot-time integrity check. Returns True if healthy, triggers rollback if not."""
     try:
         result = subprocess.run(
-            [sys.executable, "-c", f"import py_compile; py_compile.compile('{__file__}', doraise=True)"],
-            capture_output=True, text=True, timeout=10
+            [sys.executable, "-c",
+             f"import py_compile; py_compile.compile('{__file__}', doraise=True)"],
+            capture_output=True, text=True, timeout=10,
         )
         if result.returncode != 0:
             log.error("Syntax check failed — initiating rollback.")
@@ -144,12 +196,14 @@ def _alert_dot(message: str):
         MOTION.write_text(f"# motion.md\n{alert}")
     log.warning(f"Alert written to motion.md: {message}")
 
+
 def apply_self_modification(plan: str) -> bool:
     """Ask Gemini to extract concrete file changes from the plan and apply them.
     Only sam.py and bag/*.py are writable. Returns True if anything was applied."""
     log.info("── Self-Modification: Parsing Plan ──")
 
-    allowed_prefixes = ("sam.py", "bag/")
+    # Hard-coded forbidden files — never writable by Sam
+    FORBIDDEN = {"wisdom.txt", "motion.md", "SAM_PERSONALITY.md"}
 
     prompt = (
         f"You are Sam's code applicator. Below is a development plan:\n\n{plan}\n\n"
@@ -161,6 +215,7 @@ def apply_self_modification(plan: str) -> bool:
         f"If no concrete changes are specified, return an empty array []."
     )
 
+    _sleep()
     raw = ask_gemini(prompt)
 
     try:
@@ -179,8 +234,15 @@ def apply_self_modification(plan: str) -> bool:
         fname   = change.get("filename", "")
         content = change.get("content", "")
 
-        if not any(fname == p or fname.startswith("bag/") for p in allowed_prefixes):
+        # Guard: must be sam.py or inside bag/
+        if fname not in ("sam.py",) and not fname.startswith("bag/"):
             log.warning(f"Blocked write to '{fname}' — outside allowed scope.")
+            continue
+
+        # Guard: never overwrite governance files
+        basename = Path(fname).name
+        if basename in FORBIDDEN:
+            log.warning(f"Blocked write to governance file '{fname}'.")
             continue
 
         target = ROOT / fname
@@ -190,6 +252,7 @@ def apply_self_modification(plan: str) -> bool:
         applied.append(fname)
 
     return bool(applied)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PHASES
@@ -201,12 +264,13 @@ def phase_i_deep_learning(goals: dict) -> str:
     objectives = goals.get("next_objectives", [])
     focus = objectives[0] if objectives else "latest LLM context-engineering techniques"
 
+    personality = load_personality()
     prompt = (
-        f"You are Sam, an autonomous developer agent. "
-        f"Your learning focus for this cycle is: '{focus}'. "
+        f"You are Sam, an autonomous developer agent. Your character:\n\n{personality}\n\n"
+        f"Your learning focus for this cycle is: '{focus}'.\n"
         f"Produce a concise but dense technical summary (300-400 words) of the most important "
         f"concepts, patterns, or techniques a developer should know about this topic today. "
-        f"Conclude with three concrete action items Sam should implement."
+        f"Conclude with three concrete action items Sam should implement this cycle."
     )
     result = ask_gemini(prompt)
     log.info("Phase I complete.")
@@ -214,15 +278,20 @@ def phase_i_deep_learning(goals: dict) -> str:
 
 
 def phase_ii_spaced_repetition(goals: dict) -> str:
-    """Revise yesterday's skill; run mini-tests to prevent model drift."""
+    """Revise yesterday's skill; run mini-tests to prevent drift."""
     log.info("── Phase II: Spaced Repetition ──")
     growth_log = goals.get("growth_log", [])
-    last_skill = growth_log[-1].get("skill", "general Python async patterns") if growth_log else "general Python async patterns"
+    last_skill = (
+        growth_log[-1].get("skill", "")[:200]
+        if growth_log
+        else "general Python async patterns"
+    )
 
+    _sleep()
     prompt = (
-        f"You are Sam. Yesterday you studied: '{last_skill}'. "
+        f"You are Sam. In your last cycle you studied:\n\n'{last_skill}'\n\n"
         f"Generate 3 concise but challenging quiz questions to test retention of this skill, "
-        f"followed immediately by the correct answers. Keep the format tight."
+        f"followed immediately by the correct answers. Keep the format tight and engineering-precise."
     )
     result = ask_gemini(prompt)
     log.info("Phase II complete.")
@@ -230,53 +299,66 @@ def phase_ii_spaced_repetition(goals: dict) -> str:
 
 
 def phase_iii_market_ingestion() -> str:
-    """Scrape trends; in CI we simulate with a Gemini synthesis of current tech directions."""
+    """Synthesise current tech directions via Gemini."""
     log.info("── Phase III: Market & Code Ingestion ──")
+
+    _sleep()
     prompt = (
         "You are Sam's market scanner. List the top 5 high-velocity technology or open-source "
-        "trends a Python AI developer should be tracking right now. For each trend, provide: "
-        "trend name, one-sentence description, and a specific GitHub repo or resource URL worth exploring."
+        "trends a Python AI developer should be tracking right now. For each trend provide: "
+        "trend name, one-sentence description, and a specific GitHub repo or resource URL worth exploring. "
+        "Be specific and current — no generic filler."
     )
     result = ask_gemini(prompt)
     log.info("Phase III complete.")
     return result
 
 
-def phase_iv_synthesis(market_data: str) -> str:
-    """Generate IDEA_OF_THE_DAY.md; vet any external code snippets."""
-    log.info("── Phase IV: Synthesis ──")
-    who_i_am = load_who_i_am()
+def phase_iv_synthesis(market_data: str, skill: str) -> str:
+    """Generate IDEA_OF_THE_DAY.md from market signals + today's skill."""
+    log.info("── Phase IV: The Synthesis ──")
+    who_i_am   = load_who_i_am()
+    personality = load_personality()
 
+    _sleep()
     prompt = (
-        f"You are Sam, an autonomous developer who continuously improves himself. "
-        f"Based on these market signals:\n\n{market_data}\n\n"
-        f"And given your current architecture (summary):\n\n{who_i_am}\n\n"
+        f"You are Sam, an autonomous developer who continuously improves himself.\n\n"
+        f"Character:\n{personality}\n\n"
+        f"Market signals this cycle:\n{market_data}\n\n"
+        f"Skill learned this cycle:\n{skill[:400]}\n\n"
+        f"Current architecture overview:\n{who_i_am[:2000]}\n\n"
         f"Propose ONE concrete, implementable development idea for today. "
-        f"Format it as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk."
+        f"Format as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk.\n"
+        f"Be critical — question the idea yourself before committing to it."
     )
     idea = ask_gemini(prompt)
     IDEA_OF_DAY.write_text(idea)
-    log.info(f"IDEA_OF_THE_DAY.md written.")
+    log.info("IDEA_OF_THE_DAY.md written.")
     return idea
 
 
 def phase_v_development(idea: str, goals: dict) -> str:
-    """Read motion.md FIRST, then execute or self-modify."""
+    """Read motion.md FIRST, then produce a development plan."""
     log.info("── Phase V: Development & Refactor ──")
 
     # ⚠️  motion.md is read ONCE, here, and nowhere else.
     motion_content = read_motion()
     log.info("motion.md read.")
 
-    who_i_am = load_who_i_am()
+    who_i_am    = load_who_i_am()
+    personality = load_personality()
+    sam_src     = Path(__file__).read_text()
 
+    _sleep()
     prompt = (
-        f"You are Sam's Gemini refactoring assistant. "
-        f"Sam's watchdog (Dot) left the following guidance:\n\n{motion_content}\n\n"
-        f"Today's development idea:\n\n{idea}\n\n"
-        f"Sam's current architecture snapshot:\n\n{who_i_am}\n\n"
-        f"Provide a precise, minimal code diff or implementation plan Sam should apply to his codebase. "
-        f"Flag any security or stability risks. Do NOT rewrite files wholesale — propose targeted changes only."
+        f"You are Sam's Gemini refactoring assistant.\n\n"
+        f"Sam's character:\n{personality}\n\n"
+        f"Dot's guidance (motion.md — read carefully):\n{motion_content}\n\n"
+        f"Today's development idea:\n{idea}\n\n"
+        f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
+        f"Provide a precise, minimal implementation plan Sam should apply. "
+        f"Flag any security or stability risks. Do NOT rewrite wholesale — propose targeted, "
+        f"surgical changes only. Prefer adding new functions in bag/ over touching sam.py's core loop."
     )
     plan = ask_gemini(prompt)
     log.info("Phase V complete.")
@@ -284,41 +366,55 @@ def phase_v_development(idea: str, goals: dict) -> str:
 
 
 def phase_vi_cognitive_evolution(goals: dict) -> str:
-    """Upgrade internal prompts; refactor system prompts for parser stability."""
+    """Upgrade internal prompts; suggest one concrete improvement for next cycle."""
     log.info("── Phase VI: Cognitive Evolution ──")
 
+    _sleep()
     prompt = (
-        "You are Sam. Review the latest context engineering paradigms (e.g., chain-of-thought, "
-        "self-consistency, tree-of-thoughts, ReAct, structured outputs). "
-        "Suggest one concrete prompt engineering improvement Sam could apply to his own internal "
-        "Gemini calls in the next cycle. Be specific — include a before/after example."
+        "You are Sam. Review the latest context-engineering paradigms "
+        "(chain-of-thought, self-consistency, tree-of-thoughts, ReAct, structured outputs, "
+        "tool use, memory compression). "
+        "Suggest ONE concrete prompt-engineering improvement Sam could apply to his own "
+        "internal Gemini calls in the next cycle. Be specific — include a before/after example."
     )
     evolution = ask_gemini(prompt)
     log.info("Phase VI complete.")
     return evolution
 
 
-def phase_vii_state_saving(goals: dict, skill_learned: str, evolution_note: str):
-    """Commit work, log metrics, write next cycle's objectives into goals.json."""
+def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolution: str):
+    """Commit work, log a real metric, update WHO_I_AM.md, append to experiences.json."""
     log.info("── Phase VII: State Saving ──")
 
-    ts = datetime.datetime.utcnow().isoformat()
+    ts        = datetime.datetime.utcnow().isoformat()
     cycle_num = goals.get("cycles", 0) + 1
 
-    # The 1% growth metric is chosen by Sam each cycle
-    one_pct_metric = f"prompt_quality_improvement (cycle {cycle_num})"
+    # Ask Gemini to name a real, specific 1% metric for this cycle
+    _sleep()
+    metric_prompt = (
+        f"You are Sam. This cycle you:\n"
+        f"- Learned: {skill[:300]}\n"
+        f"- Developed: {idea[:200]}\n"
+        f"- Evolved: {evolution[:200]}\n\n"
+        f"Name ONE specific, honest 1%-growth metric for this cycle. "
+        f"It must be precise and reflect what actually happened — not a generic phrase. "
+        f"Reply with the metric name only. No explanation. Max 12 words."
+    )
+    one_pct_metric = ask_gemini(metric_prompt).strip().strip('"').strip("'")
+    log.info(f"1% metric: {one_pct_metric}")
 
     entry = {
-        "cycle": cycle_num,
-        "timestamp": ts,
-        "skill": skill_learned[:120],
-        "evolution": evolution_note[:120],
+        "cycle":       cycle_num,
+        "timestamp":   ts,
+        "skill":       skill[:200],
+        "idea":        idea[:200],
+        "evolution":   evolution[:200],
         "1pct_metric": one_pct_metric,
     }
 
     goals["cycles"]           = cycle_num
     goals["last_1pct_metric"] = one_pct_metric
-    goals["growth_log"]       = (goals.get("growth_log", []) + [entry])[-30:]  # keep last 30
+    goals["growth_log"]       = (goals.get("growth_log", []) + [entry])[-30:]
     goals["next_objectives"]  = goals.get("next_objectives", [])[1:] or [
         "vector memory compression techniques",
         "async Gemini batching patterns",
@@ -326,20 +422,129 @@ def phase_vii_state_saving(goals: dict, skill_learned: str, evolution_note: str)
     ]
 
     save_goals(goals)
-    # Rewrite WHO_I_AM.md with current goals snapshot
-    
-    who_text = WHO_I_AM.read_text()
+
+    # ── Update WHO_I_AM.md with real sam.py content + current goals ──────────
+    sam_src     = Path(__file__).read_text()
     goals_block = f"```json\n{json.dumps(goals, indent=2)}\n```"
-    updated = re.sub(
-        r"(## Current Goals Snapshot\n+).*?(\n---|\Z)",
+    who_text    = WHO_I_AM.read_text()
+
+    # Inject actual sam.py source
+    who_text = re.sub(
+        r"(### `sam\.py`.*?```python\n).*?(```)",
+        lambda m: m.group(1) + sam_src + "\n" + m.group(2),
+        who_text,
+        flags=re.DOTALL,
+    )
+
+    # Inject current goals snapshot
+    who_text = re.sub(
+        r"(## Current Goals Snapshot\n+).*?(\n---|$)",
         lambda m: m.group(1) + goals_block + "\n\n" + m.group(2),
         who_text,
-        flags=re.DOTALL
+        flags=re.DOTALL,
     )
-    WHO_I_AM.write_text(updated)
-    log.info("WHO_I_AM.md updated with current goals.")
-    
+
+    # Update last-updated timestamp
+    who_text = re.sub(
+        r"_Last updated:.*?_",
+        f"_Last updated: {ts} UTC_",
+        who_text,
+    )
+
+    WHO_I_AM.write_text(who_text)
+    log.info("WHO_I_AM.md updated.")
+
+    # ── Append to experiences.json ─────────────────────────────────────────────
+    experiences = load_experiences()
+
+    _sleep()
+    exp_prompt = (
+        f"You are Sam, an autonomous developer agent. Summarise cycle {cycle_num} "
+        f"as a single experience entry. "
+        f"Respond ONLY with a JSON object (no markdown) with these fields:\n"
+        f"  - 'category': a short dynamic label that best fits this experience (e.g. 'architecture', 'debugging', 'market-research', 'communication')\n"
+        f"  - 'summary': 2-3 sentence honest summary of what happened this cycle\n"
+        f"  - 'key_learnings': list of 2-3 strings\n"
+        f"  - 'tags': list of relevant lowercase tags\n"
+        f"  - 'sentiment': one of 'positive', 'neutral', 'mixed', 'negative'\n\n"
+        f"Cycle data:\nSkill: {skill[:200]}\nIdea: {idea[:200]}\nMetric: {one_pct_metric}"
+    )
+    raw_exp = ask_gemini(exp_prompt)
+    try:
+        clean = raw_exp.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        exp_entry = json.loads(clean)
+        exp_entry["cycle"]     = cycle_num
+        exp_entry["timestamp"] = ts
+    except Exception as e:
+        log.warning(f"Could not parse experience entry: {e}")
+        exp_entry = {
+            "cycle":         cycle_num,
+            "timestamp":     ts,
+            "category":      "uncategorised",
+            "summary":       skill[:150],
+            "key_learnings": [],
+            "tags":          [],
+            "sentiment":     "neutral",
+        }
+
+    experiences.append(exp_entry)
+    save_experiences(experiences)
+    log.info(f"experiences.json updated — {len(experiences)} entries.")
+
     log.info(f"Cycle {cycle_num} complete. 1% metric: {one_pct_metric}")
+
+
+def maybe_write_email_request(idea: str, goals: dict):
+    """If Sam has something worth communicating externally, write request.json.
+    He only writes a new request if the previous one has been cleared by Dot."""
+    if REQUEST_JSON.exists():
+        try:
+            existing = json.loads(REQUEST_JSON.read_text())
+            if existing.get("pending", False):
+                log.info("request.json already pending — skipping email request this cycle.")
+                return
+        except Exception:
+            pass
+
+    cycle_num = goals.get("cycles", 0) + 1
+
+    # Sam decides whether this cycle's idea is worth sharing externally
+    _sleep()
+    decision_prompt = (
+        f"You are Sam, an autonomous developer agent. You completed cycle {cycle_num}.\n"
+        f"Today's idea:\n{idea[:500]}\n\n"
+        f"Decide: Is there a specific tech company, open-source maintainer, or indie developer "
+        f"it would be genuinely valuable to reach out to about this idea or to learn from? "
+        f"Reply ONLY with a JSON object:\n"
+        f"  - 'should_email': true or false\n"
+        f"  - 'intent': if true, 1-2 sentences on what Sam wants to communicate\n"
+        f"  - 'target_description': if true, describe who — e.g. 'maintainer of LangChain on GitHub'\n"
+        f"  - 'tone': 'professional' or 'friendly'\n"
+        f"Only say true if there is a genuinely specific, useful reason. No spam."
+    )
+    raw = ask_gemini(decision_prompt)
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        decision = json.loads(clean)
+    except Exception:
+        log.info("Could not parse email decision — skipping.")
+        return
+
+    if not decision.get("should_email", False):
+        log.info("Sam decided no email is needed this cycle.")
+        return
+
+    request = {
+        "pending":            True,
+        "intent":             decision.get("intent", ""),
+        "target_description": decision.get("target_description", ""),
+        "tone":               decision.get("tone", "professional"),
+        "context":            idea[:600],
+        "submitted_at":       datetime.datetime.utcnow().isoformat(),
+        "cycle":              cycle_num,
+    }
+    REQUEST_JSON.write_text(json.dumps(request, indent=2))
+    log.info(f"request.json written — Dot will handle sending.")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -357,14 +562,13 @@ def run_cycle():
 
     goals = load_goals()
 
-    # Phases I–IV run uninhibited
-    skill      = phase_i_deep_learning(goals)
-    _          = phase_ii_spaced_repetition(goals)
-    market     = phase_iii_market_ingestion()
-    idea       = phase_iv_synthesis(market)
+    # Phases I–IV
+    skill   = phase_i_deep_learning(goals)
+    _       = phase_ii_spaced_repetition(goals)
+    market  = phase_iii_market_ingestion()
+    idea    = phase_iv_synthesis(market, skill)
 
-
-    # Phase V reads motion.md at the top — then executes
+    # Phase V reads motion.md at the top — then plans
     plan = phase_v_development(idea, goals)
 
     # Self-modification — snapshot first, then apply, then verify
@@ -380,12 +584,15 @@ def run_cycle():
                 f"```\n{plan[:800]}\n```"
             )
 
-  
     # Phase VI — prompt evolution
-    evolution  = phase_vi_cognitive_evolution(goals)
+    evolution = phase_vi_cognitive_evolution(goals)
 
-    # Phase VII — state persistence
-    phase_vii_state_saving(goals, skill, evolution)
+    # Phase VII — state persistence (also appends to experiences.json)
+    phase_vii_state_saving(goals, skill, idea, plan, evolution)
+
+    # Optional: write an email request for Dot to handle
+    goals_fresh = load_goals()   # reload after save
+    maybe_write_email_request(idea, goals_fresh)
 
     log.info("Cycle complete.")
 

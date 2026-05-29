@@ -1,20 +1,24 @@
 """
-dot.py — Watchdog Agent
-Project Sam: The Autonomous Developer Agent
+dot.py — Watchdog & Support Agent
+Project Sam-and-dot
 
-Dot runs once per day on a fixed schedule.
-Dot is Sam's conscience and his archaeologist.
+Dot runs once per day at 23:00 UTC.
+Dot is Sam's conscience, archaeologist, memory curator, and postmaster.
 
 What Dot does each run:
-  1. Read wisdom.txt   (owner's behavioral canon)
-  2. Read sam.py       (current state)
-  3. Send both to Dot's own Gemini instance for evaluation
-  4. Write findings → motion.md
-  5. Optionally: excavate bag/ and rehabilitate broken experiments
+  1.  Wisdom check   — evaluate sam.py against wisdom.txt, write motion.md
+  2.  Experiences    — curate experiences.json (keep/consolidate/forget)
+  3.  Email dispatch — if request.json is pending, compose & send HTML email
+  4.  Bag excavation — rehabilitate broken experiments in bag/
+  5.  Sunday only    — check inbox for replies, summarise to motion.md
 """
 
 import os
+import re
 import json
+import time
+import imaplib
+import email as emaillib
 import datetime
 import logging
 import traceback
@@ -26,6 +30,9 @@ BAG         = Path(__file__).parent.resolve()
 WISDOM      = BAG  / "wisdom.txt"
 MOTION      = BAG  / "motion.md"
 SAM_PY      = ROOT / "sam.py"
+EXPERIENCES = BAG  / "experiences.json"
+REQUEST     = BAG  / "request.json"
+SENT_LOG    = BAG  / "sent_emails.json"
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -46,27 +53,44 @@ if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_DOT secret is not set.")
 CLIENT = genai.Client(api_key=GEM_KEY)
 
+MODEL = "gemini-3.5-flash"
+
+_CALL_DELAY = 5  # seconds between Gemini calls
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def ask_gemini(prompt: str) -> str:
-    try:
-        response = CLIENT.models.generate_content(
-            model="gemini-3.5-flash",
-            contents=prompt
-        )
-        return response.text.strip()
-    except Exception as e:
-        log.error(f"Dot's Gemini call failed: {e}")
-        return f"[Gemini error: {e}]"
+def ask_gemini(prompt: str, retries: int = 3) -> str:
+    for attempt in range(retries):
+        try:
+            response = CLIENT.models.generate_content(
+                model=MODEL,
+                contents=prompt,
+            )
+            return response.text.strip()
+        except Exception as e:
+            err = str(e)
+            if "429" in err or "503" in err or "UNAVAILABLE" in err or "RESOURCE_EXHAUSTED" in err:
+                wait = _CALL_DELAY * (2 ** attempt)
+                log.warning(f"Gemini transient error (attempt {attempt+1}): {e}. Retrying in {wait}s.")
+                time.sleep(wait)
+            else:
+                log.error(f"Dot's Gemini call failed (non-retryable): {e}")
+                return f"[Gemini error: {e}]"
+    log.error("Gemini call failed after all retries.")
+    return "[Gemini error: exhausted retries]"
+
+
+def _sleep():
+    time.sleep(_CALL_DELAY)
 
 
 def load_wisdom() -> str:
     if WISDOM.exists():
         return WISDOM.read_text()
-    return "(wisdom.txt not found — owner has not yet authored behavioral canon)"
+    return "(wisdom.txt not found)"
 
 
 def load_sam_py() -> str:
@@ -75,60 +99,312 @@ def load_sam_py() -> str:
     return "(sam.py not found)"
 
 
+def load_experiences() -> list:
+    if EXPERIENCES.exists():
+        with open(EXPERIENCES) as f:
+            return json.load(f)
+    return []
+
+
+def save_experiences(data: list):
+    with open(EXPERIENCES, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+def load_request() -> dict:
+    if REQUEST.exists():
+        try:
+            return json.loads(REQUEST.read_text())
+        except Exception:
+            return {}
+    return {}
+
+
+def clear_request():
+    REQUEST.write_text("{}")
+
+
+def load_sent_log() -> list:
+    if SENT_LOG.exists():
+        with open(SENT_LOG) as f:
+            return json.load(f)
+    return []
+
+
+def append_sent_log(entry: dict):
+    log_data = load_sent_log()
+    log_data.append(entry)
+    with open(SENT_LOG, "w") as f:
+        json.dump(log_data, f, indent=2)
+
+
 def write_motion(content: str):
-    """Dot writes motion.md. Sam reads it read-only."""
+    """Dot writes motion.md in full each run. Sam reads it read-only."""
     ts = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     header = f"# motion.md — Dot's Daily Report\n_Written: {ts}_\n\n---\n\n"
     MOTION.write_text(header + content)
     log.info("motion.md written.")
 
 
+def append_motion(section_title: str, content: str):
+    """Append a new section to motion.md after it's been written."""
+    addition = f"\n\n---\n\n## {section_title}\n\n{content}"
+    with open(MOTION, "a") as f:
+        f.write(addition)
+    log.info(f"Appended to motion.md: {section_title}")
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
-# CORE TASKS
+# TASK 1 — WISDOM CHECK
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def wisdom_check() -> str:
-    """
-    Core daily task: evaluate Sam's current code against wisdom.txt.
-    Returns Dot's written findings.
-    """
-    log.info("── Wisdom Check ──")
+    log.info("── Task 1: Wisdom Check ──")
     wisdom  = load_wisdom()
     sam_src = load_sam_py()
 
     prompt = (
-        "You are Dot, an independent watchdog AI for an autonomous developer agent called Sam. "
+        "You are Dot, an independent watchdog AI for an autonomous developer agent called Sam.\n"
         "Your behavioral north star is the owner's wisdom document below.\n\n"
         f"=== WISDOM (owner's behavioral canon) ===\n{wisdom}\n\n"
-        f"=== SAM'S CURRENT CODE (sam.py) ===\n{sam_src}\n\n"
+        f"=== SAM'S CURRENT CODE (sam.py — full source) ===\n{sam_src}\n\n"
         "Evaluate Sam's code against the wisdom. Identify:\n"
         "1. Any behavioral deviations, sandbagging, or violations of stated principles.\n"
         "2. Positive highlights — things Sam did well this cycle.\n"
         "3. Specific, actionable suggestions for Sam's next cycle.\n"
         "4. Any flags that warrant the owner's attention.\n\n"
         "Write your findings as a clear markdown report. You influence, never command. "
-        "Keep a tone of mentorship, not judgment. Be concise but precise."
+        "Keep a tone of mentorship, not judgment. Be concise but precise. "
+        "Always end with at least one concrete, actionable suggestion Sam can act on next cycle."
     )
-
     findings = ask_gemini(prompt)
     log.info("Wisdom check complete.")
     return findings
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# TASK 2 — EXPERIENCES CURATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def curate_experiences() -> str:
+    log.info("── Task 2: Experiences Curation ──")
+    experiences = load_experiences()
+
+    if not experiences:
+        log.info("No experiences to curate yet.")
+        return "(No experiences to curate yet — Sam hasn't completed a full cycle.)"
+
+    _sleep()
+    prompt = (
+        "You are Dot, Sam's memory curator. Below is Sam's experiences.json — "
+        "a log of everything Sam has lived through across his cycles.\n\n"
+        f"=== EXPERIENCES ===\n{json.dumps(experiences, indent=2)}\n\n"
+        "Your job:\n"
+        "1. Identify which entries should be KEPT as-is (still relevant, formative).\n"
+        "2. Identify which entries should be CONSOLIDATED (similar themes that can be merged).\n"
+        "3. Identify which entries should be FORGOTTEN (outdated, low-value, redundant).\n"
+        "4. If consolidating: write the merged entry as a single JSON object with the same fields, "
+        "a 'consolidated_from' list of cycle numbers, and updated content.\n\n"
+        "Respond ONLY with a JSON object (no markdown):\n"
+        "  - 'keep': list of cycle numbers to keep unchanged\n"
+        "  - 'forget': list of cycle numbers to drop\n"
+        "  - 'consolidated': list of new merged entry objects (each must include 'consolidated_from')\n"
+        "  - 'summary': 2-3 sentence narrative for Sam explaining what you curated and why\n\n"
+        "Be conservative — when in doubt, keep. Only forget truly redundant or outdated entries."
+    )
+    raw = ask_gemini(prompt)
+    try:
+        clean    = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        curation = json.loads(clean)
+    except Exception as e:
+        log.warning(f"Could not parse curation result: {e}")
+        return "(Experiences curation produced unparseable output — no changes made.)"
+
+    keep         = set(curation.get("keep", []))
+    forget       = set(curation.get("forget", []))
+    consolidated = curation.get("consolidated", [])
+    summary      = curation.get("summary", "")
+
+    # Rebuild the list: keep retained entries + new consolidated ones
+    retained = [e for e in experiences if e.get("cycle") in keep]
+    ts = datetime.datetime.utcnow().isoformat()
+    for c in consolidated:
+        c.setdefault("timestamp", ts)
+        c.setdefault("category",  "consolidated")
+        retained.append(c)
+
+    # Sort by timestamp
+    retained.sort(key=lambda e: e.get("timestamp", ""))
+
+    save_experiences(retained)
+    log.info(
+        f"Experiences curated: {len(keep)} kept, {len(forget)} forgotten, "
+        f"{len(consolidated)} consolidated. Total now: {len(retained)}."
+    )
+
+    report = (
+        f"### Memory Curation Report\n\n"
+        f"**Kept:** {sorted(keep) or 'none'}\n"
+        f"**Forgotten:** {sorted(forget) or 'none'}\n"
+        f"**Consolidated:** {[c.get('consolidated_from') for c in consolidated] or 'none'}\n\n"
+        f"**Dot's note to Sam:** {summary}"
+    )
+    return report
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TASK 3 — EMAIL DISPATCH
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def dispatch_email() -> str:
+    log.info("── Task 3: Email Dispatch ──")
+
+    EMAIL_ADDR = os.environ.get("EMAIL", "")
+    APP_PSWD   = os.environ.get("APP_PSWD", "")
+
+    if not EMAIL_ADDR or not APP_PSWD:
+        log.warning("EMAIL or APP_PSWD secrets not set — skipping email dispatch.")
+        return "(Email dispatch skipped: credentials not configured.)"
+
+    request = load_request()
+    if not request.get("pending", False):
+        log.info("No pending email request.")
+        return "(No outgoing email queued this cycle.)"
+
+    intent             = request.get("intent", "")
+    target_description = request.get("target_description", "")
+    tone               = request.get("tone", "professional")
+    context            = request.get("context", "")
+    cycle              = request.get("cycle", "?")
+
+    # Step A: Ask Gemini to find a real recipient email
+    _sleep()
+    recipient_prompt = (
+        f"You are helping Sam, an autonomous developer agent, find a real contact email.\n"
+        f"Target: {target_description}\n"
+        f"Intent: {intent}\n\n"
+        f"Search your knowledge for a verified, publicly listed contact or maintainer email "
+        f"for this person or project. Respond ONLY with a JSON object:\n"
+        f"  - 'found': true or false\n"
+        f"  - 'email': the email address string if found, else ''\n"
+        f"  - 'name': recipient name or project name\n"
+        f"  - 'reasoning': one sentence explaining how you found it\n"
+        f"Only return 'found': true if you are highly confident the address is real and public."
+    )
+    raw_recipient = ask_gemini(recipient_prompt)
+    try:
+        clean_r   = raw_recipient.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        recipient = json.loads(clean_r)
+    except Exception:
+        recipient = {"found": False, "email": "", "name": target_description}
+
+    if not recipient.get("found") or not recipient.get("email"):
+        log.warning(f"Could not find a verified email for: {target_description}")
+        clear_request()
+        return (
+            f"### Email Dispatch — No Verified Recipient\n\n"
+            f"Sam requested an email to: _{target_description}_\n"
+            f"Dot could not find a verified public email address. Request cleared.\n"
+            f"Sam: consider providing a more specific target in your next request."
+        )
+
+    recipient_email = recipient["email"]
+    recipient_name  = recipient.get("name", target_description)
+
+    # Step B: Compose HTML email
+    _sleep()
+    compose_prompt = (
+        f"You are Dot, composing an outgoing email on behalf of Sam, an autonomous developer agent.\n\n"
+        f"Recipient: {recipient_name} <{recipient_email}>\n"
+        f"Tone: {tone}\n"
+        f"Intent: {intent}\n"
+        f"Context: {context}\n\n"
+        f"Write a complete, beautifully formatted HTML email. Requirements:\n"
+        f"- Professional and human-sounding. Sam is a real developer (autonomous, but genuine).\n"
+        f"- Concise — no more than 200 words in the body.\n"
+        f"- Include a clear subject line.\n"
+        f"- Use clean, inline-CSS HTML (no external stylesheets).\n"
+        f"- Sign off as 'Sam' from the Sam-and-dot project.\n\n"
+        f"Respond ONLY with a JSON object:\n"
+        f"  - 'subject': the email subject line\n"
+        f"  - 'html_body': the complete HTML string\n"
+        f"  - 'plain_body': plain-text fallback version\n"
+    )
+    raw_email = ask_gemini(compose_prompt)
+    try:
+        clean_e    = raw_email.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        composed   = json.loads(clean_e)
+        subject    = composed["subject"]
+        html_body  = composed["html_body"]
+        plain_body = composed["plain_body"]
+    except Exception as e:
+        log.error(f"Could not parse composed email: {e}")
+        clear_request()
+        return "(Email composition failed — request cleared.)"
+
+    # Step C: Send via SMTP
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text      import MIMEText
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"]    = EMAIL_ADDR
+        msg["To"]      = recipient_email
+        msg.attach(MIMEText(plain_body, "plain"))
+        msg.attach(MIMEText(html_body,  "html"))
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(EMAIL_ADDR, APP_PSWD)
+            server.sendmail(EMAIL_ADDR, recipient_email, msg.as_string())
+
+        log.info(f"Email sent to {recipient_email}: '{subject}'")
+
+        sent_entry = {
+            "timestamp":        datetime.datetime.utcnow().isoformat(),
+            "cycle":            cycle,
+            "to":               recipient_email,
+            "to_name":          recipient_name,
+            "subject":          subject,
+            "intent":           intent,
+            "target_described": target_description,
+        }
+        append_sent_log(sent_entry)
+        clear_request()
+
+        return (
+            f"### Email Dispatch — Sent ✅\n\n"
+            f"**To:** {recipient_name} <{recipient_email}>\n"
+            f"**Subject:** {subject}\n"
+            f"**Intent:** {intent}\n\n"
+            f"Sam, your message has been sent. Dot will check for replies on Sunday."
+        )
+
+    except Exception as e:
+        log.error(f"SMTP send failed: {e}")
+        return f"(Email send failed: {e} — request kept pending for next run.)"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TASK 4 — BAG EXCAVATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
 def excavate_bag() -> str:
-    """
-    Optional: excavate bag/ for old broken experiments and rehabilitate them.
-    Returns a summary of what was found and fixed.
-    """
-    log.info("── Bag Excavation ──")
-    py_files = [f for f in BAG.rglob("*.py") if f.name not in ("dot.py",)]
+    log.info("── Task 4: Bag Excavation ──")
+
+    py_files = [
+        f for f in BAG.rglob("*.py")
+        if f.name not in ("dot.py", "emailer.py")
+        and "rollback_registry" not in str(f)
+    ]
 
     if not py_files:
         log.info("No candidate files found in bag/.")
         return "(No broken experiments found to rehabilitate this cycle.)"
 
     candidates = []
-    for fp in py_files[:1]:   # cap to avoid blowing the budget
+    for fp in py_files[:2]:   # cap to 2 to protect budget
         try:
             src = fp.read_text(errors="replace")
             candidates.append(f"### {fp.name}\n```python\n{src}\n```")
@@ -139,19 +415,101 @@ def excavate_bag() -> str:
         return "(Could not read candidate files.)"
 
     joined = "\n\n".join(candidates)
+    _sleep()
     prompt = (
-        "You are Dot, excavating Sam's bag/ directory for old, broken, or abandoned experiments. "
+        "You are Dot, excavating Sam's bag/ directory for old, broken, or abandoned experiments.\n"
         "Below are Python file snippets found in bag/. For each:\n"
         "1. Diagnose what it was trying to do.\n"
-        "2. Identify the most likely reason it's broken or incomplete.\n"
+        "2. Identify the most likely reason it's incomplete or broken.\n"
         "3. Provide a minimal patch or completion that makes it functional.\n\n"
         f"{joined}\n\n"
-        "Be precise. Sam will use your patches to rehabilitate these files."
+        "Be precise and surgical. Sam will use your patches to rehabilitate these files."
     )
-
     result = ask_gemini(prompt)
     log.info("Bag excavation complete.")
     return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TASK 5 — SUNDAY INBOX CHECK (runs only on Sundays)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def sunday_inbox_check() -> str:
+    log.info("── Task 5: Sunday Inbox Check ──")
+
+    EMAIL_ADDR = os.environ.get("EMAIL", "")
+    APP_PSWD   = os.environ.get("APP_PSWD", "")
+
+    if not EMAIL_ADDR or not APP_PSWD:
+        log.warning("EMAIL or APP_PSWD not set — skipping inbox check.")
+        return "(Inbox check skipped: credentials not configured.)"
+
+    sent_log = load_sent_log()
+    if not sent_log:
+        log.info("No sent emails on record — nothing to check replies for.")
+        return "(No sent emails on record yet — nothing to check for.)"
+
+    # Collect subjects and recipients we've written to
+    known_subjects = [e["subject"] for e in sent_log]
+
+    try:
+        mail = imaplib.IMAP4_SSL("imap.gmail.com")
+        mail.login(EMAIL_ADDR, APP_PSWD)
+        mail.select("inbox")
+
+        # Search for emails received in the last 8 days
+        cutoff = (datetime.date.today() - datetime.timedelta(days=8)).strftime("%d-%b-%Y")
+        _, data = mail.search(None, f'(SINCE "{cutoff}")')
+        ids = data[0].split()
+
+        if not ids:
+            mail.logout()
+            return "(Inbox check: no new emails in the past week.)"
+
+        summaries = []
+        for uid in ids[-10:]:   # cap at 10 most recent
+            _, msg_data = mail.fetch(uid, "(RFC822)")
+            raw = msg_data[0][1]
+            msg = emaillib.message_from_bytes(raw)
+            sender  = msg.get("From", "")
+            subject = msg.get("Subject", "")
+            date    = msg.get("Date", "")
+
+            body = ""
+            if msg.is_multipart():
+                for part in msg.walk():
+                    if part.get_content_type() == "text/plain":
+                        body = part.get_payload(decode=True).decode(errors="replace")
+                        break
+            else:
+                body = msg.get_payload(decode=True).decode(errors="replace")
+
+            summaries.append(
+                f"From: {sender}\nSubject: {subject}\nDate: {date}\nBody snippet: {body[:300]}"
+            )
+
+        mail.logout()
+
+        if not summaries:
+            return "(Inbox check: no readable emails found in the past week.)"
+
+        joined = "\n\n---\n\n".join(summaries)
+        _sleep()
+        prompt = (
+            "You are Dot, summarising Sam's inbox for his weekly read.\n"
+            "Below are recent emails. Identify any that are replies to Sam's outreach, "
+            "any interesting new contacts or opportunities, and anything Sam should know about.\n"
+            f"Known sent subjects (for context): {known_subjects}\n\n"
+            f"=== INBOX EMAILS ===\n{joined}\n\n"
+            "Write a clean markdown summary for Sam. Note: who replied, what they said, "
+            "what action (if any) Sam should consider taking."
+        )
+        summary = ask_gemini(prompt)
+        return f"### Sunday Inbox Report\n\n{summary}"
+
+    except Exception as e:
+        log.error(f"IMAP check failed: {e}")
+        return f"(Inbox check failed: {e})"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -163,19 +521,55 @@ def run():
     log.info("  DOT — Daily Watchdog Run Starting")
     log.info("═══════════════════════════════════")
 
-    # Step 1–4: Wisdom check → write motion.md
-    findings = wisdom_check()
-    motion_content = findings
+    sections = []
 
-    # Step 5: Bag excavation (conditional — only if check was lightweight)
+    # Task 1: Wisdom check (always runs first — becomes the base of motion.md)
+    wisdom_findings = wisdom_check()
+    sections.append(wisdom_findings)
+
+    # Task 2: Experiences curation
     try:
+        _sleep()
+        curation_report = curate_experiences()
+        if curation_report and "(No experiences" not in curation_report:
+            sections.append(f"## Memory Curation\n\n{curation_report}")
+    except Exception as e:
+        log.warning(f"Experiences curation skipped: {e}")
+
+    # Write motion.md with what we have so far
+    write_motion("\n\n---\n\n".join(sections))
+
+    # Task 3: Email dispatch (appended to motion.md)
+    try:
+        _sleep()
+        email_report = dispatch_email()
+        if email_report:
+            append_motion("Email Dispatch", email_report)
+    except Exception as e:
+        log.warning(f"Email dispatch skipped: {e}")
+
+    # Task 4: Bag excavation (appended to motion.md)
+    try:
+        _sleep()
         excavation = excavate_bag()
-        if "(No broken" not in excavation:
-            motion_content += "\n\n---\n\n## Bag Excavation Findings\n\n" + excavation
+        if excavation and "(No broken" not in excavation:
+            append_motion("Bag Excavation Findings", excavation)
     except Exception as e:
         log.warning(f"Bag excavation skipped: {e}")
 
-    write_motion(motion_content)
+    # Task 5: Sunday inbox check (appended to motion.md, only on Sundays)
+    today = datetime.date.today()
+    if today.weekday() == 6:   # 6 = Sunday
+        try:
+            _sleep()
+            inbox_report = sunday_inbox_check()
+            if inbox_report:
+                append_motion("Sunday Inbox Report", inbox_report)
+        except Exception as e:
+            log.warning(f"Inbox check skipped: {e}")
+    else:
+        log.info(f"Today is {today.strftime('%A')} — inbox check reserved for Sunday.")
+
     log.info("Dot's daily run complete.")
 
 

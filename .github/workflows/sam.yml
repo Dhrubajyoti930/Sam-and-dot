@@ -1,26 +1,24 @@
 name: Sam — Operational Cycles
 
 on:
-  # Sam runs at least 1 times a day; additional runs can be triggered by push or dispatch.
   schedule:
-  - cron: "0 8  * * *"   # 08:00 UTC
-  - cron: "0 18 * * *"   # 18:00 UTC  
-    
-  workflow_dispatch:       # Manual trigger for high-value or immediate tasks
+    - cron: "0 8  * * *"   # 08:00 UTC — morning cycle
+    - cron: "0 18 * * *"   # 18:00 UTC — evening cycle
+  workflow_dispatch:         # Manual trigger for owner
 
 permissions:
-  contents: write          # Sam commits changes back to the repo
+  contents: write            # Sam commits changes back to the repo
 
 jobs:
   sam-cycle:
     runs-on: ubuntu-latest
-    timeout-minutes: 10    # Hard ceiling — protect the shared 1300 s/month pool
+    timeout-minutes: 12      # Hard ceiling — protect the shared pool
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # Full history for rollback registry awareness
+          fetch-depth: 0     # Full history for rollback registry awareness
 
       - name: Set up Python
         uses: actions/setup-python@v5
