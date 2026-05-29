@@ -578,7 +578,7 @@ def run():
         log.info(f"Today is {today.strftime('%A')} — inbox check reserved for Sunday.")
 
 
-    from bag.emailer import send_html_email
+    from emailer import send_html_email
     send_html_email(
       to_address=OWNER_EMAIL,
       subject=f"Dot's Daily Report — {datetime.date.today()}",
