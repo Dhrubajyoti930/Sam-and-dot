@@ -37,9 +37,11 @@ jobs:
 
       - name: Commit Sam's outputs
         run: |
-          git pull --rebase origin main
           git config user.name  "Sam [bot]"
           git config user.email "sam-bot@users.noreply.github.com"
+          git stash --include-untracked
+          git pull --rebase origin main
+          git stash pop
           git add -A
           git diff --cached --quiet || git commit -m "chore(sam): cycle outputs [skip ci]"
           git push
