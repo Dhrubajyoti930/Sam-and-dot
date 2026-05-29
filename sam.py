@@ -37,6 +37,7 @@ VECTOR_DB       = ROOT / "vector_db"
 IDEA_OF_DAY     = BAG  / "IDEA_OF_THE_DAY.md"
 EXPERIENCES     = BAG  / "experiences.json"
 REQUEST_JSON    = BAG  / "request.json"
+TESTS           = BAG  / "tests.py"
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -181,6 +182,33 @@ def self_check() -> bool:
         return True
     except Exception as e:
         log.error(f"Self-check exception: {e}")
+        return False
+
+
+def behaviour_check() -> bool:
+    """Run bag/tests.py to verify Sam's behavioural integrity after self-modification.
+    Returns True if all tests pass. Triggers rollback + Dot alert if any test fails."""
+    if not TESTS.exists():
+        log.info("bag/tests.py not found — skipping behaviour check.")
+        return True
+    try:
+        result = subprocess.run(
+            [sys.executable, str(TESTS)],
+            capture_output=True, text=True, timeout=15,
+            cwd=str(ROOT),
+        )
+        if result.returncode == 0:
+            log.info("Behaviour check passed.")
+            return True
+        else:
+            log.error(f"Behaviour check FAILED:\n{result.stdout}\n{result.stderr}")
+            _alert_dot(
+                "bag/tests.py failed after a self-modification. Rolling back.\n\n"
+                f"Test output:\n```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"
+            )
+            return False
+    except Exception as e:
+        log.error(f"Behaviour check exception: {e}")
         return False
 
 
@@ -585,7 +613,15 @@ def run_cycle():
     snapshot_sam()
     if apply_self_modification(plan):
         if self_check():
-            log.info("Self-modification verified — continuing.")
+            if behaviour_check():
+                log.info("Self-modification verified — syntax and behaviour both clean.")
+            else:
+                _rollback()
+                _alert_dot(
+                    "Self-modification passed syntax check but FAILED behaviour check. "
+                    "Rolled back to previous snapshot. Plan that caused failure:\n\n"
+                    f"```\n{plan}\n```"
+                )
         else:
             _rollback()
             _alert_dot(
