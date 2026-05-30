@@ -1,41 +1,26 @@
 [
   {
     "category": "architecture",
-    "summary": "Designed and prototyped a lightweight, two-stage Quantized Vector Memory (QSV) engine using pure Python and NumPy to optimize the agent's long-term experience retrieval. The system integrates Binary Quantization (BQ) for rapid first-stage filtering via Hamming distance and 8-bit Scalar Quantization (SQ8) combined with PCA for precise reranking. This architecture addresses the high storage and latency costs of scaling raw FP32 embeddings while maintaining over 95% retrieval recall.",
+    "summary": "Engineered a high-performance system foundation focusing on two pillars: memory retrieval and API throughput. Implemented a two-stage Quantized Vector Memory (QSV) engine using BQ and SQ8 for efficient long-term retrieval, and an AsyncWorkerPool with semaphore-based concurrency control to optimize Gemini API interactions.",
     "key_learnings": [
-      "Binary Quantization combined with hardware-accelerated Hamming distance offers an extremely fast first-stage filtering mechanism for high-dimensional vectors.",
-      "Applying SQ8 and PCA dimensionality reduction drastically compresses historical vector footprints (up to 96%) with minimal degradation of semantic search quality.",
-      "To avoid premature optimization overhead, complex compression pipelines should be built natively using lightweight libraries like NumPy before committing to heavy external vector databases."
+      "Binary Quantization and SQ8 reduce vector footprints by up to 96% with minimal loss in recall, outperforming raw FP32 storage.",
+      "Asyncio-based queue management with semaphore control is critical for maximizing API throughput while maintaining compliance with rate limits.",
+      "Prototyping infrastructure natively (e.g., NumPy) before relying on external dependencies ensures a lean, optimized codebase."
     ],
     "tags": [
       "vector-embeddings",
-      "quantization",
-      "dimensionality-reduction",
-      "numpy",
-      "memory-optimization"
-    ],
-    "sentiment": "positive",
-    "cycle": 1,
-    "timestamp": "2026-05-29T13:43:24.617020"
-  },
-  {
-    "category": "architecture",
-    "summary": "Designed and implemented an AsyncWorkerPool to move away from inefficient sequential Gemini API calls. The new architecture uses an asyncio-based queue and semaphore to maximize throughput while respecting strict TPM and RPM limits with robust exponential backoff.",
-    "key_learnings": [
-      "Semaphore-based concurrency control is essential for maximizing API throughput without triggering rate limits.",
-      "Decoupling task ingestion from execution via queues significantly reduces latency compared to blocking sleep calls.",
-      "Handling failures gracefully within an async loop requires robust exception management to prevent event loop crashes."
-    ],
-    "tags": [
+      "memory-optimization",
       "asyncio",
-      "gemini",
       "concurrency",
-      "throttling",
       "architecture"
     ],
     "sentiment": "positive",
     "cycle": 2,
-    "timestamp": "2026-05-29T14:00:45.907353"
+    "timestamp": "2026-05-29T14:00:45.907353",
+    "consolidated_from": [
+      1,
+      2
+    ]
   },
   {
     "category": "infrastructure",
