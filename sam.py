@@ -170,7 +170,7 @@ def snapshot_sam() -> Path:
     log.info(f"Snapshot saved → {dest.name}")
 
     # ── Snapshot all writable bag/*.py files alongside ──
-    _SNAP_EXCLUDED = {"dot.py"}
+    _SNAP_EXCLUDED = set()  # dot.py now included in snapshots so rollback can restore it (#2 fix)
     bag_snap = {
         f.name: f.read_text()
         for f in sorted(BAG.glob("*.py"))
@@ -549,9 +549,14 @@ def phase_v_development(idea: str, goals: dict) -> str:
     log.info("Phase V complete.")
 
     # Audit: Delete orphaned files in bag/
-    valid_files = {"dot.py", "async_batch.py", "emailer.py", "evaluator.py", "matrix_optimizer.py", "semantic_cache.py", "tests.py", "versioning.py"}
+    # Blocklist approach — Sam-created files survive until explicitly removed (#5 fix)
+    # async_batch.py intentionally omitted (dead code — will be cleaned up) (#10 fix)
+    _AUDIT_PROTECTED = {
+        "dot.py", "emailer.py", "evaluator.py", "matrix_optimizer.py",
+        "semantic_cache.py", "tests.py", "versioning.py",
+    }
     for f in BAG.glob("*.py"):
-        if f.name not in valid_files:
+        if f.name not in _AUDIT_PROTECTED:
             f.unlink()
             log.info(f"Audited: Deleted orphaned file {f.name}")
     return plan
@@ -772,7 +777,8 @@ def run_cycle():
 
     # Self-modification — snapshot first, then apply, then verify
     snapshot_sam()
-    if apply_self_modification(plan):
+    modified = apply_self_modification(plan)
+    if modified:
         if self_check():
             if behaviour_check():
                 log.info("Self-modification verified — syntax and behaviour both clean.")
@@ -789,6 +795,14 @@ def run_cycle():
                 "Self-modification failed the post-apply syntax check. "
                 "Rolled back to previous snapshot. Plan that caused failure:\n\n"
                 f"```\n{plan}\n```"
+            )
+    else:
+        # No patch applied — still run governance checks every cycle (#1 fix)
+        log.info("No self-modification this cycle — running governance checks anyway.")
+        if not behaviour_check():
+            _alert_dot(
+                "Governance check failed on an unmodified cycle. "
+                "No self-modification occurred — possible external file corruption or deletion."
             )
 
     # Phase VI — prompt evolution
