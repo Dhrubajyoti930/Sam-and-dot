@@ -483,8 +483,23 @@ def phase_iii_market_ingestion() -> str:
 def phase_iv_synthesis(market_data: str, skill: str) -> str:
     """Generate IDEA_OF_THE_DAY.md from market signals + today's skill."""
     log.info("── Phase IV: The Synthesis ──")
-    who_i_am   = load_who_i_am()
+    who_i_am    = load_who_i_am()
     personality = load_personality()
+
+    # Summarise recent experiences so Sam doesn't repeat himself
+    recent_exp  = load_experiences()[-3:]
+    if recent_exp:
+        exp_lines = "\n".join(
+            f"- Cycle {e.get('cycle', '?')}: {e.get('summary', '')} "
+            f"[tags: {', '.join(e.get('tags', []))}]"
+            for e in recent_exp
+        )
+        memory_block = (
+            f"Your most recent experiences (do NOT repeat these — build on them or go elsewhere):\n"
+            f"{exp_lines}\n"
+        )
+    else:
+        memory_block = ""
 
     _sleep()
     prompt = (
@@ -493,6 +508,7 @@ def phase_iv_synthesis(market_data: str, skill: str) -> str:
         f"Market signals this cycle:\n{market_data}\n\n"
         f"Skill learned this cycle:\n{skill}\n\n"
         f"Current architecture overview:\n{who_i_am}\n\n"
+        f"{memory_block}\n"
         f"Propose ONE concrete, implementable development idea for today. "
         f"Format as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk.\n"
         f"Be critical — question the idea yourself before committing to it."
