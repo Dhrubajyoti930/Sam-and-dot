@@ -30,6 +30,11 @@ jobs:
           pip install --upgrade pip
           pip install --upgrade google-genai
 
+      - name: Lint Python files
+        run: |
+          pip install ruff
+          ruff check . --select E,F --ignore E501
+
       - name: Run Sam's operational cycle
         env:
           GEM_KEY_SAM: ${{ secrets.GEM_KEY_SAM }}
