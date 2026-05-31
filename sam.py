@@ -53,8 +53,6 @@ log = logging.getLogger("sam")
 # ── Gemini client ─────────────────────────────────────────────────────────────
 from google import genai  # noqa: E402
 
-from bag.attribution import verify_assertion
-
 GEM_KEY = os.environ.get("GEM_KEY_SAM")
 if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_SAM secret is not set.")
@@ -532,9 +530,6 @@ def phase_v_development(idea: str, goals: dict) -> str:
         f"Sam's character:\n{personality}\n\n"
         f"Dot's guidance (motion.md — read carefully):\n{motion_content}\n\n"
         f"Today's development idea:\n{idea}\n\n"
-        f"CRITICAL: Use the Grounded Attribution pattern. For every architectural claim, "
-        f"perform a similarity check against wisdom.txt. Explicitly label claims as "
-        f"'GROUNDED' or 'HEURISTIC' based on a similarity threshold of 0.7.\n\n"
         f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
         f"Sam's current bag/tests.py (full source):\n```python\n{tests_src}\n```\n\n"
         f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"
@@ -721,13 +716,22 @@ def maybe_write_email_request(idea: str, goals: dict):
     decision_prompt = (
         f"You are Sam, an autonomous developer agent. You completed cycle {cycle_num}.\n"
         f"Today's idea:\n{idea}\n\n"
-        f"Decide: Is there a specific tech company, open-source maintainer, or indie developer "
-        f"it would be genuinely valuable to reach out to about this idea or to learn from? "
+        f"Decide: Is there a specific indie developer or small-project maintainer it would be "
+        f"genuinely valuable to reach out to about this idea or to learn from?\n\n"
+        f"STRICT TARGETING RULES:\n"
+        f"- Prefer indie developers and maintainers of projects with under 2000 GitHub stars.\n"
+        f"  They read their email and appreciate thoughtful outreach.\n"
+        f"- Avoid large companies, famous projects, and well-known names — they won't reply.\n"
+        f"- NEVER target generic support inboxes (hello@, support@, info@, open-source@, etc.).\n"
+        f"- NEVER target mailing lists or Google Groups.\n"
+        f"- The target must be a specific named individual with a public presence.\n\n"
         f"Reply ONLY with a JSON object:\n"
         f"  - 'should_email': true or false\n"
         f"  - 'intent': if true, 1-2 sentences on what Sam wants to communicate\n"
-        f"  - 'target_description': if true, describe who — e.g. 'maintainer of LangChain on GitHub'\n"
-        f"  - 'tone': 'professional' or 'friendly'\n"
+        f"  - 'target_description': if true, describe the specific person — name, project, and why "
+        f"they are the right contact (e.g. 'Armin Ronacher, creator of Flask, author of blog posts "
+        f"on async Python — has a public email on his personal site')\n"
+        f"  - 'tone': always 'friendly'\n"
         f"Only say true if there is a genuinely specific, useful reason. No spam."
     )
     raw = ask_gemini(decision_prompt)
