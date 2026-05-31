@@ -1,5 +1,4 @@
 import sqlite3
-import datetime
 import hashlib
 
 def get_db():

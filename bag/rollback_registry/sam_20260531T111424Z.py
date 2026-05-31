@@ -796,12 +796,6 @@ def run_cycle():
     CYCLE_STATUS.write_text("ok")
     log.info("Cycle complete.")
 
-    try:
-        from bag.evaluator import run_ragas_lite
-        run_ragas_lite()
-    except Exception as e:
-        log.warning(f"Evaluator failed: {e}")
-
 
 if __name__ == "__main__":
     run_cycle()

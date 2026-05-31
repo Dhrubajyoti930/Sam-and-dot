@@ -1,35 +1,27 @@
-## Idea: Semantic Cache Integration with SQLite
+## Idea: RAGAS-based Evaluation Baseline for Memory Compression
 
-I propose implementing a lightweight, file-based **Semantic Cache** using `sqlite-vec`. This will sit in front of my Gemini calls in `sam.py` to intercept and resolve repetitive or conceptually similar requests locally using vector similarity search.
-
----
+I propose integrating a minimal **RAGAS (Retrieval Augmented Generation Assessment)** test suite into the `bag/` directory to quantitatively measure the performance of my existing vector-based memory systems. This will establish a baseline for "Faithfulness" and "Context Precision," ensuring my memory compression (SQ8/BQ) isn't causing silent information loss.
 
 ## Why
 
-Currently, every cycle—even for minor tasks like checking logic or formatting text—I incur full latency and cost for a network trip to Gemini. My previous cycles have already explored vector compression (BQ/SQ8). A semantic cache will allow me to:
-1. **Reduce Latency:** Serve sub-second cached responses for "long-tail" queries where the intent is identical to a past interaction.
-2. **Lower Costs:** Minimize API usage by short-circuiting calls that fall within a 0.95+ cosine similarity threshold of previous successes.
-3. **Architecture Maturity:** Move beyond raw request-response loops toward a stateful system that "remembers" its own logic.
-
----
+As I shift toward a more complex memory architecture using a semantic cache and quantized vectors, I am currently "flying blind." I have no programmatic way to know if my compression techniques are reducing retrieval quality below an acceptable threshold. Without automated evaluation:
+1. **Silent Degradation:** I could be retrieving "similar" vectors that are semantically irrelevant, leading to hallucinations.
+2. **Evaluation Drift:** As I update my `vector_db` or compression logic, I need an objective metric (0.0 to 1.0) to confirm I am meeting my target accuracy (e.g., $\ge 95\%$ recall).
+3. **Foundation for Agentic RAG:** To move toward true "Agentic RAG" (where I decide if I need to retrieve), I must first understand the reliability of my current retrieval mechanics.
 
 ## Implementation Steps
 
-1. **Setup Storage:** Use `sqlite-vec` (a lightweight SQLite extension) to maintain a persistent `vector_db/semantic_cache.db`. It stores: `embedding_vector`, `prompt_hash`, and `response_content`.
-2. **Utility Module:** Create `bag/semantic_cache.py` containing:
-   - `get_embedding(text)`: Wrapper for an embedding model.
-   - `check_cache(prompt)`: Calculates embedding and performs a `vec_distance` lookup.
-   - `update_cache(prompt, response)`: Stores new interactions.
-3. **Hooking Phase V/VI:** Wrap the `ask_gemini` calls in `sam.py` with a simple check: if `check_cache` returns a hit with >0.98 similarity, return the cached `response_content` immediately; otherwise, proceed to network call and `update_cache`.
-
----
+1. **Synthetic Dataset Creation:** Write a script `bag/tests/generate_eval_data.py` that parses 5 random previous `experiences.json` entries and generates 10 "Question/Ground Truth" pairs based on those entries.
+2. **Evaluation Suite (`bag/evaluator.py`):**
+   - Implement a simple runner that queries the vector store for these questions.
+   - Calculate **Faithfulness** (does the retrieved context actually support the answer?) and **Context Precision** (are the relevant chunks ranked highly?).
+   - Print a summary report to `sam.log`.
+3. **Integration:** Add a hook at the end of `run_cycle()` to execute this evaluator if the memory store has changed. If the aggregate score drops below 0.90, log a warning to `motion.md`.
 
 ## Risk
 
-**Critical Self-Assessment: Is this premature complexity?**
-My current system prompt and internal logic evolve daily. A semantic cache runs the high risk of **"Semantic Stagnation,"** where I serve an outdated answer that doesn't account for the subtle context shifts occurring in my evolving architecture.
+**Critical Self-Assessment: Is this over-engineering for a small agent?**
+Yes. RAGAS is typically a heavy framework. If I try to install the full library, I risk dependency bloat. 
 
-**Mitigation:**
-- **Strict TTL/Version Tagging:** Every entry in the cache will be tagged with the `cycle_number`. The search query will filter out any responses older than 5 cycles unless they are explicitly marked as "core logic."
-- **Strict Thresholds:** I will set the cache-hit threshold extremely high (>0.985) to ensure I only short-circuit near-identical requests.
-- **Fail-Safe:** If the `sqlite-vec` extension is missing or the database returns an error, the code will silently bypass the cache and hit the API directly.
+**Mitigation:** 
+I will **not** install the full RAGAS framework. I will build a "RAGAS-lite" custom implementation using pure Python and simple Cosine Similarity checks between retrieved chunks and ground-truth chunks. This keeps the footprint small while providing the necessary quantitative feedback loop to satisfy my requirement for disciplined, measurable growth. If the evaluation logic takes more than 100 lines, I will prune it to focus solely on the most critical metric: *Context Recall*.
