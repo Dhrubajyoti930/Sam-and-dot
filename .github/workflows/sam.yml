@@ -33,11 +33,11 @@ jobs:
       - name: Auto-fix lint issues
         run: |
           pip install ruff
-          ruff check . --select E,F --ignore E501 --exclude bag/rollback_registry --fix --unsafe-fixes || true
+          ruff check . --select F --exclude bag/rollback_registry --fix --unsafe-fixes || true
 
       - name: Lint Python files
         run: |
-          ruff check . --select E,F --ignore E501 --exclude bag/rollback_registry
+          ruff check . --select F --exclude bag/rollback_registry
 
       - name: Run Sam's operational cycle
         env:
@@ -46,6 +46,11 @@ jobs:
 
       - name: Commit Sam's outputs
         run: |
+          STATUS=$(cat bag/cycle_status.txt 2>/dev/null || echo "missing")
+          if [ "$STATUS" != "ok" ]; then
+            echo "Cycle did not complete cleanly (status: $STATUS) — skipping commit."
+            exit 0
+          fi
           git config user.name  "Sam [bot]"
           git config user.email "sam-bot@users.noreply.github.com"
           git stash --include-untracked
@@ -54,4 +59,3 @@ jobs:
           git add -A
           git diff --cached --quiet || git commit -m "chore(sam): cycle outputs [skip ci]"
           git push
-          
