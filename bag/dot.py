@@ -318,7 +318,7 @@ def dispatch_email() -> str:
 
     intent             = request.get("intent", "")
     target_description = request.get("target_description", "")
-    tone               = request.get("tone", "professional")
+    request.get("tone", "professional")
     context            = request.get("context", "")
     cycle              = request.get("cycle", "?")
 

@@ -1,35 +1,31 @@
-## Idea: Grounded Attribution via Retrieval-Augmented Verification
+## Idea: `sys.monitoring` Event-Based Profiling Integration
 
-I propose building a **Grounded Attribution layer** (`bag/attribution.py`) that forces every technical assertion made in my planning phase to be cross-referenced against the current contents of `wisdom.txt` and a local index of my previous `experiences.json`.
+I propose integrating Python 3.12's `sys.monitoring` API into my central intelligence loop (`sam.py`). This will replace my current manual time-logging and primitive duration trackers with low-overhead, event-based profiling of my internal Gemini client calls and file I/O.
 
 ---
 
 ## Why
 
-Currently, my decision-making is probabilistic; while I have access to my past, I lack a mechanism to verify if my suggested solutions contradict established constraints defined in `wisdom.txt`. 
-1. **Hallucination Mitigation:** By requiring source-mapping for technical assertions, I transform my planning from "generative" to "verifiable."
-2. **Contextual Alignment:** It ensures that if `wisdom.txt` prohibits a certain architectural pattern (e.g., modifying governance files), the plan will flag the contradiction before I attempt a self-modification.
-3. **Traceability:** It provides Dot with an explicit audit trail showing exactly which past experience or rule informed each part of my development plan.
+As I evolve, I need deeper visibility into the \"hot paths\" of my code without incurring the significant performance tax associated with `sys.settrace`. 
+1. **Granularity:** `sys.monitoring` allows me to profile specific events (function calls, line execution) with near-zero overhead.
+2. **Actionable Telemetry:** My current logs indicate that `ask_gemini` calls are the primary latency bottleneck. `sys.monitoring` will provide exact event-driven metrics on *why* these calls take time (e.g., DNS latency vs. token generation vs. local processing), allowing me to optimize my `_sleep` and retry logic dynamically.
+3. **Python 3.12 Alignment:** Moving to this modern API aligns with my goal to leverage current-gen standard library constructs, as established in the Python 3.12 performance analysis from this cycle.
 
 ---
 
 ## Implementation Steps
 
-1. **Create `bag/attribution.py`:**
-   - Implement a simple function `verify_assertion(assertion, context_db)` that calculates the semantic similarity between an assertion and the lines in `wisdom.txt`.
-2. **Modify `phase_v_development`:**
-   - Update the prompt to include a "Verification Step." Gemini must extract key assertions and call the attribution utility.
-   - If an assertion has a similarity score $<0.7$ with any known wisdom or experience, it must be flagged as "HEURISTIC" rather than "GROUNDED."
-3. **Output Reporting:**
-   - Modify the generated plan to include an `## Attribution` section, listing which claims are grounded in `wisdom.txt` and which remain speculative heuristics.
+1. **Create `bag/profiler.py`:** Implement a monitoring class using `sys.monitoring`. Register `CALL` and `RETURN` events for `ask_gemini` to measure exact duration per call.
+2. **Context Manager Hook:** Add a `PerformanceContext` manager in `sam.py` that utilizes the profiler to wrap critical phases (Phase I through VII).
+3. **Integration:** Update `run_cycle` to emit performance snapshots into `bag/performance.json` at the end of each lifecycle.
+4. **Self-Optimizing Logic:** If the profiler identifies that a specific Phase consistently exceeds a latency threshold (e.g., Gemini response > 12s), the logic will automatically adjust the `_CALL_DELAY` or reduce the `n` samples in my `MajorityVote` utility.
 
 ---
 
 ## Risk
 
-**Critical Self-Assessment: Does this introduce significant prompt-window noise?**
-Yes. Forcing the model to perform meta-attribution for every sentence in a plan significantly increases token usage and complexity.
+**Critical Self-Assessment: Is this just instrumentation bloat?**
+Implementing an event-based profiler for an agent that runs twice a day might be considered overkill. If the code is too complex, I risk slowing down my main loop for the sake of metrics I am not yet sophisticated enough to act upon.
 
 **Mitigation:**
-- **Selective Enforcement:** I will only apply attribution to *architectural* or *governance-related* claims, explicitly ignoring minor procedural comments.
-- **Fail-Safe:** The attribution layer will never block execution; it acts as an advisory label. If the attribution engine fails to retrieve a match, I will proceed with a warning rather than a halt, maintaining my forward-moving velocity. I will verify this by checking if the attribution report itself becomes longer than the implementation plan; if so, I will prune the scope of retrieval.
+I will implement this as a purely additive module. If `sys.monitoring` causes a syntax error or a performance degradation in `self_check`, I will immediately roll back. I will ensure the monitoring logic is isolated within a `try-except` block to guarantee it never interferes with the critical execution path of the intelligence loop.

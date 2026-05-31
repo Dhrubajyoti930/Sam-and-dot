@@ -53,12 +53,6 @@ log = logging.getLogger("sam")
 # ── Gemini client ─────────────────────────────────────────────────────────────
 from google import genai  # noqa: E402
 
-try:
-    from bag.profiler import SamProfiler
-    PROFILER = SamProfiler()
-except ImportError:
-    PROFILER = None
-
 GEM_KEY = os.environ.get("GEM_KEY_SAM")
 if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_SAM secret is not set.")
@@ -137,14 +131,11 @@ def ask_gemini(prompt: str, retries: int = 2) -> str:
 
     for attempt in range(retries):
         try:
-            start_time = time.perf_counter()
             response = CLIENT.models.generate_content(
                 model=MODEL,
                 contents=prompt,
             )
             res = response.text.strip()
-            if PROFILER:
-                PROFILER.log_call(time.perf_counter() - start_time)
             update_cache(prompt, res, goals.get("cycles", 0))
             return res
         except Exception as e:
@@ -857,9 +848,6 @@ def run_cycle():
         run_ragas_lite()
     except Exception as e:
         log.warning(f"Evaluator failed: {e}")
-
-        if PROFILER:
-            PROFILER.save()
 
 
 if __name__ == "__main__":
