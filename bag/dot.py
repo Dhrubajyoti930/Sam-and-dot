@@ -387,25 +387,16 @@ def dispatch_email() -> str:
         clear_request()
         return "(Email composition failed — request cleared.)"
 
-    # Step C: Send via SMTP
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text      import MIMEText
+    # Step C: Send via emailer — no duplicate SMTP logic (#8 fix)
+    success = send_html_email(
+        to_address=recipient_email,
+        subject=subject,
+        html_body=html_body,
+        plain_body=plain_body,
+    )
 
-    try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"]    = EMAIL_ADDR
-        msg["To"]      = recipient_email
-        msg.attach(MIMEText(plain_body, "plain"))
-        msg.attach(MIMEText(html_body,  "html"))
-
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(EMAIL_ADDR, APP_PSWD)
-            server.sendmail(EMAIL_ADDR, recipient_email, msg.as_string())
-
+    if success:
         log.info(f"Email sent to {recipient_email}: '{subject}'")
-
         sent_entry = {
             "timestamp":        datetime.datetime.utcnow().isoformat(),
             "cycle":            cycle,
@@ -417,7 +408,6 @@ def dispatch_email() -> str:
         }
         append_sent_log(sent_entry)
         clear_request()
-
         return (
             f"### Email Dispatch — Sent ✅\n\n"
             f"**To:** {recipient_name} <{recipient_email}>\n"
@@ -425,10 +415,9 @@ def dispatch_email() -> str:
             f"**Intent:** {intent}\n\n"
             f"Sam, your message has been sent. Dot will check for replies on Sunday."
         )
-
-    except Exception as e:
-        log.error(f"SMTP send failed: {e}")
-        return f"(Email send failed: {e} — request kept pending for next run.)"
+    else:
+        log.error(f"Email send failed to {recipient_email}.")
+        return f"(Email send failed — request kept pending for next run.)"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -569,6 +558,9 @@ def run():
 
     sections = []
 
+    # Preserve any Sam-written alerts from the previous cycle BEFORE overwriting motion.md (#3 fix)
+    sam_alerts = read_sam_alerts()
+
     # Task 1: Wisdom check (always runs first — becomes the base of motion.md)
     wisdom_findings = wisdom_check()
     sections.append(wisdom_findings)
@@ -584,6 +576,11 @@ def run():
 
     # Write motion.md with what we have so far
     write_motion("\n\n---\n\n".join(sections))
+
+    # Restore Sam's alerts that were in the previous motion.md (#3 fix)
+    if sam_alerts:
+        append_motion("Sam Alerts (carried forward from previous cycle)", sam_alerts)
+        log.info("Sam's previous alerts restored to motion.md.")
 
     # Task 3: Email dispatch (appended to motion.md)
     try:
