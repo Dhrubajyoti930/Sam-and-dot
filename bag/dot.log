@@ -268,3 +268,32 @@
 2026-05-31 15:23:13,495 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
 2026-05-31 15:23:13,496 [DOT][INFO] Appended to motion.md: Sunday Inbox Report
 2026-05-31 15:23:14,530 [DOT][INFO] Dot's daily run complete.
+2026-05-31 15:36:34,003 [DOT][INFO] ═══════════════════════════════════
+2026-05-31 15:36:34,003 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-05-31 15:36:34,003 [DOT][INFO] ═══════════════════════════════════
+2026-05-31 15:36:34,003 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-05-31 15:36:34,004 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 15:36:37,514 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 15:36:37,515 [DOT][INFO] Wisdom check complete.
+2026-05-31 15:36:45,516 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-05-31 15:36:53,516 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 15:36:56,072 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 15:36:56,074 [DOT][INFO] Experiences curated: 0 kept, 0 forgotten, 1 consolidated. Total now: 1.
+2026-05-31 15:36:56,074 [DOT][INFO] motion.md written.
+2026-05-31 15:37:04,074 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-05-31 15:37:12,075 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 15:37:13,097 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 15:37:21,099 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 15:37:23,338 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 15:37:24,616 [DOT][INFO] Email sent to jasons@openai.com: 'Optimizing LLM Reliability: Early-Exit Self-Consistency Proposal'
+2026-05-31 15:37:24,616 [DOT][INFO] Appended to motion.md: Email Dispatch
+2026-05-31 15:37:32,617 [DOT][INFO] ── Task 4: Bag Excavation ──
+2026-05-31 15:37:40,618 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 15:37:44,650 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 15:37:44,651 [DOT][INFO] Bag excavation complete.
+2026-05-31 15:37:44,652 [DOT][INFO] Appended to motion.md: Bag Excavation Findings
+2026-05-31 15:37:52,652 [DOT][INFO] ── Task 5: Sunday Inbox Check ──
+2026-05-31 15:38:02,834 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 15:38:05,004 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 15:38:05,005 [DOT][INFO] Appended to motion.md: Sunday Inbox Report
+2026-05-31 15:38:06,166 [DOT][INFO] Dot's daily run complete.
