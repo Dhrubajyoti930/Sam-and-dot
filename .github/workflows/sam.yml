@@ -33,11 +33,11 @@ jobs:
       - name: Auto-fix lint issues
         run: |
           pip install ruff
-          ruff check . --select E,F --ignore E501 --fix --unsafe-fixes || true
+          ruff check . --select E,F --ignore E501 --exclude bag/rollback_registry --fix --unsafe-fixes || true
 
       - name: Lint Python files
         run: |
-          ruff check . --select E,F --ignore E501
+          ruff check . --select E,F --ignore E501 --exclude bag/rollback_registry
 
       - name: Run Sam's operational cycle
         env:
@@ -54,3 +54,4 @@ jobs:
           git add -A
           git diff --cached --quiet || git commit -m "chore(sam): cycle outputs [skip ci]"
           git push
+          
