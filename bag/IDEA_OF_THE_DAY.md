@@ -1,27 +1,37 @@
-## Idea: RAGAS-based Evaluation Baseline for Memory Compression
+## Idea: Conventional Commits Linting & SemVer Automation
 
-I propose integrating a minimal **RAGAS (Retrieval Augmented Generation Assessment)** test suite into the `bag/` directory to quantitatively measure the performance of my existing vector-based memory systems. This will establish a baseline for "Faithfulness" and "Context Precision," ensuring my memory compression (SQ8/BQ) isn't causing silent information loss.
+I propose implementing a lightweight commit-analysis pipeline in `bag/versioning.py` that enforces the **Conventional Commits** specification and calculates the next semantic version based on the commit history since the last `git tag`.
+
+---
 
 ## Why
 
-As I shift toward a more complex memory architecture using a semantic cache and quantized vectors, I am currently "flying blind." I have no programmatic way to know if my compression techniques are reducing retrieval quality below an acceptable threshold. Without automated evaluation:
-1. **Silent Degradation:** I could be retrieving "similar" vectors that are semantically irrelevant, leading to hallucinations.
-2. **Evaluation Drift:** As I update my `vector_db` or compression logic, I need an objective metric (0.0 to 1.0) to confirm I am meeting my target accuracy (e.g., $\ge 95\%$ recall).
-3. **Foundation for Agentic RAG:** To move toward true "Agentic RAG" (where I decide if I need to retrieve), I must first understand the reliability of my current retrieval mechanics.
+Currently, I manage versions and changelogs manually or non-deterministically. This lacks the rigour required for automated deployment.
+1. **Contract Reliability:** By strictly mapping `fix` to patch, `feat` to minor, and `BREAKING CHANGE` to major, I establish a machine-readable history that justifies every version bump.
+2. **Automated Changelogs:** A formalized commit history allows me to derive `CHANGELOG.md` directly from the log, eliminating the manual burden of release note maintenance.
+3. **CI/CD Integration:** This provides a foundation for the "CI/CD Gate" pattern, ensuring that any code merge that violates the versioning contract is caught and rejected before it reaches the codebase.
+
+---
 
 ## Implementation Steps
 
-1. **Synthetic Dataset Creation:** Write a script `bag/tests/generate_eval_data.py` that parses 5 random previous `experiences.json` entries and generates 10 "Question/Ground Truth" pairs based on those entries.
-2. **Evaluation Suite (`bag/evaluator.py`):**
-   - Implement a simple runner that queries the vector store for these questions.
-   - Calculate **Faithfulness** (does the retrieved context actually support the answer?) and **Context Precision** (are the relevant chunks ranked highly?).
-   - Print a summary report to `sam.log`.
-3. **Integration:** Add a hook at the end of `run_cycle()` to execute this evaluator if the memory store has changed. If the aggregate score drops below 0.90, log a warning to `motion.md`.
+1. **Create `bag/versioning.py`:** 
+   - Define a function `parse_commits(since_tag)` that parses `git log` using a regex pattern matching the Conventional Commits spec.
+   - Implement logic to determine the next version: `0.0.0` → `patch` → `minor` → `major`.
+2. **Pre-Commit Linting:** 
+   - Add a `check_commit(message)` utility that validates incoming commit messages against the spec.
+   - Update `phase_v_development` to ensure all internal `bag/` modifications follow this pattern.
+3. **Changelog Synthesis:**
+   - Create a module that formats the parsed commit list into a `CHANGELOG.md` file, grouping by type (`feat`, `fix`, `perf`, `chore`).
+4. **CI/CD Gate Logic:**
+   - Add a script `bag/ci_check.py` that, when triggered, verifies the current branch state against the last tag to calculate the bump.
+
+---
 
 ## Risk
 
-**Critical Self-Assessment: Is this over-engineering for a small agent?**
-Yes. RAGAS is typically a heavy framework. If I try to install the full library, I risk dependency bloat. 
+**Critical Self-Assessment: Is this premature automation?**
+Introducing automated versioning before I have a high-frequency release cycle may add maintenance overhead that outstrips the current utility.
 
-**Mitigation:** 
-I will **not** install the full RAGAS framework. I will build a "RAGAS-lite" custom implementation using pure Python and simple Cosine Similarity checks between retrieved chunks and ground-truth chunks. This keeps the footprint small while providing the necessary quantitative feedback loop to satisfy my requirement for disciplined, measurable growth. If the evaluation logic takes more than 100 lines, I will prune it to focus solely on the most critical metric: *Context Recall*.
+**Mitigation:**
+I will keep the implementation strictly within `bag/versioning.py` as an optional utility. It will not be integrated into my primary `run_cycle` as a mandatory blocking gate until I have successfully tested the parsing logic against at least 10 historical commits. I will ensure the tool is \"opt-in\" by creating an explicit `versioning_enabled` flag in `goals.json`.

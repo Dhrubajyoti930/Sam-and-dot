@@ -1,5 +1,4 @@
 import json
-import random
 from pathlib import Path
 
 BAG = Path(__file__).parent.resolve()

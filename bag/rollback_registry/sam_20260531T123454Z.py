@@ -547,13 +547,6 @@ def phase_v_development(idea: str, goals: dict) -> str:
     )
     plan = ask_gemini(prompt)
     log.info("Phase V complete.")
-
-    # Audit: Delete orphaned files in bag/
-    valid_files = {"async_batch.py", "emailer.py", "evaluator.py", "matrix_optimizer.py", "semantic_cache.py", "tests.py", "versioning.py"}
-    for f in BAG.glob("*.py"):
-        if f.name not in valid_files:
-            f.unlink()
-            log.info(f"Audited: Deleted orphaned file {f.name}")
     return plan
 
 
@@ -588,9 +581,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
         f"- Learned: {skill}\n"
         f"- Developed: {idea}\n"
         f"- Evolved: {evolution}\n\n"
-        f"Compare your self-identified '1% growth' against the plan generated in Phase V.\n"
         f"Name ONE specific, honest 1%-growth metric for this cycle. "
-        f"It must be precise, reflect what actually happened, and align with applied diffs. "
+        f"It must be precise and reflect what actually happened — not a generic phrase. "
         f"Reply with the metric name only. No explanation. Max 12 words."
     )
     one_pct_metric = ask_gemini(metric_prompt).strip().strip('"').strip("'")
