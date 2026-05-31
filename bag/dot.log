@@ -297,3 +297,32 @@
 2026-05-31 15:38:05,004 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
 2026-05-31 15:38:05,005 [DOT][INFO] Appended to motion.md: Sunday Inbox Report
 2026-05-31 15:38:06,166 [DOT][INFO] Dot's daily run complete.
+2026-05-31 15:44:45,075 [DOT][INFO] ═══════════════════════════════════
+2026-05-31 15:44:45,076 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-05-31 15:44:45,076 [DOT][INFO] ═══════════════════════════════════
+2026-05-31 15:44:45,076 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-05-31 15:44:45,076 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 15:44:50,108 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 15:44:50,110 [DOT][INFO] Wisdom check complete.
+2026-05-31 15:44:58,110 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-05-31 15:45:06,111 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 15:45:08,592 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 15:45:08,594 [DOT][INFO] Experiences curated: 0 kept, 0 forgotten, 1 consolidated. Total now: 1.
+2026-05-31 15:45:08,594 [DOT][INFO] motion.md written.
+2026-05-31 15:45:16,594 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-05-31 15:45:24,595 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 15:45:25,754 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 15:45:33,755 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 15:45:36,221 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 15:45:37,372 [DOT][INFO] Email sent to paul@paulgauthier.ai: 'Inquiry: Grounded Attribution for Autonomous Agent Stability'
+2026-05-31 15:45:37,373 [DOT][INFO] Appended to motion.md: Email Dispatch
+2026-05-31 15:45:45,373 [DOT][INFO] ── Task 4: Bag Excavation ──
+2026-05-31 15:45:53,374 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 15:45:58,592 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 15:45:58,593 [DOT][INFO] Bag excavation complete.
+2026-05-31 15:45:58,593 [DOT][INFO] Appended to motion.md: Bag Excavation Findings
+2026-05-31 15:46:06,593 [DOT][INFO] ── Task 5: Sunday Inbox Check ──
+2026-05-31 15:46:21,580 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 15:46:24,508 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 15:46:24,509 [DOT][INFO] Appended to motion.md: Sunday Inbox Report
+2026-05-31 15:46:25,779 [DOT][INFO] Dot's daily run complete.
