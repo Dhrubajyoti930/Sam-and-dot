@@ -2,7 +2,7 @@ name: Dot — Daily Watchdog
 
 on:
   schedule:
-    - cron: "0 5 * * *"   # 23:00 UTC — runs after Sam's evening cycle
+    - cron: "0 5 * * *"    # 05:00 UTC — runs after Sam's evening cycle
   workflow_dispatch:         # Manual trigger for owner
 
 permissions:
@@ -23,11 +23,13 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "requirements.txt"
 
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install --upgrade google-genai
+          pip install -r requirements.txt
 
       - name: Run Dot's daily watchdog review
         env:
