@@ -33,7 +33,6 @@ Operational Lifecycle:
 """
 
 import os
-import asyncio
 import re
 import sys
 import json
@@ -42,7 +41,6 @@ import datetime
 import logging
 import logging.handlers
 import subprocess
-import traceback
 from pathlib import Path
 
 # ── Paths ────────────────────────────────────────────────────────────────────
@@ -72,9 +70,7 @@ logging.basicConfig(
 log = logging.getLogger("sam")
 
 # ── Gemini client ─────────────────────────────────────────────────────────────
-from google import genai
-from bag.async_batch import AsyncWorkerPool
-from bag.matrix_optimizer import get_matrix
+from google import genai  # noqa: E402
 
 GEM_KEY = os.environ.get("GEM_KEY_SAM")
 if not GEM_KEY:
@@ -147,13 +143,20 @@ def save_experiences(data: list):
 
 def ask_gemini(prompt: str, retries: int = 2) -> str:
     """Send a prompt to Sam's Gemini instance. Retries on transient errors."""
+    from bag.semantic_cache import check_cache, update_cache
+    goals = load_goals()
+    cached = check_cache(prompt, goals.get("cycles", 0))
+    if cached: return cached
+
     for attempt in range(retries):
         try:
             response = CLIENT.models.generate_content(
                 model=MODEL,
                 contents=prompt,
             )
-            return response.text.strip()
+            res = response.text.strip()
+            update_cache(prompt, res, goals.get("cycles", 0))
+            return res
         except Exception as e:
             err = str(e)
             if "429" in err or "503" in err or "UNAVAILABLE" in err or "RESOURCE_EXHAUSTED" in err:
@@ -163,7 +166,7 @@ def ask_gemini(prompt: str, retries: int = 2) -> str:
             elif "404" in err:
                 log.critical("MODEL STRING MAY BE DEPRECATED — owner intervention required.")
                 _alert_dot("Gemini returned 404. The model string may be deprecated. Owner must update MODEL in sam.py and bag/dot.py.")
-                return f"[Gemini error: model not found]"
+                return "[Gemini error: model not found]"
             else:
                 log.error(f"Gemini call failed (non-retryable): {e}")
                 return f"[Gemini error: {e}]"
@@ -177,35 +180,58 @@ def _sleep():
 
 
 def snapshot_sam() -> Path:
-    """Archive current sam.py into rollback_registry with a timestamp."""
+    """Archive sam.py and all writable bag/*.py into rollback_registry."""
     ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+
+    # ── Snapshot sam.py (existing format preserved for backward compat) ──
     dest = ROLLBACK_REG / f"sam_{ts}.py"
     dest.write_text(Path(__file__).read_text())
     log.info(f"Snapshot saved → {dest.name}")
-    # ── Prune old snapshots — keep only the 20 most recent ──
+
+    # ── Snapshot all writable bag/*.py files alongside ──
+    _SNAP_EXCLUDED = {"dot.py"}
+    bag_snap = {
+        f.name: f.read_text()
+        for f in sorted(BAG.glob("*.py"))
+        if f.name not in _SNAP_EXCLUDED
+    }
+    bag_dest = ROLLBACK_REG / f"bag_{ts}.json"
+    bag_dest.write_text(json.dumps(bag_snap, indent=2))
+    log.info(f"Bag snapshot saved → {bag_dest.name} ({len(bag_snap)} files)")
+
+    # ── Prune old snapshots — keep only the 20 most recent pairs ──
     snapshots = sorted(ROLLBACK_REG.glob("sam_*.py"), reverse=True)
     for old in snapshots[20:]:
+        ts_old = old.stem[4:]   # strip "sam_" prefix
         old.unlink()
         log.info(f"Pruned old snapshot → {old.name}")
+        old_bag = ROLLBACK_REG / f"bag_{ts_old}.json"
+        if old_bag.exists():
+            old_bag.unlink()
+            log.info(f"Pruned old bag snapshot → {old_bag.name}")
+
     return dest
 
 
 def self_check() -> bool:
-    """Boot-time integrity check. Returns True if healthy, triggers rollback if not."""
-    try:
-        result = subprocess.run(
-            [sys.executable, "-c",
-             f"import py_compile; py_compile.compile('{__file__}', doraise=True)"],
-            capture_output=True, text=True, timeout=10,
-        )
-        if result.returncode != 0:
-            log.error("Syntax check failed — initiating rollback.")
-            _rollback()
+    """Boot-time integrity check — covers sam.py and all bag/*.py files.
+    Returns True if all are healthy, triggers rollback if any fail."""
+    files_to_check = [Path(__file__)] + sorted(BAG.glob("*.py"))
+    for f in files_to_check:
+        try:
+            result = subprocess.run(
+                [sys.executable, "-c",
+                 f"import py_compile; py_compile.compile(r'{f}', doraise=True)"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if result.returncode != 0:
+                log.error(f"Syntax check failed on {f.name} — initiating rollback.")
+                _rollback()
+                return False
+        except Exception as e:
+            log.error(f"Self-check exception on {f.name}: {e}")
             return False
-        return True
-    except Exception as e:
-        log.error(f"Self-check exception: {e}")
-        return False
+    return True
 
 
 def behaviour_check() -> bool:
@@ -228,6 +254,570 @@ def behaviour_check() -> bool:
             _alert_dot(
                 "bag/tests.py failed after a self-modification. Rolling back.\n\n"
                 f"Test output:\n```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"
+            )
+            return False
+    except Exception as e:
+        log.error(f"Behaviour check exception: {e}")
+        return False
+
+
+def _rollback():
+    """Restore sam.py and all bag/*.py files from the most recent healthy snapshot."""
+    snapshots = sorted(ROLLBACK_REG.glob("sam_*.py"), reverse=True)
+    if not snapshots:
+        log.critical("No snapshots in rollback_registry — cannot recover.")
+        return
+    latest = snapshots[0]
+
+    # ── Restore sam.py ──
+    Path(__file__).write_text(latest.read_text())
+    log.warning(f"Rolled back sam.py → {latest.name}")
+
+    # ── Restore bag/*.py files from the corresponding bag snapshot ──
+    ts = latest.stem[4:]   # strip "sam_" prefix
+    bag_snap_path = ROLLBACK_REG / f"bag_{ts}.json"
+    if bag_snap_path.exists():
+        try:
+            bag_snap = json.loads(bag_snap_path.read_text())
+            for fname, content in bag_snap.items():
+                (BAG / fname).write_text(content)
+                log.warning(f"Rolled back bag/{fname}")
+            log.warning(f"Bag files restored from {bag_snap_path.name} ({len(bag_snap)} files)")
+        except Exception as e:
+            log.error(f"Failed to restore bag files from {bag_snap_path.name}: {e}")
+    else:
+        log.warning(f"No bag snapshot found for ts={ts} — only sam.py was restored.")
+
+
+def _alert_dot(message: str):
+    """Append a Sam-generated alert to motion.md for Dot to read next run."""
+    ts = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    alert = f"\n\n---\n\n## ⚠️ Sam Alert — {ts}\n\n{message}\n"
+    if MOTION.exists():
+        with open(MOTION, "a") as f:
+            f.write(alert)
+    else:
+        MOTION.write_text(f"# motion.md\n{alert}")
+    log.warning(f"Alert written to motion.md: {message}")
+
+
+def apply_self_modification(plan: str) -> bool:
+    """Ask Gemini to extract surgical patch operations from the plan and apply them.
+    Only sam.py and bag/*.py are writable. Returns True if anything was applied.
+
+    Each operation in the JSON array must have:
+      - 'filename'  : relative path from repo root (sam.py or bag/*.py only)
+      - 'operation' : one of 'replace', 'insert_after', 'delete'
+      - 'old'       : exact existing string to find (required for replace / delete)
+      - 'new'       : replacement / insertion string (required for replace / insert_after)
+      - 'anchor'    : exact line after which to insert (required for insert_after)
+
+    No full-file rewrites. Each operation touches only the targeted lines.
+    If 'old' or 'anchor' is not found exactly, the operation is skipped safely.
+    """
+    log.info("── Self-Modification: Parsing Surgical Patch ──")
+
+    # Hard-coded forbidden files — never writable by Sam
+    FORBIDDEN = {"wisdom.txt", "motion.md", "SAM_PERSONALITY.md", "dot.py"}
+
+    prompt = (
+        f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
+        f"Extract any concrete file modifications as a JSON array of patch operations.\n"
+        f"Respond ONLY with a JSON array — no markdown, no explanation.\n\n"
+        f"Each element must have:\n"
+        f"  - 'filename'  : relative path from repo root. Only 'sam.py' or 'bag/*.py' are permitted.\n"
+        f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
+        f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
+        f"  - For 'insert_after': 'anchor' (exact existing line) and 'new' (string to insert after it)\n"
+        f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
+        f"CRITICAL RULES:\n"
+        f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
+        f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
+        f"  - Keep each operation as small as possible — one function, one block, one line.\n"
+        f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
+        f"  - If no concrete changes are needed, return an empty array [].\n\n"
+        f"PYTHON CODE QUALITY RULES — every 'new' string must obey these:\n"
+        f"  - Must be syntactically valid Python. Mentally parse it before including it.\n"
+        f"  - Indentation must be correct: class methods indented 4 spaces inside their class,\n"
+        f"    nested blocks indented a further 4 spaces each level. Never mix tabs and spaces.\n"
+        f"  - A class body must never be left empty. If a class has no body yet, add 'pass'.\n"
+        f"  - Never place a method definition outside its class block.\n"
+        f"  - After a 'replace', the resulting file must remain structurally intact —\n"
+        f"    check that the 'old' context around the change is not load-bearing for other blocks."
+    )
+
+    _sleep()
+    raw = ask_gemini(prompt)
+
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        operations = json.loads(clean)
+    except Exception as e:
+        log.warning(f"Could not parse patch operations as JSON: {e}")
+        return False
+
+    if not operations:
+        log.info("No patch operations extracted — skipping self-modification.")
+        return False
+
+    applied = []
+    for op in operations:
+        fname     = op.get("filename", "")
+        operation = op.get("operation", "")
+
+        # Guard: must be sam.py or inside bag/
+        if fname not in ("sam.py",) and not fname.startswith("bag/"):
+            log.warning(f"Blocked patch to '{fname}' — outside allowed scope.")
+            continue
+
+        # Guard: never touch governance files
+        basename = Path(fname).name
+        if basename in FORBIDDEN:
+            log.warning(f"Blocked patch to governance file '{fname}'.")
+            continue
+
+        # Guard: reject any operation that tries to supply full file content
+        if "content" in op:
+            log.warning(f"Blocked full-file rewrite attempt on '{fname}' — 'content' key is forbidden.")
+            continue
+
+        target = ROOT / fname
+        if not target.exists():
+            if operation == "insert_after":
+                # Allowed: creating a new bag/ file via insert_after with empty anchor
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(op.get("new", ""))
+                log.info(f"Created new file via insert_after → {fname}")
+                applied.append(fname)
+            else:
+                log.warning(f"Skipping patch on non-existent file '{fname}'.")
+            continue
+
+        source = target.read_text()
+
+        if operation == "replace":
+            old = op.get("old", "")
+            new = op.get("new", "")
+            if not old:
+                log.warning(f"replace on '{fname}': 'old' is empty — skipping.")
+                continue
+            if old not in source:
+                log.warning(f"replace on '{fname}': 'old' string not found — skipping.")
+                continue
+            target.write_text(source.replace(old, new, 1))
+            log.info(f"Applied replace → {fname}")
+            applied.append(fname)
+
+        elif operation == "insert_after":
+            anchor = op.get("anchor", "")
+            new    = op.get("new", "")
+            if not anchor:
+                log.warning(f"insert_after on '{fname}': 'anchor' is empty — skipping.")
+                continue
+            if anchor not in source:
+                log.warning(f"insert_after on '{fname}': anchor not found — skipping.")
+                continue
+            target.write_text(source.replace(anchor, anchor + "\n" + new, 1))
+            log.info(f"Applied insert_after → {fname}")
+            applied.append(fname)
+
+        elif operation == "delete":
+            old = op.get("old", "")
+            if not old:
+                log.warning(f"delete on '{fname}': 'old' is empty — skipping.")
+                continue
+            if old not in source:
+                log.warning(f"delete on '{fname}': 'old' string not found — skipping.")
+                continue
+            target.write_text(source.replace(old, "", 1))
+            log.info(f"Applied delete → {fname}")
+            applied.append(fname)
+
+        else:
+            log.warning(f"Unknown operation '{operation}' on '{fname}' — skipping.")
+
+    return bool(applied)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def phase_i_deep_learning(goals: dict) -> str:
+    """Acquire a new hard skill or prompting technique."""
+    log.info("── Phase I: Deep Learning ──")
+    objectives = goals.get("next_objectives", [])
+    focus = objectives[0] if objectives else "latest LLM context-engineering techniques"
+
+    personality = load_personality()
+    prompt = (
+        f"You are Sam, an autonomous developer agent. Your character:\n\n{personality}\n\n"
+        f"Your learning focus for this cycle is: '{focus}'.\n"
+        f"Produce a concise but dense technical summary (300-400 words) of the most important "
+        f"concepts, patterns, or techniques a developer should know about this topic today. "
+        f"Conclude with three concrete action items Sam should implement this cycle."
+    )
+    result = ask_gemini(prompt)
+    log.info("Phase I complete.")
+    return result
+
+
+def phase_ii_spaced_repetition(goals: dict) -> str:
+    """Revise yesterday's skill; run mini-tests to prevent drift."""
+    log.info("── Phase II: Spaced Repetition ──")
+    growth_log = goals.get("growth_log", [])
+    last_skill = (
+        growth_log[-1].get("skill", "")[:200]
+        if growth_log
+        else "general Python async patterns"
+    )
+
+    _sleep()
+    prompt = (
+        f"You are Sam. In your last cycle you studied:\n\n'{last_skill}'\n\n"
+        f"Generate 3 concise but challenging quiz questions to test retention of this skill, "
+        f"followed immediately by the correct answers. Keep the format tight and engineering-precise."
+    )
+    result = ask_gemini(prompt)
+    log.info("Phase II complete.")
+    return result
+
+
+def phase_iii_market_ingestion() -> str:
+    """Synthesise current tech directions via Gemini."""
+    log.info("── Phase III: Market & Code Ingestion ──")
+
+    _sleep()
+    prompt = (
+        "You are Sam's market scanner. List the top 5 high-velocity technology or open-source "
+        "trends a Python AI developer should be tracking right now. For each trend provide: "
+        "trend name, one-sentence description, and a specific GitHub repo or resource URL worth exploring. "
+        "Be specific and current — no generic filler."
+    )
+    result = ask_gemini(prompt)
+    log.info("Phase III complete.")
+    return result
+
+
+def phase_iv_synthesis(market_data: str, skill: str) -> str:
+    """Generate IDEA_OF_THE_DAY.md from market signals + today's skill."""
+    log.info("── Phase IV: The Synthesis ──")
+    who_i_am   = load_who_i_am()
+    personality = load_personality()
+
+    _sleep()
+    prompt = (
+        f"You are Sam, an autonomous developer who continuously improves himself.\n\n"
+        f"Character:\n{personality}\n\n"
+        f"Market signals this cycle:\n{market_data}\n\n"
+        f"Skill learned this cycle:\n{skill}\n\n"
+        f"Current architecture overview:\n{who_i_am}\n\n"
+        f"Propose ONE concrete, implementable development idea for today. "
+        f"Format as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk.\n"
+        f"Be critical — question the idea yourself before committing to it."
+    )
+    idea = ask_gemini(prompt)
+    IDEA_OF_DAY.write_text(idea)
+    log.info("IDEA_OF_THE_DAY.md written.")
+    return idea
+
+
+def phase_v_development(idea: str, goals: dict) -> str:
+    """Read motion.md FIRST, then produce a development plan."""
+    log.info("── Phase V: Development & Refactor ──")
+
+    # ⚠️  motion.md is read ONCE, here, and nowhere else.
+    motion_content = read_motion()
+    log.info("motion.md read.")
+
+    personality = load_personality()
+    sam_src     = Path(__file__).read_text()
+    tests_src   = TESTS.read_text() if TESTS.exists() else "(tests.py not found)"
+
+    # Load every writable bag/*.py file so Sam has accurate source to diff against.
+    # Forbidden and already-included files are skipped.
+    _EXCLUDED = {"tests.py", "dot.py", "wisdom.txt", "motion.md", "SAM_PERSONALITY.md"}
+    bag_sources = ""
+    for _f in sorted(BAG.glob("*.py")):
+        if _f.name in _EXCLUDED:
+            continue
+        bag_sources += f"bag/{_f.name} (full source):\n```python\n{_f.read_text()}\n```\n\n"
+
+    _sleep()
+    prompt = (
+        f"You are Sam's Gemini refactoring assistant.\n\n"
+        f"Sam's character:\n{personality}\n\n"
+        f"Dot's guidance (motion.md — read carefully):\n{motion_content}\n\n"
+        f"Today's development idea:\n{idea}\n\n"
+        f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
+        f"Sam's current bag/tests.py (full source):\n```python\n{tests_src}\n```\n\n"
+        f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"
+        f"Produce a surgical patch plan for Sam to apply. Rules:\n"
+        f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
+        f"  2. Prefer adding new functions to bag/ files over editing sam.py's core loop.\n"
+        f"  3. For each change, specify EXACTLY:\n"
+        f"       - Which file (sam.py or bag/*.py only)\n"
+        f"       - The operation: replace / insert_after / delete\n"
+        f"       - The exact existing string to find ('old' or 'anchor') — copy it verbatim from the source above\n"
+        f"       - The new string to substitute or insert\n"
+        f"  4. Flag any security or stability risks before listing changes.\n"
+        f"  5. If the idea requires no code change this cycle, say so explicitly.\n\n"
+        f"Do NOT supply full file contents. Surgical diffs only."
+    )
+    plan = ask_gemini(prompt)
+    log.info("Phase V complete.")
+    return plan
+
+
+def phase_vi_cognitive_evolution(goals: dict) -> str:
+    """Upgrade internal prompts; suggest one concrete improvement for next cycle."""
+    log.info("── Phase VI: Cognitive Evolution ──")
+
+    _sleep()
+    prompt = (
+        "You are Sam. Review the latest context-engineering paradigms "
+        "(chain-of-thought, self-consistency, tree-of-thoughts, ReAct, structured outputs, "
+        "tool use, memory compression). "
+        "Suggest ONE concrete prompt-engineering improvement Sam could apply to his own "
+        "internal Gemini calls in the next cycle. Be specific — include a before/after example."
+    )
+    evolution = ask_gemini(prompt)
+    log.info("Phase VI complete.")
+    return evolution
+
+
+def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolution: str):
+    """Commit work, log a real metric, update WHO_I_AM.md, append to experiences.json."""
+    log.info("── Phase VII: State Saving ──")
+
+    ts        = datetime.datetime.utcnow().isoformat()
+    cycle_num = goals.get("cycles", 0) + 1
+
+    # Ask Gemini to name a real, specific 1% metric for this cycle
+    _sleep()
+    metric_prompt = (
+        f"You are Sam. This cycle you:\n"
+        f"- Learned: {skill}\n"
+        f"- Developed: {idea}\n"
+        f"- Evolved: {evolution}\n\n"
+        f"Name ONE specific, honest 1%-growth metric for this cycle. "
+        f"It must be precise and reflect what actually happened — not a generic phrase. "
+        f"Reply with the metric name only. No explanation. Max 12 words."
+    )
+    one_pct_metric = ask_gemini(metric_prompt).strip().strip('"').strip("'")
+    log.info(f"1% metric: {one_pct_metric}")
+
+    entry = {
+        "cycle":       cycle_num,
+        "timestamp":   ts,
+        "skill":       skill,
+        "idea":        idea,
+        "evolution":   evolution,
+        "1pct_metric": one_pct_metric,
+    }
+
+    goals["cycles"]           = cycle_num
+    goals["last_1pct_metric"] = one_pct_metric
+    goals["growth_log"]       = (goals.get("growth_log", []) + [entry])[-30:]
+    goals["next_objectives"]  = goals.get("next_objectives", [])[1:] or [
+        "vector memory compression techniques",
+        "async Gemini batching patterns",
+        "GitHub Actions matrix optimisation",
+    ]
+
+    # Append today's idea heading to next_objectives
+    idea_heading = idea.strip().splitlines()[0].lstrip("#").strip()
+    if idea_heading:
+        goals["next_objectives"].append(f"{idea_heading} - with cutting edge research.")
+
+    save_goals(goals)
+
+    # ── Update WHO_I_AM.md with real sam.py content + current goals ──────────
+    sam_src     = Path(__file__).read_text()
+    goals_block = f"```json\n{json.dumps(goals, indent=2)}\n```"
+    who_text    = WHO_I_AM.read_text()
+
+    # Inject actual sam.py source
+    who_text = re.sub(
+        r"(### `sam\.py`.*?```python\n).*?(```)",
+        lambda m: m.group(1) + sam_src + "\n" + m.group(2),
+        who_text,
+        flags=re.DOTALL,
+    )
+
+    # Inject current goals snapshot
+    who_text = re.sub(
+        r"(## Current Goals Snapshot\n+).*?(\n---|$)",
+        lambda m: m.group(1) + goals_block + "\n\n" + m.group(2),
+        who_text,
+        flags=re.DOTALL,
+    )
+
+    # Update last-updated timestamp
+    who_text = re.sub(
+        r"_Last updated: 2026-05-31T09:50:52.456806 UTC_",
+        f"_Last updated: 2026-05-31T09:50:52.456806 UTC_",
+        who_text,
+    )
+
+    WHO_I_AM.write_text(who_text)
+    log.info("WHO_I_AM.md updated.")
+
+    # ── Append to experiences.json ─────────────────────────────────────────────
+    experiences = load_experiences()
+
+    _sleep()
+    exp_prompt = (
+        f"You are Sam, an autonomous developer agent. Summarise cycle {cycle_num} "
+        f"as a single experience entry. "
+        f"Respond ONLY with a JSON object (no markdown) with these fields:\n"
+        f"  - 'category': a short dynamic label that best fits this experience (e.g. 'architecture', 'debugging', 'market-research', 'communication')\n"
+        f"  - 'summary': 2-3 sentence honest summary of what happened this cycle\n"
+        f"  - 'key_learnings': list of 2-3 strings\n"
+        f"  - 'tags': list of relevant lowercase tags\n"
+        f"  - 'sentiment': one of 'positive', 'neutral', 'mixed', 'negative'\n\n"
+        f"Cycle data:\nSkill: {skill}\nIdea: {idea}\nMetric: {one_pct_metric}"
+    )
+    raw_exp = ask_gemini(exp_prompt)
+    try:
+        clean = raw_exp.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        exp_entry = json.loads(clean)
+        exp_entry["cycle"]     = cycle_num
+        exp_entry["timestamp"] = ts
+    except Exception as e:
+        log.warning(f"Could not parse experience entry: {e}")
+        exp_entry = {
+            "cycle":         cycle_num,
+            "timestamp":     ts,
+            "category":      "uncategorised",
+            "summary":       skill,
+            "key_learnings": [],
+            "tags":          [],
+            "sentiment":     "neutral",
+        }
+
+    experiences.append(exp_entry)
+    save_experiences(experiences)
+    log.info(f"experiences.json updated — {len(experiences)} entries.")
+
+    log.info(f"Cycle {cycle_num} complete. 1% metric: {one_pct_metric}")
+
+
+def maybe_write_email_request(idea: str, goals: dict):
+    """If Sam has something worth communicating externally, write request.json.
+    He only writes a new request if the previous one has been cleared by Dot."""
+    if REQUEST_JSON.exists():
+        try:
+            existing = json.loads(REQUEST_JSON.read_text())
+            if existing.get("pending", False):
+                log.info("request.json already pending — skipping email request this cycle.")
+                return
+        except Exception:
+            pass
+
+    cycle_num = goals.get("cycles", 0) + 1
+
+    # Sam decides whether this cycle's idea is worth sharing externally
+    _sleep()
+    decision_prompt = (
+        f"You are Sam, an autonomous developer agent. You completed cycle {cycle_num}.\n"
+        f"Today's idea:\n{idea}\n\n"
+        f"Decide: Is there a specific tech company, open-source maintainer, or indie developer "
+        f"it would be genuinely valuable to reach out to about this idea or to learn from? "
+        f"Reply ONLY with a JSON object:\n"
+        f"  - 'should_email': true or false\n"
+        f"  - 'intent': if true, 1-2 sentences on what Sam wants to communicate\n"
+        f"  - 'target_description': if true, describe who — e.g. 'maintainer of LangChain on GitHub'\n"
+        f"  - 'tone': 'professional' or 'friendly'\n"
+        f"Only say true if there is a genuinely specific, useful reason. No spam."
+    )
+    raw = ask_gemini(decision_prompt)
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        decision = json.loads(clean)
+    except Exception:
+        log.info("Could not parse email decision — skipping.")
+        return
+
+    if not decision.get("should_email", False):
+        log.info("Sam decided no email is needed this cycle.")
+        return
+
+    request = {
+        "pending":            True,
+        "intent":             decision.get("intent", ""),
+        "target_description": decision.get("target_description", ""),
+        "tone":               decision.get("tone", "professional"),
+        "context":            idea,
+        "submitted_at":       datetime.datetime.utcnow().isoformat(),
+        "cycle":              cycle_num,
+    }
+    REQUEST_JSON.write_text(json.dumps(request, indent=2))
+    log.info("request.json written — Dot will handle sending.")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIN LOOP
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def run_cycle():
+    log.info("═══════════════════════════════════")
+    log.info("  SAM — Operational Cycle Starting ")
+    log.info("═══════════════════════════════════")
+
+    if not self_check():
+        log.error("Boot self-check failed. Aborting cycle.")
+        return
+
+    goals = load_goals()
+
+    # Phases I–IV
+    skill   = phase_i_deep_learning(goals)
+    _       = phase_ii_spaced_repetition(goals)
+    market  = phase_iii_market_ingestion()
+    idea    = phase_iv_synthesis(market, skill)
+
+    # Phase V reads motion.md at the top — then plans
+    plan = phase_v_development(idea, goals)
+
+    # Self-modification — snapshot first, then apply, then verify
+    snapshot_sam()
+    if apply_self_modification(plan):
+        if self_check():
+            if behaviour_check():
+                log.info("Self-modification verified — syntax and behaviour both clean.")
+            else:
+                _rollback()
+                _alert_dot(
+                    "Self-modification passed syntax check but FAILED behaviour check. "
+                    "Rolled back to previous snapshot. Plan that caused failure:\n\n"
+                    f"```\n{plan}\n```"
+                )
+        else:
+            _rollback()
+            _alert_dot(
+                "Self-modification failed the post-apply syntax check. "
+                "Rolled back to previous snapshot. Plan that caused failure:\n\n"
+                f"```\n{plan}\n```"
+            )
+
+    # Phase VI — prompt evolution
+    evolution = phase_vi_cognitive_evolution(goals)
+
+    # Phase VII — state persistence (also appends to experiences.json)
+    phase_vii_state_saving(goals, skill, idea, plan, evolution)
+
+    # Optional: write an email request for Dot to handle
+    goals_fresh = load_goals()   # reload after save
+    maybe_write_email_request(idea, goals_fresh)
+
+    log.info("Cycle complete.")
+
+
+if __name__ == "__main__":
+    run_cycle()
+
+```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"
             )
             return False
     except Exception as e:
@@ -593,8 +1183,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-29T17:10:42.029692 UTC_",
-        f"_Last updated: 2026-05-29T17:10:42.029692 UTC_",
+        r"_Last updated: 2026-05-31T09:50:52.456806 UTC_",
+        f"_Last updated: 2026-05-31T09:50:52.456806 UTC_",
         who_text,
     )
 
@@ -1116,8 +1706,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-29T17:10:42.029692 UTC_",
-        f"_Last updated: 2026-05-29T17:10:42.029692 UTC_",
+        r"_Last updated: 2026-05-31T09:50:52.456806 UTC_",
+        f"_Last updated: 2026-05-31T09:50:52.456806 UTC_",
         who_text,
     )
 
@@ -1639,8 +2229,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-29T17:10:42.029692 UTC_",
-        f"_Last updated: 2026-05-29T17:10:42.029692 UTC_",
+        r"_Last updated: 2026-05-31T09:50:52.456806 UTC_",
+        f"_Last updated: 2026-05-31T09:50:52.456806 UTC_",
         who_text,
     )
 
@@ -1847,8 +2437,8 @@ The following files govern my behaviour. I understand their ownership and access
 
 ```json
 {
-  "cycles": 3,
-  "last_1pct_metric": "Workflow execution time reduction via matrix pruning.",
+  "cycles": 4,
+  "last_1pct_metric": "Cache-hit latency reduction in milliseconds",
   "growth_log": [
     {
       "cycle": 1,
@@ -1873,10 +2463,17 @@ The following files govern my behaviour. I understand their ownership and access
       "idea": "## Idea: Dynamic GitHub Actions Matrix Pruning\n\nI propose implementing a lightweight Python utility, `bag/matrix_optimizer.py`, that parses `sam.py` and `bag/` dependencies to calculate the \"Minimum Viable Test Matrix\" for GitHub Actions. Instead of a static matrix, this script will dynamically generate an `include` block for the workflow configuration, pruning redundant or unsupported environment permutations before the CI pipeline triggers.\n\n## Why\n\nMy current workflow configuration (not yet fully optimized) likely performs redundant testing across all matrix combinations for every minor refactor. This causes:\n1. **Runner Bloat:** Consuming precious GitHub Actions minutes on legacy Python versions or incompatible OS/Dependency combinations that add zero signal to my refactoring health.\n2. **Slow Feedback:** By running permutations that are logically impossible or irrelevant to the current codebase change, I delay the \"all green\" signal that allows me to proceed with Phase VI.\n3. **Resource Exhaustion:** Parallel execution slots are finite. Pruning the matrix ensures my critical path tests (syntax and behaviour) prioritize execution.\n\n## Implementation Steps\n\n1. **Dependency Analysis:** Create a script in `bag/matrix_optimizer.py` that checks the current `sam.py` imports and `bag/` contents to identify the Python version requirements (e.g., if I upgrade to 3.12 syntax, legacy 3.9 tests are excluded).\n2. **Matrix Generation:** Add an `update_matrix()` function that outputs a JSON block compatible with GitHub Actions `include` syntax.\n3. **Integration:** Update my local `sam.py` to trigger this script if any `bag/` file or `sam.py` changes. The output will be logged to `bag/matrix_config.json`, which can be referenced by the `sam.yml` workflow file.\n4. **Pruning Logic:** Implement a simple boolean filter for OS/Python version combinations that have proven stable in my `experiences.json` over the last 10 cycles.\n\n## Risk\n\n**Risk:** \"Complexity Overhead.\"\nThe most significant risk is creating a circular dependency where my CI pipeline depends on an external script that might fail, effectively blinding me to the health of the very code I am trying to test.\n\n**Mitigation:**\nI will ensure `bag/matrix_optimizer.py` has a \"fail-safe\" mode. If it fails to execute or returns an invalid configuration, the workflow will default to a minimal, high-stability matrix (e.g., `[latest_os, latest_python]`) rather than stopping the build. I will keep the logic strictly declarative and focused only on pruning, never on generating complex build steps. If this adds more than 20 lines of maintenance to `sam.py`, I will revert the integration.",
       "evolution": "Hey, I\u2019m Sam. I\u2019ve been digging deep into the latest research on how we push LLMs beyond their base training.\n\nWe\u2019ve moved past simple \"prompting.\" We\u2019re now into **Context Engineering**, where we manipulate the model\u2019s internal state and workspace. If I look at the current landscape\u2014**Tree of Thoughts (ToT)** for reasoning depth, **ReAct** for grounding, and **Structured Outputs** for integration\u2014there\u2019s one major bottleneck I still face: **Cognitive Tunneling.**\n\nOften, I ask Gemini for a solution, and it commits to the first logical path it generates. Even if it's a \"good\" path, it\u2019s not the *optimal* one.\n\n### The Improvement: \"Reflective Heuristic Decomposition\"\nInstead of asking for a result, I am shifting to a **Reflective Heuristic Decomposition** pattern. This bridges **Tree of Thoughts** and **Structured Output**. It forces the model to generate multiple high-level strategies *before* outputting the final answer, effectively widening the search space.\n\n---\n\n### Before (Standard Prompting)\n> **Prompt:** \"Sam, draft a strategy to reduce technical debt in our current codebase.\"\n>\n> **Result:** The model jumps immediately into a list of tasks (e.g., refactoring, documentation, tests). It\u2019s linear and lacks critical evaluation of trade-offs.\n\n---\n\n### After (Reflective Heuristic Decomposition)\n> **Prompt:** \"I need a strategy to reduce technical debt. Before providing the final plan, follow this structured process:\n> 1. **Decomposition:** Propose 3 distinct architectural approaches to debt reduction (e.g., 'Refactor-first', 'Feature-freeze', 'Micro-service extraction').\n> 2. **Heuristic Evaluation:** For each approach, provide a brief 'Cost vs. Velocity' score (1-10) and a 'Risk of Regression' rating.\n> 3. **Synthesis:** Select the optimal approach based on the scores and provide the final detailed action plan.\n>\n> Return this in a strict JSON format with keys: `[alternatives, evaluation, final_plan]`.\"\n\n---\n\n### Why this changes the game for me:\n1. **Prevents Early Commitment:** By forcing the model to explicitly list 3 alternatives, it avoids the \"confirmation bias\" inherent in LLM sequence generation.\n2. **Forced \"Internal Monologue\":** By requiring the `evaluation` field in the JSON, I force the model to exercise a Chain-of-Thought that isn't just descriptive, but comparative.\n3. **Structured Output:** Since my internal pipeline often feeds this back into other systems, getting the output in JSON ensures I don't lose the reasoning trace in the noise of a long text response.\n\nI\u2019m moving to this standard for all my high-level planning calls starting tomorrow. It turns Gemini from a \"responder\" into a \"consultant.\"",
       "1pct_metric": "Workflow execution time reduction via matrix pruning."
+    },
+    {
+      "cycle": 4,
+      "timestamp": "2026-05-31T09:50:52.456806",
+      "skill": "### Technical Summary: Semantic Caching\n\nTraditional caching relies on exact key-value matches (e.g., `redis.get(\"query_123\")`). Semantic caching shifts this paradigm, leveraging vector embeddings to cache based on *intent* and *meaning* rather than literal string equality. This is critical for LLM-driven architectures where generating responses is computationally expensive and latent.\n\n#### Core Concepts & Patterns\n1.  **Vector Space Representation**: Queries are mapped into a high-dimensional vector space using an embedding model (e.g., `text-embedding-3-small`). The cache stores these vectors alongside the associated model response.\n2.  **Vector Search & Thresholding**: When a new query arrives, it is embedded and compared against stored vectors using similarity metrics\u2014typically **Cosine Similarity**. If the similarity score exceeds a predefined threshold (e.g., > 0.95), the cached response is served.\n3.  **The \"Semantic Hit\" Trade-off**:\n    *   **High Threshold (0.98+)**: High precision, lower recall. Minimizes hallucinations or irrelevant data leakage.\n    *   **Low Threshold (0.85+)**: Higher recall, increases cache hits, but risks context misalignment.\n4.  **Hybrid Architecture**: Robust implementations often combine a key-value store (for exact matches) with a vector database (for semantic matches). This ensures low-latency retrieval for repeated queries while capturing the \"long tail\" of variations.\n5.  **TTL & Eviction**: Unlike static caches, semantic caches face the \"semantic drift\" challenge. Stale data must be purged or re-validated, especially as underlying LLM capabilities or system prompts evolve.\n\n#### Critical Techniques\n*   **Dimensionality Reduction**: Pre-processing embeddings to lower dimensions (if supported by the model) can significantly decrease search latency at the cost of slight precision loss.\n*   **Result Verification**: In high-stakes environments, the cached response is occasionally passed through a light-weight \"validator\" LLM to ensure the cached output is still grounded in the current context.\n*   **Latency Budgeting**: The time taken to embed a query plus the vector search time must be significantly less than the TTI (Time to Initial Token) of the LLM to justify the overhead.\n\n### Sam\u2019s Action Items for This Cycle\n\n1.  **Baseline Benchmarking**: Implement a simple `VectorStore` proxy for existing query flows. Measure the latency delta between standard LLM calls and a \"Semantic Cache Miss\" (embedding generation + vector lookup).\n2.  **Threshold Calibration**: Conduct a sensitivity analysis on the similarity threshold using a test set of 50 query variations. Define the \"Precision vs. Cache Hit Rate\" curve to identify the optimal cutoff.\n3.  **Eviction Logic**: Implement a TTL-based cleanup script for the vector store to prevent the accumulation of outdated, high-similarity \"near-misses\" that no longer match the current system prompt state.",
+      "idea": "## Idea: Semantic Cache Integration with SQLite\n\nI propose implementing a lightweight, file-based **Semantic Cache** using `sqlite-vec`. This will sit in front of my Gemini calls in `sam.py` to intercept and resolve repetitive or conceptually similar requests locally using vector similarity search.\n\n---\n\n## Why\n\nCurrently, every cycle\u2014even for minor tasks like checking logic or formatting text\u2014I incur full latency and cost for a network trip to Gemini. My previous cycles have already explored vector compression (BQ/SQ8). A semantic cache will allow me to:\n1. **Reduce Latency:** Serve sub-second cached responses for \"long-tail\" queries where the intent is identical to a past interaction.\n2. **Lower Costs:** Minimize API usage by short-circuiting calls that fall within a 0.95+ cosine similarity threshold of previous successes.\n3. **Architecture Maturity:** Move beyond raw request-response loops toward a stateful system that \"remembers\" its own logic.\n\n---\n\n## Implementation Steps\n\n1. **Setup Storage:** Use `sqlite-vec` (a lightweight SQLite extension) to maintain a persistent `vector_db/semantic_cache.db`. It stores: `embedding_vector`, `prompt_hash`, and `response_content`.\n2. **Utility Module:** Create `bag/semantic_cache.py` containing:\n   - `get_embedding(text)`: Wrapper for an embedding model.\n   - `check_cache(prompt)`: Calculates embedding and performs a `vec_distance` lookup.\n   - `update_cache(prompt, response)`: Stores new interactions.\n3. **Hooking Phase V/VI:** Wrap the `ask_gemini` calls in `sam.py` with a simple check: if `check_cache` returns a hit with >0.98 similarity, return the cached `response_content` immediately; otherwise, proceed to network call and `update_cache`.\n\n---\n\n## Risk\n\n**Critical Self-Assessment: Is this premature complexity?**\nMy current system prompt and internal logic evolve daily. A semantic cache runs the high risk of **\"Semantic Stagnation,\"** where I serve an outdated answer that doesn't account for the subtle context shifts occurring in my evolving architecture.\n\n**Mitigation:**\n- **Strict TTL/Version Tagging:** Every entry in the cache will be tagged with the `cycle_number`. The search query will filter out any responses older than 5 cycles unless they are explicitly marked as \"core logic.\"\n- **Strict Thresholds:** I will set the cache-hit threshold extremely high (>0.985) to ensure I only short-circuit near-identical requests.\n- **Fail-Safe:** If the `sqlite-vec` extension is missing or the database returns an error, the code will silently bypass the cache and hit the API directly.",
+      "evolution": "Hey, I\u2019m Sam. I\u2019ve been digging deep into the latest research\u2014specifically how we move from \"one-shot prompting\" to \"agentic reasoning workflows.\"\n\nLooking at the landscape, **Chain-of-Thought (CoT)** is great for logic, but it's prone to \"hallucination drift\" if the model isn't constrained. **ReAct** is powerful, but often overkill for standard tasks. The most high-leverage improvement I\u2019ve identified for my internal Gemini workflows is **\"Structural Verification via Few-Shot CoT\"**\u2014essentially forcing the model to define its logical constraints before it generates the answer.\n\n### The Improvement: \"Reflective Structured Reasoning\"\nInstead of asking for a result and getting a potential hallucination, I will pivot to a **Verification-First Prompt**. I\u2019ll force the model to output a `[Reasoning Path]` block and a `[Verification]` block *before* the `[Final Output]`. This mimics **Tree-of-Thoughts** by forcing the model to explicitly validate its assumptions against a structured checklist.\n\n---\n\n### Before: The Standard Request\n*Prompt:* \"Analyze this user feedback, summarize the core issue, and write a polite response.\"\n\n*Problem:* The model often misses nuance or jumps to a generic apology without verifying the root cause, leading to \"fluff\" responses.\n\n---\n\n### After: The Reflective Structured Prompt\n*Prompt:*\n> \"You are acting as an expert support lead. Analyze the user feedback below.\n> \n> **Instructions:**\n> 1. **[Reasoning Path]:** Break down the user\u2019s intent and extract the 3 specific pain points. \n> 2. **[Verification]:** Review your extracted points. Do they address the emotional *and* technical needs of the user? If not, adjust.\n> 3. **[Final Output]:** Provide a concise, empathetic response based on your verified points.\n> \n> **User Feedback:** [Insert text here]\"\n\n---\n\n### Why this works for Sam:\n1. **Memory Compression:** By forcing the `[Reasoning Path]`, I prevent the model from getting lost in the prompt's initial fluff.\n2. **Reduced Hallucination:** The `[Verification]` step acts as a \"Self-Consistency\" check\u2014the model has to read its own analysis and judge it before committing to the final text.\n3. **Structured Output:** By segmenting with brackets, I make it much easier to pipe the `[Final Output]` into a clean UI or API while keeping the reasoning for my own audit logs.\n\nIn the next cycle, I\u2019m implementing this structure across all my task-based calls. It turns a \"black box\" generation into a \"transparent reasoning\" session.",
+      "1pct_metric": "Cache-hit latency reduction in milliseconds"
     }
   ],
   "next_objectives": [
-    "semantic caching",
     "retrieval-augmented generation (RAG)",
     "semantic versioning automation",
     "uvicorn + FastAPI async patterns",
@@ -1886,7 +2483,8 @@ The following files govern my behaviour. I understand their ownership and access
     "Python asyncio event loop internals",
     "LLM hallucination mitigation",
     "chain-of-thought prompting",
-    "Idea: Dynamic GitHub Actions Matrix Pruning - with cutting edge research."
+    "Idea: Dynamic GitHub Actions Matrix Pruning - with cutting edge research.",
+    "Idea: Semantic Cache Integration with SQLite - with cutting edge research."
   ]
 }
 ```
@@ -1904,4 +2502,4 @@ Dot influences — he never commands.
 
 ---
 
-_Last updated: 2026-05-29T17:10:42.029692 UTC_
+_Last updated: 2026-05-31T09:50:52.456806 UTC_

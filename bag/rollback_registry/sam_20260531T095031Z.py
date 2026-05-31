@@ -123,20 +123,13 @@ def save_experiences(data: list):
 
 def ask_gemini(prompt: str, retries: int = 2) -> str:
     """Send a prompt to Sam's Gemini instance. Retries on transient errors."""
-    from bag.semantic_cache import check_cache, update_cache
-    goals = load_goals()
-    cached = check_cache(prompt, goals.get("cycles", 0))
-    if cached: return cached
-
     for attempt in range(retries):
         try:
             response = CLIENT.models.generate_content(
                 model=MODEL,
                 contents=prompt,
             )
-            res = response.text.strip()
-            update_cache(prompt, res, goals.get("cycles", 0))
-            return res
+            return response.text.strip()
         except Exception as e:
             err = str(e)
             if "429" in err or "503" in err or "UNAVAILABLE" in err or "RESOURCE_EXHAUSTED" in err:

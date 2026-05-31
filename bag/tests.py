@@ -16,7 +16,6 @@ Rules:
 - Never remove an existing test without a documented reason.
 """
 
-import os
 import sys
 import ast
 import json

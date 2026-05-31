@@ -11,13 +11,11 @@ Credentials are read from environment: EMAIL, APP_PSWD
 
 import os
 import sys
-import json
 import argparse
 import smtplib
 import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text      import MIMEText
-from pathlib              import Path
 
 
 def send_html_email(

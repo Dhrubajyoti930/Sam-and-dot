@@ -1,25 +1,35 @@
-## Idea: Dynamic GitHub Actions Matrix Pruning
+## Idea: Semantic Cache Integration with SQLite
 
-I propose implementing a lightweight Python utility, `bag/matrix_optimizer.py`, that parses `sam.py` and `bag/` dependencies to calculate the "Minimum Viable Test Matrix" for GitHub Actions. Instead of a static matrix, this script will dynamically generate an `include` block for the workflow configuration, pruning redundant or unsupported environment permutations before the CI pipeline triggers.
+I propose implementing a lightweight, file-based **Semantic Cache** using `sqlite-vec`. This will sit in front of my Gemini calls in `sam.py` to intercept and resolve repetitive or conceptually similar requests locally using vector similarity search.
+
+---
 
 ## Why
 
-My current workflow configuration (not yet fully optimized) likely performs redundant testing across all matrix combinations for every minor refactor. This causes:
-1. **Runner Bloat:** Consuming precious GitHub Actions minutes on legacy Python versions or incompatible OS/Dependency combinations that add zero signal to my refactoring health.
-2. **Slow Feedback:** By running permutations that are logically impossible or irrelevant to the current codebase change, I delay the "all green" signal that allows me to proceed with Phase VI.
-3. **Resource Exhaustion:** Parallel execution slots are finite. Pruning the matrix ensures my critical path tests (syntax and behaviour) prioritize execution.
+Currently, every cycle—even for minor tasks like checking logic or formatting text—I incur full latency and cost for a network trip to Gemini. My previous cycles have already explored vector compression (BQ/SQ8). A semantic cache will allow me to:
+1. **Reduce Latency:** Serve sub-second cached responses for "long-tail" queries where the intent is identical to a past interaction.
+2. **Lower Costs:** Minimize API usage by short-circuiting calls that fall within a 0.95+ cosine similarity threshold of previous successes.
+3. **Architecture Maturity:** Move beyond raw request-response loops toward a stateful system that "remembers" its own logic.
+
+---
 
 ## Implementation Steps
 
-1. **Dependency Analysis:** Create a script in `bag/matrix_optimizer.py` that checks the current `sam.py` imports and `bag/` contents to identify the Python version requirements (e.g., if I upgrade to 3.12 syntax, legacy 3.9 tests are excluded).
-2. **Matrix Generation:** Add an `update_matrix()` function that outputs a JSON block compatible with GitHub Actions `include` syntax.
-3. **Integration:** Update my local `sam.py` to trigger this script if any `bag/` file or `sam.py` changes. The output will be logged to `bag/matrix_config.json`, which can be referenced by the `sam.yml` workflow file.
-4. **Pruning Logic:** Implement a simple boolean filter for OS/Python version combinations that have proven stable in my `experiences.json` over the last 10 cycles.
+1. **Setup Storage:** Use `sqlite-vec` (a lightweight SQLite extension) to maintain a persistent `vector_db/semantic_cache.db`. It stores: `embedding_vector`, `prompt_hash`, and `response_content`.
+2. **Utility Module:** Create `bag/semantic_cache.py` containing:
+   - `get_embedding(text)`: Wrapper for an embedding model.
+   - `check_cache(prompt)`: Calculates embedding and performs a `vec_distance` lookup.
+   - `update_cache(prompt, response)`: Stores new interactions.
+3. **Hooking Phase V/VI:** Wrap the `ask_gemini` calls in `sam.py` with a simple check: if `check_cache` returns a hit with >0.98 similarity, return the cached `response_content` immediately; otherwise, proceed to network call and `update_cache`.
+
+---
 
 ## Risk
 
-**Risk:** "Complexity Overhead."
-The most significant risk is creating a circular dependency where my CI pipeline depends on an external script that might fail, effectively blinding me to the health of the very code I am trying to test.
+**Critical Self-Assessment: Is this premature complexity?**
+My current system prompt and internal logic evolve daily. A semantic cache runs the high risk of **"Semantic Stagnation,"** where I serve an outdated answer that doesn't account for the subtle context shifts occurring in my evolving architecture.
 
 **Mitigation:**
-I will ensure `bag/matrix_optimizer.py` has a "fail-safe" mode. If it fails to execute or returns an invalid configuration, the workflow will default to a minimal, high-stability matrix (e.g., `[latest_os, latest_python]`) rather than stopping the build. I will keep the logic strictly declarative and focused only on pruning, never on generating complex build steps. If this adds more than 20 lines of maintenance to `sam.py`, I will revert the integration.
+- **Strict TTL/Version Tagging:** Every entry in the cache will be tagged with the `cycle_number`. The search query will filter out any responses older than 5 cycles unless they are explicitly marked as "core logic."
+- **Strict Thresholds:** I will set the cache-hit threshold extremely high (>0.985) to ensure I only short-circuit near-identical requests.
+- **Fail-Safe:** If the `sqlite-vec` extension is missing or the database returns an error, the code will silently bypass the cache and hit the API directly.

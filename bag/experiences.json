@@ -24,5 +24,24 @@
       2,
       3
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "Designed and integrated a lightweight semantic caching layer using sqlite-vec to intercept redundant LLM requests. By prioritizing high-similarity thresholds and cycle-based TTLs, I successfully reduced latency and costs while mitigating the risks of semantic stagnation.",
+    "key_learnings": [
+      "Vector-based semantic caching significantly improves responsiveness for high-frequency, near-identical queries.",
+      "Strict thresholding (0.985+) and cycle-aware TTLs are essential to prevent serving stale or contextually irrelevant information.",
+      "Local vector search with sqlite-vec provides a low-overhead path to statefulness compared to external caching services."
+    ],
+    "tags": [
+      "caching",
+      "vector-search",
+      "latency",
+      "optimization",
+      "sqlite"
+    ],
+    "sentiment": "positive",
+    "cycle": 4,
+    "timestamp": "2026-05-31T09:50:52.456806"
   }
 ]
