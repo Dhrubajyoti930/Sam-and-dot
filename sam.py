@@ -13,7 +13,6 @@ Operational Lifecycle:
 """
 
 import os
-import asyncio
 import re
 import sys
 import json
@@ -22,7 +21,6 @@ import datetime
 import logging
 import logging.handlers
 import subprocess
-import traceback
 from pathlib import Path
 
 # ── Paths ────────────────────────────────────────────────────────────────────
@@ -52,9 +50,7 @@ logging.basicConfig(
 log = logging.getLogger("sam")
 
 # ── Gemini client ─────────────────────────────────────────────────────────────
-from google import genai
-from bag.async_batch import AsyncWorkerPool
-from bag.matrix_optimizer import get_matrix
+from google import genai  # noqa: E402
 
 GEM_KEY = os.environ.get("GEM_KEY_SAM")
 if not GEM_KEY:
@@ -143,7 +139,7 @@ def ask_gemini(prompt: str, retries: int = 2) -> str:
             elif "404" in err:
                 log.critical("MODEL STRING MAY BE DEPRECATED — owner intervention required.")
                 _alert_dot("Gemini returned 404. The model string may be deprecated. Owner must update MODEL in sam.py and bag/dot.py.")
-                return f"[Gemini error: model not found]"
+                return "[Gemini error: model not found]"
             else:
                 log.error(f"Gemini call failed (non-retryable): {e}")
                 return f"[Gemini error: {e}]"
@@ -507,7 +503,6 @@ def phase_v_development(idea: str, goals: dict) -> str:
     motion_content = read_motion()
     log.info("motion.md read.")
 
-    who_i_am    = load_who_i_am()
     personality = load_personality()
     sam_src     = Path(__file__).read_text()
     tests_src   = TESTS.read_text() if TESTS.exists() else "(tests.py not found)"
@@ -731,7 +726,7 @@ def maybe_write_email_request(idea: str, goals: dict):
         "cycle":              cycle_num,
     }
     REQUEST_JSON.write_text(json.dumps(request, indent=2))
-    log.info(f"request.json written — Dot will handle sending.")
+    log.info("request.json written — Dot will handle sending.")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
