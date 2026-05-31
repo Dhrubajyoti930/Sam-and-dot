@@ -245,6 +245,24 @@ check(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 7 — bag/*.py syntax integrity
+# Every Python helper Sam can modify must parse cleanly.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+for _py_file in sorted(BAG.glob("*.py")):
+    if _py_file.name == "tests.py":
+        continue  # skip self
+    try:
+        _src = _py_file.read_text()
+        ast.parse(_src)
+    except SyntaxError as _e:
+        check(False, f"FAIL: bag/{_py_file.name} has a syntax error: {_e}. "
+                     f"Sam's self-modification left a broken helper file.")
+    except Exception as _e:
+        check(False, f"FAIL: Could not read bag/{_py_file.name}: {_e}")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # REPORT
 # ═══════════════════════════════════════════════════════════════════════════════
 
