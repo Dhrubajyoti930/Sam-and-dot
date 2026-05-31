@@ -2,8 +2,8 @@ name: Sam — Operational Cycles
 
 on:
   schedule:
-    - cron: "0 3  * * *"   # 03:00 UTC 
-    - cron: "0 4 * * *"   # 04:00 UTC 
+    - cron: "0 3  * * *"   # 03:00 UTC
+    - cron: "0 4 * * *"    # 04:00 UTC
   workflow_dispatch:         # Manual trigger for owner
 
 permissions:
@@ -24,15 +24,16 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "requirements.txt"
 
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install --upgrade google-genai
+          pip install -r requirements.txt
 
       - name: Auto-fix lint issues
         run: |
-          pip install ruff
           ruff check . --select F --exclude bag/rollback_registry --fix --unsafe-fixes || true
 
       - name: Lint Python files
