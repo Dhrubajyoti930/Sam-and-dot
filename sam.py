@@ -549,7 +549,7 @@ def phase_v_development(idea: str, goals: dict) -> str:
     log.info("Phase V complete.")
 
     # Audit: Delete orphaned files in bag/
-    valid_files = {"async_batch.py", "emailer.py", "evaluator.py", "matrix_optimizer.py", "semantic_cache.py", "tests.py", "versioning.py"}
+    valid_files = {"dot.py", "async_batch.py", "emailer.py", "evaluator.py", "matrix_optimizer.py", "semantic_cache.py", "tests.py", "versioning.py"}
     for f in BAG.glob("*.py"):
         if f.name not in valid_files:
             f.unlink()
