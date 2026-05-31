@@ -36,6 +36,7 @@ VECTOR_DB       = ROOT / "vector_db"
 IDEA_OF_DAY     = BAG  / "IDEA_OF_THE_DAY.md"
 EXPERIENCES     = BAG  / "experiences.json"
 REQUEST_JSON    = BAG  / "request.json"
+CYCLE_STATUS    = BAG  / "cycle_status.txt"
 TESTS           = BAG  / "tests.py"
 
 # ── Logging ──────────────────────────────────────────────────────────────────
@@ -741,6 +742,7 @@ def maybe_write_email_request(idea: str, goals: dict):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def run_cycle():
+    CYCLE_STATUS.write_text("pending")
     log.info("═══════════════════════════════════")
     log.info("  SAM — Operational Cycle Starting ")
     log.info("═══════════════════════════════════")
@@ -791,6 +793,7 @@ def run_cycle():
     goals_fresh = load_goals()   # reload after save
     maybe_write_email_request(idea, goals_fresh)
 
+    CYCLE_STATUS.write_text("ok")
     log.info("Cycle complete.")
 
 
