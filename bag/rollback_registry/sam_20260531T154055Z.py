@@ -53,8 +53,6 @@ log = logging.getLogger("sam")
 # ── Gemini client ─────────────────────────────────────────────────────────────
 from google import genai  # noqa: E402
 
-from bag.attribution import verify_assertion
-
 GEM_KEY = os.environ.get("GEM_KEY_SAM")
 if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_SAM secret is not set.")
@@ -532,9 +530,6 @@ def phase_v_development(idea: str, goals: dict) -> str:
         f"Sam's character:\n{personality}\n\n"
         f"Dot's guidance (motion.md — read carefully):\n{motion_content}\n\n"
         f"Today's development idea:\n{idea}\n\n"
-        f"CRITICAL: Use the Grounded Attribution pattern. For every architectural claim, "
-        f"perform a similarity check against wisdom.txt. Explicitly label claims as "
-        f"'GROUNDED' or 'HEURISTIC' based on a similarity threshold of 0.7.\n\n"
         f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
         f"Sam's current bag/tests.py (full source):\n```python\n{tests_src}\n```\n\n"
         f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"

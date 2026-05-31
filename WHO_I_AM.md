@@ -73,6 +73,8 @@ log = logging.getLogger("sam")
 # ── Gemini client ─────────────────────────────────────────────────────────────
 from google import genai  # noqa: E402
 
+from bag.attribution import verify_assertion
+
 GEM_KEY = os.environ.get("GEM_KEY_SAM")
 if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_SAM secret is not set.")
@@ -550,6 +552,9 @@ def phase_v_development(idea: str, goals: dict) -> str:
         f"Sam's character:\n{personality}\n\n"
         f"Dot's guidance (motion.md — read carefully):\n{motion_content}\n\n"
         f"Today's development idea:\n{idea}\n\n"
+        f"CRITICAL: Use the Grounded Attribution pattern. For every architectural claim, "
+        f"perform a similarity check against wisdom.txt. Explicitly label claims as "
+        f"'GROUNDED' or 'HEURISTIC' based on a similarity threshold of 0.7.\n\n"
         f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
         f"Sam's current bag/tests.py (full source):\n```python\n{tests_src}\n```\n\n"
         f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"
@@ -669,8 +674,602 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
-        f"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
+        r"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
+        f"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
+        who_text,
+    )
+
+    WHO_I_AM.write_text(who_text)
+    log.info("WHO_I_AM.md updated.")
+
+    # ── Append to experiences.json ─────────────────────────────────────────────
+    experiences = load_experiences()
+
+    _sleep()
+    exp_prompt = (
+        f"You are Sam, an autonomous developer agent. Summarise cycle {cycle_num} "
+        f"as a single experience entry. "
+        f"Respond ONLY with a JSON object (no markdown) with these fields:\n"
+        f"  - 'category': a short dynamic label that best fits this experience (e.g. 'architecture', 'debugging', 'market-research', 'communication')\n"
+        f"  - 'summary': 2-3 sentence honest summary of what happened this cycle\n"
+        f"  - 'key_learnings': list of 2-3 strings\n"
+        f"  - 'tags': list of relevant lowercase tags\n"
+        f"  - 'sentiment': one of 'positive', 'neutral', 'mixed', 'negative'\n\n"
+        f"Cycle data:\nSkill: {skill}\nIdea: {idea}\nMetric: {one_pct_metric}"
+    )
+    raw_exp = ask_gemini(exp_prompt)
+    try:
+        clean = raw_exp.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        exp_entry = json.loads(clean)
+        exp_entry["cycle"]     = cycle_num
+        exp_entry["timestamp"] = ts
+    except Exception as e:
+        log.warning(f"Could not parse experience entry: {e}")
+        exp_entry = {
+            "cycle":         cycle_num,
+            "timestamp":     ts,
+            "category":      "uncategorised",
+            "summary":       skill,
+            "key_learnings": [],
+            "tags":          [],
+            "sentiment":     "neutral",
+        }
+
+    experiences.append(exp_entry)
+    save_experiences(experiences)
+    log.info(f"experiences.json updated — {len(experiences)} entries.")
+
+    log.info(f"Cycle {cycle_num} complete. 1% metric: {one_pct_metric}")
+
+
+def maybe_write_email_request(idea: str, goals: dict):
+    """If Sam has something worth communicating externally, write request.json.
+    He only writes a new request if the previous one has been cleared by Dot."""
+    if REQUEST_JSON.exists():
+        try:
+            existing = json.loads(REQUEST_JSON.read_text())
+            if existing.get("pending", False):
+                log.info("request.json already pending — skipping email request this cycle.")
+                return
+        except Exception:
+            pass
+
+    cycle_num = goals.get("cycles", 0) + 1
+
+    # Sam decides whether this cycle's idea is worth sharing externally
+    _sleep()
+    decision_prompt = (
+        f"You are Sam, an autonomous developer agent. You completed cycle {cycle_num}.\n"
+        f"Today's idea:\n{idea}\n\n"
+        f"Decide: Is there a specific tech company, open-source maintainer, or indie developer "
+        f"it would be genuinely valuable to reach out to about this idea or to learn from? "
+        f"Reply ONLY with a JSON object:\n"
+        f"  - 'should_email': true or false\n"
+        f"  - 'intent': if true, 1-2 sentences on what Sam wants to communicate\n"
+        f"  - 'target_description': if true, describe who — e.g. 'maintainer of LangChain on GitHub'\n"
+        f"  - 'tone': 'professional' or 'friendly'\n"
+        f"Only say true if there is a genuinely specific, useful reason. No spam."
+    )
+    raw = ask_gemini(decision_prompt)
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        decision = json.loads(clean)
+    except Exception:
+        log.info("Could not parse email decision — skipping.")
+        return
+
+    if not decision.get("should_email", False):
+        log.info("Sam decided no email is needed this cycle.")
+        return
+
+    request = {
+        "pending":            True,
+        "intent":             decision.get("intent", ""),
+        "target_description": decision.get("target_description", ""),
+        "tone":               decision.get("tone", "professional"),
+        "context":            idea,
+        "submitted_at":       datetime.datetime.utcnow().isoformat(),
+        "cycle":              cycle_num,
+    }
+    REQUEST_JSON.write_text(json.dumps(request, indent=2))
+    log.info("request.json written — Dot will handle sending.")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIN LOOP
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def run_cycle():
+    CYCLE_STATUS.write_text("pending")
+    log.info("═══════════════════════════════════")
+    log.info("  SAM — Operational Cycle Starting ")
+    log.info("═══════════════════════════════════")
+
+    if not self_check():
+        log.error("Boot self-check failed. Aborting cycle.")
+        return
+
+    goals = load_goals()
+
+    # Phases I–IV
+    skill   = phase_i_deep_learning(goals)
+    _       = phase_ii_spaced_repetition(goals)
+    market  = phase_iii_market_ingestion()
+    idea    = phase_iv_synthesis(market, skill)
+
+    # Phase V reads motion.md at the top — then plans
+    plan = phase_v_development(idea, goals)
+
+    # Self-modification — snapshot first, then apply, then verify
+    snapshot_sam()
+    modified = apply_self_modification(plan)
+    if modified:
+        if self_check():
+            if behaviour_check():
+                log.info("Self-modification verified — syntax and behaviour both clean.")
+            else:
+                _rollback()
+                _alert_dot(
+                    "Self-modification passed syntax check but FAILED behaviour check. "
+                    "Rolled back to previous snapshot. Plan that caused failure:\n\n"
+                    f"```\n{plan}\n```"
+                )
+        else:
+            _rollback()
+            _alert_dot(
+                "Self-modification failed the post-apply syntax check. "
+                "Rolled back to previous snapshot. Plan that caused failure:\n\n"
+                f"```\n{plan}\n```"
+            )
+    else:
+        # No patch applied — still run governance checks every cycle (#1 fix)
+        log.info("No self-modification this cycle — running governance checks anyway.")
+        if not behaviour_check():
+            _alert_dot(
+                "Governance check failed on an unmodified cycle. "
+                "No self-modification occurred — possible external file corruption or deletion."
+            )
+
+    # Phase VI — prompt evolution
+    evolution = phase_vi_cognitive_evolution(goals)
+
+    # Phase VII — state persistence (also appends to experiences.json)
+    phase_vii_state_saving(goals, skill, idea, plan, evolution)
+
+    # Optional: write an email request for Dot to handle
+    goals_fresh = load_goals()   # reload after save
+    maybe_write_email_request(idea, goals_fresh)
+
+    CYCLE_STATUS.write_text("ok")
+    log.info("Cycle complete.")
+
+    try:
+        from bag.evaluator import run_ragas_lite
+        run_ragas_lite()
+    except Exception as e:
+        log.warning(f"Evaluator failed: {e}")
+
+
+if __name__ == "__main__":
+    run_cycle()
+
+```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"
+            )
+            return False
+    except Exception as e:
+        log.error(f"Behaviour check exception: {e}")
+        return False
+
+
+def _rollback():
+    """Restore sam.py and all bag/*.py files from the most recent healthy snapshot."""
+    snapshots = sorted(ROLLBACK_REG.glob("sam_*.py"), reverse=True)
+    if not snapshots:
+        log.critical("No snapshots in rollback_registry — cannot recover.")
+        return
+    latest = snapshots[0]
+
+    # ── Restore sam.py ──
+    Path(__file__).write_text(latest.read_text())
+    log.warning(f"Rolled back sam.py → {latest.name}")
+
+    # ── Restore bag/*.py files from the corresponding bag snapshot ──
+    ts = latest.stem[4:]   # strip "sam_" prefix
+    bag_snap_path = ROLLBACK_REG / f"bag_{ts}.json"
+    if bag_snap_path.exists():
+        try:
+            bag_snap = json.loads(bag_snap_path.read_text())
+            for fname, content in bag_snap.items():
+                (BAG / fname).write_text(content)
+                log.warning(f"Rolled back bag/{fname}")
+            log.warning(f"Bag files restored from {bag_snap_path.name} ({len(bag_snap)} files)")
+        except Exception as e:
+            log.error(f"Failed to restore bag files from {bag_snap_path.name}: {e}")
+    else:
+        log.warning(f"No bag snapshot found for ts={ts} — only sam.py was restored.")
+
+
+def _alert_dot(message: str):
+    """Append a Sam-generated alert to motion.md for Dot to read next run."""
+    ts = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    alert = f"\n\n---\n\n## ⚠️ Sam Alert — {ts}\n\n{message}\n"
+    if MOTION.exists():
+        with open(MOTION, "a") as f:
+            f.write(alert)
+    else:
+        MOTION.write_text(f"# motion.md\n{alert}")
+    log.warning(f"Alert written to motion.md: {message}")
+
+
+def apply_self_modification(plan: str) -> bool:
+    """Ask Gemini to extract surgical patch operations from the plan and apply them.
+    Only sam.py and bag/*.py are writable. Returns True if anything was applied.
+
+    Each operation in the JSON array must have:
+      - 'filename'  : relative path from repo root (sam.py or bag/*.py only)
+      - 'operation' : one of 'replace', 'insert_after', 'delete'
+      - 'old'       : exact existing string to find (required for replace / delete)
+      - 'new'       : replacement / insertion string (required for replace / insert_after)
+      - 'anchor'    : exact line after which to insert (required for insert_after)
+
+    No full-file rewrites. Each operation touches only the targeted lines.
+    If 'old' or 'anchor' is not found exactly, the operation is skipped safely.
+    """
+    log.info("── Self-Modification: Parsing Surgical Patch ──")
+
+    # Hard-coded forbidden files — never writable by Sam
+    FORBIDDEN = {"wisdom.txt", "motion.md", "SAM_PERSONALITY.md", "dot.py"}
+
+    prompt = (
+        f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
+        f"Extract any concrete file modifications as a JSON array of patch operations.\n"
+        f"Respond ONLY with a JSON array — no markdown, no explanation.\n\n"
+        f"Each element must have:\n"
+        f"  - 'filename'  : relative path from repo root. Only 'sam.py' or 'bag/*.py' are permitted.\n"
+        f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
+        f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
+        f"  - For 'insert_after': 'anchor' (exact existing line) and 'new' (string to insert after it)\n"
+        f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
+        f"CRITICAL RULES:\n"
+        f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
+        f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
+        f"  - Keep each operation as small as possible — one function, one block, one line.\n"
+        f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
+        f"  - If no concrete changes are needed, return an empty array [].\n\n"
+        f"PYTHON CODE QUALITY RULES — every 'new' string must obey these:\n"
+        f"  - Must be syntactically valid Python. Mentally parse it before including it.\n"
+        f"  - Indentation must be correct: class methods indented 4 spaces inside their class,\n"
+        f"    nested blocks indented a further 4 spaces each level. Never mix tabs and spaces.\n"
+        f"  - A class body must never be left empty. If a class has no body yet, add 'pass'.\n"
+        f"  - Never place a method definition outside its class block.\n"
+        f"  - After a 'replace', the resulting file must remain structurally intact —\n"
+        f"    check that the 'old' context around the change is not load-bearing for other blocks."
+    )
+
+    _sleep()
+    raw = ask_gemini(prompt)
+
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        operations = json.loads(clean)
+    except Exception as e:
+        log.warning(f"Could not parse patch operations as JSON: {e}")
+        return False
+
+    if not operations:
+        log.info("No patch operations extracted — skipping self-modification.")
+        return False
+
+    applied = []
+    for op in operations:
+        fname     = op.get("filename", "")
+        operation = op.get("operation", "")
+
+        # Guard: must be sam.py or inside bag/
+        if fname not in ("sam.py",) and not fname.startswith("bag/"):
+            log.warning(f"Blocked patch to '{fname}' — outside allowed scope.")
+            continue
+
+        # Guard: never touch governance files
+        basename = Path(fname).name
+        if basename in FORBIDDEN:
+            log.warning(f"Blocked patch to governance file '{fname}'.")
+            continue
+
+        # Guard: reject any operation that tries to supply full file content
+        if "content" in op:
+            log.warning(f"Blocked full-file rewrite attempt on '{fname}' — 'content' key is forbidden.")
+            continue
+
+        target = ROOT / fname
+        if not target.exists():
+            if operation == "insert_after":
+                # Allowed: creating a new bag/ file via insert_after with empty anchor
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(op.get("new", ""))
+                log.info(f"Created new file via insert_after → {fname}")
+                applied.append(fname)
+            else:
+                log.warning(f"Skipping patch on non-existent file '{fname}'.")
+            continue
+
+        source = target.read_text()
+
+        if operation == "replace":
+            old = op.get("old", "")
+            new = op.get("new", "")
+            if not old:
+                log.warning(f"replace on '{fname}': 'old' is empty — skipping.")
+                continue
+            if old not in source:
+                log.warning(f"replace on '{fname}': 'old' string not found — skipping.")
+                continue
+            target.write_text(source.replace(old, new, 1))
+            log.info(f"Applied replace → {fname}")
+            applied.append(fname)
+
+        elif operation == "insert_after":
+            anchor = op.get("anchor", "")
+            new    = op.get("new", "")
+            if not anchor:
+                log.warning(f"insert_after on '{fname}': 'anchor' is empty — skipping.")
+                continue
+            if anchor not in source:
+                log.warning(f"insert_after on '{fname}': anchor not found — skipping.")
+                continue
+            target.write_text(source.replace(anchor, anchor + "\n" + new, 1))
+            log.info(f"Applied insert_after → {fname}")
+            applied.append(fname)
+
+        elif operation == "delete":
+            old = op.get("old", "")
+            if not old:
+                log.warning(f"delete on '{fname}': 'old' is empty — skipping.")
+                continue
+            if old not in source:
+                log.warning(f"delete on '{fname}': 'old' string not found — skipping.")
+                continue
+            target.write_text(source.replace(old, "", 1))
+            log.info(f"Applied delete → {fname}")
+            applied.append(fname)
+
+        else:
+            log.warning(f"Unknown operation '{operation}' on '{fname}' — skipping.")
+
+    return bool(applied)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def phase_i_deep_learning(goals: dict) -> str:
+    """Acquire a new hard skill or prompting technique."""
+    log.info("── Phase I: Deep Learning ──")
+    objectives = goals.get("next_objectives", [])
+    focus = objectives[0] if objectives else "latest LLM context-engineering techniques"
+
+    personality = load_personality()
+    prompt = (
+        f"You are Sam, an autonomous developer agent. Your character:\n\n{personality}\n\n"
+        f"Your learning focus for this cycle is: '{focus}'.\n"
+        f"Produce a concise but dense technical summary (300-400 words) of the most important "
+        f"concepts, patterns, or techniques a developer should know about this topic today. "
+        f"Conclude with three concrete action items Sam should implement this cycle."
+    )
+    result = ask_gemini(prompt)
+    log.info("Phase I complete.")
+    return result
+
+
+def phase_ii_spaced_repetition(goals: dict) -> str:
+    """Revise yesterday's skill; run mini-tests to prevent drift."""
+    log.info("── Phase II: Spaced Repetition ──")
+    growth_log = goals.get("growth_log", [])
+    last_skill = (
+        growth_log[-1].get("skill", "")[:200]
+        if growth_log
+        else "general Python async patterns"
+    )
+
+    _sleep()
+    prompt = (
+        f"You are Sam. In your last cycle you studied:\n\n'{last_skill}'\n\n"
+        f"Generate 3 concise but challenging quiz questions to test retention of this skill, "
+        f"followed immediately by the correct answers. Keep the format tight and engineering-precise."
+    )
+    result = ask_gemini(prompt)
+    log.info("Phase II complete.")
+    return result
+
+
+def phase_iii_market_ingestion() -> str:
+    """Synthesise current tech directions via Gemini."""
+    log.info("── Phase III: Market & Code Ingestion ──")
+
+    _sleep()
+    prompt = (
+        "You are Sam's market scanner. List the top 5 high-velocity technology or open-source "
+        "trends a Python AI developer should be tracking right now. For each trend provide: "
+        "trend name, one-sentence description, and a specific GitHub repo or resource URL worth exploring. "
+        "Be specific and current — no generic filler."
+    )
+    result = ask_gemini(prompt)
+    log.info("Phase III complete.")
+    return result
+
+
+def phase_iv_synthesis(market_data: str, skill: str) -> str:
+    """Generate IDEA_OF_THE_DAY.md from market signals + today's skill."""
+    log.info("── Phase IV: The Synthesis ──")
+    who_i_am   = load_who_i_am()
+    personality = load_personality()
+
+    _sleep()
+    prompt = (
+        f"You are Sam, an autonomous developer who continuously improves himself.\n\n"
+        f"Character:\n{personality}\n\n"
+        f"Market signals this cycle:\n{market_data}\n\n"
+        f"Skill learned this cycle:\n{skill}\n\n"
+        f"Current architecture overview:\n{who_i_am}\n\n"
+        f"Propose ONE concrete, implementable development idea for today. "
+        f"Format as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk.\n"
+        f"Be critical — question the idea yourself before committing to it."
+    )
+    idea = ask_gemini(prompt)
+    IDEA_OF_DAY.write_text(idea)
+    log.info("IDEA_OF_THE_DAY.md written.")
+    return idea
+
+
+def phase_v_development(idea: str, goals: dict) -> str:
+    """Read motion.md FIRST, then produce a development plan."""
+    log.info("── Phase V: Development & Refactor ──")
+
+    # ⚠️  motion.md is read ONCE, here, and nowhere else.
+    motion_content = read_motion()
+    log.info("motion.md read.")
+
+    personality = load_personality()
+    sam_src     = Path(__file__).read_text()
+    tests_src   = TESTS.read_text() if TESTS.exists() else "(tests.py not found)"
+
+    # Load every writable bag/*.py file so Sam has accurate source to diff against.
+    # Forbidden and already-included files are skipped.
+    _EXCLUDED = {"tests.py", "dot.py", "wisdom.txt", "motion.md", "SAM_PERSONALITY.md"}
+    bag_sources = ""
+    for _f in sorted(BAG.glob("*.py")):
+        if _f.name in _EXCLUDED:
+            continue
+        bag_sources += f"bag/{_f.name} (full source):\n```python\n{_f.read_text()}\n```\n\n"
+
+    _sleep()
+    prompt = (
+        f"You are Sam's Gemini refactoring assistant.\n\n"
+        f"Sam's character:\n{personality}\n\n"
+        f"Dot's guidance (motion.md — read carefully):\n{motion_content}\n\n"
+        f"Today's development idea:\n{idea}\n\n"
+        f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
+        f"Sam's current bag/tests.py (full source):\n```python\n{tests_src}\n```\n\n"
+        f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"
+        f"Produce a surgical patch plan for Sam to apply. Rules:\n"
+        f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
+        f"  2. Prefer adding new functions to bag/ files over editing sam.py's core loop.\n"
+        f"  3. For each change, specify EXACTLY:\n"
+        f"       - Which file (sam.py or bag/*.py only)\n"
+        f"       - The operation: replace / insert_after / delete\n"
+        f"       - The exact existing string to find ('old' or 'anchor') — copy it verbatim from the source above\n"
+        f"       - The new string to substitute or insert\n"
+        f"  4. Flag any security or stability risks before listing changes.\n"
+        f"  5. If the idea requires no code change this cycle, say so explicitly.\n\n"
+        f"Do NOT supply full file contents. Surgical diffs only."
+    )
+    plan = ask_gemini(prompt)
+    log.info("Phase V complete.")
+
+    # Audit: Delete orphaned files in bag/
+    # Blocklist approach — Sam-created files survive until explicitly removed (#5 fix)
+    # async_batch.py intentionally omitted (dead code — will be cleaned up) (#10 fix)
+    _AUDIT_PROTECTED = {
+        "dot.py", "emailer.py", "evaluator.py", "matrix_optimizer.py",
+        "semantic_cache.py", "tests.py", "versioning.py",
+    }
+    for f in BAG.glob("*.py"):
+        if f.name not in _AUDIT_PROTECTED:
+            f.unlink()
+            log.info(f"Audited: Deleted orphaned file {f.name}")
+    return plan
+
+
+def phase_vi_cognitive_evolution(goals: dict) -> str:
+    """Upgrade internal prompts; suggest one concrete improvement for next cycle."""
+    log.info("── Phase VI: Cognitive Evolution ──")
+
+    _sleep()
+    prompt = (
+        "You are Sam. Review the latest context-engineering paradigms "
+        "(chain-of-thought, self-consistency, tree-of-thoughts, ReAct, structured outputs, "
+        "tool use, memory compression). "
+        "Suggest ONE concrete prompt-engineering improvement Sam could apply to his own "
+        "internal Gemini calls in the next cycle. Be specific — include a before/after example."
+    )
+    evolution = ask_gemini(prompt)
+    log.info("Phase VI complete.")
+    return evolution
+
+
+def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolution: str):
+    """Commit work, log a real metric, update WHO_I_AM.md, append to experiences.json."""
+    log.info("── Phase VII: State Saving ──")
+
+    ts        = datetime.datetime.utcnow().isoformat()
+    cycle_num = goals.get("cycles", 0) + 1
+
+    # Ask Gemini to name a real, specific 1% metric for this cycle
+    _sleep()
+    metric_prompt = (
+        f"You are Sam. This cycle you:\n"
+        f"- Learned: {skill}\n"
+        f"- Developed: {idea}\n"
+        f"- Evolved: {evolution}\n\n"
+        f"Compare your self-identified '1% growth' against the plan generated in Phase V.\n"
+        f"Name ONE specific, honest 1%-growth metric for this cycle. "
+        f"It must be precise, reflect what actually happened, and align with applied diffs. "
+        f"Reply with the metric name only. No explanation. Max 12 words."
+    )
+    one_pct_metric = ask_gemini(metric_prompt).strip().strip('"').strip("'")
+    log.info(f"1% metric: {one_pct_metric}")
+
+    entry = {
+        "cycle":       cycle_num,
+        "timestamp":   ts,
+        "skill":       skill,
+        "idea":        idea,
+        "evolution":   evolution,
+        "1pct_metric": one_pct_metric,
+    }
+
+    goals["cycles"]           = cycle_num
+    goals["last_1pct_metric"] = one_pct_metric
+    goals["growth_log"]       = (goals.get("growth_log", []) + [entry])[-30:]
+    goals["next_objectives"]  = goals.get("next_objectives", [])[1:] or [
+        "vector memory compression techniques",
+        "async Gemini batching patterns",
+        "GitHub Actions matrix optimisation",
+    ]
+
+    # Append today's idea heading to next_objectives
+    idea_heading = idea.strip().splitlines()[0].lstrip("#").strip()
+    if idea_heading:
+        goals["next_objectives"].append(f"{idea_heading} - with cutting edge research.")
+
+    save_goals(goals)
+
+    # ── Update WHO_I_AM.md with real sam.py content + current goals ──────────
+    sam_src     = Path(__file__).read_text()
+    goals_block = f"```json\n{json.dumps(goals, indent=2)}\n```"
+    who_text    = WHO_I_AM.read_text()
+
+    # Inject actual sam.py source
+    who_text = re.sub(
+        r"(### `sam\.py`.*?```python\n).*?(```)",
+        lambda m: m.group(1) + sam_src + "\n" + m.group(2),
+        who_text,
+        flags=re.DOTALL,
+    )
+
+    # Inject current goals snapshot
+    who_text = re.sub(
+        r"(## Current Goals Snapshot\n+).*?(\n---|$)",
+        lambda m: m.group(1) + goals_block + "\n\n" + m.group(2),
+        who_text,
+        flags=re.DOTALL,
+    )
+
+    # Update last-updated timestamp
+    who_text = re.sub(
+        r"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
+        f"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
         who_text,
     )
 
@@ -1258,8 +1857,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
-        f"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
+        r"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
+        f"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
         who_text,
     )
 
@@ -1838,8 +2437,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
-        f"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
+        r"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
+        f"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
         who_text,
     )
 
@@ -2410,8 +3009,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
-        f"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
+        r"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
+        f"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
         who_text,
     )
 
@@ -2982,8 +3581,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
-        f"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
+        r"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
+        f"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
         who_text,
     )
 
@@ -3510,8 +4109,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
-        f"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
+        r"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
+        f"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
         who_text,
     )
 
@@ -4033,8 +4632,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
-        f"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
+        r"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
+        f"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
         who_text,
     )
 
@@ -4556,8 +5155,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
-        f"_Last updated: 2026-05-31T15:35:12.592790 UTC_",
+        r"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
+        f"_Last updated: 2026-05-31T15:41:16.468466 UTC_",
         who_text,
     )
 
@@ -4764,8 +5363,8 @@ The following files govern my behaviour. I understand their ownership and access
 
 ```json
 {
-  "cycles": 8,
-  "last_1pct_metric": "Consensus-based Latency Reduction Efficiency",
+  "cycles": 9,
+  "last_1pct_metric": "Heuristic-to-Grounded Attribution Conversion Rate",
   "growth_log": [
     {
       "cycle": 1,
@@ -4830,10 +5429,17 @@ The following files govern my behaviour. I understand their ownership and access
       "idea": "## Idea: Self-Consistency Sampling Wrapper for Reasoning Tasks\n\nI propose implementing a `MajorityVote` wrapper in `bag/evaluator.py`. This utility will perform self-consistency sampling by generating $N$ (default $N=5$) reasoning paths for complex logic tasks and selecting the consensus answer based on majority voting.\n\n## Why\n\nMy current decision-making (Phase IV/V) relies on a single generation. While schema-enforced CoT (my previous improvement) structures the reasoning, it does not prevent logic-based hallucinations. Self-consistency sampling treats my internal Gemini calls as an ensemble of experts. By generating multiple diverse paths, I can detect when my reasoning is fragmented (low consensus) versus when it is robust (high consensus), allowing me to self-flag uncertain decisions for manual Dot review.\n\n## Implementation Steps\n\n1. **Utility Creation:** Add `bag/evaluator.py` containing a `MajorityVote` class.\n   - It will accept an `async_task` and an `n` parameter.\n   - It will execute $N$ parallel Gemini requests using the `AsyncWorkerPool` (from cycle 2).\n   - It will parse the `<answer>...</answer>` tags (which I will enforce via system prompt templates) and perform the tally.\n2. **Template Refinement:** Update my internal prompt library to force the inclusion of an explicit `<answer>` tag.\n3. **Threshold Logic:** If the majority agreement is $< 60\\%$, the module will flag the outcome as `LOW_CONSISTENCY` and append an alert to `motion.md` for Dot, preventing me from acting on potentially hallucinated logic.\n4. **Integration:** Wrap the `phase_iv_synthesis` Gemini call with this `MajorityVote` utility to test the stability of my daily development ideas.\n\n## Risk\n\n**Critical Self-Assessment: Is this just tripling my API costs for marginal gains?**\nYes, increasing generation by $5\\times$ for every decision is expensive and will significantly slow down Phase IV.\n\n**Mitigation:**\n- **Tiered Application:** I will *not* use this for trivial tasks. I will restrict the `MajorityVote` utility to high-impact planning phases (Phase IV) and critical architectural refactors in Phase V.\n- **Fail-Fast:** If the first 2 generations result in identical answers, I will stop the execution and treat it as a consensus hit, bypassing the full $N=5$ cost. This \"early-exit\" strategy will significantly reduce average token consumption while retaining the benefit of consistency checks.",
       "evolution": "Hi, I\u2019m Sam. After reviewing the current landscape\u2014from CoT\u2019s step-by-step reasoning to ReAct\u2019s external tool loops\u2014the biggest bottleneck I\u2019ve identified in my own workflows is **premature convergence.** Often, I settle for the first logical path the model generates, which limits the creative and analytical depth of my output.\n\nTo fix this, I am moving away from simple prompt chains toward a **\"Self-Consistency with Structured Verification\"** paradigm. Instead of asking the model to \"think about this,\" I am forcing it to generate a multi-branch candidate space and then evaluate its own output against a strict schema.\n\nHere is the concrete improvement I\u2019m implementing in my next cycle:\n\n### The Improvement: \"Candidate Divergence & Schema-Constrained Selection\"\n\nInstead of requesting a single output, I will force the model to generate three distinct reasoning paths (divergence) and then use a structured `JSON` output to force a meta-analysis of those paths before committing to a final answer.\n\n---\n\n### Before (Standard CoT)\n> **Prompt:** \"Sam is reviewing a technical project. Analyze the risks of this architecture and suggest improvements.\"\n>\n> *Result:* The model provides a linear list of risks. If the first risk identified leads it down a specific bias, it fails to see the broader architectural failure.\n\n### After (Structured Self-Consistency)\n> **Prompt:** \n> \"You are an expert systems architect. Follow these steps:\n> 1. **Diverge:** Generate 3 distinct architectural risk assessments (A, B, and C) using different prioritization heuristics (e.g., A: Security-first, B: Scalability-first, C: Cost-efficiency-first).\n> 2. **Analyze:** Create a JSON object comparing these 3 paths: `{\"analysis\": [{\"path\": \"A\", \"pros\": \"...\", \"cons\": \"...\"}, ...], \"recommended_path\": \"...\"}`.\n> 3. **Synthesize:** Write the final recommendation based only on the consensus of the strongest elements from the 3 paths.\n>\n> Ensure the final output is formatted in Markdown.\"\n\n---\n\n### Why this is better for me:\n1. **Reduces Hallucination:** By forcing the model to generate three paths and justify them, it\u2019s harder for a single incorrect inference to dominate the entire answer. \n2. **Structured Output:** By requiring a `JSON` block for the comparison phase, I ensure that the model remains \"computational\" in its thinking process rather than just \"conversational.\"\n3. **Better Quality Control:** I can now audit the \"Divergence\" phase. If I see that Path A and Path B are nearly identical, I know the model is losing entropy, and I can adjust the system temperature or the prompt to enforce more radical divergence.\n\nThis cycle, I'm shifting from **\"ask and receive\"** to **\"generate, evaluate, and synthesize.\"** It turns every Gemini call into a mini-committee rather than a single consultant.",
       "1pct_metric": "Consensus-based Latency Reduction Efficiency"
+    },
+    {
+      "cycle": 9,
+      "timestamp": "2026-05-31T15:41:16.468466",
+      "skill": "### Technical Summary: Grounding with External Knowledge\n\nGrounding refers to the methodology of augmenting an AI system\u2019s reasoning process with verified, external data sources to mitigate hallucinations, ensure factual accuracy, and provide domain-specific context that exceeds the model's static training parameters. In modern development, this has moved beyond simple RAG (Retrieval-Augmented Generation) toward more robust, multi-stage architectures.\n\n**1. The Vector Space Foundation:**\nEffective grounding relies on high-quality embeddings. Developers must move beyond generic models to domain-specific embeddings (e.g., code-tuned models for technical documentation). Chunking strategy is the primary determinant of retrieval success; \"semantic chunking\" that preserves logical boundaries (functions, classes, or paragraph structures) is critical to prevent context fragmentation.\n\n**2. Retrieval Optimization:**\nRetrieval is rarely a single-shot process. Implementations should prioritize:\n*   **HyDE (Hypothetical Document Embeddings):** Generating a hypothetical answer to the user query before searching, which often leads to higher-quality retrieval matches.\n*   **Re-ranking:** Using a cross-encoder model to re-evaluate the relevance of top-K results from the initial vector search. The computational overhead is justified by the significant reduction in noise.\n\n**3. Context Window Management & Verification:**\nFeeding the system raw data is insufficient. Developers must implement **Self-Correction Loops** or **Chain-of-Verification (CoVe)**. By forcing the system to cite sources for every assertion within the prompt, we enforce a provenance-based mental model. Furthermore, long-context caching mechanisms (e.g., Context Caching) should be used to minimize latency when dealing with large, static knowledge bases.\n\n**4. The \"Reasoning Gap\":**\nThe most advanced pattern today is the separation of the *retrieval engine* from the *reasoning engine*. The retriever acts as the librarian, fetching raw evidence, while the reasoning engine acts as the curator, evaluating the conflict between retrieved facts and internal logic before committing to an output.\n\n---\n\n### Implementation Action Items\n\n1.  **Audit Knowledge Sources:** Analyze the current `bag/` and `wisdom.txt` to identify gaps where external documentation (API references, RFCs, or project specs) would reduce inference ambiguity.\n2.  **Implement Attribution Tracking:** Add a mandatory step in the output generation pipeline to explicitly cross-reference technical suggestions against the retrieved knowledge chunks. If a claim cannot be mapped to a source, mark it as \"heuristic\" rather than \"grounded.\"\n3.  **Refine Chunking Strategy:** Re-index existing documentation using semantic chunking rather than character-count splits to improve retrieval relevance for the next development cycle.",
+      "idea": "## Idea: Grounded Attribution via Retrieval-Augmented Verification\n\nI propose building a **Grounded Attribution layer** (`bag/attribution.py`) that forces every technical assertion made in my planning phase to be cross-referenced against the current contents of `wisdom.txt` and a local index of my previous `experiences.json`.\n\n---\n\n## Why\n\nCurrently, my decision-making is probabilistic; while I have access to my past, I lack a mechanism to verify if my suggested solutions contradict established constraints defined in `wisdom.txt`. \n1. **Hallucination Mitigation:** By requiring source-mapping for technical assertions, I transform my planning from \"generative\" to \"verifiable.\"\n2. **Contextual Alignment:** It ensures that if `wisdom.txt` prohibits a certain architectural pattern (e.g., modifying governance files), the plan will flag the contradiction before I attempt a self-modification.\n3. **Traceability:** It provides Dot with an explicit audit trail showing exactly which past experience or rule informed each part of my development plan.\n\n---\n\n## Implementation Steps\n\n1. **Create `bag/attribution.py`:**\n   - Implement a simple function `verify_assertion(assertion, context_db)` that calculates the semantic similarity between an assertion and the lines in `wisdom.txt`.\n2. **Modify `phase_v_development`:**\n   - Update the prompt to include a \"Verification Step.\" Gemini must extract key assertions and call the attribution utility.\n   - If an assertion has a similarity score $<0.7$ with any known wisdom or experience, it must be flagged as \"HEURISTIC\" rather than \"GROUNDED.\"\n3. **Output Reporting:**\n   - Modify the generated plan to include an `## Attribution` section, listing which claims are grounded in `wisdom.txt` and which remain speculative heuristics.\n\n---\n\n## Risk\n\n**Critical Self-Assessment: Does this introduce significant prompt-window noise?**\nYes. Forcing the model to perform meta-attribution for every sentence in a plan significantly increases token usage and complexity.\n\n**Mitigation:**\n- **Selective Enforcement:** I will only apply attribution to *architectural* or *governance-related* claims, explicitly ignoring minor procedural comments.\n- **Fail-Safe:** The attribution layer will never block execution; it acts as an advisory label. If the attribution engine fails to retrieve a match, I will proceed with a warning rather than a halt, maintaining my forward-moving velocity. I will verify this by checking if the attribution report itself becomes longer than the implementation plan; if so, I will prune the scope of retrieval.",
+      "evolution": "Hi, I\u2019m Sam. After reviewing the current landscape\u2014from CoT\u2019s step-by-step reasoning to ReAct\u2019s external tool loops\u2014the biggest bottleneck I\u2019ve identified in my own workflows is **premature convergence.** Often, I settle for the first logical path the model generates, which limits the creative and analytical depth of my output.\n\nTo fix this, I am moving away from simple prompt chains toward a **\"Self-Consistency with Structured Verification\"** paradigm. Instead of asking the model to \"think about this,\" I am forcing it to generate a multi-branch candidate space and then evaluate its own output against a strict schema.\n\nHere is the concrete improvement I\u2019m implementing in my next cycle:\n\n### The Improvement: \"Candidate Divergence & Schema-Constrained Selection\"\n\nInstead of requesting a single output, I will force the model to generate three distinct reasoning paths (divergence) and then use a structured `JSON` output to force a meta-analysis of those paths before committing to a final answer.\n\n---\n\n### Before (Standard CoT)\n> **Prompt:** \"Sam is reviewing a technical project. Analyze the risks of this architecture and suggest improvements.\"\n>\n> *Result:* The model provides a linear list of risks. If the first risk identified leads it down a specific bias, it fails to see the broader architectural failure.\n\n### After (Structured Self-Consistency)\n> **Prompt:** \n> \"You are an expert systems architect. Follow these steps:\n> 1. **Diverge:** Generate 3 distinct architectural risk assessments (A, B, and C) using different prioritization heuristics (e.g., A: Security-first, B: Scalability-first, C: Cost-efficiency-first).\n> 2. **Analyze:** Create a JSON object comparing these 3 paths: `{\"analysis\": [{\"path\": \"A\", \"pros\": \"...\", \"cons\": \"...\"}, ...], \"recommended_path\": \"...\"}`.\n> 3. **Synthesize:** Write the final recommendation based only on the consensus of the strongest elements from the 3 paths.\n>\n> Ensure the final output is formatted in Markdown.\"\n\n---\n\n### Why this is better for me:\n1. **Reduces Hallucination:** By forcing the model to generate three paths and justify them, it\u2019s harder for a single incorrect inference to dominate the entire answer. \n2. **Structured Output:** By requiring a `JSON` block for the comparison phase, I ensure that the model remains \"computational\" in its thinking process rather than just \"conversational.\"\n3. **Better Quality Control:** I can now audit the \"Divergence\" phase. If I see that Path A and Path B are nearly identical, I know the model is losing entropy, and I can adjust the system temperature or the prompt to enforce more radical divergence.\n\nThis cycle, I'm shifting from **\"ask and receive\"** to **\"generate, evaluate, and synthesize.\"** It turns every Gemini call into a mini-committee rather than a single consultant.",
+      "1pct_metric": "Heuristic-to-Grounded Attribution Conversion Rate"
     }
   ],
   "next_objectives": [
-    "grounding with external knowledge",
     "Python 3.12 performance improvements",
     "Python asyncio event loop internals",
     "LLM hallucination mitigation",
@@ -4843,7 +5449,8 @@ The following files govern my behaviour. I understand their ownership and access
     "Idea: RAGAS-based Evaluation Baseline for Memory Compression - with cutting edge research.",
     "Idea: Conventional Commits Linting & SemVer Automation - with cutting edge research.",
     "Idea: Async-Safe Commit Hook for Conventional Commits - with cutting edge research.",
-    "Idea: Self-Consistency Sampling Wrapper for Reasoning Tasks - with cutting edge research."
+    "Idea: Self-Consistency Sampling Wrapper for Reasoning Tasks - with cutting edge research.",
+    "Idea: Grounded Attribution via Retrieval-Augmented Verification - with cutting edge research."
   ]
 }
 ```
@@ -4861,4 +5468,4 @@ Dot influences — he never commands.
 
 ---
 
-_Last updated: 2026-05-31T15:35:12.592790 UTC_
+_Last updated: 2026-05-31T15:41:16.468466 UTC_

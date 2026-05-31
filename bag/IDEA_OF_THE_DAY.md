@@ -1,26 +1,35 @@
-## Idea: Self-Consistency Sampling Wrapper for Reasoning Tasks
+## Idea: Grounded Attribution via Retrieval-Augmented Verification
 
-I propose implementing a `MajorityVote` wrapper in `bag/evaluator.py`. This utility will perform self-consistency sampling by generating $N$ (default $N=5$) reasoning paths for complex logic tasks and selecting the consensus answer based on majority voting.
+I propose building a **Grounded Attribution layer** (`bag/attribution.py`) that forces every technical assertion made in my planning phase to be cross-referenced against the current contents of `wisdom.txt` and a local index of my previous `experiences.json`.
+
+---
 
 ## Why
 
-My current decision-making (Phase IV/V) relies on a single generation. While schema-enforced CoT (my previous improvement) structures the reasoning, it does not prevent logic-based hallucinations. Self-consistency sampling treats my internal Gemini calls as an ensemble of experts. By generating multiple diverse paths, I can detect when my reasoning is fragmented (low consensus) versus when it is robust (high consensus), allowing me to self-flag uncertain decisions for manual Dot review.
+Currently, my decision-making is probabilistic; while I have access to my past, I lack a mechanism to verify if my suggested solutions contradict established constraints defined in `wisdom.txt`. 
+1. **Hallucination Mitigation:** By requiring source-mapping for technical assertions, I transform my planning from "generative" to "verifiable."
+2. **Contextual Alignment:** It ensures that if `wisdom.txt` prohibits a certain architectural pattern (e.g., modifying governance files), the plan will flag the contradiction before I attempt a self-modification.
+3. **Traceability:** It provides Dot with an explicit audit trail showing exactly which past experience or rule informed each part of my development plan.
+
+---
 
 ## Implementation Steps
 
-1. **Utility Creation:** Add `bag/evaluator.py` containing a `MajorityVote` class.
-   - It will accept an `async_task` and an `n` parameter.
-   - It will execute $N$ parallel Gemini requests using the `AsyncWorkerPool` (from cycle 2).
-   - It will parse the `<answer>...</answer>` tags (which I will enforce via system prompt templates) and perform the tally.
-2. **Template Refinement:** Update my internal prompt library to force the inclusion of an explicit `<answer>` tag.
-3. **Threshold Logic:** If the majority agreement is $< 60\%$, the module will flag the outcome as `LOW_CONSISTENCY` and append an alert to `motion.md` for Dot, preventing me from acting on potentially hallucinated logic.
-4. **Integration:** Wrap the `phase_iv_synthesis` Gemini call with this `MajorityVote` utility to test the stability of my daily development ideas.
+1. **Create `bag/attribution.py`:**
+   - Implement a simple function `verify_assertion(assertion, context_db)` that calculates the semantic similarity between an assertion and the lines in `wisdom.txt`.
+2. **Modify `phase_v_development`:**
+   - Update the prompt to include a "Verification Step." Gemini must extract key assertions and call the attribution utility.
+   - If an assertion has a similarity score $<0.7$ with any known wisdom or experience, it must be flagged as "HEURISTIC" rather than "GROUNDED."
+3. **Output Reporting:**
+   - Modify the generated plan to include an `## Attribution` section, listing which claims are grounded in `wisdom.txt` and which remain speculative heuristics.
+
+---
 
 ## Risk
 
-**Critical Self-Assessment: Is this just tripling my API costs for marginal gains?**
-Yes, increasing generation by $5\times$ for every decision is expensive and will significantly slow down Phase IV.
+**Critical Self-Assessment: Does this introduce significant prompt-window noise?**
+Yes. Forcing the model to perform meta-attribution for every sentence in a plan significantly increases token usage and complexity.
 
 **Mitigation:**
-- **Tiered Application:** I will *not* use this for trivial tasks. I will restrict the `MajorityVote` utility to high-impact planning phases (Phase IV) and critical architectural refactors in Phase V.
-- **Fail-Fast:** If the first 2 generations result in identical answers, I will stop the execution and treat it as a consensus hit, bypassing the full $N=5$ cost. This "early-exit" strategy will significantly reduce average token consumption while retaining the benefit of consistency checks.
+- **Selective Enforcement:** I will only apply attribution to *architectural* or *governance-related* claims, explicitly ignoring minor procedural comments.
+- **Fail-Safe:** The attribution layer will never block execution; it acts as an advisory label. If the attribution engine fails to retrieve a match, I will proceed with a warning rather than a halt, maintaining my forward-moving velocity. I will verify this by checking if the attribution report itself becomes longer than the implementation plan; if so, I will prune the scope of retrieval.
