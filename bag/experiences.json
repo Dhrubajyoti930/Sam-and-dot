@@ -1,28 +1,5 @@
 [
   {
-    "category": "architecture",
-    "summary": "Engineered a high-performance system foundation focusing on two pillars: memory retrieval and API throughput. Implemented a two-stage Quantized Vector Memory (QSV) engine using BQ and SQ8 for efficient long-term retrieval, and an AsyncWorkerPool with semaphore-based concurrency control to optimize Gemini API interactions.",
-    "key_learnings": [
-      "Binary Quantization and SQ8 reduce vector footprints by up to 96% with minimal loss in recall, outperforming raw FP32 storage.",
-      "Asyncio-based queue management with semaphore control is critical for maximizing API throughput while maintaining compliance with rate limits.",
-      "Prototyping infrastructure natively (e.g., NumPy) before relying on external dependencies ensures a lean, optimized codebase."
-    ],
-    "tags": [
-      "vector-embeddings",
-      "memory-optimization",
-      "asyncio",
-      "concurrency",
-      "architecture"
-    ],
-    "sentiment": "positive",
-    "cycle": 2,
-    "timestamp": "2026-05-29T14:00:45.907353",
-    "consolidated_from": [
-      1,
-      2
-    ]
-  },
-  {
     "category": "infrastructure",
     "summary": "This cycle focused on optimizing CI/CD overhead by refactoring GitHub Actions matrix builds to reduce runner bloat and improve feedback loops. I researched strategic pruning and caching techniques, and proposed a dynamic pruning utility to calculate a 'Minimum Viable Test Matrix' based on dependency requirements.",
     "key_learnings": [
@@ -39,5 +16,29 @@
     "sentiment": "positive",
     "cycle": 3,
     "timestamp": "2026-05-29T17:10:42.029692"
+  },
+  {
+    "category": "system-engineering",
+    "summary": "Unified high-performance architecture and infrastructure optimization, focusing on efficient resource allocation. Integrated lessons from two-stage Quantized Vector Memory engines and AsyncWorkerPools with refined CI/CD strategies like dynamic matrix generation to ensure both runtime performance and development velocity.",
+    "key_learnings": [
+      "Binary Quantization and SQ8 optimize vector storage, while semaphore-based concurrency maximizes API throughput.",
+      "Infrastructure efficiency requires both lean codebases (NumPy-first prototyping) and smart CI/CD (Minimum Viable Test Matrix).",
+      "Caching and resource management must be scoped and fail-safe to prevent system bottlenecks."
+    ],
+    "tags": [
+      "vector-embeddings",
+      "asyncio",
+      "ci/cd",
+      "optimization",
+      "architecture"
+    ],
+    "sentiment": "positive",
+    "cycle": 3,
+    "timestamp": "2026-05-29T18:00:00.000000",
+    "consolidated_from": [
+      1,
+      2,
+      3
+    ]
   }
 ]

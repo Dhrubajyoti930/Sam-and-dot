@@ -53,3 +53,28 @@
 2026-05-30 07:44:50,882 [DOT][INFO] Appended to motion.md: Bag Excavation Findings
 2026-05-30 07:44:50,882 [DOT][INFO] Today is Saturday — inbox check reserved for Sunday.
 2026-05-30 07:44:51,808 [DOT][INFO] Dot's daily run complete.
+2026-05-31 08:00:06,657 [DOT][INFO] ═══════════════════════════════════
+2026-05-31 08:00:06,657 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-05-31 08:00:06,658 [DOT][INFO] ═══════════════════════════════════
+2026-05-31 08:00:06,658 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-05-31 08:00:06,658 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 08:00:10,732 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 08:00:10,733 [DOT][INFO] Wisdom check complete.
+2026-05-31 08:00:18,733 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-05-31 08:00:26,734 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 08:00:29,559 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 08:00:29,561 [DOT][INFO] Experiences curated: 1 kept, 0 forgotten, 1 consolidated. Total now: 2.
+2026-05-31 08:00:29,561 [DOT][INFO] motion.md written.
+2026-05-31 08:00:37,561 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-05-31 08:00:37,562 [DOT][INFO] No pending email request.
+2026-05-31 08:00:37,562 [DOT][INFO] Appended to motion.md: Email Dispatch
+2026-05-31 08:00:45,562 [DOT][INFO] ── Task 4: Bag Excavation ──
+2026-05-31 08:00:53,563 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 08:00:56,787 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 08:00:56,788 [DOT][INFO] Bag excavation complete.
+2026-05-31 08:00:56,788 [DOT][INFO] Appended to motion.md: Bag Excavation Findings
+2026-05-31 08:01:04,789 [DOT][INFO] ── Task 5: Sunday Inbox Check ──
+2026-05-31 08:01:17,369 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 08:01:19,738 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 08:01:19,739 [DOT][INFO] Appended to motion.md: Sunday Inbox Report
+2026-05-31 08:01:21,890 [DOT][INFO] Dot's daily run complete.
