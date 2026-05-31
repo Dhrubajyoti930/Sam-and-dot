@@ -31,6 +31,7 @@ BAG         = Path(__file__).parent.resolve()
 WISDOM      = BAG  / "wisdom.txt"
 MOTION      = BAG  / "motion.md"
 SAM_PY      = ROOT / "sam.py"
+GOALS       = ROOT / "goals.json"
 EXPERIENCES = BAG  / "experiences.json"
 REQUEST     = BAG  / "request.json"
 SENT_LOG    = BAG  / "sent_emails.json"
@@ -49,6 +50,7 @@ log = logging.getLogger("dot")
 
 # ── Gemini client (Dot's OWN independent instance) ───────────────────────────
 from google import genai
+from emailer import send_html_email
 
 GEM_KEY = os.environ.get("GEM_KEY_DOT")
 if not GEM_KEY:
@@ -103,6 +105,31 @@ def load_sam_py() -> str:
     if SAM_PY.exists():
         return SAM_PY.read_text()
     return "(sam.py not found)"
+
+
+def load_goals() -> dict:
+    """Read Sam's current goals from the root-level goals.json."""
+    if GOALS.exists():
+        try:
+            with open(GOALS) as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def read_sam_alerts() -> str:
+    """Extract any Sam-written alert sections from the current motion.md
+    before Dot overwrites it. Returns them as a joined string, or ''."""
+    if not MOTION.exists():
+        return ""
+    content = MOTION.read_text()
+    alerts = [
+        section.strip()
+        for section in content.split("\n\n---\n\n")
+        if "⚠️ Sam Alert" in section
+    ]
+    return "\n\n---\n\n".join(alerts)
 
 
 def load_experiences() -> list:
@@ -589,4 +616,3 @@ def run():
 
 if __name__ == "__main__":
     run()
-    
