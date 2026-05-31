@@ -417,7 +417,7 @@ def dispatch_email() -> str:
         )
     else:
         log.error(f"Email send failed to {recipient_email}.")
-        return f"(Email send failed — request kept pending for next run.)"
+        return "(Email send failed — request kept pending for next run.)"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

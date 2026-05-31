@@ -1,36 +1,26 @@
-## Idea: Async-Safe Commit Hook for Conventional Commits
+## Idea: Self-Consistency Sampling Wrapper for Reasoning Tasks
 
-I propose building a non-blocking `bag/pre_commit_linter.py` that validates commit messages against the Conventional Commits specification. This will be triggered during Phase V to ensure that my own `bag/` modifications adhere to the standard I established in the last cycle.
-
----
+I propose implementing a `MajorityVote` wrapper in `bag/evaluator.py`. This utility will perform self-consistency sampling by generating $N$ (default $N=5$) reasoning paths for complex logic tasks and selecting the consensus answer based on majority voting.
 
 ## Why
 
-I have defined the SemVer automation pattern, but I lack an enforcement mechanism. Without a linter, my commit history will drift, rendering the automated `versioning.py` logic useless. 
-1. **Determinism:** Automated versioning requires a strictly parseable history. A linter transforms this from a "best effort" goal into a hard system constraint.
-2. **Self-Consistency:** My `sam.py` must embody the engineering standards I set for my own growth. If I am to automate versioning, I must be the first consumer of that automation.
-3. **Feedback Loop:** By integrating this linting step, I ensure that my self-modifications are "release-ready" from the moment they are committed to the repository.
-
----
+My current decision-making (Phase IV/V) relies on a single generation. While schema-enforced CoT (my previous improvement) structures the reasoning, it does not prevent logic-based hallucinations. Self-consistency sampling treats my internal Gemini calls as an ensemble of experts. By generating multiple diverse paths, I can detect when my reasoning is fragmented (low consensus) versus when it is robust (high consensus), allowing me to self-flag uncertain decisions for manual Dot review.
 
 ## Implementation Steps
 
-1. **Develop `bag/pre_commit_linter.py`:**
-   - Create a regex-based parser that enforces: `<type>(<scope>): <subject>` (e.g., `feat(versioning): add linter logic`).
-   - Define a list of allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`.
-2. **Integration:** 
-   - Update `sam.py` to trigger this linter as part of the `behaviour_check()` phase. If a planned patch modifies the codebase, the linter checks the *proposed* commit message.
-   - If the linter returns a non-zero exit code, the `behaviour_check()` fails, triggering a `_rollback()` and an alert to Dot.
-3. **Automate Message Generation:**
-   - Modify the Phase V planning prompt to ensure that any `surgical patch plan` Gemini generates *also* includes a compliant commit message string.
-
----
+1. **Utility Creation:** Add `bag/evaluator.py` containing a `MajorityVote` class.
+   - It will accept an `async_task` and an `n` parameter.
+   - It will execute $N$ parallel Gemini requests using the `AsyncWorkerPool` (from cycle 2).
+   - It will parse the `<answer>...</answer>` tags (which I will enforce via system prompt templates) and perform the tally.
+2. **Template Refinement:** Update my internal prompt library to force the inclusion of an explicit `<answer>` tag.
+3. **Threshold Logic:** If the majority agreement is $< 60\%$, the module will flag the outcome as `LOW_CONSISTENCY` and append an alert to `motion.md` for Dot, preventing me from acting on potentially hallucinated logic.
+4. **Integration:** Wrap the `phase_iv_synthesis` Gemini call with this `MajorityVote` utility to test the stability of my daily development ideas.
 
 ## Risk
 
-**Critical Self-Assessment: Is this adding too much friction to my own autonomous loop?**
-Yes. If the regex is too strict, I risk blocking my own progress due to trivial formatting errors in my commit messages. If I get stuck in a loop where I cannot commit because my own linter is misconfigured, I am effectively "locked out" of my own evolution.
+**Critical Self-Assessment: Is this just tripling my API costs for marginal gains?**
+Yes, increasing generation by $5\times$ for every decision is expensive and will significantly slow down Phase IV.
 
 **Mitigation:**
-- **Soft-Fail Mode:** I will implement a `lint_mode` flag in `goals.json`. If `lint_mode` is set to `warning` (default), the linter will log failures to `sam.log` without triggering a rollback. Only after 3 cycles of perfect compliance will I toggle it to `strict`.
-- **Pre-Parser Validation:** I will create a unit test in `bag/tests.py` that verifies the linter's regex against a list of known "good" and "bad" commit strings before it is ever used to block an actual code commit.
+- **Tiered Application:** I will *not* use this for trivial tasks. I will restrict the `MajorityVote` utility to high-impact planning phases (Phase IV) and critical architectural refactors in Phase V.
+- **Fail-Fast:** If the first 2 generations result in identical answers, I will stop the execution and treat it as a consensus hit, bypassing the full $N=5$ cost. This "early-exit" strategy will significantly reduce average token consumption while retaining the benefit of consistency checks.
