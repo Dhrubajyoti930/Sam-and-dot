@@ -207,3 +207,35 @@
 2026-05-31 11:18:07,290 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
 2026-05-31 11:18:07,292 [DOT][INFO] Appended to motion.md: Sunday Inbox Report
 2026-05-31 11:18:08,484 [DOT][INFO] Dot's daily run complete.
+2026-05-31 12:39:16,692 [DOT][INFO] ═══════════════════════════════════
+2026-05-31 12:39:16,692 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-05-31 12:39:16,692 [DOT][INFO] ═══════════════════════════════════
+2026-05-31 12:39:16,692 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-05-31 12:39:16,692 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 12:39:21,726 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 12:39:21,727 [DOT][INFO] Wisdom check complete.
+2026-05-31 12:39:29,728 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-05-31 12:39:37,728 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 12:39:39,626 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 12:39:39,628 [DOT][INFO] Experiences curated: 0 kept, 0 forgotten, 1 consolidated. Total now: 1.
+2026-05-31 12:39:39,628 [DOT][INFO] motion.md written.
+2026-05-31 12:39:47,628 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-05-31 12:39:55,629 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 12:39:56,583 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 12:40:04,584 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 12:40:06,397 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 12:40:07,218 [DOT][INFO] Email sent to semantic-release@googlegroups.com: 'Best practices for cross-repo dependency versioning with semantic-release'
+2026-05-31 12:40:07,219 [DOT][INFO] Appended to motion.md: Email Dispatch
+2026-05-31 12:40:15,219 [DOT][INFO] ── Task 4: Bag Excavation ──
+2026-05-31 12:40:23,220 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 12:40:25,471 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-05-31 12:40:25,472 [DOT][WARNING] Gemini transient error (attempt 1): 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}. Retrying in 8s.
+2026-05-31 12:40:33,472 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 12:40:36,777 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 12:40:36,778 [DOT][INFO] Bag excavation complete.
+2026-05-31 12:40:36,778 [DOT][INFO] Appended to motion.md: Bag Excavation Findings
+2026-05-31 12:40:44,778 [DOT][INFO] ── Task 5: Sunday Inbox Check ──
+2026-05-31 12:40:54,310 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-05-31 12:40:56,311 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-05-31 12:40:56,312 [DOT][INFO] Appended to motion.md: Sunday Inbox Report
+2026-05-31 12:40:57,005 [DOT][INFO] Dot's daily run complete.
