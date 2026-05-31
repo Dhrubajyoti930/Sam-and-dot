@@ -171,21 +171,24 @@ def snapshot_sam() -> Path:
 
 
 def self_check() -> bool:
-    """Boot-time integrity check. Returns True if healthy, triggers rollback if not."""
-    try:
-        result = subprocess.run(
-            [sys.executable, "-c",
-             f"import py_compile; py_compile.compile('{__file__}', doraise=True)"],
-            capture_output=True, text=True, timeout=10,
-        )
-        if result.returncode != 0:
-            log.error("Syntax check failed — initiating rollback.")
-            _rollback()
+    """Boot-time integrity check — covers sam.py and all bag/*.py files.
+    Returns True if all are healthy, triggers rollback if any fail."""
+    files_to_check = [Path(__file__)] + sorted(BAG.glob("*.py"))
+    for f in files_to_check:
+        try:
+            result = subprocess.run(
+                [sys.executable, "-c",
+                 f"import py_compile; py_compile.compile(r'{f}', doraise=True)"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if result.returncode != 0:
+                log.error(f"Syntax check failed on {f.name} — initiating rollback.")
+                _rollback()
+                return False
+        except Exception as e:
+            log.error(f"Self-check exception on {f.name}: {e}")
             return False
-        return True
-    except Exception as e:
-        log.error(f"Self-check exception: {e}")
-        return False
+    return True
 
 
 def behaviour_check() -> bool:
