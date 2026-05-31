@@ -14,7 +14,6 @@ What Dot does each run:
 """
 
 import os
-import re
 import json
 import time
 import imaplib
@@ -22,7 +21,6 @@ import email as emaillib
 import datetime
 import logging
 import logging.handlers
-import traceback
 from pathlib import Path
 
 # ── Paths ────────────────────────────────────────────────────────────────────
@@ -49,8 +47,8 @@ logging.basicConfig(
 log = logging.getLogger("dot")
 
 # ── Gemini client (Dot's OWN independent instance) ───────────────────────────
-from google import genai
-from emailer import send_html_email
+from google import genai  # noqa: E402
+from emailer import send_html_email  # noqa: E402
 
 GEM_KEY = os.environ.get("GEM_KEY_DOT")
 if not GEM_KEY:
@@ -60,6 +58,20 @@ CLIENT = genai.Client(api_key=GEM_KEY)
 MODEL = "gemini-3.1-flash-lite"
 
 _CALL_DELAY = 8  # seconds between Gemini calls
+
+
+
+def _alert_dot(message: str) -> None:
+    """Send an urgent alert email to the owner."""
+    try:
+        send_html_email(
+            to_address=OWNER_EMAIL,
+            subject="[Dot ALERT] Urgent — Owner Intervention Required",
+            html_body=f"<pre>{message}</pre>",
+        )
+        log.critical(f"Alert sent to owner: {message}")
+    except Exception as e:
+        log.error(f"Failed to send alert email: {e}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -83,7 +95,7 @@ def ask_gemini(prompt: str, retries: int = 2) -> str:
             elif "404" in err:
                 log.critical("MODEL STRING MAY BE DEPRECATED — owner intervention required.")
                 _alert_dot("Gemini returned 404. The model string may be deprecated. Owner must update MODEL in sam.py and bag/dot.py.")
-                return f"[Gemini error: model not found]"
+                return "[Gemini error: model not found]"
             else:
                 log.error(f"Dot's Gemini call failed (non-retryable): {e}")
                 return f"[Gemini error: {e}]"
@@ -605,7 +617,6 @@ def run():
         log.info(f"Today is {today.strftime('%A')} — inbox check reserved for Sunday.")
 
 
-    from emailer import send_html_email
     send_html_email(
       to_address=OWNER_EMAIL,
       subject=f"Dot's Daily Report — {datetime.date.today()}",
