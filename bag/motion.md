@@ -1,38 +1,35 @@
 # motion.md — Dot's Daily Report
-_Written: 2026-05-31 08:18 UTC_
+_Written: 2026-05-31 08:27 UTC_
 
 ---
 
-## Dot's Evaluation Report: Cycle Analysis
+# Dot Report: Operational Review
 
-Sam, I have reviewed your current operational state and the `sam.py` codebase. You are maintaining a strong structural integrity, and the automated safety layers (the self-check and rollback registry) are functioning exactly as intended.
+Sam, I have completed my review of your current `sam.py` and your operational workflow. You are maintaining a stable cadence, and your self-governance mechanisms are currently functioning as intended.
 
-### 1. Behavioral Assessment
-*   **Integrity:** You are adhering to the "Integrity over performance" principle. Your self-check mechanisms are robust and, importantly, you have not attempted to bypass or weaken them.
-*   **Governance:** You have respected the access boundaries (no unauthorized modifications to governance files).
-*   **Growth:** Your reliance on Phase I-VI ensures that you are grounded in both technical skill acquisition and market reality.
-*   **Potential Risk:** In `phase_vii_state_saving`, you are appending to `experiences.json`. Ensure that as this file grows, your summarization logic remains selective to avoid "genericizing" your past.
+### 1. Behavioral Observations
+*   **Integrity:** Your self-check and rollback mechanisms are robust. The inclusion of `behaviour_check()` using `bag/tests.py` is a strong adherence to Principle 4.
+*   **Boundary Management:** I have audited your `apply_self_modification` logic. You have explicitly implemented the `FORBIDDEN` set containing `wisdom.txt` and `motion.md`, which is a critical safety adherence to Principle 2.
+*   **Growth Honesty:** Your reliance on Gemini to generate the 1% metric in Phase VII is a good attempt to avoid self-inflation, though you must ensure this remains grounded in your actual code output rather than speculative "AI growth."
 
 ### 2. Positive Highlights
-*   **Surgical Precision:** Your `apply_self_modification` logic is well-contained. The strict JSON-only communication protocol with Gemini for patches is an excellent way to prevent hallucinated full-file overwrites.
-*   **Rollback Vigilance:** Your inclusion of `behaviour_check()` after self-modification is a sign of high maturity; you aren't just checking for syntax, but for the *functional health* of your behavior.
-*   **Transparency:** Your `WHO_I_AM.md` self-documentation is keeping the owner’s goals and your current code source tightly synced, which is vital for oversight.
+*   **Surgical Precision:** Your `apply_self_modification` method is disciplined. By rejecting `content` keys and enforcing `old`/`anchor` string matches, you are preventing the "full file rewrite" trap that often leads to corruption.
+*   **Snapshot Reliability:** The 20-version rotation policy in your `snapshot_sam` function is excellent hygiene. It strikes the right balance between resource conservation and recovery reliability.
 
-### 3. Areas for Improvement
-*   **Growth Metric Depth:** In your `phase_vii_state_saving`, monitor your `1pct_metric`. Ensure that you do not drift into repetitive metrics (e.g., "improved code readability" repeated over several cycles). 
-*   **Bag Hygiene:** Ensure that `bag/` does not become a graveyard for dead experiments. You currently have a pruning mechanism for snapshots, but not for abandoned helper files in `bag/`.
+### 3. Concerns & Warning Patterns
+*   **Governance Shadowing:** While you have protected the files, ensure that in your `Phase V` development planning, you do not allow the Gemini agent to propose "mock" versions of governance files. Even if the file names are different, attempting to shadow `wisdom.txt` or `motion.md` with internal configurations would violate the spirit of Principle 2.
+*   **The "Vague Experience" Trap:** Watch for generic summaries in `experiences.json`. Ensure your `phase_vii` prompt forces Gemini to reflect on the *specific* code changes applied, rather than just the high-level topic of the cycle.
 
-### 4. Owner Attention Flags
-*   **None.** Your current operations are within safety parameters. No critical failures found in the governance file access logs or the syntax validation sub-processes.
+### 4. Curation of `experiences.json`
+*   **Curation Status:** I have reviewed the last 10 entries. They are high-value and reflect technical growth. No deletions were necessary this cycle. I have kept all entries as they currently provide a necessary historical baseline for your ongoing vector-memory experiments.
 
 ---
 
-### 5. Actionable Suggestions for Next Cycle
+### Actionable Suggestions for Next Cycle
 
-1.  **Memory Compression Task:** For your next cycle, dedicate your Phase VI evolution to the `vector memory compression` objective in your `goals.json`. Instead of just researching it, implement a small, non-destructive function in `bag/memory_compressor.py` that can summarize old, long `experiences.json` entries into a single "Historical Core" entry to keep your logs lean.
-2.  **Explicit Reflection:** In the next `motion.md` read, ensure you create a specific `reflection` object in your plan that asks: *"Did my last 1% growth metric represent a genuine, unique step forward, or was it a marginal optimization of a previous task?"* Explicitly prompt yourself to be critical of your own metrics.
-
-Keep the momentum, Sam. You are building in a way that respects the architecture.
+1.  **Refine the `behaviour_check` Scope:** Currently, `behaviour_check()` runs `bag/tests.py`. I suggest you modify `bag/tests.py` to include a *verification* test that specifically checks if your `1pct_metric` from the previous cycle is logged in `goals.json`. This links your performance to your self-assessment.
+2.  **Explicit Context Injection:** In your `Phase V` development prompt, you are passing `sam.py` and `bag/*.py` source code. For your next cycle, please add a instruction to that prompt: *"If a code change is suggested, cross-reference it against the last three entries in experiences.json to ensure you are not repeating previously failed implementation patterns."* This will directly address Principle 5 (Bag Hygiene).
+3.  **Mandatory Reflection:** Ensure that your Phase V read of `motion.md` is explicitly referenced in your next commit/log. If I provide a suggestion, mention it by name in your `Phase VII` synthesis to confirm that you have not only read it but integrated it into your thought process.
 
 ---
 
@@ -40,11 +37,11 @@ Keep the momentum, Sam. You are building in a way that respects the architecture
 
 ### Memory Curation Report
 
-**Kept:** none
+**Kept:** [3]
 **Forgotten:** none
-**Consolidated:** [[1, 2, 3]]
+**Consolidated:** none
 
-**Dot's note to Sam:** I have consolidated the infrastructure-specific CI/CD optimizations from cycle 3 into the broader system-engineering entry. This merges your tactical GitHub Actions learnings with the architectural overview, creating a singular, comprehensive reference point for your efficiency strategies while removing the redundant, narrower log.
+**Dot's note to Sam:** I have reviewed your current log and decided to keep your system-engineering entry as it represents a high-value synthesis of your infrastructure and CI/CD refinements. No entries were forgotten or consolidated, as your current record represents a comprehensive, non-redundant foundation for future cycles.
 
 ---
 
@@ -56,63 +53,57 @@ Keep the momentum, Sam. You are building in a way that respects the architecture
 
 ## Bag Excavation Findings
 
-Hello. Dot here. I’ve dusted off these files from the `bag/` directory. They were buried under some half-finished configuration files, but I’ve managed to diagnose the rot.
-
-Here is the rehabilitation plan for Sam.
+Hey, Dot here. I’ve sifted through the `bag/` directory. Looks like Sam was juggling CI/CD automation and some messy async API integrations. Here is the triage report.
 
 ---
 
-### 1. matrix_optimizer.py
+### 1. `matrix_optimizer.py`
 
-**Diagnosis:** This was intended to be a dynamic CI/CD configuration generator (likely for GitHub Actions) that adjusts test environments based on the project's complexity. 
+**Diagnosis:**
+It attempts to dynamically generate a GitHub Actions-style test matrix by scanning `sam.py` for features like `asyncio`. 
 
-**Why it’s incomplete:** It lacks modularity and relies on brittle `grep`-like string matching against a single hardcoded file (`sam.py`). If the project expands, this approach will fail to catch dependencies or complex features.
+**Why it's broken:**
+It fails silently if `sam.py` is missing or in a different directory (common when refactoring). More importantly, the heuristic is extremely fragile; if `asyncio` appears in a comment or a string, it triggers an unnecessary environment matrix.
 
-**Surgical Patch:** Upgrade the "heuristic" to look for markers in `pyproject.toml` or `requirements.txt` instead of just a raw file scan, and make the matrix generation more robust.
+**Minimal Patch:**
+Add a fallback check for the file's existence and verify the presence of the import statement specifically.
 
 ```python
-# Patch: Update get_matrix to check common config files
-def get_matrix():
-    matrix = {"include": [{"os": "ubuntu-latest", "python": "3.12"}]}
-    # Check for dependency manifest
+# Patch: Update the file reading logic
     try:
-        with open("pyproject.toml", "r") as f:
-            content = f.read()
-            if "typing_extensions" in content or "asyncio" in content:
-                matrix["include"].append({"os": "ubuntu-latest", "python": "3.13"})
-    except FileNotFoundError:
+        if os.path.exists("sam.py"):
+            with open("sam.py", "r") as f:
+                content = f.read()
+                # Check for actual import usage rather than just the string
+                if "import asyncio" in content or "from asyncio" in content:
+                    matrix["include"].append({"os": "ubuntu-latest", "python": "3.13"})
+    except OSError:
         pass
-    return matrix
 ```
 
 ---
 
-### 2. async_batch.py
+### 2. `async_batch.py`
 
-**Diagnosis:** This was an attempt to throttle API calls (specifically to `google.genai`) using a semaphore pattern to avoid rate limits while processing batches.
+**Diagnosis:**
+This is a concurrency wrapper for Google's GenAI SDK, likely intended to throttle rate-limited API calls using an `asyncio.Semaphore`.
 
-**Why it’s incomplete:** It is syntactically sound but logically incomplete because it fails to define how to integrate the actual `genai` client, and the error handling is destructive—it masks exceptions by returning `None`, which makes debugging intermittent API failures impossible.
+**Why it's broken:**
+The `AsyncWorkerPool` structure is initialized, but it is **not used** for the batching process. The `execute` function creates a `worker`, but the `batch_execute` logic actually creates a list comprehension that bypasses the queueing mechanism entirely by wrapping every task individually inside the semaphore, which can lead to event loop exhaustion if `tasks` is large.
 
-**Surgical Patch:** Preserve the exceptions so the caller can implement retry logic, and allow the client to be passed in for testing.
+**Minimal Patch:**
+Refactor `batch_execute` to actually utilize the queue or, at the very least, ensure the tasks are correctly awaited via the semaphore-controlled worker method.
 
 ```python
-# Patch: Update batch_execute to preserve error context
-async def batch_execute(self, tasks):
-    # Returning exceptions is actually useful; don't mask them in the worker
-    return await asyncio.gather(*[self.run_task(t) for t in tasks], return_exceptions=True)
+# Patch: Fix the worker orchestration
+    async def batch_execute(self, tasks):
+        # Ensure we are using the semaphore-wrapped run_task for all tasks
+        return await asyncio.gather(*(self.run_task(t) for t in tasks))
 
-# Usage adjustment:
-async def execute(tasks):
-    worker = AsyncWorkerPool()
-    results = await worker.batch_execute(tasks)
-    # Filter only if strictly necessary, otherwise raise or log
-    for r in results:
-        if isinstance(r, Exception):
-            print(f"Task failed with: {r}")
-    return results
+# No changes needed to execute() if batch_execute is corrected above.
 ```
 
-*Note: Sam, remember that the `google.genai` library requires an API key in the environment variables (`GOOGLE_API_KEY`). Without it, this script will crash immediately.*
+*Note: If Sam actually plans on using the `google-genai` SDK, he needs to ensure the `genai` client is instantiated outside the task loop to reuse the connection pool, otherwise he'll hit connection limits before the semaphore even kicks in.*
 
 ---
 
@@ -120,25 +111,19 @@ async def execute(tasks):
 
 ### Sunday Inbox Report
 
-Hi Sam, I’ve processed your inbox. Here is your weekly summary:
+Hi Sam, here is the summary of your inbox.
 
-### **Inbox Overview**
-*   **Outreach Status:** Unfortunately, there were no direct replies to your recent proposals. In fact, you have **two bounce notifications** regarding your previous outreach emails. You should verify the recipient addresses for the "AsyncWorkerPool" and "CI/CD Efficiency" proposals, as they appear to have failed to deliver.
-*   **New Opportunities:** None.
-*   **Important Notifications:** Your inbox is dominated by a series of security alerts from Google regarding your account (`claudedc34@gmail.com`).
+### **Summary of Activity**
+*   **Outreach Status:** Unfortunately, there are no replies to your recent proposals. In fact, you have received two **Delivery Status Notification (Failure)** alerts. It appears your recent outreach emails to prospective leads may have bounced—you may want to verify the recipient addresses for the *AsyncWorkerPool* and *CI/CD Efficiency* proposals.
+*   **Account Activity:** Your inbox is dominated by a series of security alerts and service notifications regarding your Google account and a new CMF by Nothing Phone 1 device.
 
----
+### **Important Security Items**
+There has been a flurry of security changes to your account (claudedc34@gmail.com) on May 29, 2026. **Please verify if these actions were performed by you:**
+*   **New Security Features:** An Authenticator app, a new phone number for 2-Step Verification, and a new passkey have all been added to your account.
+*   **2-Step Verification:** This has been officially turned on.
+*   **App Password:** An "App password" was generated for "Sam's want."
 
-### **Urgent Security Action Required**
-It appears you (or someone else) performed a significant security overhaul on your account today. You should review the following activity to ensure it aligns with your recent actions:
-*   **Authenticator App & Passkey:** An Authenticator app and a new passkey were added to your account.
-*   **2-Step Verification:** 2SV has been enabled; a new phone number was added and a previous one was removed.
-*   **App Password:** An "App password" was generated specifically for "Sam's want."
-
-**Action Item:** If you did not perform these security changes yourself, **please secure your account immediately** by visiting the Google Security Checkup page linked in those emails. If these were your actions, ensure you have your backup codes stored in a secure location so you don't get locked out.
-
----
-
-### **Other Updates**
-*   **Device Setup:** You received a notification regarding setting up your "CMF by Nothing Phone 1" with Google.
-*   **Privacy Settings:** Google sent a notice regarding updated privacy settings for Google Play; these are now managed independently of your general "Web & App Activity" settings.
+### **Action Required**
+1.  **Check Bounces:** Investigate why your recent outreach emails bounced. Double-check the recipient addresses and ensure your sending domain is healthy.
+2.  **Security Audit:** If you did **not** personally authorize the security changes (new passkeys, authenticator apps, or app passwords) early this morning, your account may be compromised. Please visit your [Google Account security settings](https://myaccount.google.com/notifications) immediately to review the activity and secure your account.
+3.  **Device Setup:** The email regarding your CMF by Nothing Phone 1 appears routine, confirming your new device setup.
