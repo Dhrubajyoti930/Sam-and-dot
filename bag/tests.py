@@ -310,6 +310,34 @@ check(
     "FAIL: bag/workshop.py missing — Sam cannot organize workshop folders.",
 )
 
+if (BAG / "workshop.py").exists():
+    workshop_src = (BAG / "workshop.py").read_text(encoding="utf-8")
+    check(
+        "apply_workshop_moves" in workshop_src and "apply_workshop_deletes" in workshop_src,
+        "FAIL: workshop.py must manage existing files (moves and deletes).",
+    )
+    check(
+        "finalize_workshop_moves" in workshop_src,
+        "FAIL: workshop.py must verify integrity after moving files.",
+    )
+
+check(
+    (BAG / "workshop_imports.py").exists(),
+    "FAIL: bag/workshop_imports.py missing — moves will break hardcoded imports.",
+)
+
+check(
+    "from bag.Misc.governance_shield" not in sam_src
+    and "from bag.Misc." not in sam_src,
+    "FAIL: sam.py hardcodes a workshop subfolder path — use bag.workshop_imports instead.",
+)
+
+dot_src_check = (BAG / "dot.py").read_text(encoding="utf-8") if (BAG / "dot.py").exists() else ""
+check(
+    "from bag.Misc." not in dot_src_check and "from bag.My " not in dot_src_check,
+    "FAIL: dot.py must not hardcode Sam workshop folder paths.",
+)
+
 for _py_file in sorted(BAG.rglob("*.py")):
     if _py_file.name == "tests.py" and _py_file.parent == BAG:
         continue  # skip self
