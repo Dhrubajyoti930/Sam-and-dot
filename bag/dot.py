@@ -48,7 +48,7 @@ log = logging.getLogger("dot")
 
 # ── Gemini client (Dot's OWN independent instance) ───────────────────────────
 from google import genai  # noqa: E402
-from emailer import send_html_email  # noqa: E402
+from bag.emailer import send_html_email  # noqa: E402
 
 GEM_KEY = os.environ.get("GEM_KEY_DOT")
 if not GEM_KEY:
