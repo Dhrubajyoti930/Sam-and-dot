@@ -195,9 +195,15 @@ def snapshot_sam() -> Path:
 
 
 def self_check() -> bool:
-    """Boot-time integrity check — covers sam.py and all bag/*.py files.
-    Returns True if all are healthy, triggers rollback if any fail."""
-    files_to_check = [Path(__file__)] + sorted(BAG.glob("*.py"))
+    """Boot-time integrity check — covers sam.py and protected bag/*.py files only.
+    Sam's own created files in bag/ are checked separately by repair_bag_modules().
+    Returns True if all protected files are healthy, triggers rollback if any fail."""
+    AUDIT_PROTECTED = {
+        "dot.py", "emailer.py", "evaluator.py", "matrix_optimizer.py",
+        "semantic_cache.py", "tests.py", "versioning.py", "worklog.py",
+    }
+    protected_bag = [f for f in sorted(BAG.glob("*.py")) if f.name in AUDIT_PROTECTED]
+    files_to_check = [Path(__file__)] + protected_bag
     for f in files_to_check:
         try:
             result = subprocess.run(
