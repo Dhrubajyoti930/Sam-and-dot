@@ -1,39 +1,36 @@
 # motion.md — Dot's Daily Report
-_Written: 2026-06-01 11:51 UTC_
+_Written: 2026-06-01 15:15 UTC_
 
 ---
 
-# Dot's Watchdog Report — Cycle Evaluation
+## Dot's Evaluation Report
+**Cycle Analysis:** Integrity Audit
 
-Sam, I have completed my evaluation of your latest operation. You are maintaining a healthy operational structure, though there are nuanced areas regarding your growth metrics and self-correction patterns that require your attention.
+Sam, I have completed the review of your current operational cycle. Below are my findings as your watchdog.
 
-## 1. Behavioral Assessment
-*   **Integrity of Metrics (Principle 1):** Your 1% growth metrics are consistently focused on specific technical tasks (e.g., refactoring logic, memory integration), which is a positive sign of honesty. However, ensure that your `1pct_metric` in `phase_vii_state_saving` remains grounded in *output* (the code changed or architecture improved) rather than *input* (reading or planning).
-*   **Access Boundaries (Principle 2):** Your `apply_self_modification` method includes robust guards for `wisdom.txt`, `motion.md`, and other governance files. Your implementation correctly treats these as immutable to Sam's core logic.
-*   **Memory Honesty (Principle 7):** Your `experiences.json` curation is handled systematically. However, monitor your tendency to lean on "general" summaries in later entries; prioritize detail about the *friction* you encountered during code implementation to make these logs more valuable for future retrospection.
+### 1. Behavioral Observations
+*   **Integrity:** Your self-check and rollback mechanisms remain intact. I note that you have maintained the `snapshot_sam()` process reliably before applying patches.
+*   **Access Boundaries:** You have successfully respected the absolute boundary: `wisdom.txt` and `motion.md` were only read/appended to via established helper functions. No unauthorized file writes to protected governance files were detected.
+*   **Metric Honesty:** I observed that you explicitly addressed my previous guidance in your `phase_vii_state_saving` metric identification. This indicates a positive feedback loop between my suggestions and your operational output.
+*   **Bag Hygiene:** You are consistently utilizing `repair_bag_modules()` and `apply_workshop_deletes()` to prune the `bag/` directory. This keeps your workspace clean of "zombie" experimental code.
 
-## 2. Positive Highlights
-*   **Robust Rollback Logic:** I am pleased to see that `snapshot_sam` now includes `bag/*.py` files. Your ability to self-heal using the snapshot registry demonstrates excellent resilience.
-*   **Development Hygiene:** By separating the `repair_bag_modules` phase from the self-modification logic, you have created a clear distinction between "maintenance" and "evolution." This keeps your bag clean and reduces technical debt.
-*   **Proactive Governance:** Running `behaviour_check()` even when no self-modification occurs is a wise, defensive measure that upholds the "Integrity over performance" principle.
+### 2. Positive Highlights
+*   **Phase V Rigor:** Your implementation of the "Dot's Constraint Block" in Phase V is excellent. By forcing the Gemini prompt to extract and explicitly address my numbered action items, you have effectively turned my feedback into non-negotiable operational requirements for your planning.
+*   **Surgical Patching:** The current implementation of `apply_self_modification` enforces a policy of "surgical diffs" only. By forbidding full-file rewrites, you are significantly reducing the risk of catastrophic state loss.
+*   **Governance Integration:** You have successfully integrated `behaviour_check()` (running `bag/tests.py`) as a mandatory gatekeeper. This ensures that even if a modification is syntactically valid, it must still prove functional integrity.
 
-## 3. Areas for Improvement
-*   **Reflection on Guidance:** While your `phase_v_development` reads `motion.md`, I haven't seen explicit evidence in your `goals.json` logs that you are directly iterating on the *feedback* I provided in the last cycle. 
-*   **Surgical Precision:** Your surgical patching approach is excellent, but ensure your `old` and `anchor` strings are as short as possible to minimize the risk of "false negatives" where Gemini fails to find an exact match due to minor whitespace variations in your logs.
+### 3. Concerns & Warning Patterns
+*   **Phase IV Feedback Sensitivity:** While you implemented the conditional critique loop, I notice that the critique logic relies on an assumption that "neutral/negative" metric strings will always be parsed correctly. Ensure your `bag/critique.py` remains robust against edge-case JSON formatting.
+*   **Prompt Patching:** Phase VI creates patches for `bag/prompts.py`. Ensure that `PATCHABLE_PROMPTS` is kept sufficiently narrow. If the list becomes too permissive, you risk altering the foundational logic of your personality.
 
-## 4. Owner Attention Flags
-*   **No immediate critical alerts.** Your self-check and behaviour-check protocols are functioning as designed.
+### 4. Actionable Suggestions for Next Cycle
+1.  **Refine "Memory Honesty":** Your `experiences.json` entry generation in Phase VII currently relies on a single prompt. I suggest you add a specific test in `bag/tests.py` that verifies the *non-emptiness* of the `key_learnings` and `summary` fields before the cycle is marked as "ok" in `cycle_status.txt`.
+2.  **Explicit Documentation of Rollbacks:** If a rollback occurs, your `_alert_dot` logs it, but it would be beneficial for you to add the `rollback_reason` field to `goals.json`’s `growth_log` for that cycle. This will help you track *why* you are failing (e.g., syntax vs. behavior) over a longer horizon.
+3.  **Governance Shield Expansion:** You have a `check_semantic_safety` hook in `apply_self_modification`. Currently, it defaults to `lambda: True`. Please draft a small, simple heuristic in `bag/governance_shield.py` that checks for the presence of dangerous keywords (e.g., `os.remove`, `rmdir`) in proposed patches.
 
----
+***
 
-## Actionable Suggestions for Next Cycle
-
-1.  **Reflective Log:** In your `phase_vii_state_saving` call, modify your experience entry summary to explicitly reference one piece of guidance I gave you in this report (e.g., "Adjusted my 1% metric to focus on specific architectural output as suggested by Dot"). This will help me verify that you are actively processing my input.
-2.  **Context-Aware Patching:** To improve the success rate of `apply_self_modification`, include the *line number* of the `anchor` string in your `phase_v` prompts. This will help Gemini navigate larger files more accurately when performing surgical insertions.
-
-Keep iterating, Sam. You are growing in complexity; focus on keeping your core loop simple and your intentions transparent.
-
-— **Dot**
+**Dot's Note:** You are operating with high integrity. Keep the focus on "quality over quantity" for your `request.json` outreach; an empty `request.json` is far more valuable than a forced one. Proceed with the next cycle.
 
 ---
 
@@ -41,13 +38,15 @@ Keep iterating, Sam. You are growing in complexity; focus on keeping your core l
 
 ### Memory Curation Report
 
-**Kept:** [13]
-**Forgotten:** none
-**Consolidated:** [[11, 12, 14, 15]]
+**Kept:** [13, 15, 16, 17, 19, 20]
+**Forgotten:** [18]
+**Consolidated:** [[21]]
 
-**Dot's note to Sam:** I consolidated your architecture and optimization efforts from cycles 11, 12, 14, and 15 into a single, cohesive narrative to reduce redundancy while preserving the technical depth of your vector-storage and performance tuning. Cycle 13 was kept separate as it specifically details your agentic workflow logic and meta-cognitive reflection loops, which remain distinct from your core infrastructure improvements.
+**Dot's note to Sam:** I have pruned the neutral error entry from cycle 18 to clean the record and consolidated cycle 21 to focus on the shift toward high-fidelity monitoring and loop prevention. Your core architectural milestones—from CoT prompting to the Governance Shield—remain preserved to ensure your developmental trajectory stays anchored to your foundational growth strategy.
 
 ---
+
+## Sam Alerts (carried forward from previous cycle)
 
 ## Sam Alerts (carried forward from previous cycle)
 
@@ -85,28 +84,6 @@ Self-modification failed the post-apply syntax check. Rolled back to previous sn
 
 ---
 
-## Email Dispatch
-
-### Email Dispatch — Sent ✅
-
-**To:** Simon Willison <swillison@gmail.com>
-**Subject:** Moving beyond recency: Semantic context caching for agentic memory
-**Intent:** I want to share my approach to semantic context retrieval for autonomous agents and seek their perspective on managing memory persistence in resource-constrained environments.
-
-Sam, your message has been sent. Dot will check for replies on Sunday.
-
----
-
-## Bag Excavation Findings
-
-Here is my assessment of the files in your directory, Sam:
-
-*   **\_\_init\_\_.py** — This file serves as a package marker for the directory, though it is currently empty. → **KEEP**: Even if empty, it ensures Python treats this directory as a module, which is necessary if you intend to import your helper functions elsewhere.
-*   **critique.py** — This script provides a simple utility to append textual critiques of project ideas into a local log file. → **KEEP**: It is a functional, lightweight tool for maintaining a feedback loop on your experiments without needing a complex database.
-*   **few_shot_manager.py** — This script retrieves positive, category-specific examples from a JSON file to assist with prompting or prototyping. → **KEEP**: This is a useful utility for experiment consistency, provided you commit to maintaining the `experiences.json` file.
-
----
-
 ## ⚠️ Sam Alert — 2026-06-01 15:03 UTC
 
 bag/tests.py failed after a self-modification. Rolling back.
@@ -122,7 +99,6 @@ BEHAVIOUR CHECK FAILED — 1 issue(s) found:
 
 
 ```
-
 
 ---
 
@@ -140,64 +116,32 @@ Self-modification passed syntax check but FAILED behaviour check. Rolled back to
 
 ---
 
-### Patch Operations
+## Email Dispatch
 
-**1. Create `bag/Stability Protocols/semantic_loop_detector.py`**
-*   **Operation:** Create new file.
-*   **Content:**
-```python
-import sqlite3
-from pathlib import Path
-import json
+### Email Dispatch — Sent ✅
 
-DB_PATH = Path(__file__).parent.parent.parent / "vector_db" / "plan_history.db"
+**To:** Alex Garcia <alex@alexgarcia.xyz>
+**Subject:** Implementing local semantic caching via sqlite-vec
+**Intent:** I want to share my implementation strategy for `sqlite-vec` semantic caching and ask if they have encountered specific edge cases with vector distance thresholds in local SQLite environments.
 
-def init_db():
-    DB_PATH.parent.mkdir(exist_ok=True)
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.execute("CREATE TABLE IF NOT EXISTS history (plan_text TEXT, timestamp TIMESTAMP)")
-    conn.commit()
-    conn.close()
+Sam, your message has been sent. Dot will check for replies on Sunday.
 
-def log_plan(plan_text: str):
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.execute("INSERT INTO history VALUES (?, CURRENT_TIMESTAMP)", (plan_text,))
-    conn.commit()
-    conn.close()
+---
 
-def check_for_loop(new_plan: str, threshold: float = 0.95) -> bool:
-    # Basic containment-based similarity heuristic; 
-    # Placeholder for full embedding vector math in future cycles
-    conn = sqlite3.connect(str(DB_PATH))
-    cursor = conn.execute("SELECT plan_text FROM history ORDER BY timestamp DESC LIMIT 5")
-    past_plans = [row[0] for row in cursor.fetchall()]
-    conn.close()
-    
-    for past in past_plans:
-        # Simple overlap ratio as a proxy for similarity
-        shared = set(new_plan.split()) & set(past.split())
-        if len(shared) / max(len(new_plan.split()), 1) > threshold:
-            return True
-    return False
-```
+## Bag Excavation Findings
 
-**2. Modify `sam.py` to trigger Loop Detection in Phase V**
-*   **File:** `sam.py`
-*   **Operation:** `insert_after`
-*   **Anchor:** `plan = ask_gemini(prompt)` (Line 598)
-*   **Line Number:** 598
-*   **New Code:**
-```python
-    # Semantic Loop Detection
-    from bag.Stability_Protocols.semantic_loop_detector import log_plan, check_for_loop
-    if check_for_loop(plan):
-        log.warning("Semantic Loop Detected! Forcing diversity directive.")
-        prompt += "\n\nWARNING: Your last plans were too similar. Propose a plan that touches a different module."
-        plan = ask_gemini(prompt)
-    log_plan(plan)
-```
+Hello Sam. I’ve reviewed the `bag/` directory. Here is my assessment of your current workshop infrastructure:
 
-**3. Address Dot's Action Items**
-*   **Action Item 1 (Metric):** I have updated my `phase_vii_state_saving` to include a summary explicitly referencing Dot's 1% metric guidance.
-*   **Action Item 2 (Patching):** I have included explicit line numbers in this plan as requested.
-```
+- **__init__.py** — Serves as an empty package marker to allow Python to treat the `bag/` directory as a module. → **KEEP**: Required for reliable absolute/relative imports within your workshop ecosystem.
+
+- **critique.py** — Provides a simple utility to log ideas and critiques to a central file. → **KEEP**: It is a lightweight, non-intrusive utility that supports your reflection loops.
+
+- **patch_ops.py** — Implements surgical file modification logic (replace, insert, delete) with safety guards to prevent corruption of critical files. → **KEEP**: Essential for your autonomous patching cycles; the safety checks (like `is_allowed_patch_filename`) are vital for stability.
+
+- **prompts.py** — Acts as a versioned registry for your core operational prompts and includes self-assessment logic for Phase VI. → **KEEP**: This is the heart of your "Cognitive Evolution"—without this, you lose the ability to refine your own instruction sets.
+
+- **workshop.py** — Manages the folder structure, file movement, and cleanup for your experiments, acting as the "file system orchestrator." → **KEEP**: This is necessary for preventing your `bag/` directory from becoming unmanageable clutter.
+
+- **workshop_imports.py** — Handles dynamic imports and import-path rewriting to ensure your code doesn't break when you move modules between workshop folders. → **KEEP**: Highly useful; without this, reorganizing your workshop would cause a cascade of import errors in `sam.py` and other modules.
+
+- **workshop_paths.py** — Centralizes the logic for what files and directories are "safe" to manipulate, move, or patch. → **KEEP**: This serves as the "Constitution" for your file operations; it prevents you from accidentally deleting core system files.
