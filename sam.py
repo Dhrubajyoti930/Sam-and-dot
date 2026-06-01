@@ -53,12 +53,6 @@ log = logging.getLogger("sam")
 # ── Gemini client ─────────────────────────────────────────────────────────────
 from google import genai  # noqa: E402
 
-try:
-    from bag.profiler import SamProfiler
-    PROFILER = SamProfiler()
-except ImportError:
-    PROFILER = None
-
 GEM_KEY = os.environ.get("GEM_KEY_SAM")
 if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_SAM secret is not set.")
@@ -137,14 +131,11 @@ def ask_gemini(prompt: str, retries: int = 2) -> str:
 
     for attempt in range(retries):
         try:
-            start_time = time.perf_counter()
             response = CLIENT.models.generate_content(
                 model=MODEL,
                 contents=prompt,
             )
             res = response.text.strip()
-            if PROFILER:
-                PROFILER.log_call(time.perf_counter() - start_time)
             update_cache(prompt, res, goals.get("cycles", 0))
             return res
         except Exception as e:
@@ -573,6 +564,16 @@ def phase_v_development(idea: str, goals: dict) -> str:
     plan = ask_gemini(prompt)
     log.info("Phase V complete.")
 
+    # Open a worklog entry for this cycle's plan
+    try:
+        from bag.worklog import open_entry
+        cycle_num  = goals.get("cycles", 0) + 1
+        idea_title = idea.strip().splitlines()[0].lstrip("#").strip()[:60]
+        open_entry(cycle_num, idea_title, note="Plan generated in Phase V.")
+        log.info(f"Worklog entry opened: {idea_title}")
+    except Exception as e:
+        log.warning(f"Worklog open failed: {e}")
+
     # Audit: Delete orphaned files in bag/
     # Blocklist approach — Sam-created files survive until explicitly removed (#5 fix)
     # async_batch.py intentionally omitted (dead code — will be cleaned up) (#10 fix)
@@ -839,6 +840,19 @@ def run_cycle():
                 "No self-modification occurred — possible external file corruption or deletion."
             )
 
+    # Close worklog entry based on outcome
+    try:
+        from bag.worklog import close_entry, _make_id
+        cycle_num  = goals.get("cycles", 0) + 1
+        idea_title = idea.strip().splitlines()[0].lstrip("#").strip()[:60]
+        entry_id   = _make_id(cycle_num, idea_title)
+        outcome    = "applied" if modified else "deferred"
+        close_entry(entry_id, cycle_num, outcome=outcome,
+                    note=f"Cycle complete. Modification applied: {modified}.")
+        log.info(f"Worklog entry closed: {entry_id} ({outcome})")
+    except Exception as e:
+        log.warning(f"Worklog close failed: {e}")
+
     # Phase VI — prompt evolution
     evolution = phase_vi_cognitive_evolution(goals)
 
@@ -857,9 +871,6 @@ def run_cycle():
         run_ragas_lite()
     except Exception as e:
         log.warning(f"Evaluator failed: {e}")
-
-        if PROFILER:
-            PROFILER.save()
 
 
 if __name__ == "__main__":
