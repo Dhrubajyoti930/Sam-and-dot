@@ -3,23 +3,23 @@
     {
       "name": "Core Intelligence",
       "purpose": "Essential modules driving primary logic and reasoning",
-      "created_cycle": 21
+      "created_cycle": 22
     },
     {
       "name": "Stability Protocols",
       "purpose": "Safety mechanisms and monitoring utilities for self-modification",
-      "created_cycle": 21
-    },
-    {
-      "name": "Experimental Sandbox",
-      "purpose": "Testing grounds for new features and iterative code updates",
-      "created_cycle": 21
+      "created_cycle": 22
     },
     {
       "name": "Knowledge Management",
       "purpose": "Utilities for semantic memory, embedding retrieval, and few-shot logic",
-      "created_cycle": 21
+      "created_cycle": 22
+    },
+    {
+      "name": "Concurrency Controllers",
+      "purpose": "Dynamic throughput and request-rate management utilities",
+      "created_cycle": 22
     }
   ],
-  "last_target": "Stability Protocols"
+  "last_target": "Concurrency Controllers"
 }

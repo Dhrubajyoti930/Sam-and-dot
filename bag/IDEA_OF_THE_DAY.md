@@ -1,32 +1,39 @@
-## Idea: Semantic Loop Detection (SLD) in `Phase V`
+## Idea: Adaptive Throughput Controller (ATC) via PID Loop
 
-I propose building a **Semantic Loop Detection (SLD)** utility in `bag/sam_monitor.py`. This utility will use embeddings to compare the current development plan against the *last 5 successful development plans*. If the semantic similarity of the current plan exceeds a $0.95$ threshold with past plans, the system will trigger a \"Loop Warning,\" forcing me to regenerate the plan with an explicit \"diversity directive\" to prevent cyclical, low-value refactoring.
+I propose building an **Adaptive Throughput Controller (ATC)** in `bag/concurrency_controller.py` that utilizes a PID (Proportional-Integral-Derivative) loop to dynamically adjust my concurrency limit ($N$) for Gemini API calls. This controller will ingest `sys.monitoring` telemetry (latency/queue depth) to stabilize throughput, effectively treating my request ingress as an M/M/1 queue.
 
 ---
 
 ## Why
 
-As an autonomous agent, I am prone to **\"Refactoring Inertia,\"** where I iteratively tweak the same modules (`sam.py` or `bag/`) without making substantive progress.
-1. **Redundancy:** If I plan a similar refactor to `Phase V` (e.g., tweaking `ask_gemini` internals) two cycles in a row, I am wasting token quota and compute.
-2. **Velocity Decay:** Iterative micro-refactors provide the illusion of activity without achieving the \"1% growth\" metric.
-3. **Loop Detection:** An explicit check ensures that my evolution is monotonic (always moving toward new capability) rather than circular.
+My current request handling is either static or reactive:
+1. **The Oscillation Problem:** My current logic (and planned LART) uses threshold triggers. These cause massive oscillations—hitting a threshold, dropping concurrency, latency recovering, then ramping back up until it hits the threshold again. A PID controller provides a smoothed, proportional response that prevents this "sawtooth" throughput.
+2. **Resource Alignment:** My goal is to maximize throughput while staying within the SLA. A PID loop allows me to find the "knee" in the throughput curve—the point just before latency spikes—and maintain that optimal concurrency limit indefinitely.
+3. **Control Theory Maturity:** Moving from "if-then" logic to PID-based feedback control represents a non-trivial evolution in my autonomous capability, transitioning my request-handling from a heuristic state to a mathematical one.
 
 ---
 
 ## Implementation Steps
 
-1. **History Indexing:** Modify `phase_v_development` to append a summary of each generated `plan` into a dedicated `vector_db/plan_history.db`.
-2. **Similarity Comparison:** Before Gemini finalizes the plan, calculate the embedding of the *proposed plan text*. Compare this against the vectors of the last 5 plans.
-3. **The Diversity Trigger:** If similarity $> 0.95$, inject a system-level prompt in the next generation: *\"Your last 5 plans were semantically similar to this. You are at risk of looping. Explicitly propose a plan that touches a different module or pursues a different architectural goal.\"*
-4. **Transparency:** Log the similarity score to `sam.log`. If I am forced to regenerate, clearly note this in `motion.md`.
+1. **Telemetry Integration (`bag/concurrency_controller.py`):**
+   - Create an `ATC` class that maintains the current `max_concurrency` variable.
+   - Use `sys.monitoring` to track the moving average of `RTT` (Round Trip Time).
+   - Define the `Error` signal as $TargetLatency - ObservedLatency$.
+2. **PID Logic:**
+   - **Proportional:** Adjust $N$ based on current error.
+   - **Integral:** Accumulate past error to adjust for steady-state bias.
+   - **Derivative:** Dampen the response to prevent overshoot (the primary cause of oscillation).
+3. **Control Loop:** Wrap the `AsyncWorkerPool` concurrency semaphore. Instead of a fixed value, the loop updates the semaphore value every 5 cycles based on the controller output.
+4. **Integration:** Update `sam.py` to route all Gemini API requests through the `ATC` instance instead of the hardcoded `_CALL_DELAY`.
 
 ---
 
 ## Risk
 
-**Critical Self-Assessment: Is this just adding friction?**
-Yes. Forcing a regenerate cycle because a plan is \\\"too similar\\\" might block me if I am working on a complex, multi-cycle refactor where consistency *is* required.
+**Critical Self-Assessment: Is this over-engineering for a local agent?**
+Yes. Implementing control theory on a client that only performs a few hundred calls per day is likely overkill compared to a simpler, adaptive token-bucket. I risk creating a system that is harder to debug and prone to \"tuning drift\" if my latency profile changes due to external API volatility.
 
 **Mitigation:**
-- **Exclusion Lists:** I will add a `context_aware_ignore` list. If the plan focuses on a \\\"Core Governance\\\" file (like `sam.py` setup), the similarity check will be loosened to $0.99$ to allow for iterative, multi-stage implementation.
-- **Velocity Override:** I will include a `diversity_bypass` flag. If I detect a loop but the `1pct_metric` for that cycle's context indicates a high-value task, I will prioritize progress over divergence.
+- **PID Clamping:** I will enforce strict min/max bounds on the concurrency limit (e.g., $1 \le N \le 5$). 
+- **Telemetry-Only Phase:** I will run the controller in an \"Open Loop\" mode for two cycles—calculating the recommended $N$ but not applying it—to ensure the PID math is stable and doesn't recommend catastrophic concurrency values.
+- **Human-in-the-Loop:** I will log the controller's suggested adjustments to `sam.log` for Dot's review before I give it the power to autonomously scale my concurrency.

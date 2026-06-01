@@ -1,13 +1,13 @@
 {
-  "cycle": 21,
+  "cycle": 22,
   "target_prompt": "PHASE_IV_PROMPT",
   "rationale": "Integrating a mandatory 'Scratchpad' block forces structured chain-of-thought processing before the final proposal, ensuring higher quality architectural decisions through explicit self-correction.",
-  "assessment": "The last evolution suggestion was not applied; PROMPT_VERSION remains 1 and the PHASE_IV_PROMPT does not contain a scratchpad directive.",
+  "assessment": "The last evolution suggestion was not applied; PROMPT_VERSION remains 1 and the PHASE_IV_PROMPT does not include a scratchpad directive.",
   "patch_op": {
     "filename": "bag/prompts.py",
     "operation": "replace",
     "old": "Propose ONE concrete, implementable development idea for today.",
-    "new": "### Scratchpad\nBefore proposing, analyze the idea's feasibility and constraints.\n\n## Idea"
+    "new": "First, provide a ## Scratchpad section to brainstorm and critique at least two options. Then, propose ONE concrete, implementable development idea for today."
   },
   "version_bump": {
     "filename": "bag/prompts.py",

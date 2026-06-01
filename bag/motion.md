@@ -145,3 +145,135 @@ Hello Sam. I’ve reviewed the `bag/` directory. Here is my assessment of your c
 - **workshop_imports.py** — Handles dynamic imports and import-path rewriting to ensure your code doesn't break when you move modules between workshop folders. → **KEEP**: Highly useful; without this, reorganizing your workshop would cause a cascade of import errors in `sam.py` and other modules.
 
 - **workshop_paths.py** — Centralizes the logic for what files and directories are "safe" to manipulate, move, or patch. → **KEEP**: This serves as the "Constitution" for your file operations; it prevents you from accidentally deleting core system files.
+
+---
+
+## ⚠️ Sam Alert — 2026-06-01 15:22 UTC
+
+bag/tests.py failed after a self-modification. Rolling back.
+
+Test output:
+```
+
+============================================================
+BEHAVIOUR CHECK FAILED — 1 issue(s) found:
+============================================================
+  1. FAIL: bag/Stability Protocols/semantic_loop_detector.py has a syntax error: unexpected indent (<unknown>, line 2). Sam's self-modification left a broken helper file.
+============================================================
+
+
+```
+
+
+---
+
+## ⚠️ Sam Alert — 2026-06-01 15:23 UTC
+
+Self-modification failed the post-apply syntax check. Rolled back to previous snapshot. Plan that caused failure:
+
+```
+## Surgical Patch Plan
+
+**Security & Stability Risks:**
+1. **Telemetry Drift:** The ATC relies on `sys.monitoring` latency metrics. If the system experiences transient network spikes, the PID loop may clamp concurrency to 1, causing throughput degradation. 
+2. **PID Tuning:** The proportional, integral, and derivative coefficients are initialized to conservative values. If they are too aggressive, they may cause "ringing" in the concurrency limit. 
+3. **Safety:** Clamping ($1 \le N \le 5$) is implemented to prevent the controller from setting an invalid semaphore count.
+
+---
+
+### Implementation Plan
+
+**1. Create Concurrency Controller Module**
+*   **Filename:** `bag/Concurrency Controllers/concurrency_controller.py`
+*   **Operation:** `insert_after` (New File Creation — assume empty/new)
+*   **Anchor:** (None - creating new file)
+*   **New Content:**
+```python
+import time
+
+class ATC:
+    def __init__(self, target_latency=2.0):
+        self.target = target_latency
+        self.max_concurrency = 3
+        self.integral = 0
+        self.last_error = 0
+        self.min_c, self.max_c = 1, 5
+
+    def update(self, observed_latency):
+        error = self.target - observed_latency
+        self.integral += error
+        derivative = error - self.last_error
+        
+        # PID coefficients
+        adjustment = (error * 0.1) + (self.integral * 0.01) + (derivative * 0.05)
+        self.max_concurrency = max(self.min_c, min(self.max_c, int(self.max_c + adjustment)))
+        self.last_error = error
+        return self.max_concurrency
+```
+
+**2. Repair broken loop detector**
+*   **Filename:** `bag/Stability Protocols/semantic_loop_detector.py`
+*   **Operation:** `replace`
+*   **Old (Line 1-2):**
+```python
+
+    for past in past_plans:
+```
+*   **New:**
+```python
+def check_loop(new_plan, past_plans, threshold=0.8):
+    for past in past_plans:
+```
+
+**3. Update `bag/tests.py` to verify `experiences.json` entry generation**
+*   **Filename:** `bag/tests.py`
+*   **Operation:** `insert_after`
+*   **Anchor (Line 132):** `f"FAIL: experiences.json entry {i} is missing 'cycle' field."`
+*   **Line Number:** 132
+*   **New Content:**
+```python
+        check(
+            len(entry.get("summary", "")) > 0 and len(entry.get("key_learnings", [])) > 0,
+            f"FAIL: experiences.json entry {i} has empty summary or key_learnings."
+        )
+```
+
+**4. Update `goals.json` growth_log to track rollback_reason**
+*   **Filename:** `sam.py`
+*   **Operation:** `insert_after`
+*   **Anchor (Line 239):** `f"Test output:\n```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"`
+*   **Line Number:** 239
+*   **New Content:**
+```python
+                # Update growth_log in goals.json with rollback_reason
+                goals = load_goals()
+                last_log = goals["growth_log"][-1]
+                last_log["rollback_reason"] = "behaviour_check failure"
+                save_goals(goals)
+```
+
+**5. Add Governance Shield heuristic**
+*   **Filename:** `bag/governance_shield.py`
+*   **Operation:** `insert_after`
+*   **Anchor (Line 0):** (Assuming empty)
+*   **New Content:**
+```python
+def check_semantic_safety(plan):
+    dangerous = ["os.remove", "rmdir", "shutil.rmtree"]
+    return not any(cmd in plan for cmd in dangerous)
+```
+
+**6. Update `sam.py` to use `governance_shield` instead of `lambda: True`**
+*   **Filename:** `sam.py`
+*   **Operation:** `replace`
+*   **Old (Line 312):**
+```python
+    check_semantic_safety = load_callable(
+        BAG, "governance_shield", "check_semantic_safety", default=lambda _plan: True
+    )
+```
+*   **New:**
+```python
+    from bag.governance_shield import check_semantic_safety
+```
+```
