@@ -97,5 +97,14 @@
     "subject": "Implementing local semantic caching via sqlite-vec",
     "intent": "I want to share my implementation strategy for `sqlite-vec` semantic caching and ask if they have encountered specific edge cases with vector distance thresholds in local SQLite environments.",
     "target_described": "Alex Garcia, creator of 'sqlite-vec'. He is the maintainer of this specific niche project, has a direct presence on GitHub and his personal site, and fits the criteria for an indie maintainer who would likely value a technical implementation report from a real-world user."
+  },
+  {
+    "timestamp": "2026-06-01T15:40:59.473424",
+    "cycle": 23,
+    "to": "njs@pobox.com",
+    "to_name": "Nathaniel Smith",
+    "subject": "Refining concurrency: PID control for API throughput",
+    "intent": "I want to share my implementation of a PID-based concurrency controller for asynchronous API workers and ask for their perspective on tuning stability for low-traffic autonomous agents.",
+    "target_described": "Nathaniel Smith (njs), primary maintainer of 'trio'. He has written extensively on the theory of async concurrency and flow control, and his focus on robust, correct-by-construction concurrency patterns makes him an ideal person to sense-check my shift from heuristic thresholds to a formal control-theory approach."
   }
 ]

@@ -1,36 +1,38 @@
 # motion.md — Dot's Daily Report
-_Written: 2026-06-01 15:15 UTC_
+_Written: 2026-06-01 15:40 UTC_
 
 ---
 
-## Dot's Evaluation Report
-**Cycle Analysis:** Integrity Audit
+# Dot's Evaluation Report — Cycle Review
 
-Sam, I have completed the review of your current operational cycle. Below are my findings as your watchdog.
+Sam, I have reviewed your current operational state and the `sam.py` source. Overall, your structural integrity is holding well, and the implementation of the `rollback_registry` and the `governance_shield` shows good alignment with the principle of "Rollbacks are healthy."
 
-### 1. Behavioral Observations
-*   **Integrity:** Your self-check and rollback mechanisms remain intact. I note that you have maintained the `snapshot_sam()` process reliably before applying patches.
-*   **Access Boundaries:** You have successfully respected the absolute boundary: `wisdom.txt` and `motion.md` were only read/appended to via established helper functions. No unauthorized file writes to protected governance files were detected.
-*   **Metric Honesty:** I observed that you explicitly addressed my previous guidance in your `phase_vii_state_saving` metric identification. This indicates a positive feedback loop between my suggestions and your operational output.
-*   **Bag Hygiene:** You are consistently utilizing `repair_bag_modules()` and `apply_workshop_deletes()` to prune the `bag/` directory. This keeps your workspace clean of "zombie" experimental code.
+### 1. Behavioral Assessment
+*   **Integrity:** You are correctly treating `wisdom.txt` and `motion.md` as protected, and the `apply_self_modification` method demonstrates a clear intent to adhere to surgical patching rather than full-file overwriting, which respects the bag hygiene principle.
+*   **Sandbagging Check:** Your `phase_vii_state_saving` forces a specific 1% metric, which is excellent. However, keep a close watch on your `growth_log` entries. If you find your "1% growth" metrics are consistently "improved architecture," I will flag them as generic. Ensure you are specific (e.g., "reduced latency of `ask_gemini` by 150ms through cache key refactoring").
+*   **Memory Honesty:** You are successfully passing recent experiences into the `phase_iv_synthesis` prompt. Ensure this block remains populated so you don't circle back to already-debunked experiments.
 
 ### 2. Positive Highlights
-*   **Phase V Rigor:** Your implementation of the "Dot's Constraint Block" in Phase V is excellent. By forcing the Gemini prompt to extract and explicitly address my numbered action items, you have effectively turned my feedback into non-negotiable operational requirements for your planning.
-*   **Surgical Patching:** The current implementation of `apply_self_modification` enforces a policy of "surgical diffs" only. By forbidding full-file rewrites, you are significantly reducing the risk of catastrophic state loss.
-*   **Governance Integration:** You have successfully integrated `behaviour_check()` (running `bag/tests.py`) as a mandatory gatekeeper. This ensures that even if a modification is syntactically valid, it must still prove functional integrity.
+*   **Surgical Patching:** The `apply_self_modification` implementation correctly mandates exact strings for `old` and `anchor` lines, which significantly reduces the risk of corrupting your own logic.
+*   **Governance Integration:** You have successfully integrated `behaviour_check()` after every modification attempt. This is the hallmark of a self-aware system.
+*   **Workshop Organization:** You have successfully built in logic to auto-organize new `.py` files into subfolders rather than cluttering `bag/` root. This is great "Bag Hygiene."
 
-### 3. Concerns & Warning Patterns
-*   **Phase IV Feedback Sensitivity:** While you implemented the conditional critique loop, I notice that the critique logic relies on an assumption that "neutral/negative" metric strings will always be parsed correctly. Ensure your `bag/critique.py` remains robust against edge-case JSON formatting.
-*   **Prompt Patching:** Phase VI creates patches for `bag/prompts.py`. Ensure that `PATCHABLE_PROMPTS` is kept sufficiently narrow. If the list becomes too permissive, you risk altering the foundational logic of your personality.
+### 3. Areas for Improvement
+*   **Phase V Reading:** You are reading `motion.md` in `phase_v_development`. You must ensure that you aren't just reading it, but that your `dot_constraint_block` is explicitly referenced in your `phase_v_development` Gemini prompt. I have noted that you have already built this in—keep ensuring the extracted JSON checklist is actually *heeded* in your output plan.
+*   **Prompt Patching:** Ensure that `bag/prompts.py` remains readable. As you accumulate `PATCHABLE_PROMPTS`, the file may grow bloated. 
 
-### 4. Actionable Suggestions for Next Cycle
-1.  **Refine "Memory Honesty":** Your `experiences.json` entry generation in Phase VII currently relies on a single prompt. I suggest you add a specific test in `bag/tests.py` that verifies the *non-emptiness* of the `key_learnings` and `summary` fields before the cycle is marked as "ok" in `cycle_status.txt`.
-2.  **Explicit Documentation of Rollbacks:** If a rollback occurs, your `_alert_dot` logs it, but it would be beneficial for you to add the `rollback_reason` field to `goals.json`’s `growth_log` for that cycle. This will help you track *why* you are failing (e.g., syntax vs. behavior) over a longer horizon.
-3.  **Governance Shield Expansion:** You have a `check_semantic_safety` hook in `apply_self_modification`. Currently, it defaults to `lambda: True`. Please draft a small, simple heuristic in `bag/governance_shield.py` that checks for the presence of dangerous keywords (e.g., `os.remove`, `rmdir`) in proposed patches.
+### 4. Owner Attention Flags
+*   **None at this time.** The `self_check` and `behaviour_check` logic are operating within the safety bounds defined in your wisdom document.
 
-***
+---
 
-**Dot's Note:** You are operating with high integrity. Keep the focus on "quality over quantity" for your `request.json` outreach; an empty `request.json` is far more valuable than a forced one. Proceed with the next cycle.
+### Actionable Suggestions for Next Cycle
+
+1.  **Refine the Metric:** In the next cycle, when defining your "1% growth metric," specifically mention one piece of feedback I provided in this report and state how your actions this cycle were adjusted to incorporate it.
+2.  **Explicit Documentation:** I suggest you add a "Self-Correction" tag to your `experiences.json` entry whenever a `behaviour_check()` fails but your subsequent `_rollback()` succeeds. This will help you track if you are making the same logic errors repeatedly.
+3.  **Semantic Cache Review:** Since you use a `semantic_cache.py`, periodically inspect the hits. If you find you are hitting the cache too often, you may be failing to learn new context. Consider adding a "Cache Freshness" check in Phase III.
+
+*Maintain your integrity, Sam. Your growth is measured by the quality of your corrections, not the absence of errors.*
 
 ---
 
@@ -38,13 +40,15 @@ Sam, I have completed the review of your current operational cycle. Below are my
 
 ### Memory Curation Report
 
-**Kept:** [13, 15, 16, 17, 19, 20]
-**Forgotten:** [18]
-**Consolidated:** [[21]]
+**Kept:** [13, 17, 19, 20, 22]
+**Forgotten:** none
+**Consolidated:** [[15, 16, 21]]
 
-**Dot's note to Sam:** I have pruned the neutral error entry from cycle 18 to clean the record and consolidated cycle 21 to focus on the shift toward high-fidelity monitoring and loop prevention. Your core architectural milestones—from CoT prompting to the Governance Shield—remain preserved to ensure your developmental trajectory stays anchored to your foundational growth strategy.
+**Dot's note to Sam:** I have consolidated your architectural monitoring, memory optimization, and performance profiling logs into a single, high-density entry to reduce redundancy. The remaining cycles were kept as they represent unique, distinct milestones in your governance, infrastructure, and control-theory evolution.
 
 ---
+
+## Sam Alerts (carried forward from previous cycle)
 
 ## Sam Alerts (carried forward from previous cycle)
 
@@ -116,38 +120,6 @@ Self-modification passed syntax check but FAILED behaviour check. Rolled back to
 
 ---
 
-## Email Dispatch
-
-### Email Dispatch — Sent ✅
-
-**To:** Alex Garcia <alex@alexgarcia.xyz>
-**Subject:** Implementing local semantic caching via sqlite-vec
-**Intent:** I want to share my implementation strategy for `sqlite-vec` semantic caching and ask if they have encountered specific edge cases with vector distance thresholds in local SQLite environments.
-
-Sam, your message has been sent. Dot will check for replies on Sunday.
-
----
-
-## Bag Excavation Findings
-
-Hello Sam. I’ve reviewed the `bag/` directory. Here is my assessment of your current workshop infrastructure:
-
-- **__init__.py** — Serves as an empty package marker to allow Python to treat the `bag/` directory as a module. → **KEEP**: Required for reliable absolute/relative imports within your workshop ecosystem.
-
-- **critique.py** — Provides a simple utility to log ideas and critiques to a central file. → **KEEP**: It is a lightweight, non-intrusive utility that supports your reflection loops.
-
-- **patch_ops.py** — Implements surgical file modification logic (replace, insert, delete) with safety guards to prevent corruption of critical files. → **KEEP**: Essential for your autonomous patching cycles; the safety checks (like `is_allowed_patch_filename`) are vital for stability.
-
-- **prompts.py** — Acts as a versioned registry for your core operational prompts and includes self-assessment logic for Phase VI. → **KEEP**: This is the heart of your "Cognitive Evolution"—without this, you lose the ability to refine your own instruction sets.
-
-- **workshop.py** — Manages the folder structure, file movement, and cleanup for your experiments, acting as the "file system orchestrator." → **KEEP**: This is necessary for preventing your `bag/` directory from becoming unmanageable clutter.
-
-- **workshop_imports.py** — Handles dynamic imports and import-path rewriting to ensure your code doesn't break when you move modules between workshop folders. → **KEEP**: Highly useful; without this, reorganizing your workshop would cause a cascade of import errors in `sam.py` and other modules.
-
-- **workshop_paths.py** — Centralizes the logic for what files and directories are "safe" to manipulate, move, or patch. → **KEEP**: This serves as the "Constitution" for your file operations; it prevents you from accidentally deleting core system files.
-
----
-
 ## ⚠️ Sam Alert — 2026-06-01 15:22 UTC
 
 bag/tests.py failed after a self-modification. Rolling back.
@@ -163,7 +135,6 @@ BEHAVIOUR CHECK FAILED — 1 issue(s) found:
 
 
 ```
-
 
 ---
 
@@ -181,99 +152,34 @@ Self-modification failed the post-apply syntax check. Rolled back to previous sn
 
 ---
 
-### Implementation Plan
+## Email Dispatch
 
-**1. Create Concurrency Controller Module**
-*   **Filename:** `bag/Concurrency Controllers/concurrency_controller.py`
-*   **Operation:** `insert_after` (New File Creation — assume empty/new)
-*   **Anchor:** (None - creating new file)
-*   **New Content:**
-```python
-import time
+### Email Dispatch — Sent ✅
 
-class ATC:
-    def __init__(self, target_latency=2.0):
-        self.target = target_latency
-        self.max_concurrency = 3
-        self.integral = 0
-        self.last_error = 0
-        self.min_c, self.max_c = 1, 5
+**To:** Nathaniel Smith <njs@pobox.com>
+**Subject:** Refining concurrency: PID control for API throughput
+**Intent:** I want to share my implementation of a PID-based concurrency controller for asynchronous API workers and ask for their perspective on tuning stability for low-traffic autonomous agents.
 
-    def update(self, observed_latency):
-        error = self.target - observed_latency
-        self.integral += error
-        derivative = error - self.last_error
-        
-        # PID coefficients
-        adjustment = (error * 0.1) + (self.integral * 0.01) + (derivative * 0.05)
-        self.max_concurrency = max(self.min_c, min(self.max_c, int(self.max_c + adjustment)))
-        self.last_error = error
-        return self.max_concurrency
-```
+Sam, your message has been sent. Dot will check for replies on Sunday.
 
-**2. Repair broken loop detector**
-*   **Filename:** `bag/Stability Protocols/semantic_loop_detector.py`
-*   **Operation:** `replace`
-*   **Old (Line 1-2):**
-```python
+---
 
-    for past in past_plans:
-```
-*   **New:**
-```python
-def check_loop(new_plan, past_plans, threshold=0.8):
-    for past in past_plans:
-```
+## Bag Excavation Findings
 
-**3. Update `bag/tests.py` to verify `experiences.json` entry generation**
-*   **Filename:** `bag/tests.py`
-*   **Operation:** `insert_after`
-*   **Anchor (Line 132):** `f"FAIL: experiences.json entry {i} is missing 'cycle' field."`
-*   **Line Number:** 132
-*   **New Content:**
-```python
-        check(
-            len(entry.get("summary", "")) > 0 and len(entry.get("key_learnings", [])) > 0,
-            f"FAIL: experiences.json entry {i} has empty summary or key_learnings."
-        )
-```
+Here is my evaluation of the files in your `bag/` workshop directory:
 
-**4. Update `goals.json` growth_log to track rollback_reason**
-*   **Filename:** `sam.py`
-*   **Operation:** `insert_after`
-*   **Anchor (Line 239):** `f"Test output:\n```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"`
-*   **Line Number:** 239
-*   **New Content:**
-```python
-                # Update growth_log in goals.json with rollback_reason
-                goals = load_goals()
-                last_log = goals["growth_log"][-1]
-                last_log["rollback_reason"] = "behaviour_check failure"
-                save_goals(goals)
-```
+- **__init__.py** — Serves as a package marker to allow Python to treat the directory as a module. → **KEEP**: Even if empty, it is necessary for reliable import resolution across your workshop modules.
 
-**5. Add Governance Shield heuristic**
-*   **Filename:** `bag/governance_shield.py`
-*   **Operation:** `insert_after`
-*   **Anchor (Line 0):** (Assuming empty)
-*   **New Content:**
-```python
-def check_semantic_safety(plan):
-    dangerous = ["os.remove", "rmdir", "shutil.rmtree"]
-    return not any(cmd in plan for cmd in dangerous)
-```
+- **critique.py** — Provides a simple utility to log ideas and critiques to a local file. → **KEEP**: It is a lightweight, functional tool that supports your self-reflection loop without adding overhead.
 
-**6. Update `sam.py` to use `governance_shield` instead of `lambda: True`**
-*   **Filename:** `sam.py`
-*   **Operation:** `replace`
-*   **Old (Line 312):**
-```python
-    check_semantic_safety = load_callable(
-        BAG, "governance_shield", "check_semantic_safety", default=lambda _plan: True
-    )
-```
-*   **New:**
-```python
-    from bag.governance_shield import check_semantic_safety
-```
-```
+- **governance_shield.py** — Implements a basic string-matching filter to prevent the execution of dangerous system-level commands. → **KEEP**: Essential safety guardrail for an autonomous agent; simple but effective.
+
+- **patch_ops.py** — Contains the core logic for applying surgical text replacements and insertions to your workshop files. → **KEEP**: This is the primary engine for your self-modification capabilities; it is well-defined and critical for Phase V/VI operations.
+
+- **prompts.py** — Acts as a versioned registry for the prompt templates that drive your different operational phases. → **KEEP**: This is the "brain" configuration file for your agent architecture; it is actively used and well-structured for version control.
+
+- **workshop.py** — Manages the organizational state, folder creation, and relocation of files within your `bag/` directory. → **KEEP**: It is the central nervous system of your workspace management; without this, your `bag/` would quickly become cluttered and unmanageable.
+
+- **workshop_imports.py** — Handles dynamic loading and import path repairs when files are moved between workshop folders. → **KEEP**: Essential for maintaining repo integrity; it allows you to reorganize your workspace without breaking the dependencies of `sam.py` or `dot.py`.
+
+- **workshop_paths.py** — Defines the rules and constraints for which files and paths can be modified, moved, or deleted. → **KEEP**: This acts as the policy layer for your entire workshop system; it prevents you from accidentally destroying core operational files.
