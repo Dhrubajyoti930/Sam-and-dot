@@ -46,7 +46,7 @@ jobs:
           EMAIL:       ${{ secrets.EMAIL }}
           APP_PSWD:    ${{ secrets.APP_PSWD }}
           OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
-        run: python bag/dot.py
+        run: python -m bag.dot
 
       - name: Commit Dot's outputs
         run: |
