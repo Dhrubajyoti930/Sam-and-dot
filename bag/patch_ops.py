@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-FORBIDDEN = {"wisdom.txt", "motion.md", "SAM_PERSONALITY.md", "dot.py"}
+from bag.workshop_paths import FORBIDDEN_BASENAMES, is_allowed_patch_filename
 
 
 def apply_patch_operations(operations: list, root: Path, log) -> bool:
@@ -12,12 +12,12 @@ def apply_patch_operations(operations: list, root: Path, log) -> bool:
         fname = op.get("filename", "")
         operation = op.get("operation", "")
 
-        if fname not in ("sam.py",) and not fname.startswith("bag/"):
+        if not is_allowed_patch_filename(fname):
             log.warning(f"Blocked patch to '{fname}' — outside allowed scope.")
             continue
 
         basename = Path(fname).name
-        if basename in FORBIDDEN:
+        if basename in FORBIDDEN_BASENAMES:
             log.warning(f"Blocked patch to governance file '{fname}'.")
             continue
 
@@ -36,7 +36,7 @@ def apply_patch_operations(operations: list, root: Path, log) -> bool:
                 log.warning(f"Skipping patch on non-existent file '{fname}'.")
             continue
 
-        source = target.read_text()
+        source = target.read_text(encoding="utf-8")
 
         if operation == "replace":
             old, new = op.get("old", ""), op.get("new", "")
@@ -46,7 +46,7 @@ def apply_patch_operations(operations: list, root: Path, log) -> bool:
             if old not in source:
                 log.warning(f"replace on '{fname}': 'old' string not found — skipping.")
                 continue
-            target.write_text(source.replace(old, new, 1))
+            target.write_text(source.replace(old, new, 1), encoding="utf-8")
             log.info(f"Applied replace → {fname}")
             applied.append(fname)
 
@@ -58,7 +58,7 @@ def apply_patch_operations(operations: list, root: Path, log) -> bool:
             if anchor not in source:
                 log.warning(f"insert_after on '{fname}': anchor not found — skipping.")
                 continue
-            target.write_text(source.replace(anchor, anchor + "\n" + new, 1))
+            target.write_text(source.replace(anchor, anchor + "\n" + new, 1), encoding="utf-8")
             log.info(f"Applied insert_after → {fname}")
             applied.append(fname)
 
@@ -70,7 +70,7 @@ def apply_patch_operations(operations: list, root: Path, log) -> bool:
             if old not in source:
                 log.warning(f"delete on '{fname}': 'old' string not found — skipping.")
                 continue
-            target.write_text(source.replace(old, "", 1))
+            target.write_text(source.replace(old, "", 1), encoding="utf-8")
             log.info(f"Applied delete → {fname}")
             applied.append(fname)
 
