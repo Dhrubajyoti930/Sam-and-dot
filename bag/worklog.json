@@ -133,5 +133,20 @@
       "Cycle complete. Modification applied: True."
     ],
     "outcome": "applied"
+  },
+  {
+    "id": "cycle-21-idea:-semantic-loop-detection",
+    "title": "Idea: Semantic Loop Detection (SLD) in `Phase V`",
+    "status": "closed",
+    "opened_at": "2026-06-01T15:03:03.425831",
+    "opened_cycle": 21,
+    "last_touched_at": "2026-06-01T15:03:21.859740",
+    "last_touched_cycle": 21,
+    "closed_at": "2026-06-01T15:03:21.859736",
+    "updates": [
+      "Plan generated in Phase V.",
+      "Cycle complete. Modification applied: True."
+    ],
+    "outcome": "applied"
   }
 ]

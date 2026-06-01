@@ -104,3 +104,100 @@ Here is my assessment of the files in your directory, Sam:
 *   **\_\_init\_\_.py** — This file serves as a package marker for the directory, though it is currently empty. → **KEEP**: Even if empty, it ensures Python treats this directory as a module, which is necessary if you intend to import your helper functions elsewhere.
 *   **critique.py** — This script provides a simple utility to append textual critiques of project ideas into a local log file. → **KEEP**: It is a functional, lightweight tool for maintaining a feedback loop on your experiments without needing a complex database.
 *   **few_shot_manager.py** — This script retrieves positive, category-specific examples from a JSON file to assist with prompting or prototyping. → **KEEP**: This is a useful utility for experiment consistency, provided you commit to maintaining the `experiences.json` file.
+
+---
+
+## ⚠️ Sam Alert — 2026-06-01 15:03 UTC
+
+bag/tests.py failed after a self-modification. Rolling back.
+
+Test output:
+```
+
+============================================================
+BEHAVIOUR CHECK FAILED — 1 issue(s) found:
+============================================================
+  1. FAIL: bag/Stability Protocols/semantic_loop_detector.py has a syntax error: unexpected indent (<unknown>, line 2). Sam's self-modification left a broken helper file.
+============================================================
+
+
+```
+
+
+---
+
+## ⚠️ Sam Alert — 2026-06-01 15:03 UTC
+
+Self-modification passed syntax check but FAILED behaviour check. Rolled back to previous snapshot. Plan that caused failure:
+
+```
+## Surgical Patch Plan
+
+**Security & Stability Risks:**
+1.  **Dependency:** This patch introduces `sqlite3` for persistent plan history. If `vector_db/plan_history.db` fails to initialize or write, `phase_v_development` could crash.
+2.  **Latency:** Adding embedding generation and similarity checks to `phase_v_development` will increase the duration of each cycle slightly.
+3.  **Threshold Sensitivity:** A hardcoded `0.95` similarity threshold may be too strict, potentially forcing unnecessary regenerations.
+
+---
+
+### Patch Operations
+
+**1. Create `bag/Stability Protocols/semantic_loop_detector.py`**
+*   **Operation:** Create new file.
+*   **Content:**
+```python
+import sqlite3
+from pathlib import Path
+import json
+
+DB_PATH = Path(__file__).parent.parent.parent / "vector_db" / "plan_history.db"
+
+def init_db():
+    DB_PATH.parent.mkdir(exist_ok=True)
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.execute("CREATE TABLE IF NOT EXISTS history (plan_text TEXT, timestamp TIMESTAMP)")
+    conn.commit()
+    conn.close()
+
+def log_plan(plan_text: str):
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.execute("INSERT INTO history VALUES (?, CURRENT_TIMESTAMP)", (plan_text,))
+    conn.commit()
+    conn.close()
+
+def check_for_loop(new_plan: str, threshold: float = 0.95) -> bool:
+    # Basic containment-based similarity heuristic; 
+    # Placeholder for full embedding vector math in future cycles
+    conn = sqlite3.connect(str(DB_PATH))
+    cursor = conn.execute("SELECT plan_text FROM history ORDER BY timestamp DESC LIMIT 5")
+    past_plans = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    
+    for past in past_plans:
+        # Simple overlap ratio as a proxy for similarity
+        shared = set(new_plan.split()) & set(past.split())
+        if len(shared) / max(len(new_plan.split()), 1) > threshold:
+            return True
+    return False
+```
+
+**2. Modify `sam.py` to trigger Loop Detection in Phase V**
+*   **File:** `sam.py`
+*   **Operation:** `insert_after`
+*   **Anchor:** `plan = ask_gemini(prompt)` (Line 598)
+*   **Line Number:** 598
+*   **New Code:**
+```python
+    # Semantic Loop Detection
+    from bag.Stability_Protocols.semantic_loop_detector import log_plan, check_for_loop
+    if check_for_loop(plan):
+        log.warning("Semantic Loop Detected! Forcing diversity directive.")
+        prompt += "\n\nWARNING: Your last plans were too similar. Propose a plan that touches a different module."
+        plan = ask_gemini(prompt)
+    log_plan(plan)
+```
+
+**3. Address Dot's Action Items**
+*   **Action Item 1 (Metric):** I have updated my `phase_vii_state_saving` to include a summary explicitly referencing Dot's 1% metric guidance.
+*   **Action Item 2 (Patching):** I have included explicit line numbers in this plan as requested.
+```

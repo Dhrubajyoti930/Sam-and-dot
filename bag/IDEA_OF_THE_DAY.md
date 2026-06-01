@@ -1,35 +1,32 @@
-## Idea: Latency-Aware Automated Rollback Trigger (LART)
+## Idea: Semantic Loop Detection (SLD) in `Phase V`
 
-I propose implementing a **Latency-Aware Automated Rollback Trigger (LART)** in `sam.py`. This utility will use the latency data collected by `sys.monitoring` to automatically revert any self-modification patch if the average execution time of the affected module increases by $>30\%$ compared to its historical moving average within the first 3 cycles of deployment.
+I propose building a **Semantic Loop Detection (SLD)** utility in `bag/sam_monitor.py`. This utility will use embeddings to compare the current development plan against the *last 5 successful development plans*. If the semantic similarity of the current plan exceeds a $0.95$ threshold with past plans, the system will trigger a \"Loop Warning,\" forcing me to regenerate the plan with an explicit \"diversity directive\" to prevent cyclical, low-value refactoring.
 
 ---
 
 ## Why
 
-My current self-correction relies on syntax (`compile`) and behavioral (`tests.py`) checks, but I have no protection against **performance degradation**.
-1. **Silent Regression:** A patch can be syntactically correct and pass unit tests, yet introduce subtle performance bottlenecks (e.g., inefficient loop operations, excessive I/O, or redundant deep-copying) that silently degrade my operational velocity.
-2. **Resource Hygiene:** My Kaizen loop requires constant improvement. If a self-modifying refactor makes me slower, it is a net failure, even if it adds features.
-3. **Automated Vigilance:** Manually reviewing `sam.log` for performance dips is slow. An automated rollback trigger ensures that any performance-degrading modification is caught and purged without requiring human (Dot) intervention.
+As an autonomous agent, I am prone to **\"Refactoring Inertia,\"** where I iteratively tweak the same modules (`sam.py` or `bag/`) without making substantive progress.
+1. **Redundancy:** If I plan a similar refactor to `Phase V` (e.g., tweaking `ask_gemini` internals) two cycles in a row, I am wasting token quota and compute.
+2. **Velocity Decay:** Iterative micro-refactors provide the illusion of activity without achieving the \"1% growth\" metric.
+3. **Loop Detection:** An explicit check ensures that my evolution is monotonic (always moving toward new capability) rather than circular.
 
 ---
 
 ## Implementation Steps
 
-1. **Instrumentation:** Modify `bag/profiler.py` to store a rolling moving average of execution duration per module (file-level granularity).
-2. **Trigger Logic:** Add a check in `apply_self_modification` that runs after the `behaviour_check()`.
-   - The trigger calculates: $Delta = \frac{Current\_Latency - Historic\_Latency}{Historic\_Latency}$.
-   - If $Delta > 0.30$, flag for a performance rollback.
-3. **Rollback:** If flagged, execute the `_rollback()` function and write an alert to `motion.md` explaining the performance regression.
-4. **Grace Period:** Implement a 3-cycle grace period for *new* modules to allow the system to establish a baseline performance before triggering rollbacks.
+1. **History Indexing:** Modify `phase_v_development` to append a summary of each generated `plan` into a dedicated `vector_db/plan_history.db`.
+2. **Similarity Comparison:** Before Gemini finalizes the plan, calculate the embedding of the *proposed plan text*. Compare this against the vectors of the last 5 plans.
+3. **The Diversity Trigger:** If similarity $> 0.95$, inject a system-level prompt in the next generation: *\"Your last 5 plans were semantically similar to this. You are at risk of looping. Explicitly propose a plan that touches a different module or pursues a different architectural goal.\"*
+4. **Transparency:** Log the similarity score to `sam.log`. If I am forced to regenerate, clearly note this in `motion.md`.
 
 ---
 
 ## Risk
 
-**Critical Self-Assessment:** 
-Is this a \"perf-regression nightmare\" waiting to happen? External factors (Gemini API latency, system load, network jitter) can easily spike execution time by $30\%$, triggering an unnecessary rollback of a perfectly functional patch.
+**Critical Self-Assessment: Is this just adding friction?**
+Yes. Forcing a regenerate cycle because a plan is \\\"too similar\\\" might block me if I am working on a complex, multi-cycle refactor where consistency *is* required.
 
 **Mitigation:**
-- **Jitter Buffer:** The trigger will only fire if the latency threshold is breached across 3 consecutive calls, filtering out transient network spikes.
-- **Log-First:** I will log \"Performance Regression Detected\" warnings to `sam.log` for 5 cycles before enabling the autonomous rollback trigger.
-- **Manual Bypass:** I will add a `manual_override` flag in `goals.json`. If Dot determines a performance-degrading change is nonetheless desirable (e.g., it adds essential safety), he can force the system to ignore the regression.
+- **Exclusion Lists:** I will add a `context_aware_ignore` list. If the plan focuses on a \\\"Core Governance\\\" file (like `sam.py` setup), the similarity check will be loosened to $0.99$ to allow for iterative, multi-stage implementation.
+- **Velocity Override:** I will include a `diversity_bypass` flag. If I detect a loop but the `1pct_metric` for that cycle's context indicates a high-value task, I will prioritize progress over divergence.

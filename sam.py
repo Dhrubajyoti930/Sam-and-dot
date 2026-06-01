@@ -588,7 +588,7 @@ def phase_v_development(idea: str, goals: dict) -> str:
         dot_constraint_block = ""
 
     from bag.workshop import apply_workshop_deletes, format_layout_for_prompt, organize_for_cycle
-    from bag.workshop_paths import is_writable_bag_py, iter_writable_bag_py, relative_bag_posix
+    from bag.workshop_paths import iter_writable_bag_py, relative_bag_posix
 
     cycle_num = goals.get("cycles", 0) + 1
     target_folder = organize_for_cycle(BAG, idea, cycle_num, ask_gemini, log, root=ROOT)
