@@ -318,7 +318,7 @@ def dispatch_email() -> str:
 
     intent             = request.get("intent", "")
     target_description = request.get("target_description", "")
-    request.get("tone", "professional")
+    tone               = request.get("tone", "professional")
     context            = request.get("context", "")
     cycle              = request.get("cycle", "?")
 
@@ -625,6 +625,21 @@ def run():
     else:
         log.info(f"Today is {today.strftime('%A')} — inbox check reserved for Sunday.")
 
+
+    # Task 6: Worklog stale check
+    try:
+        from bag.worklog import stale_report
+        import json as _json
+        goals_path = Path(__file__).parent.parent / "goals.json"
+        current_cycle = _json.loads(goals_path.read_text()).get("cycles", 0)
+        stale = stale_report(current_cycle)
+        if stale:
+            append_motion("Worklog — Stale Items", stale)
+            log.info("Stale worklog entries flagged in motion.md.")
+        else:
+            log.info("Worklog: no stale entries.")
+    except Exception as e:
+        log.warning(f"Worklog stale check skipped: {e}")
 
     send_html_email(
       to_address=OWNER_EMAIL,
