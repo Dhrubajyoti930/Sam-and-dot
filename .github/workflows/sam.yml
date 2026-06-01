@@ -32,6 +32,67 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Auto-install Sam's bag/ dependencies
+        run: |
+          python - << 'EOF'
+          import ast, sys, subprocess
+          from pathlib import Path
+
+          # Build set of already-installed package names
+          try:
+              from importlib.metadata import packages_distributions
+              installed = {k.lower() for k in packages_distributions()}
+          except Exception:
+              installed = set()
+
+          stdlib = sys.stdlib_module_names
+          missing = set()
+
+          for f in Path('bag').glob('*.py'):
+              try:
+                  tree = ast.parse(f.read_text(errors='replace'))
+                  for node in ast.walk(tree):
+                      if isinstance(node, ast.Import):
+                          for alias in node.names:
+                              name = alias.name.split('.')[0]
+                              if name and name not in stdlib and name.lower() not in installed:
+                                  missing.add(name)
+                      elif isinstance(node, ast.ImportFrom):
+                          name = (node.module or '').split('.')[0]
+                          if name and name not in stdlib and name.lower() not in installed:
+                              missing.add(name)
+              except Exception:
+                  pass
+
+          # Map common import names to their pip package names
+          pip_map = {
+              'sklearn': 'scikit-learn',
+              'cv2': 'opencv-python',
+              'PIL': 'Pillow',
+              'bs4': 'beautifulsoup4',
+              'yaml': 'PyYAML',
+              'dotenv': 'python-dotenv',
+          }
+
+          if missing:
+              pip_names = [pip_map.get(m, m) for m in missing]
+              print(f'Installing missing packages: {pip_names}')
+              subprocess.run([sys.executable, '-m', 'pip', 'install', *pip_names], check=True)
+
+              # Add to requirements.txt so they are cached next cycle
+              req_path = Path('requirements.txt')
+              existing = req_path.read_text().splitlines() if req_path.exists() else []
+              existing_lower = {r.split('==')[0].split('>=')[0].strip().lower() for r in existing}
+              new_reqs = [p for p in pip_names if p.lower() not in existing_lower]
+              if new_reqs:
+                  with open(req_path, 'a') as rf:
+                      for r in new_reqs:
+                          rf.write(f'\n{r}')
+                  print(f'Added to requirements.txt: {new_reqs}')
+          else:
+              print('All bag/ imports satisfied.')
+          EOF
+
       - name: Auto-fix lint issues
         run: |
           ruff check . --select F --exclude bag/rollback_registry --fix --unsafe-fixes || true
