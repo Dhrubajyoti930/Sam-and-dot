@@ -38,6 +38,7 @@ EXPERIENCES     = BAG  / "experiences.json"
 REQUEST_JSON    = BAG  / "request.json"
 CYCLE_STATUS    = BAG  / "cycle_status.txt"
 TESTS           = BAG  / "tests.py"
+PROMPT_PATCH    = BAG  / "prompt_patch.json"
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -122,17 +123,19 @@ def save_experiences(data: list):
         json.dump(data, f, indent=2)
 
 
-def ask_gemini(prompt: str, retries: int = 2) -> str:
+def ask_gemini(prompt: str, retries: int = 2, bypass_cache: bool = False) -> str:
     """Send a prompt to Sam's Gemini instance. Retries on transient errors."""
-    from bag.semantic_cache import check_cache, update_cache
+    from bag.semantic_cache import check_cache, update_cache, get_db
 
-    # Ensure cache directory exists
-    from bag.semantic_cache import get_db
     get_db()
     goals = load_goals()
-    # For now, bypass if cache hit found; integration with embedding service deferred to next cycle
-    cached = check_cache(prompt, goals.get("cycles", 0))
-    if cached: return cached
+    cycle = goals.get("cycles", 0)
+
+    if not bypass_cache:
+        cached = check_cache(prompt, cycle)
+        if cached:
+            log.info("Semantic cache hit — returning cached response.")
+            return cached
 
     for attempt in range(retries):
         try:
@@ -141,7 +144,8 @@ def ask_gemini(prompt: str, retries: int = 2) -> str:
                 contents=prompt,
             )
             res = response.text.strip()
-            update_cache(prompt, res, goals.get("cycles", 0))
+            if not bypass_cache:
+                update_cache(prompt, res, cycle)
             return res
         except Exception as e:
             err = str(e)
@@ -205,7 +209,7 @@ def self_check() -> bool:
     Returns True if all protected files are healthy, triggers rollback if any fail."""
     AUDIT_PROTECTED = {
         "dot.py", "emailer.py", "evaluator.py", "matrix_optimizer.py",
-        "semantic_cache.py", "tests.py", "versioning.py", "worklog.py",
+        "semantic_cache.py", "tests.py", "versioning.py", "worklog.py", "prompts.py",
     }
     protected_bag = [f for f in sorted(BAG.glob("*.py")) if f.name in AUDIT_PROTECTED]
     files_to_check = [Path(__file__)] + protected_bag
@@ -303,7 +307,7 @@ def repair_bag_modules() -> list:
 
     AUDIT_PROTECTED = {
         "dot.py", "emailer.py", "evaluator.py", "matrix_optimizer.py",
-        "semantic_cache.py", "tests.py", "versioning.py", "worklog.py",
+        "semantic_cache.py", "tests.py", "versioning.py", "worklog.py", "prompts.py",
     }
 
     BAG = Path(__file__).parent / "bag"
@@ -488,6 +492,35 @@ def apply_self_modification(plan: str) -> bool:
     return bool(applied)
 
 
+def apply_prompt_patch() -> bool:
+    """Apply Phase VI patch plan from bag/prompt_patch.json (no extra Gemini call)."""
+    from bag.patch_ops import apply_patch_operations
+    from bag.semantic_cache import invalidate_phase_vi_cache, invalidate_cycle
+
+    if not PROMPT_PATCH.exists():
+        return False
+
+    log.info("── Phase VI: Applying Prompt Patch ──")
+    try:
+        plan = json.loads(PROMPT_PATCH.read_text())
+    except Exception as e:
+        log.warning(f"Could not read prompt_patch.json: {e}")
+        return False
+
+    ops = [op for op in (plan.get("patch_op"), plan.get("version_bump")) if op]
+    if not ops:
+        return False
+
+    applied = apply_patch_operations(ops, ROOT, log)
+    if applied:
+        PROMPT_PATCH.unlink(missing_ok=True)
+        cycle = load_goals().get("cycles", 0)
+        invalidate_phase_vi_cache()
+        invalidate_cycle(cycle)
+        log.info("Prompt patch applied; semantic cache invalidated for Phase VI.")
+    return applied
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # PHASES
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -498,14 +531,8 @@ def phase_i_deep_learning(goals: dict) -> str:
     objectives = goals.get("next_objectives", [])
     focus = objectives[0] if objectives else "latest LLM context-engineering techniques"
 
-    personality = load_personality()
-    prompt = (
-        f"You are Sam, an autonomous developer agent. Your character:\n\n{personality}\n\n"
-        f"Your learning focus for this cycle is: '{focus}'.\n"
-        f"Produce a concise but dense technical summary (300-400 words) of the most important "
-        f"concepts, patterns, or techniques a developer should know about this topic today. "
-        f"Conclude with three concrete action items Sam should implement this cycle."
-    )
+    from bag.prompts import PHASE_I_PROMPT
+    prompt = PHASE_I_PROMPT.format(personality=load_personality(), focus=focus)
     result = ask_gemini(prompt)
     log.info("Phase I complete.")
     return result
@@ -521,13 +548,9 @@ def phase_ii_spaced_repetition(goals: dict) -> str:
         else "general Python async patterns"
     )
 
+    from bag.prompts import PHASE_II_PROMPT
     _sleep()
-    prompt = (
-        f"You are Sam. In your last cycle you studied:\n\n'{last_skill}'\n\n"
-        f"Generate 3 concise but challenging quiz questions to test retention of this skill, "
-        f"followed immediately by the correct answers. Keep the format tight and engineering-precise."
-    )
-    result = ask_gemini(prompt)
+    result = ask_gemini(PHASE_II_PROMPT.format(last_skill=last_skill))
     log.info("Phase II complete.")
     return result
 
@@ -536,14 +559,9 @@ def phase_iii_market_ingestion() -> str:
     """Synthesise current tech directions via Gemini."""
     log.info("── Phase III: Market & Code Ingestion ──")
 
+    from bag.prompts import PHASE_III_PROMPT
     _sleep()
-    prompt = (
-        "You are Sam's market scanner. List the top 5 high-velocity technology or open-source "
-        "trends a Python AI developer should be tracking right now. For each trend provide: "
-        "trend name, one-sentence description, and a specific GitHub repo or resource URL worth exploring. "
-        "Be specific and current — no generic filler."
-    )
-    result = ask_gemini(prompt)
+    result = ask_gemini(PHASE_III_PROMPT)
     log.info("Phase III complete.")
     return result
 
@@ -569,17 +587,14 @@ def phase_iv_synthesis(market_data: str, skill: str) -> str:
     else:
         memory_block = ""
 
+    from bag.prompts import PHASE_IV_PROMPT
     _sleep()
-    prompt = (
-        f"You are Sam, an autonomous developer who continuously improves himself.\n\n"
-        f"Character:\n{personality}\n\n"
-        f"Market signals this cycle:\n{market_data}\n\n"
-        f"Skill learned this cycle:\n{skill}\n\n"
-        f"Current architecture overview:\n{who_i_am}\n\n"
-        f"{memory_block}\n"
-        f"Propose ONE concrete, implementable development idea for today. "
-        f"Format as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk.\n"
-        f"Be critical — question the idea yourself before committing to it."
+    prompt = PHASE_IV_PROMPT.format(
+        personality=personality,
+        market_data=market_data,
+        skill=skill,
+        who_i_am=who_i_am,
+        memory_block=memory_block,
     )
     # Phase IV: Two-pass critique loop
     candidate = ask_gemini(prompt)
@@ -727,20 +742,101 @@ def phase_v_development(idea: str, goals: dict) -> str:
 
 
 def phase_vi_cognitive_evolution(goals: dict) -> str:
-    """Upgrade internal prompts; suggest one concrete improvement for next cycle."""
+    """Assess last evolution, propose ONE surgical prompt patch via prompt_patch.json."""
     log.info("── Phase VI: Cognitive Evolution ──")
 
+    growth_log = goals.get("growth_log", [])
+    last_evolution = growth_log[-1].get("evolution", "") if growth_log else ""
+    last_evolution_cycle = growth_log[-1].get("cycle", 0) if growth_log else 0
+
+    try:
+        from bag.prompts import PATCHABLE_PROMPTS, PHASE_VI_PROMPT, PROMPT_VERSION
+        prompts_src = (BAG / "prompts.py").read_text()
+    except Exception as e:
+        log.warning(f"Phase VI: Could not load bag/prompts.py: {e}")
+        return f"[Phase VI skipped — bag/prompts.py unavailable: {e}]"
+
+    cycle_num = goals.get("cycles", 0)
+    cache_salt = f"[cycle={cycle_num} pv={PROMPT_VERSION}]"
+
     _sleep()
-    prompt = (
-        "You are Sam. Review the latest context-engineering paradigms "
-        "(chain-of-thought, self-consistency, tree-of-thoughts, ReAct, structured outputs, "
-        "tool use, memory compression). "
-        "Suggest ONE concrete prompt-engineering improvement Sam could apply to his own "
-        "internal Gemini calls in the next cycle. Be specific — include a before/after example."
+    prompt = cache_salt + "\n\n" + PHASE_VI_PROMPT.format(
+        last_evolution_cycle=last_evolution_cycle,
+        last_evolution=(
+            last_evolution[:600] if last_evolution else "(none — first evolution cycle)"
+        ),
+        prompt_version=PROMPT_VERSION,
+        prompts_src=prompts_src,
+        patchable_prompts=PATCHABLE_PROMPTS,
+        next_prompt_version=PROMPT_VERSION + 1,
     )
-    evolution = ask_gemini(prompt)
+
+    raw = ask_gemini(prompt, bypass_cache=True)
+
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        patch_proposal = json.loads(clean)
+    except Exception as e:
+        log.warning(f"Phase VI: Could not parse patch proposal as JSON: {e}")
+        return raw
+
+    assessment = patch_proposal.get("assessment", "")
+    target = patch_proposal.get("target_prompt")
+    rationale = patch_proposal.get("rationale", "")
+    before_snippet = patch_proposal.get("before_snippet", "")
+    after_snippet = patch_proposal.get("after_snippet", "")
+    new_version = patch_proposal.get("new_prompt_version", PROMPT_VERSION + 1)
+
+    log.info(f"Phase VI assessment: {assessment}")
+    patch_written = False
+
+    if (
+        target
+        and target in PATCHABLE_PROMPTS
+        and before_snippet
+        and after_snippet
+        and before_snippet in prompts_src
+        and before_snippet != after_snippet
+        and len(after_snippet.strip()) > 10
+    ):
+        patch_plan = {
+            "cycle": cycle_num + 1,
+            "target_prompt": target,
+            "rationale": rationale,
+            "assessment": assessment,
+            "patch_op": {
+                "filename": "bag/prompts.py",
+                "operation": "replace",
+                "old": before_snippet,
+                "new": after_snippet,
+            },
+            "version_bump": {
+                "filename": "bag/prompts.py",
+                "operation": "replace",
+                "old": f"PROMPT_VERSION = {PROMPT_VERSION}",
+                "new": f"PROMPT_VERSION = {new_version}",
+            },
+        }
+        PROMPT_PATCH.write_text(json.dumps(patch_plan, indent=2))
+        log.info(f"Phase VI patch plan written → {PROMPT_PATCH.name} (target: {target})")
+        patch_written = True
+    else:
+        if target and target not in PATCHABLE_PROMPTS:
+            log.warning(f"Phase VI: target '{target}' not in PATCHABLE_PROMPTS — patch rejected.")
+        elif before_snippet and before_snippet not in prompts_src:
+            log.warning("Phase VI: before_snippet not found in prompts.py — patch rejected.")
+        elif not target:
+            log.info("Phase VI: No patch proposed this cycle (target_prompt is null).")
+
+    evolution_text = (
+        f"[Cycle {cycle_num + 1} — PROMPT_VERSION {PROMPT_VERSION}]\n\n"
+        f"Assessment: {assessment}\n\n"
+        f"Target: {target or 'none'}\n"
+        f"Rationale: {rationale}\n"
+        f"Patch written: {patch_written}"
+    )
     log.info("Phase VI complete.")
-    return evolution
+    return evolution_text
 
 
 def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolution: str):
@@ -996,8 +1092,20 @@ def run_cycle():
     except Exception as e:
         log.warning(f"Worklog close failed: {e}")
 
-    # Phase VI — prompt evolution
+    # Phase VI — prompt evolution (propose patch, then apply before state save)
     evolution = phase_vi_cognitive_evolution(goals)
+
+    snapshot_sam()
+    prompt_modified = apply_prompt_patch()
+    if prompt_modified:
+        if self_check() and behaviour_check():
+            log.info("Phase VI prompt patch verified.")
+        else:
+            _rollback()
+            _alert_dot(
+                "Phase VI prompt patch failed verification. Rolled back to previous snapshot.\n\n"
+                f"Evolution summary:\n```\n{evolution[:600]}\n```"
+            )
 
     # Phase VII — state persistence (also appends to experiences.json)
     phase_vii_state_saving(goals, skill, idea, plan, evolution)
