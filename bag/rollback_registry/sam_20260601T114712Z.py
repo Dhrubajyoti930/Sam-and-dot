@@ -576,31 +576,7 @@ def phase_iv_synthesis(market_data: str, skill: str) -> str:
         f"Format as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk.\n"
         f"Be critical — question the idea yourself before committing to it."
     )
-    # Phase IV: Two-pass critique loop
-    candidate = ask_gemini(prompt)
-    
-    # Conditional Critique: Trigger only if recent metric is not positive
-    goals = load_goals()
-    last_metric = goals.get("last_1pct_metric", "").lower()
-    
-    if any(neg in last_metric for neg in ["neutral", "negative", "stagnant"]):
-        critique_prompt = (
-            f"Review this idea against my 'wisdom.txt' and recent 'experiences.json'.\n"
-            f"Idea:\n{candidate}\n\n"
-            f"Identify any logical contradictions, repeating past failures, or over-engineering.\n"
-            f"Respond with a brief, concise JSON critique (fields: 'is_valid', 'critique')."
-        )
-        _sleep()
-        critique_raw = ask_gemini(critique_prompt)
-        # Simplified handling: assume critique is valid JSON if parsing succeeds
-        from bag.critique import log_critique
-        log_critique({"idea": candidate}, critique_raw)
-        
-        # Finalization
-        idea = ask_gemini(f"Refine this idea based on this critique:\nCritique: {critique_raw}\nIdea: {candidate}")
-    else:
-        idea = candidate
-
+    idea = ask_gemini(prompt)
     IDEA_OF_DAY.write_text(idea)
     log.info("IDEA_OF_THE_DAY.md written.")
     return idea

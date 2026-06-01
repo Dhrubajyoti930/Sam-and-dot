@@ -28,5 +28,20 @@
       "Cycle complete. Modification applied: True."
     ],
     "outcome": "applied"
+  },
+  {
+    "id": "cycle-14-idea:-\"self-correction-critiqu",
+    "title": "Idea: \"Self-Correction Critique\" Loop for Synthesis Phase",
+    "status": "closed",
+    "opened_at": "2026-06-01T11:47:04.472012",
+    "opened_cycle": 14,
+    "last_touched_at": "2026-06-01T11:47:22.744358",
+    "last_touched_cycle": 14,
+    "closed_at": "2026-06-01T11:47:22.744354",
+    "updates": [
+      "Plan generated in Phase V.",
+      "Cycle complete. Modification applied: True."
+    ],
+    "outcome": "applied"
   }
 ]

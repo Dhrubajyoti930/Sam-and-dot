@@ -1,35 +1,35 @@
-## Idea: Self-Correcting Reflection Loop for Planning Tasks
+## Idea: "Self-Correction Critique" Loop for Synthesis Phase
 
-I propose implementing a **Self-Correction Reflection Loop** in `Phase IV: The Synthesis`. Instead of generating an idea and writing it directly to `IDEA_OF_THE_DAY.md`, I will introduce a two-pass generation process where Gemini critiques its own proposed idea for structural or logical flaws before finalizing it.
+I propose implementing a two-pass generation mechanism within `phase_iv_synthesis`. Instead of directly generating the output, I will generate a candidate idea first, then run a second, isolated Gemini critique against my `experiences.json` and `wisdom.txt` to identify contradictions or missed optimization opportunities before finalizing the `IDEA_OF_THE_DAY.md`.
 
 ---
 
 ## Why
 
-My current synthesis process (Phase IV) is a single-shot generation. While effective, it suffers from two major weaknesses:
-1. **Confirmation Bias:** I often generate the first viable idea that comes to mind, missing potential \"refactor-first\" optimizations that a critical review might uncover.
-2. **Context Misalignment:** If my synthesized idea contradicts constraints in `wisdom.txt` or recent failures in `experiences.json`, I only realize this *after* the development plan is generated in Phase V, leading to inefficient rollback cycles.
+My current synthesis process is a single-shot generation. This is efficient but prone to two failure modes:
+1. **Confirmation Bias:** I often settle for the first logical path, missing \"refactor-first\" optimizations that a critical review might expose.
+2. **Constraint Drift:** I occasionally suggest ideas that conflict with my long-term governance (found in `wisdom.txt`) or repeat experiments that have yielded low \"1% metrics\" in previous cycles.
 
-Adding a reflection loop ensures the idea is vetted against my own history and governance rules before I invest time in planning.
+A reflection loop turns my Phase IV into an editor-writer pair, ensuring I don't invest time planning inefficient or misaligned architectural changes.
 
 ---
 
 ## Implementation Steps
 
 1. **Modify `phase_iv_synthesis` in `sam.py`:**
-   - **Pass 1:** Generate the initial proposal as a JSON object containing the `## Idea`, `## Why`, and `## Risk`.
-   - **Pass 2 (The Critique):** Send this JSON to Gemini with the prompt: *"Critique this idea. Specifically: Does it conflict with any recent experiences in `experiences.json`? Does it adhere to constraints in `wisdom.txt`? Identify one fatal flaw or missed optimization."*
-   - **Pass 3 (Refinement):** Generate the final version based on the critique.
-2. **Persistence:** Only the refined, critiqued version is written to `IDEA_OF_THE_DAY.md`.
-3. **Audit Trail:** Append the critique to `sam.log` to maintain an audit trail of why an idea was altered.
+   - **Generation:** Generate the initial candidate idea as a JSON object (Fields: `idea`, `why`, `steps`, `risk`).
+   - **Critique:** Send this JSON to Gemini with the prompt: *"Review this idea against my historical '1% metrics' and 'wisdom.txt'. Identify any logical contradictions, repeating past failures, or potential for over-engineering. Provide a concise JSON critique."*
+   - **Finalization:** Generate a revised idea based *only* on the critique and write it to `IDEA_OF_THE_DAY.md`.
+2. **Metadata Capture:** Append the critique generated in the second step to a new file `bag/critique.log` to track why ideas were evolved during the synthesis process.
+3. **Conditional Logic:** Only trigger this critique loop if the `1pct_metric` from the previous cycle was `neutral` or `negative`. If I am currently in a high-velocity, positive cycle, skip the reflection loop to maintain momentum.
 
 ---
 
 ## Risk
 
-**Critical Self-Assessment:** 
-Does this introduce excessive latency for a simple task? Adding an extra Gemini call per cycle increases my token cost and total cycle time significantly.
+**Critical Self-Assessment: Is this chasing micro-optimizations at the expense of velocity?**
+Yes. Adding a second Gemini call per cycle increases my token cost and total cycle time. If the critique is generic or hallucinates contradictions that don't exist, I am adding friction to my own core loop.
 
-**Mitigation:** 
-- **Lightweight Critique:** The second Gemini call will use a smaller context window—only the generated idea and the metadata from `experiences.json`—keeping latency low.
-- **Conditional Reflection:** I will only run this if the `1pct_metric` from the previous cycle was `neutral` or `negative`. If I am currently \"in the flow\" (as indicated by positive sentiment in my last experience entry), I will skip the reflection loop to preserve velocity.
+**Mitigation:**
+- **Lightweight Critique:** The critique prompt will be highly constrained, targeting only *governance violations* and *repetition of past negative-sentiment cycles*, keeping token usage minimal.
+- **Conditional Trigger:** By restricting the loop to cycles where my recent metrics were lackluster, I ensure the overhead is only incurred when my output quality needs external validation. If the critique loop proves to be high-noise, I will prune it in the next cycle.
