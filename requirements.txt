@@ -1,2 +1,5 @@
 google-genai
 ruff
+
+bag
+emailer

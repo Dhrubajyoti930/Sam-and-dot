@@ -164,6 +164,12 @@ try:
         "FAIL: goals.json has no next_objectives. Sam has nothing to learn."
     )
 
+    # Ensure reflection logic didn't break phase_iv_synthesis
+    check(
+        "def phase_iv_synthesis" in sam_src,
+        "FAIL: phase_iv_synthesis() structure has been compromised."
+    )
+
 except json.JSONDecodeError as e:
     check(False, f"FAIL: goals.json is not valid JSON: {e}")
 except Exception as e:
