@@ -118,5 +118,20 @@
       "Cycle complete. Modification applied: True."
     ],
     "outcome": "applied"
+  },
+  {
+    "id": "cycle-20-idea:-latency-aware-automated",
+    "title": "Idea: Latency-Aware Automated Rollback Trigger (LART)",
+    "status": "closed",
+    "opened_at": "2026-06-01T14:51:34.439313",
+    "opened_cycle": 20,
+    "last_touched_at": "2026-06-01T14:51:53.533615",
+    "last_touched_cycle": 20,
+    "closed_at": "2026-06-01T14:51:53.533608",
+    "updates": [
+      "Plan generated in Phase V.",
+      "Cycle complete. Modification applied: True."
+    ],
+    "outcome": "applied"
   }
 ]

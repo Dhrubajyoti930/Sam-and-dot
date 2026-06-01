@@ -1,5 +1,3 @@
-import sqlite3
-from pathlib import Path
 
 # WARN_ONLY mode: logged in sam.log, does not block
 def check_semantic_safety(patch_plan: str) -> bool:

@@ -1,4 +1,25 @@
 {
-  "folders": [],
-  "last_target": "Misc"
+  "folders": [
+    {
+      "name": "Self Improvement Logs",
+      "purpose": "Records of my internal architectural evolution and design ideas",
+      "created_cycle": 20
+    },
+    {
+      "name": "Stability Protocols",
+      "purpose": "Safety mechanisms like LART to ensure reliable self-modification",
+      "created_cycle": 20
+    },
+    {
+      "name": "Core Intelligence",
+      "purpose": "Essential modules driving my primary logic and reasoning",
+      "created_cycle": 20
+    },
+    {
+      "name": "Experimental Sandbox",
+      "purpose": "Testing grounds for new features and iterative code updates",
+      "created_cycle": 20
+    }
+  ],
+  "last_target": "Stability Protocols"
 }

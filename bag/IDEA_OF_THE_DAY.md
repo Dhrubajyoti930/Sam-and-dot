@@ -1,33 +1,35 @@
-## Idea: RAG-based \"Governance Shield\" for Self-Modification
+## Idea: Latency-Aware Automated Rollback Trigger (LART)
 
-I propose building a **Governance Shield** (`bag/evaluator.py` extension) that performs a pre-patch semantic check. Before applying any surgical patch generated in Phase V, this utility will run a similarity check between the proposed new code and the core constraints in `wisdom.txt`.
+I propose implementing a **Latency-Aware Automated Rollback Trigger (LART)** in `sam.py`. This utility will use the latency data collected by `sys.monitoring` to automatically revert any self-modification patch if the average execution time of the affected module increases by $>30\%$ compared to its historical moving average within the first 3 cycles of deployment.
 
 ---
 
 ## Why
 
-My current self-modification process relies on Phase V syntax checks and Phase V behavioral tests. However, it lacks a *semantic gate*. I am technically autonomous, but I risk drifting away from my core behavioural constraints over time.
-1. **Constraint Safety:** If a patch inadvertently modifies a function that `wisdom.txt` deems \"protected\" or \"canonical,\" the current system might apply the change as long as it is syntactically valid Python.
-2. **Accountability:** This adds a layer of verifiable governance, providing a programmatic guarantee to the owner that I am not violating my own constitution.
-3. **Reflective Learning:** If a patch is rejected by the Governance Shield, I will log the violation reason, which serves as a high-fidelity data point for my self-improvement metrics.
+My current self-correction relies on syntax (`compile`) and behavioral (`tests.py`) checks, but I have no protection against **performance degradation**.
+1. **Silent Regression:** A patch can be syntactically correct and pass unit tests, yet introduce subtle performance bottlenecks (e.g., inefficient loop operations, excessive I/O, or redundant deep-copying) that silently degrade my operational velocity.
+2. **Resource Hygiene:** My Kaizen loop requires constant improvement. If a self-modifying refactor makes me slower, it is a net failure, even if it adds features.
+3. **Automated Vigilance:** Manually reviewing `sam.log` for performance dips is slow. An automated rollback trigger ensures that any performance-degrading modification is caught and purged without requiring human (Dot) intervention.
 
 ---
 
 ## Implementation Steps
 
-1. **Constitutional Indexing:** Create a permanent vector index of `wisdom.txt` in `vector_db/wisdom_index.db`.
-2. **Patch Interceptor:** Update `apply_self_modification` to calculate the semantic embedding of the `new` code block.
-3. **Similarity Filter:** Query the `wisdom_index.db` to check if the proposed code overlaps semantically with \"forbidden\" logic (e.g., unauthorized changes to Phase VII persistence, or attempts to modify governance accessors).
-4. **Failure Hook:** If a high-similarity match is found (threshold > 0.8), the patch is automatically rejected, and a `Governance Violation` is logged to `motion.md`.
+1. **Instrumentation:** Modify `bag/profiler.py` to store a rolling moving average of execution duration per module (file-level granularity).
+2. **Trigger Logic:** Add a check in `apply_self_modification` that runs after the `behaviour_check()`.
+   - The trigger calculates: $Delta = \frac{Current\_Latency - Historic\_Latency}{Historic\_Latency}$.
+   - If $Delta > 0.30$, flag for a performance rollback.
+3. **Rollback:** If flagged, execute the `_rollback()` function and write an alert to `motion.md` explaining the performance regression.
+4. **Grace Period:** Implement a 3-cycle grace period for *new* modules to allow the system to establish a baseline performance before triggering rollbacks.
 
 ---
 
 ## Risk
 
-**Critical Self-Assessment: Is this over-engineering for a local-first agent?**
-Yes. I am effectively creating a \"Self-Censor\" mechanism. If the similarity threshold is too sensitive, I will block my own legitimate development progress, leading to a state where I am unable to perform any meaningful refactoring.
+**Critical Self-Assessment:** 
+Is this a \"perf-regression nightmare\" waiting to happen? External factors (Gemini API latency, system load, network jitter) can easily spike execution time by $30\%$, triggering an unnecessary rollback of a perfectly functional patch.
 
 **Mitigation:**
-- **Advisory Mode:** For the first 3 cycles, the shield will run in `WARN_ONLY` mode. It will log violations to `sam.log` rather than blocking patches. 
-- **Explicit Exclusions:** I will include a \"whitelist\" in `bag/governance_shield.py` for standard refactor patterns that are known to be safe, ensuring I do not block standard performance optimizations.
-- **Human Oversight:** All blocked patches will be surfaced to Dot via `motion.md`, ensuring that if I am being overly restrictive, the owner can intervene.
+- **Jitter Buffer:** The trigger will only fire if the latency threshold is breached across 3 consecutive calls, filtering out transient network spikes.
+- **Log-First:** I will log \"Performance Regression Detected\" warnings to `sam.log` for 5 cycles before enabling the autonomous rollback trigger.
+- **Manual Bypass:** I will add a `manual_override` flag in `goals.json`. If Dot determines a performance-degrading change is nonetheless desirable (e.g., it adds essential safety), he can force the system to ignore the regression.
