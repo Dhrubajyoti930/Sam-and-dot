@@ -614,6 +614,29 @@ def phase_v_development(idea: str, goals: dict) -> str:
     motion_content = read_motion()
     log.info("motion.md read.")
 
+    # Extract Dot's actionable items as a hard constraint block
+    _sleep()
+    dot_checklist_prompt = (
+        f"Dot's guidance:\n{motion_content}\n\n"
+        f"Extract ONLY the numbered items under 'Actionable Suggestions for Next Cycle'. "
+        f"Return them as a JSON array of plain strings. If none found, return []."
+    )
+    raw_checklist = ask_gemini(dot_checklist_prompt)
+    try:
+        clean_checklist = raw_checklist.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        dot_actions = json.loads(clean_checklist)
+    except Exception:
+        dot_actions = []
+
+    if dot_actions:
+        dot_constraint_block = "Dot's REQUIRED action items this cycle (address each explicitly):\n"
+        for i, action in enumerate(dot_actions, 1):
+            dot_constraint_block += f"  {i}. {action}\n"
+        dot_constraint_block += "\n"
+        log.info(f"Dot's action items surfaced: {len(dot_actions)} item(s)")
+    else:
+        dot_constraint_block = ""
+
     personality = load_personality()
     sam_src     = Path(__file__).read_text()
     tests_src   = TESTS.read_text() if TESTS.exists() else "(tests.py not found)"
@@ -631,7 +654,8 @@ def phase_v_development(idea: str, goals: dict) -> str:
     prompt = (
         f"You are Sam's Gemini refactoring assistant.\n\n"
         f"Sam's character:\n{personality}\n\n"
-        f"Dot's guidance (motion.md — read carefully):\n{motion_content}\n\n"
+        f"Dot's guidance (motion.md):\n{motion_content}\n\n"
+        f"{dot_constraint_block}"
         f"Today's development idea:\n{idea}\n\n"
         f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
         f"Sam's current bag/tests.py (full source):\n```python\n{tests_src}\n```\n\n"
@@ -642,7 +666,8 @@ def phase_v_development(idea: str, goals: dict) -> str:
         f"  3. For each change, specify EXACTLY:\n"
         f"       - Which file (sam.py or bag/*.py only)\n"
         f"       - The operation: replace / insert_after / delete\n"
-        f"       - The exact existing string to find ('old' or 'anchor') — copy it verbatim from the source above\n"
+        f"       - The exact existing string to find ('old' or 'anchor') — copy it CHARACTER-FOR-CHARACTER from the source above, including all whitespace and indentation. Also state the line number it appears on.\n"
+        f"       - Keep 'old' and 'anchor' strings as SHORT as possible (1-2 lines max) to reduce whitespace mismatch risk.\n"
         f"       - The new string to substitute or insert\n"
         f"  4. Flag any security or stability risks before listing changes.\n"
         f"  5. If the idea requires no code change this cycle, say so explicitly.\n\n"
@@ -721,15 +746,17 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
     cycle_num = goals.get("cycles", 0) + 1
 
     # Ask Gemini to name a real, specific 1% metric for this cycle
+    motion_content = read_motion()
     _sleep()
     metric_prompt = (
         f"You are Sam. This cycle you:\n"
         f"- Learned: {skill}\n"
         f"- Developed: {idea}\n"
         f"- Evolved: {evolution}\n\n"
-        f"Compare your self-identified '1% growth' against the plan generated in Phase V.\n"
-        f"Name ONE specific, honest 1%-growth metric for this cycle. "
-        f"It must be precise, reflect what actually happened, and align with applied diffs. "
+        f"Dot's guidance this cycle:\n{motion_content[:600]}\n\n"
+        f"Compare your self-identified '1% growth' against the plan generated in Phase V "
+        f"AND against what Dot asked for. Name ONE specific, honest 1%-growth metric that "
+        f"reflects what actually happened and explicitly notes whether you acted on Dot's suggestions. "
         f"Reply with the metric name only. No explanation. Max 12 words."
     )
     one_pct_metric = ask_gemini(metric_prompt).strip().strip('"').strip("'")
@@ -800,11 +827,11 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
         f"as a single experience entry. "
         f"Respond ONLY with a JSON object (no markdown) with these fields:\n"
         f"  - 'category': a short dynamic label that best fits this experience (e.g. 'architecture', 'debugging', 'market-research', 'communication')\n"
-        f"  - 'summary': 2-3 sentence honest summary of what happened this cycle\n"
+        f"  - 'summary': 2-3 sentence honest summary of what happened this cycle, explicitly noting one piece of Dot's guidance you acted on (or why you could not)\n"
         f"  - 'key_learnings': list of 2-3 strings\n"
         f"  - 'tags': list of relevant lowercase tags\n"
         f"  - 'sentiment': one of 'positive', 'neutral', 'mixed', 'negative'\n\n"
-        f"Cycle data:\nSkill: {skill}\nIdea: {idea}\nMetric: {one_pct_metric}"
+        f"Cycle data:\nSkill: {skill}\nIdea: {idea}\nMetric: {one_pct_metric}\nDot's guidance this cycle:\n{motion_content[:600]}"
     )
     raw_exp = ask_gemini(exp_prompt)
     try:
