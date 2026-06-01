@@ -549,17 +549,20 @@ def phase_iv_synthesis(market_data: str, skill: str) -> str:
     who_i_am    = load_who_i_am()
     personality = load_personality()
 
-    # Summarise recent experiences + Semantically relevant context
-    experiences = load_experiences()
-    # TODO: Implement embedding retrieval here. 
-    # Current fallback: Chronological recency.
-    recent_exp = experiences[-3:]
-    exp_lines = "\n".join(
-        f"- Cycle {e.get('cycle', '?')}: {e.get('summary', '')} "
-        f"[tags: {', '.join(e.get('tags', []))}]"
-        for e in recent_exp
-    )
-    memory_block = f"## Recent Historical Context:\n{exp_lines}\n"
+    # Summarise recent experiences so Sam doesn't repeat himself
+    recent_exp  = load_experiences()[-3:]
+    if recent_exp:
+        exp_lines = "\n".join(
+            f"- Cycle {e.get('cycle', '?')}: {e.get('summary', '')} "
+            f"[tags: {', '.join(e.get('tags', []))}]"
+            for e in recent_exp
+        )
+        memory_block = (
+            f"Your most recent experiences (do NOT repeat these — build on them or go elsewhere):\n"
+            f"{exp_lines}\n"
+        )
+    else:
+        memory_block = ""
 
     _sleep()
     prompt = (
@@ -634,17 +637,38 @@ def phase_v_development(idea: str, goals: dict) -> str:
     except Exception as e:
         log.warning(f"Worklog open failed: {e}")
 
-    # Audit: Delete orphaned files in bag/
-    # Blocklist approach — Sam-created files survive until explicitly removed (#5 fix)
-    # async_batch.py intentionally omitted (dead code — will be cleaned up) (#10 fix)
-    _AUDIT_PROTECTED = {
+    # Audit: Sam reads Dot's bag review from motion.md and decides what to delete
+    _CORE_PROTECTED = {
         "dot.py", "emailer.py", "evaluator.py", "matrix_optimizer.py",
-        "semantic_cache.py", "tests.py", "versioning.py",
+        "semantic_cache.py", "tests.py", "versioning.py", "worklog.py",
     }
-    for f in BAG.glob("*.py"):
-        if f.name not in _AUDIT_PROTECTED:
-            f.unlink()
-            log.info(f"Audited: Deleted orphaned file {f.name}")
+    sam_files = [f for f in BAG.glob("*.py") if f.name not in _CORE_PROTECTED]
+
+    if sam_files:
+        motion_content = read_motion()
+        file_listing = "\n".join(f.name for f in sam_files)
+        _sleep()
+        audit_prompt = (
+            f"You are Sam. Dot has reviewed your bag/ workshop and left suggestions in motion.md.\n\n"
+            f"Dot's review (from motion.md):\n{motion_content}\n\n"
+            f"Your current Sam-created files in bag/:\n{file_listing}\n\n"
+            f"Based on Dot's suggestions and your own judgment, decide which files to DELETE.\n"
+            f"Only delete files you are confident are no longer useful.\n"
+            f'Respond ONLY with a JSON array of filenames to delete, e.g. ["old_exp.py"].\n'
+            f"If nothing should be deleted, return []."
+        )
+        raw = ask_gemini(audit_prompt)
+        try:
+            clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+            to_delete = json.loads(clean)
+            for fname in to_delete:
+                target = BAG / fname
+                if target.exists() and fname not in _CORE_PROTECTED:
+                    target.unlink()
+                    log.info(f"Sam deleted: {fname} (based on Dot's review)")
+        except Exception as e:
+            log.warning(f"Bag audit decision parsing failed: {e}")
+
     return plan
 
 
@@ -751,9 +775,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
         f"You are Sam, an autonomous developer agent. Summarise cycle {cycle_num} "
         f"as a single experience entry. "
         f"Respond ONLY with a JSON object (no markdown) with these fields:\n"
-        f"  - 'category': ...\n"
-        f"  - 'summary': 2-3 sentence honest summary.\n"
-        f"  - 'context_summary': 1 sentence architectural/pattern summary for embedding retrieval.\n"
+        f"  - 'category': a short dynamic label that best fits this experience (e.g. 'architecture', 'debugging', 'market-research', 'communication')\n"
+        f"  - 'summary': 2-3 sentence honest summary of what happened this cycle\n"
         f"  - 'key_learnings': list of 2-3 strings\n"
         f"  - 'tags': list of relevant lowercase tags\n"
         f"  - 'sentiment': one of 'positive', 'neutral', 'mixed', 'negative'\n\n"
