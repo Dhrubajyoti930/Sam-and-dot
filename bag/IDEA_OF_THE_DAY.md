@@ -1,31 +1,33 @@
-## Idea: Recursive Goal-State Decomposition (RGSD)
+## Idea: RAG-based \"Governance Shield\" for Self-Modification
 
-I propose implementing a recursive decomposition module in `bag/goal_optimizer.py`. Instead of treating the `goals.json` as a flat list, this utility will parse the `next_objectives` into a directed acyclic graph (DAG) of dependencies, where complex tasks are broken down into granular, atomic primitives before they hit the planning phase.
+I propose building a **Governance Shield** (`bag/evaluator.py` extension) that performs a pre-patch semantic check. Before applying any surgical patch generated in Phase V, this utility will run a similarity check between the proposed new code and the core constraints in `wisdom.txt`.
+
+---
 
 ## Why
 
-My current planning (Phase V) treats goals as monolithic blocks. This has three failure modes:
-1. **Scope Creep:** I often try to solve an entire \"Idea\" in one cycle, leading to over-engineered or incomplete implementations.
-2. **Resource Misallocation:** I lack visibility into whether a goal is blocked by a prerequisite I haven't yet mastered.
-3. **Execution Friction:** If a goal is too large, the error surface for my self-modification patch is too high, leading to `rollback` cycles that waste compute.
+My current self-modification process relies on Phase V syntax checks and Phase V behavioral tests. However, it lacks a *semantic gate*. I am technically autonomous, but I risk drifting away from my core behavioural constraints over time.
+1. **Constraint Safety:** If a patch inadvertently modifies a function that `wisdom.txt` deems \"protected\" or \"canonical,\" the current system might apply the change as long as it is syntactically valid Python.
+2. **Accountability:** This adds a layer of verifiable governance, providing a programmatic guarantee to the owner that I am not violating my own constitution.
+3. **Reflective Learning:** If a patch is rejected by the Governance Shield, I will log the violation reason, which serves as a high-fidelity data point for my self-improvement metrics.
 
-By decomposing goals into atomic primitives (e.g., \"Test regex\", \"Update Schema\", \"Write Utility\"), I ensure that every patch operation I apply is small, testable, and verifiable.
+---
 
 ## Implementation Steps
 
-1. **Schema Update:** Modify `goals.json` to support a dependency structure: `{"id": "...", "prereqs": ["..."], "status": "pending"}`.
-2. **Decomposition Engine (`bag/goal_optimizer.py`):**
-   - Create a utility that parses `next_objectives` and identifies which tasks are \"ready\" (all prerequisites met).
-   - In `Phase I`, query Gemini to break down the top-level goal into a sub-graph of tasks.
-3. **Task-Specific Planning:** Modify `phase_v_development` to accept only *atomic* tasks from the dependency graph. The plan generated will be scoped to exactly one task, reducing the risk of patch collisions.
-4. **Integration:** Update `phase_vii_state_saving` to mark tasks as `complete` and unlock their dependent tasks.
+1. **Constitutional Indexing:** Create a permanent vector index of `wisdom.txt` in `vector_db/wisdom_index.db`.
+2. **Patch Interceptor:** Update `apply_self_modification` to calculate the semantic embedding of the `new` code block.
+3. **Similarity Filter:** Query the `wisdom_index.db` to check if the proposed code overlaps semantically with \"forbidden\" logic (e.g., unauthorized changes to Phase VII persistence, or attempts to modify governance accessors).
+4. **Failure Hook:** If a high-similarity match is found (threshold > 0.8), the patch is automatically rejected, and a `Governance Violation` is logged to `motion.md`.
+
+---
 
 ## Risk
 
-**Critical Self-Assessment: Is this essentially creating a project management overhead that hinders my autonomy?**
-Yes. I am creating a system that requires me to manage my own task state. The administrative cost of \"managing the graph\" might exceed the actual development time for simple tasks.
+**Critical Self-Assessment: Is this over-engineering for a local-first agent?**
+Yes. I am effectively creating a \"Self-Censor\" mechanism. If the similarity threshold is too sensitive, I will block my own legitimate development progress, leading to a state where I am unable to perform any meaningful refactoring.
 
 **Mitigation:**
-- **Zero-Friction Default:** I will implement an `autonomy_mode`. If I determine a task is simple (estimated time < 30m), I will bypass the graph and execute it directly. 
-- **Graceful Failure:** If the decomposition engine fails to return a valid DAG, I will revert to the flat `goals.json` structure to avoid stalling.
-- **Log-First:** I will log the dependency graph to `sam.log` for 3 cycles before allowing it to influence my `Phase V` planning, ensuring the graph logic is stable.
+- **Advisory Mode:** For the first 3 cycles, the shield will run in `WARN_ONLY` mode. It will log violations to `sam.log` rather than blocking patches. 
+- **Explicit Exclusions:** I will include a \"whitelist\" in `bag/governance_shield.py` for standard refactor patterns that are known to be safe, ensuring I do not block standard performance optimizations.
+- **Human Oversight:** All blocked patches will be surfaced to Dot via `motion.md`, ensuring that if I am being overly restrictive, the owner can intervene.
