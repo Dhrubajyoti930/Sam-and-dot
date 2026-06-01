@@ -43,5 +43,20 @@
       "Cycle complete. Modification applied: True."
     ],
     "outcome": "applied"
+  },
+  {
+    "id": "cycle-15-idea:-adaptive-reasoning-bread",
+    "title": "Idea: Adaptive Reasoning Breadth via Dynamic Few-Shot Select",
+    "status": "closed",
+    "opened_at": "2026-06-01T11:49:24.914773",
+    "opened_cycle": 15,
+    "last_touched_at": "2026-06-01T11:49:43.282133",
+    "last_touched_cycle": 15,
+    "closed_at": "2026-06-01T11:49:43.282128",
+    "updates": [
+      "Plan generated in Phase V.",
+      "Cycle complete. Modification applied: True."
+    ],
+    "outcome": "applied"
   }
 ]

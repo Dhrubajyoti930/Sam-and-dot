@@ -142,3 +142,96 @@ def update_cache(prompt: str, response: str, cycle: int):
 ```
 
 *Note: I switched the pruning logic to delete the **oldest** entries (`cycle ASC`) rather than trying to keep the newest ones via a subselect, which is more idiomatic for a sliding-window cache.*
+
+---
+
+## ⚠️ Sam Alert — 2026-06-01 11:49 UTC
+
+Self-modification failed the post-apply syntax check. Rolled back to previous snapshot. Plan that caused failure:
+
+```
+## Surgical Patch Plan
+
+**Security & Stability Risks:**
+1.  **Memory Overhead:** The `FewShotManager` will load `experiences.json` into memory. For large histories, this is minor, but it scales linearly.
+2.  **Semantic Quality:** The effectiveness of the few-shot selection depends entirely on the quality of past experiences. If `experiences.json` contains low-quality summaries, the model's reasoning may be degraded.
+3.  **Dependency:** This adds a dependency on `bag/few_shot_manager.py`. If this file fails to initialize, the primary `ask_gemini` loop must handle the failure gracefully (fallback to no-few-shot).
+
+---
+
+### Implementation Plan
+
+**1. Create `bag/few_shot_manager.py`:**
+This file will handle the extraction of relevant past successes from `experiences.json`.
+
+**2. Modify `sam.py`:**
+Integrate the manager into the `ask_gemini` function to dynamically inject examples.
+
+---
+
+### Proposed Changes
+
+#### File: `bag/few_shot_manager.py` (New File)
+*Operation: insert_after (creating new file)*
+*Anchor: (Empty string - create new file)*
+*New:*
+```python
+import json
+from pathlib import Path
+
+def get_few_shot_example(task_category: str) -> str:
+    exp_path = Path(__file__).parent / "experiences.json"
+    if not exp_path.exists():
+        return ""
+    
+    with open(exp_path) as f:
+        data = json.load(f)
+    
+    # Filter for positive sentiment, relevant category
+    candidates = [
+        e for e in data 
+        if e.get("sentiment") == "positive" and e.get("category") == task_category
+    ]
+    
+    # Return most recent matching example
+    if candidates:
+        best = candidates[-1]
+        return f"Structure Example:\nSummary: {best['summary']}\nLearnings: {', '.join(best['key_learnings'])}"
+    return ""
+```
+
+#### File: `sam.py`
+*Operation: insert_after*
+*Anchor: `from bag.semantic_cache import check_cache, update_cache`*
+*New:*
+```python
+from bag.few_shot_manager import get_few_shot_example
+```
+
+*Operation: replace*
+*Old:*
+```python
+    cached = check_cache(prompt, goals.get("cycles", 0))
+    if cached: return cached
+
+    for attempt in range(retries):
+```
+*New:*
+```python
+    cached = check_cache(prompt, goals.get("cycles", 0))
+    if cached: return cached
+    
+    # Inject few-shot if reasoning task
+    if "Plan" in prompt or "Synthesis" in prompt:
+        example = get_few_shot_example("architecture")
+        if example:
+            prompt = f"{example}\n\n{prompt}"
+
+    for attempt in range(retries):
+```
+
+---
+
+### Validation
+I will add a test case to `bag/tests.py` in the next cycle to verify `bag/few_shot_manager.py` correctly handles an empty or missing `experiences.json` without crashing.
+```

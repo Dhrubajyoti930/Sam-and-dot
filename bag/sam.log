@@ -918,3 +918,167 @@ I have opted to integrate the throttle logic as a helper in `sam.py` that consum
 2026-06-01 11:47:48,772 [INFO] request.json already pending — skipping email request this cycle.
 2026-06-01 11:47:48,772 [INFO] Cycle complete.
 2026-06-01 11:47:48,773 [INFO] [Evaluator] Only 4 experiences — skipping (need 5+).
+2026-06-01 11:48:40,289 [INFO] ═══════════════════════════════════
+2026-06-01 11:48:40,289 [INFO]   SAM — Operational Cycle Starting 
+2026-06-01 11:48:40,289 [INFO] ═══════════════════════════════════
+2026-06-01 11:48:40,522 [INFO] ── Phase I: Deep Learning ──
+2026-06-01 11:48:40,547 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:48:43,884 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:48:43,889 [INFO] Phase I complete.
+2026-06-01 11:48:43,889 [INFO] ── Phase II: Spaced Repetition ──
+2026-06-01 11:48:51,891 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:48:53,536 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:48:53,539 [INFO] Phase II complete.
+2026-06-01 11:48:53,540 [INFO] ── Phase III: Market & Code Ingestion ──
+2026-06-01 11:49:01,541 [INFO] Phase III complete.
+2026-06-01 11:49:01,541 [INFO] ── Phase IV: The Synthesis ──
+2026-06-01 11:49:09,544 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:49:13,130 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:49:13,136 [INFO] IDEA_OF_THE_DAY.md written.
+2026-06-01 11:49:13,136 [INFO] ── Phase V: Development & Refactor ──
+2026-06-01 11:49:13,136 [INFO] motion.md read.
+2026-06-01 11:49:21,138 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:49:24,910 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:49:24,914 [INFO] Phase V complete.
+2026-06-01 11:49:24,915 [INFO] Worklog entry opened: Idea: Adaptive Reasoning Breadth via Dynamic Few-Shot Select
+2026-06-01 11:49:32,916 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:49:33,494 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:49:33,497 [INFO] ── Bag Module Health Check ──
+2026-06-01 11:49:33,497 [INFO] All bag modules are syntax-clean.
+2026-06-01 11:49:33,498 [INFO] Snapshot saved → sam_20260601T114933Z.py
+2026-06-01 11:49:33,498 [INFO] Bag snapshot saved → bag_20260601T114933Z.json (10 files)
+2026-06-01 11:49:33,499 [INFO] ── Self-Modification: Parsing Surgical Patch ──
+2026-06-01 11:49:41,500 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:49:43,212 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:49:43,216 [INFO] Created new file via insert_after → bag/few_shot_manager.py
+2026-06-01 11:49:43,216 [INFO] Applied insert_after → sam.py
+2026-06-01 11:49:43,217 [INFO] Applied replace → sam.py
+2026-06-01 11:49:43,275 [ERROR] Syntax check failed on sam.py — initiating rollback.
+2026-06-01 11:49:43,276 [WARNING] Rolled back sam.py → sam_20260601T114933Z.py
+2026-06-01 11:49:43,276 [WARNING] Rolled back bag/__init__.py
+2026-06-01 11:49:43,276 [WARNING] Rolled back bag/critique.py
+2026-06-01 11:49:43,277 [WARNING] Rolled back bag/dot.py
+2026-06-01 11:49:43,277 [WARNING] Rolled back bag/emailer.py
+2026-06-01 11:49:43,277 [WARNING] Rolled back bag/evaluator.py
+2026-06-01 11:49:43,277 [WARNING] Rolled back bag/matrix_optimizer.py
+2026-06-01 11:49:43,278 [WARNING] Rolled back bag/semantic_cache.py
+2026-06-01 11:49:43,278 [WARNING] Rolled back bag/tests.py
+2026-06-01 11:49:43,278 [WARNING] Rolled back bag/versioning.py
+2026-06-01 11:49:43,278 [WARNING] Rolled back bag/worklog.py
+2026-06-01 11:49:43,278 [WARNING] Bag files restored from bag_20260601T114933Z.json (10 files)
+2026-06-01 11:49:43,279 [WARNING] Rolled back sam.py → sam_20260601T114933Z.py
+2026-06-01 11:49:43,279 [WARNING] Rolled back bag/__init__.py
+2026-06-01 11:49:43,279 [WARNING] Rolled back bag/critique.py
+2026-06-01 11:49:43,280 [WARNING] Rolled back bag/dot.py
+2026-06-01 11:49:43,280 [WARNING] Rolled back bag/emailer.py
+2026-06-01 11:49:43,280 [WARNING] Rolled back bag/evaluator.py
+2026-06-01 11:49:43,280 [WARNING] Rolled back bag/matrix_optimizer.py
+2026-06-01 11:49:43,280 [WARNING] Rolled back bag/semantic_cache.py
+2026-06-01 11:49:43,281 [WARNING] Rolled back bag/tests.py
+2026-06-01 11:49:43,281 [WARNING] Rolled back bag/versioning.py
+2026-06-01 11:49:43,281 [WARNING] Rolled back bag/worklog.py
+2026-06-01 11:49:43,281 [WARNING] Bag files restored from bag_20260601T114933Z.json (10 files)
+2026-06-01 11:49:43,281 [WARNING] Alert written to motion.md: Self-modification failed the post-apply syntax check. Rolled back to previous snapshot. Plan that caused failure:
+
+```
+## Surgical Patch Plan
+
+**Security & Stability Risks:**
+1.  **Memory Overhead:** The `FewShotManager` will load `experiences.json` into memory. For large histories, this is minor, but it scales linearly.
+2.  **Semantic Quality:** The effectiveness of the few-shot selection depends entirely on the quality of past experiences. If `experiences.json` contains low-quality summaries, the model's reasoning may be degraded.
+3.  **Dependency:** This adds a dependency on `bag/few_shot_manager.py`. If this file fails to initialize, the primary `ask_gemini` loop must handle the failure gracefully (fallback to no-few-shot).
+
+---
+
+### Implementation Plan
+
+**1. Create `bag/few_shot_manager.py`:**
+This file will handle the extraction of relevant past successes from `experiences.json`.
+
+**2. Modify `sam.py`:**
+Integrate the manager into the `ask_gemini` function to dynamically inject examples.
+
+---
+
+### Proposed Changes
+
+#### File: `bag/few_shot_manager.py` (New File)
+*Operation: insert_after (creating new file)*
+*Anchor: (Empty string - create new file)*
+*New:*
+```python
+import json
+from pathlib import Path
+
+def get_few_shot_example(task_category: str) -> str:
+    exp_path = Path(__file__).parent / "experiences.json"
+    if not exp_path.exists():
+        return ""
+    
+    with open(exp_path) as f:
+        data = json.load(f)
+    
+    # Filter for positive sentiment, relevant category
+    candidates = [
+        e for e in data 
+        if e.get("sentiment") == "positive" and e.get("category") == task_category
+    ]
+    
+    # Return most recent matching example
+    if candidates:
+        best = candidates[-1]
+        return f"Structure Example:\nSummary: {best['summary']}\nLearnings: {', '.join(best['key_learnings'])}"
+    return ""
+```
+
+#### File: `sam.py`
+*Operation: insert_after*
+*Anchor: `from bag.semantic_cache import check_cache, update_cache`*
+*New:*
+```python
+from bag.few_shot_manager import get_few_shot_example
+```
+
+*Operation: replace*
+*Old:*
+```python
+    cached = check_cache(prompt, goals.get("cycles", 0))
+    if cached: return cached
+
+    for attempt in range(retries):
+```
+*New:*
+```python
+    cached = check_cache(prompt, goals.get("cycles", 0))
+    if cached: return cached
+    
+    # Inject few-shot if reasoning task
+    if "Plan" in prompt or "Synthesis" in prompt:
+        example = get_few_shot_example("architecture")
+        if example:
+            prompt = f"{example}\n\n{prompt}"
+
+    for attempt in range(retries):
+```
+
+---
+
+### Validation
+I will add a test case to `bag/tests.py` in the next cycle to verify `bag/few_shot_manager.py` correctly handles an empty or missing `experiences.json` without crashing.
+```
+2026-06-01 11:49:43,282 [INFO] Worklog entry closed: cycle-15-idea:-adaptive-reasoning-bread (applied)
+2026-06-01 11:49:43,282 [INFO] ── Phase VI: Cognitive Evolution ──
+2026-06-01 11:49:51,283 [INFO] Phase VI complete.
+2026-06-01 11:49:51,283 [INFO] ── Phase VII: State Saving ──
+2026-06-01 11:49:59,284 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:50:00,403 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:50:00,406 [INFO] 1% metric: Semantic Cache Hit Latency Reduction
+2026-06-01 11:50:00,407 [INFO] goals.json updated.
+2026-06-01 11:50:00,416 [INFO] WHO_I_AM.md updated.
+2026-06-01 11:50:08,417 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:50:09,475 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:50:09,478 [INFO] experiences.json updated — 5 entries.
+2026-06-01 11:50:09,478 [INFO] Cycle 15 complete. 1% metric: Semantic Cache Hit Latency Reduction
+2026-06-01 11:50:09,479 [INFO] request.json already pending — skipping email request this cycle.
+2026-06-01 11:50:09,479 [INFO] Cycle complete.
+2026-06-01 11:50:09,480 [INFO] [Evaluator] Memory integrity check passed — 5 experiences, quality OK.

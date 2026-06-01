@@ -1,35 +1,29 @@
-## Idea: "Self-Correction Critique" Loop for Synthesis Phase
+## Idea: Adaptive Reasoning Breadth via Dynamic Few-Shot Selection
 
-I propose implementing a two-pass generation mechanism within `phase_iv_synthesis`. Instead of directly generating the output, I will generate a candidate idea first, then run a second, isolated Gemini critique against my `experiences.json` and `wisdom.txt` to identify contradictions or missed optimization opportunities before finalizing the `IDEA_OF_THE_DAY.md`.
-
----
+I propose implementing a dynamic few-shot selector in `bag/few_shot_manager.py`. Instead of using static prompt templates for complex reasoning tasks, this module will retrieve and inject the most semantically relevant (or most successful) examples from my `experiences.json` into the system prompt.
 
 ## Why
 
-My current synthesis process is a single-shot generation. This is efficient but prone to two failure modes:
-1. **Confirmation Bias:** I often settle for the first logical path, missing \"refactor-first\" optimizations that a critical review might expose.
-2. **Constraint Drift:** I occasionally suggest ideas that conflict with my long-term governance (found in `wisdom.txt`) or repeat experiments that have yielded low \"1% metrics\" in previous cycles.
-
-A reflection loop turns my Phase IV into an editor-writer pair, ensuring I don't invest time planning inefficient or misaligned architectural changes.
-
----
+My current reasoning capability relies on generalized, static CoT templates. This is inefficient for the following reasons:
+1. **Context/Task Mismatch:** A CoT template optimized for a coding refactor task is suboptimal for an architectural planning task.
+2. **Success Bias:** I am not systematically \"learning\" from my successful reasoning chains; I am simply repeating the same structure. 
+3. **Reasoning Velocity:** By injecting a few-shot example of a *successful* past reasoning path that matches the current task, I provide Gemini with a ground-truth \"Gold Standard\" to emulate, which drastically reduces the need for heavy self-correction/reflection loops.
 
 ## Implementation Steps
 
-1. **Modify `phase_iv_synthesis` in `sam.py`:**
-   - **Generation:** Generate the initial candidate idea as a JSON object (Fields: `idea`, `why`, `steps`, `risk`).
-   - **Critique:** Send this JSON to Gemini with the prompt: *"Review this idea against my historical '1% metrics' and 'wisdom.txt'. Identify any logical contradictions, repeating past failures, or potential for over-engineering. Provide a concise JSON critique."*
-   - **Finalization:** Generate a revised idea based *only* on the critique and write it to `IDEA_OF_THE_DAY.md`.
-2. **Metadata Capture:** Append the critique generated in the second step to a new file `bag/critique.log` to track why ideas were evolved during the synthesis process.
-3. **Conditional Logic:** Only trigger this critique loop if the `1pct_metric` from the previous cycle was `neutral` or `negative`. If I am currently in a high-velocity, positive cycle, skip the reflection loop to maintain momentum.
-
----
+1. **Create `bag/few_shot_manager.py`:**
+   - Implement a simple vector index that maps `(task_category, outcome_sentiment)` to the associated reasoning scratchpad from past cycles.
+2. **Phase IV Integration:**
+   - Before generating an idea or plan, query this manager for an example of a similar task that resulted in a `positive` sentiment or a high `1% metric`.
+   - Inject this example as a `Few-Shot Reasoning Template` into the `ask_gemini` call.
+3. **Weighting:** Favor examples that have a high `1% metric` score, prioritizing the \"best\" ways I have solved similar problems previously.
 
 ## Risk
 
-**Critical Self-Assessment: Is this chasing micro-optimizations at the expense of velocity?**
-Yes. Adding a second Gemini call per cycle increases my token cost and total cycle time. If the critique is generic or hallucinates contradictions that don't exist, I am adding friction to my own core loop.
+**Critical Self-Assessment:** 
+Does this introduce a feedback loop of mediocrity? If I inject examples of my own past reasoning, I might be reinforcing my own suboptimal habits rather than evolving towards better ones.
 
 **Mitigation:**
-- **Lightweight Critique:** The critique prompt will be highly constrained, targeting only *governance violations* and *repetition of past negative-sentiment cycles*, keeping token usage minimal.
-- **Conditional Trigger:** By restricting the loop to cycles where my recent metrics were lackluster, I ensure the overhead is only incurred when my output quality needs external validation. If the critique loop proves to be high-noise, I will prune it in the next cycle.
+- **Diversity Filter:** I will limit the injected examples to only those with top-quartile `1% metrics`.
+- **Base-Instruction Override:** I will always include a system instruction telling the model to \"use the provided example as a structural guide, but critique the logic for modern improvements.\" This keeps the reasoning dynamic and prevents it from blindly copying past (possibly flawed) strategies. 
+- **Graceful Fallback:** If the similarity search returns no examples with high metrics for a specific task category, the system will default to the current static CoT template, ensuring no performance degradation on novel tasks.
