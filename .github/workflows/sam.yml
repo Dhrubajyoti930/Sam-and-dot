@@ -48,7 +48,9 @@ jobs:
           stdlib = sys.stdlib_module_names
           missing = set()
 
-          for f in Path('bag').glob('*.py'):
+          for f in Path('bag').rglob('*.py'):
+              if 'rollback_registry' in f.parts:
+                  continue
               try:
                   tree = ast.parse(f.read_text(errors='replace'))
                   for node in ast.walk(tree):
