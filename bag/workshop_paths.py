@@ -2,13 +2,14 @@
 
 from pathlib import Path
 
-from bag.workshop import BLOCKED_DIR_NAMES
+BLOCKED_DIR_NAMES = frozenset({"rollback_registry", "__pycache__", ".git"})
 
 # Root-level bag/*.py that Sam must never patch or delete via workshop flows
 ROOT_PROTECTED_PY = frozenset({
     "dot.py", "emailer.py", "evaluator.py", "matrix_optimizer.py",
     "semantic_cache.py", "tests.py", "versioning.py", "worklog.py", "prompts.py",
-    "patch_ops.py", "workshop.py", "workshop_paths.py", "critique.py",
+    "patch_ops.py", "workshop.py", "workshop_paths.py", "workshop_imports.py",
+    "critique.py",
 })
 
 FORBIDDEN_BASENAMES = frozenset({
@@ -20,9 +21,35 @@ def relative_bag_posix(path: Path, bag: Path) -> str:
     return path.relative_to(bag).as_posix()
 
 
+def normalize_bag_rel(rel: str) -> str:
+    """Path relative to bag/ (no leading bag/)."""
+    rel = str(rel or "").replace("\\", "/").strip().lstrip("/")
+    if rel.startswith("bag/"):
+        rel = rel[4:]
+    return rel
+
+
 def is_blocked_relative(rel: str) -> bool:
     parts = Path(rel).parts
     return any(p in BLOCKED_DIR_NAMES for p in parts)
+
+
+def is_allowed_workshop_destination(path: Path, bag: Path) -> bool:
+    """Whether a .py path may be used as a move target (file may not exist yet)."""
+    if path.suffix != ".py":
+        return False
+    try:
+        rel = relative_bag_posix(path, bag)
+    except ValueError:
+        return False
+    if is_blocked_relative(rel):
+        return False
+    if path.name in FORBIDDEN_BASENAMES:
+        return False
+    parts = Path(rel).parts
+    if len(parts) == 1 and parts[0] in ROOT_PROTECTED_PY:
+        return False
+    return True
 
 
 def is_writable_bag_py(path: Path, bag: Path) -> bool:
