@@ -56,7 +56,8 @@ def update_cache(prompt: str, response: str, cycle: int):
     prompt_hash = _prompt_hash(prompt, cycle)
     conn = get_db()
     conn.execute(
-        "INSERT OR REPLACE INTO cache VALUES (?, ?, ?)",
+        "INSERT OR REPLACE INTO cache (prompt_hash, response, cycle, embedding) "
+        "VALUES (?, ?, ?, NULL)",
         (prompt_hash, response, cycle),
     )
     conn.commit()
