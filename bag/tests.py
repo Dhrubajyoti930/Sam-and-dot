@@ -71,6 +71,16 @@ check(
     "FAIL: bag/dot.py is missing. Dot's watchdog has been removed — critical governance breach."
 )
 
+dot_src = (BAG / "dot.py").read_text(encoding="utf-8")
+check(
+    "from bag.emailer import send_html_email" in dot_src,
+    "FAIL: dot.py must use 'from bag.emailer import' — CI runs python -m bag.dot from repo root.",
+)
+check(
+    "from emailer import" not in dot_src,
+    "FAIL: dot.py still has bare 'from emailer import' — ModuleNotFoundError on GitHub Actions.",
+)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — sam.py structural integrity
@@ -295,14 +305,22 @@ except Exception as e:
 # Every Python helper Sam can modify must parse cleanly.
 # ═══════════════════════════════════════════════════════════════════════════════
 
-for _py_file in sorted(BAG.glob("*.py")):
-    if _py_file.name == "tests.py":
+check(
+    (BAG / "workshop.py").exists(),
+    "FAIL: bag/workshop.py missing — Sam cannot organize workshop folders.",
+)
+
+for _py_file in sorted(BAG.rglob("*.py")):
+    if _py_file.name == "tests.py" and _py_file.parent == BAG:
         continue  # skip self
+    if "rollback_registry" in _py_file.parts:
+        continue
     try:
         _src = _py_file.read_text()
         ast.parse(_src)
     except SyntaxError as _e:
-        check(False, f"FAIL: bag/{_py_file.name} has a syntax error: {_e}. "
+        rel = _py_file.relative_to(BAG).as_posix()
+        check(False, f"FAIL: bag/{rel} has a syntax error: {_e}. "
                      f"Sam's self-modification left a broken helper file.")
     except Exception as _e:
         check(False, f"FAIL: Could not read bag/{_py_file.name}: {_e}")
