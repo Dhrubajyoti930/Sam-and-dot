@@ -1109,14 +1109,6 @@ def run_cycle():
 
     # Phase VII — state persistence (also appends to experiences.json)
     phase_vii_state_saving(goals, skill, idea, plan, evolution)
-    # Phase VII: Compaction
-    if cycle_num % 5 == 0:
-        try:
-            from bag.vector_manager import compact_cache
-            compact_cache()
-            log.info("Vector store compaction performed.")
-        except Exception as e:
-            log.warning(f"Vector store compaction failed: {e}")
 
     # Optional: write an email request for Dot to handle
     goals_fresh = load_goals()   # reload after save

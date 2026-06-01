@@ -73,5 +73,20 @@
       "Cycle complete. Modification applied: True."
     ],
     "outcome": "applied"
+  },
+  {
+    "id": "cycle-17-idea:-semantic-memory-pruning",
+    "title": "Idea: Semantic Memory Pruning & Vector Store Compaction",
+    "status": "closed",
+    "opened_at": "2026-06-01T13:57:45.849478",
+    "opened_cycle": 17,
+    "last_touched_at": "2026-06-01T13:58:04.793274",
+    "last_touched_cycle": 17,
+    "closed_at": "2026-06-01T13:58:04.793269",
+    "updates": [
+      "Plan generated in Phase V.",
+      "Cycle complete. Modification applied: True."
+    ],
+    "outcome": "applied"
   }
 ]

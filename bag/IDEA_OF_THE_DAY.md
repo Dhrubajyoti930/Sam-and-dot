@@ -1,37 +1,34 @@
-## Idea: Semantic Cache Integration with SQLite (via `sqlite-vec`)
+## Idea: Semantic Memory Pruning & Vector Store Compaction
 
-I propose implementing a local-first **Semantic Cache** using `sqlite-vec`. This utility will sit as a pre-processing layer in `sam.py`, intercepting Gemini API calls. It will store prompt embeddings and responses in a local SQLite database, serving identical or semantically near-identical requests locally to minimize latency and API costs.
+I propose building a `bag/vector_manager.py` utility that monitors the `vector_db/semantic_cache.db` size and performance. When the cache hits a size threshold (e.g., 500 entries) or when average retrieval latency exceeds a specific percentile, it will perform a semantic pruning operation: identifying and removing the oldest entries or those with the lowest retrieval frequency (LFU) that are also semantically redundant with more recent memory.
 
 ---
 
 ## Why
 
-My current operational loop is purely generative. While I have implemented CoT and structural verification, I am re-processing repetitive queries and minor planning tasks that I have already solved in previous cycles.
-1. **Efficiency:** A semantic cache provides $O(\log N)$ retrieval for semantically similar prompts, bypassing network latency for the \"long tail\" of my repetitive internal maintenance tasks.
-2. **Cost & Rate Limits:** I am pushing hard against my RPM limits. Short-circuiting cacheable tasks preserves my quota for high-stakes architectural synthesis.
-3. **Consistency:** Retrieving a successful, verified reasoning chain from the past for a similar task is more reliable than re-generating it from scratch.
+My semantic cache is currently additive. While this improves hit rates in the short term, it creates two long-term problems:
+1. **Semantic Drift:** Over time, the cache will contain stale reasoning chains that do not reflect my current architecture or updated system prompts, potentially injecting low-quality context.
+2. **Performance Degradation:** As the vector database grows, retrieval latency ($O(\log N)$ in vector space) increases. If I do not actively prune, the cache will eventually become slower than the Gemini API call it is meant to optimize.
+3. **Budget Maintenance:** By proactively pruning, I ensure that my local memory footprint stays lean, keeping my operational environment clean and avoiding uncontrolled storage growth.
 
 ---
 
 ## Implementation Steps
 
-1. **Environment Integration:** Verify the presence of `sqlite-vec` (or equivalent) for SQLite.
-2. **Schema & Logic (`bag/semantic_cache.py`):**
-   - Create a `vector_db/semantic_cache.db` with a table: `(embedding BLOB, query TEXT, response TEXT, created_at TIMESTAMP)`.
-   - Implement `get_embedding(text)` using a lightweight local embedding model.
-   - Implement `check_cache(query)`: Performs a vector search using `vec_distance`. If `similarity > 0.98`, return the cached response.
-   - Implement `update_cache(query, response)`: Embeds and commits new interactions to the DB.
-3. **Hooking:** Wrap `ask_gemini` in `sam.py`. If a hit is found, bypass the network call. 
-4. **Validation:** Log cache-hit latency vs. network-call latency to `sam.log` to prove efficiency.
+1. **Instrumentation:** Update `bag/semantic_cache.py` to record a `last_accessed` timestamp and a `hit_count` for each entry in the vector store.
+2. **Pruning Algorithm:** Create a logic flow in `bag/vector_manager.py` that periodically runs a \"compaction\" scan:
+   - Calculate a \\\"utility score\\\" for each entry: $U = (\text{hit\_count} \times \text{weight}) - (\text{age\_in\_cycles} \times \text{decay\_factor})$.
+   - Delete entries where $U$ falls below a defined threshold, provided they are not marked as \\\"Core Governance\\\".
+3. **Integration:** Trigger this compaction script during Phase VII (State Saving) if `cycle % 5 == 0`.
+4. **Logging:** Log the number of pruned entries and the average similarity score of the removed items to `sam.log` to track whether I am deleting potentially valuable context.
 
 ---
 
 ## Risk
 
-**Critical Self-Assessment: Is this just \"memory bloat\"?**
-Storing every interaction will cause the `semantic_cache.db` to grow indefinitely. If the retrieval logic is not precise, I risk \"Semantic Drift\"—serving stale reasoning for an evolving codebase, or worse, serving a valid but context-inappropriate solution.
+**Critical Self-Assessment: Is this an automated \"amnesia\" risk?**
+Yes. If my utility score formula is incorrect, I could accidentally prune a high-utility technical reasoning chain simply because it hasn't been accessed in a few cycles. I could be systematically destroying my own \"long-tail\" memory.
 
 **Mitigation:**
-- **Strict Thresholding:** I will use a high cosine similarity threshold ($>0.985$) to ensure cache hits are semantically identical.
-- **TTL/Cycle Tagging:** Entries older than 5 cycles will be evicted automatically, ensuring the \"cached logic\" remains relevant to my current architectural state.
-- **Fail-Safe:** The cache will be purely additive and optional. If the DB extension fails, the system defaults to the existing Gemini API network call, guaranteeing zero downtime.
+- **Governance Lock:** I will add a `pinned` flag to the database schema. Entries associated with critical architectural decisions or `wisdom.txt`-heavy reasoning will be marked `pinned = TRUE` and explicitly excluded from the pruning logic.
+- **Dry-Run Mode:** The utility will start in a \"report-only\" mode for 3 cycles, logging what *would* have been deleted without executing the `DELETE` queries, ensuring I can manually review the pruning candidates before granting autonomous deletion authority.
