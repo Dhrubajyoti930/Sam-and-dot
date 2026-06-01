@@ -1,11 +1,25 @@
-import sqlite3
 import hashlib
+import re
+import sqlite3
 from pathlib import Path
 
-# Fix #4 — absolute path so this works regardless of working directory
 DB_PATH = Path(__file__).parent.parent / "vector_db" / "semantic_cache.db"
+_MAX_CACHE_ENTRIES = 500
 
-_MAX_CACHE_ENTRIES = 500  # Fix #11 — cap cache size
+_PHASE_VI_MARKERS = (
+    "Cognitive Evolution",
+    "Phase VI",
+    "PATCHABLE_PROMPTS",
+    "before_snippet",
+)
+
+
+def _is_phase_vi_prompt(prompt: str) -> bool:
+    if any(marker in prompt for marker in _PHASE_VI_MARKERS):
+        return True
+    if re.search(r"\[cycle=\d+\s+pv=\d+\]", prompt):
+        return True
+    return False
 
 
 def get_db():
@@ -18,12 +32,18 @@ def get_db():
     return conn
 
 
+def _prompt_hash(prompt: str, cycle: int) -> str:
+    normalised = re.sub(r"\[cycle=\d+\s+pv=\d+\]\s*", "", prompt).strip()
+    return hashlib.sha256(f"{cycle}:{normalised}".encode()).hexdigest()
+
+
 def check_cache(prompt: str, current_cycle: int):
-    prompt_hash = hashlib.sha256(prompt.encode()).hexdigest()
+    if _is_phase_vi_prompt(prompt):
+        return None
     conn = get_db()
     cursor = conn.execute(
         "SELECT response FROM cache WHERE prompt_hash = ? AND cycle >= ?",
-        (prompt_hash, current_cycle - 5),
+        (_prompt_hash(prompt, current_cycle), current_cycle - 5),
     )
     row = cursor.fetchone()
     conn.close()
@@ -31,15 +51,15 @@ def check_cache(prompt: str, current_cycle: int):
 
 
 def update_cache(prompt: str, response: str, cycle: int):
-    prompt_hash = hashlib.sha256(prompt.encode()).hexdigest()
+    if _is_phase_vi_prompt(prompt):
+        return
+    prompt_hash = _prompt_hash(prompt, cycle)
     conn = get_db()
     conn.execute(
         "INSERT OR REPLACE INTO cache VALUES (?, ?, ?)",
         (prompt_hash, response, cycle),
     )
     conn.commit()
-
-    # Fix #11 — prune oldest entries beyond the cap
     count = conn.execute("SELECT COUNT(*) FROM cache").fetchone()[0]
     if count > _MAX_CACHE_ENTRIES:
         conn.execute(
@@ -48,5 +68,22 @@ def update_cache(prompt: str, response: str, cycle: int):
             (_MAX_CACHE_ENTRIES,),
         )
         conn.commit()
+    conn.close()
 
+
+def invalidate_phase_vi_cache():
+    """Remove cached responses likely tied to Phase VI evolution prompts."""
+    conn = get_db()
+    rows = conn.execute("SELECT prompt_hash, response, cycle FROM cache").fetchall()
+    for prompt_hash, response, cycle in rows:
+        if response and any(m in response[:500] for m in ("before_snippet", "target_prompt", "scratchpad")):
+            conn.execute("DELETE FROM cache WHERE prompt_hash = ?", (prompt_hash,))
+    conn.commit()
+    conn.close()
+
+
+def invalidate_cycle(cycle: int):
+    conn = get_db()
+    conn.execute("DELETE FROM cache WHERE cycle = ?", (cycle,))
+    conn.commit()
     conn.close()
