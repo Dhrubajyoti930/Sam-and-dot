@@ -318,7 +318,7 @@ def dispatch_email() -> str:
 
     intent             = request.get("intent", "")
     target_description = request.get("target_description", "")
-    request.get("tone", "professional")
+    tone               = request.get("tone", "professional")
     context            = request.get("context", "")
     cycle              = request.get("cycle", "?")
 
@@ -437,42 +437,50 @@ def dispatch_email() -> str:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def excavate_bag() -> str:
-    log.info("── Task 4: Bag Excavation ──")
+    log.info("── Task 4: Bag Review ──")
+
+    # Core files Dot never questions — infrastructure, not experiments
+    DOT_PROTECTED = {
+        "dot.py", "emailer.py", "evaluator.py", "matrix_optimizer.py",
+        "semantic_cache.py", "tests.py", "versioning.py", "worklog.py",
+    }
 
     py_files = [
-        f for f in BAG.rglob("*.py")
-        if f.name not in ("dot.py", "emailer.py")
+        f for f in sorted(BAG.glob("*.py"))
+        if f.name not in DOT_PROTECTED
         and "rollback_registry" not in str(f)
     ]
 
     if not py_files:
-        log.info("No candidate files found in bag/.")
-        return "(No broken experiments found to rehabilitate this cycle.)"
+        log.info("No Sam-created files to review in bag/.")
+        return "(No Sam-created files found for review this cycle.)"
 
-    candidates = []
-    for fp in py_files[:2]:   # cap to 2 to protect budget
+    # Read all Sam-created files in full for Dot's big-context review
+    file_blocks = []
+    for fp in py_files:
         try:
             src = fp.read_text(errors="replace")
-            candidates.append(f"### {fp.name}\n```python\n{src}\n```")
+            file_blocks.append(f"### {fp.name}\n```python\n{src}\n```")
         except Exception:
-            pass
+            file_blocks.append(f"### {fp.name}\n(could not read)")
 
-    if not candidates:
-        return "(Could not read candidate files.)"
-
-    joined = "\n\n".join(candidates)
+    joined = "\n\n".join(file_blocks)
     _sleep()
     prompt = (
-        "You are Dot, excavating Sam's bag/ directory for old, broken, or abandoned experiments.\n"
-        "Below are Python file snippets found in bag/. For each:\n"
-        "1. Diagnose what it was trying to do.\n"
-        "2. Identify the most likely reason it's incomplete or broken.\n"
-        "3. Provide a minimal patch or completion that makes it functional.\n\n"
+        "You are Dot, reviewing Sam's bag/ workshop directory.\n"
+        "Sam creates files here as experiments and prototypes. Your job is to evaluate each one\n"
+        "and give Sam a clear, honest recommendation: keep or delete — and why.\n\n"
+        "For each file below:\n"
+        "1. Describe what it does in one sentence.\n"
+        "2. Assess whether it is useful, broken, redundant, or abandoned.\n"
+        "3. Recommend: KEEP or DELETE, with a specific reason.\n\n"
+        "Be direct. Sam will read your suggestions and make his own final decision.\n\n"
         f"{joined}\n\n"
-        "Be precise and surgical. Sam will use your patches to rehabilitate these files."
+        "Format your response as a markdown list, one entry per file:\n"
+        "- **filename.py** — [one-sentence description] → **KEEP** / **DELETE**: [reason]"
     )
     result = ask_gemini(prompt)
-    log.info("Bag excavation complete.")
+    log.info("Bag review complete.")
     return result
 
 
