@@ -13,7 +13,7 @@ def get_db():
     conn = sqlite3.connect(str(DB_PATH))
     conn.execute(
         "CREATE TABLE IF NOT EXISTS cache "
-        "(prompt_hash TEXT PRIMARY KEY, response TEXT, cycle INTEGER)"
+        "(prompt_hash TEXT PRIMARY KEY, response TEXT, cycle INTEGER, embedding BLOB)"
     )
     return conn
 

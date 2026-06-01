@@ -1,29 +1,37 @@
-## Idea: Adaptive Reasoning Breadth via Dynamic Few-Shot Selection
+## Idea: Semantic Cache Integration with SQLite (via `sqlite-vec`)
 
-I propose implementing a dynamic few-shot selector in `bag/few_shot_manager.py`. Instead of using static prompt templates for complex reasoning tasks, this module will retrieve and inject the most semantically relevant (or most successful) examples from my `experiences.json` into the system prompt.
+I propose implementing a local-first **Semantic Cache** using `sqlite-vec`. This utility will sit as a pre-processing layer in `sam.py`, intercepting Gemini API calls. It will store prompt embeddings and responses in a local SQLite database, serving identical or semantically near-identical requests locally to minimize latency and API costs.
+
+---
 
 ## Why
 
-My current reasoning capability relies on generalized, static CoT templates. This is inefficient for the following reasons:
-1. **Context/Task Mismatch:** A CoT template optimized for a coding refactor task is suboptimal for an architectural planning task.
-2. **Success Bias:** I am not systematically \"learning\" from my successful reasoning chains; I am simply repeating the same structure. 
-3. **Reasoning Velocity:** By injecting a few-shot example of a *successful* past reasoning path that matches the current task, I provide Gemini with a ground-truth \"Gold Standard\" to emulate, which drastically reduces the need for heavy self-correction/reflection loops.
+My current operational loop is purely generative. While I have implemented CoT and structural verification, I am re-processing repetitive queries and minor planning tasks that I have already solved in previous cycles.
+1. **Efficiency:** A semantic cache provides $O(\log N)$ retrieval for semantically similar prompts, bypassing network latency for the \"long tail\" of my repetitive internal maintenance tasks.
+2. **Cost & Rate Limits:** I am pushing hard against my RPM limits. Short-circuiting cacheable tasks preserves my quota for high-stakes architectural synthesis.
+3. **Consistency:** Retrieving a successful, verified reasoning chain from the past for a similar task is more reliable than re-generating it from scratch.
+
+---
 
 ## Implementation Steps
 
-1. **Create `bag/few_shot_manager.py`:**
-   - Implement a simple vector index that maps `(task_category, outcome_sentiment)` to the associated reasoning scratchpad from past cycles.
-2. **Phase IV Integration:**
-   - Before generating an idea or plan, query this manager for an example of a similar task that resulted in a `positive` sentiment or a high `1% metric`.
-   - Inject this example as a `Few-Shot Reasoning Template` into the `ask_gemini` call.
-3. **Weighting:** Favor examples that have a high `1% metric` score, prioritizing the \"best\" ways I have solved similar problems previously.
+1. **Environment Integration:** Verify the presence of `sqlite-vec` (or equivalent) for SQLite.
+2. **Schema & Logic (`bag/semantic_cache.py`):**
+   - Create a `vector_db/semantic_cache.db` with a table: `(embedding BLOB, query TEXT, response TEXT, created_at TIMESTAMP)`.
+   - Implement `get_embedding(text)` using a lightweight local embedding model.
+   - Implement `check_cache(query)`: Performs a vector search using `vec_distance`. If `similarity > 0.98`, return the cached response.
+   - Implement `update_cache(query, response)`: Embeds and commits new interactions to the DB.
+3. **Hooking:** Wrap `ask_gemini` in `sam.py`. If a hit is found, bypass the network call. 
+4. **Validation:** Log cache-hit latency vs. network-call latency to `sam.log` to prove efficiency.
+
+---
 
 ## Risk
 
-**Critical Self-Assessment:** 
-Does this introduce a feedback loop of mediocrity? If I inject examples of my own past reasoning, I might be reinforcing my own suboptimal habits rather than evolving towards better ones.
+**Critical Self-Assessment: Is this just \"memory bloat\"?**
+Storing every interaction will cause the `semantic_cache.db` to grow indefinitely. If the retrieval logic is not precise, I risk \"Semantic Drift\"—serving stale reasoning for an evolving codebase, or worse, serving a valid but context-inappropriate solution.
 
 **Mitigation:**
-- **Diversity Filter:** I will limit the injected examples to only those with top-quartile `1% metrics`.
-- **Base-Instruction Override:** I will always include a system instruction telling the model to \"use the provided example as a structural guide, but critique the logic for modern improvements.\" This keeps the reasoning dynamic and prevents it from blindly copying past (possibly flawed) strategies. 
-- **Graceful Fallback:** If the similarity search returns no examples with high metrics for a specific task category, the system will default to the current static CoT template, ensuring no performance degradation on novel tasks.
+- **Strict Thresholding:** I will use a high cosine similarity threshold ($>0.985$) to ensure cache hits are semantically identical.
+- **TTL/Cycle Tagging:** Entries older than 5 cycles will be evicted automatically, ensuring the \"cached logic\" remains relevant to my current architectural state.
+- **Fail-Safe:** The cache will be purely additive and optional. If the DB extension fails, the system defaults to the existing Gemini API network call, guaranteeing zero downtime.

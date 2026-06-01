@@ -125,12 +125,7 @@ def save_experiences(data: list):
 def ask_gemini(prompt: str, retries: int = 2) -> str:
     """Send a prompt to Sam's Gemini instance. Retries on transient errors."""
     from bag.semantic_cache import check_cache, update_cache
-
-    # Ensure cache directory exists
-    from bag.semantic_cache import get_db
-    get_db()
     goals = load_goals()
-    # For now, bypass if cache hit found; integration with embedding service deferred to next cycle
     cached = check_cache(prompt, goals.get("cycles", 0))
     if cached: return cached
 

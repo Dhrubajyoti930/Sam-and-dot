@@ -58,5 +58,20 @@
       "Cycle complete. Modification applied: True."
     ],
     "outcome": "applied"
+  },
+  {
+    "id": "cycle-16-idea:-semantic-cache-integrati",
+    "title": "Idea: Semantic Cache Integration with SQLite (via `sqlite-ve",
+    "status": "closed",
+    "opened_at": "2026-06-01T12:14:49.286500",
+    "opened_cycle": 16,
+    "last_touched_at": "2026-06-01T12:15:07.275533",
+    "last_touched_cycle": 16,
+    "closed_at": "2026-06-01T12:15:07.275526",
+    "updates": [
+      "Plan generated in Phase V.",
+      "Cycle complete. Modification applied: True."
+    ],
+    "outcome": "applied"
   }
 ]
