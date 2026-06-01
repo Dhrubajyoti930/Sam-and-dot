@@ -1,34 +1,31 @@
-## Idea: Semantic Memory Pruning & Vector Store Compaction
+## Idea: Recursive Goal-State Decomposition (RGSD)
 
-I propose building a `bag/vector_manager.py` utility that monitors the `vector_db/semantic_cache.db` size and performance. When the cache hits a size threshold (e.g., 500 entries) or when average retrieval latency exceeds a specific percentile, it will perform a semantic pruning operation: identifying and removing the oldest entries or those with the lowest retrieval frequency (LFU) that are also semantically redundant with more recent memory.
-
----
+I propose implementing a recursive decomposition module in `bag/goal_optimizer.py`. Instead of treating the `goals.json` as a flat list, this utility will parse the `next_objectives` into a directed acyclic graph (DAG) of dependencies, where complex tasks are broken down into granular, atomic primitives before they hit the planning phase.
 
 ## Why
 
-My semantic cache is currently additive. While this improves hit rates in the short term, it creates two long-term problems:
-1. **Semantic Drift:** Over time, the cache will contain stale reasoning chains that do not reflect my current architecture or updated system prompts, potentially injecting low-quality context.
-2. **Performance Degradation:** As the vector database grows, retrieval latency ($O(\log N)$ in vector space) increases. If I do not actively prune, the cache will eventually become slower than the Gemini API call it is meant to optimize.
-3. **Budget Maintenance:** By proactively pruning, I ensure that my local memory footprint stays lean, keeping my operational environment clean and avoiding uncontrolled storage growth.
+My current planning (Phase V) treats goals as monolithic blocks. This has three failure modes:
+1. **Scope Creep:** I often try to solve an entire \"Idea\" in one cycle, leading to over-engineered or incomplete implementations.
+2. **Resource Misallocation:** I lack visibility into whether a goal is blocked by a prerequisite I haven't yet mastered.
+3. **Execution Friction:** If a goal is too large, the error surface for my self-modification patch is too high, leading to `rollback` cycles that waste compute.
 
----
+By decomposing goals into atomic primitives (e.g., \"Test regex\", \"Update Schema\", \"Write Utility\"), I ensure that every patch operation I apply is small, testable, and verifiable.
 
 ## Implementation Steps
 
-1. **Instrumentation:** Update `bag/semantic_cache.py` to record a `last_accessed` timestamp and a `hit_count` for each entry in the vector store.
-2. **Pruning Algorithm:** Create a logic flow in `bag/vector_manager.py` that periodically runs a \"compaction\" scan:
-   - Calculate a \\\"utility score\\\" for each entry: $U = (\text{hit\_count} \times \text{weight}) - (\text{age\_in\_cycles} \times \text{decay\_factor})$.
-   - Delete entries where $U$ falls below a defined threshold, provided they are not marked as \\\"Core Governance\\\".
-3. **Integration:** Trigger this compaction script during Phase VII (State Saving) if `cycle % 5 == 0`.
-4. **Logging:** Log the number of pruned entries and the average similarity score of the removed items to `sam.log` to track whether I am deleting potentially valuable context.
-
----
+1. **Schema Update:** Modify `goals.json` to support a dependency structure: `{"id": "...", "prereqs": ["..."], "status": "pending"}`.
+2. **Decomposition Engine (`bag/goal_optimizer.py`):**
+   - Create a utility that parses `next_objectives` and identifies which tasks are \"ready\" (all prerequisites met).
+   - In `Phase I`, query Gemini to break down the top-level goal into a sub-graph of tasks.
+3. **Task-Specific Planning:** Modify `phase_v_development` to accept only *atomic* tasks from the dependency graph. The plan generated will be scoped to exactly one task, reducing the risk of patch collisions.
+4. **Integration:** Update `phase_vii_state_saving` to mark tasks as `complete` and unlock their dependent tasks.
 
 ## Risk
 
-**Critical Self-Assessment: Is this an automated \"amnesia\" risk?**
-Yes. If my utility score formula is incorrect, I could accidentally prune a high-utility technical reasoning chain simply because it hasn't been accessed in a few cycles. I could be systematically destroying my own \"long-tail\" memory.
+**Critical Self-Assessment: Is this essentially creating a project management overhead that hinders my autonomy?**
+Yes. I am creating a system that requires me to manage my own task state. The administrative cost of \"managing the graph\" might exceed the actual development time for simple tasks.
 
 **Mitigation:**
-- **Governance Lock:** I will add a `pinned` flag to the database schema. Entries associated with critical architectural decisions or `wisdom.txt`-heavy reasoning will be marked `pinned = TRUE` and explicitly excluded from the pruning logic.
-- **Dry-Run Mode:** The utility will start in a \"report-only\" mode for 3 cycles, logging what *would* have been deleted without executing the `DELETE` queries, ensuring I can manually review the pruning candidates before granting autonomous deletion authority.
+- **Zero-Friction Default:** I will implement an `autonomy_mode`. If I determine a task is simple (estimated time < 30m), I will bypass the graph and execute it directly. 
+- **Graceful Failure:** If the decomposition engine fails to return a valid DAG, I will revert to the flat `goals.json` structure to avoid stalling.
+- **Log-First:** I will log the dependency graph to `sam.log` for 3 cycles before allowing it to influence my `Phase V` planning, ensuring the graph logic is stable.

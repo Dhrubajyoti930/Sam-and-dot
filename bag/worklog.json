@@ -88,5 +88,20 @@
       "Cycle complete. Modification applied: True."
     ],
     "outcome": "applied"
+  },
+  {
+    "id": "cycle-18-idea:-recursive-goal-state-dec",
+    "title": "Idea: Recursive Goal-State Decomposition (RGSD)",
+    "status": "closed",
+    "opened_at": "2026-06-01T14:23:45.152731",
+    "opened_cycle": 18,
+    "last_touched_at": "2026-06-01T14:24:03.562154",
+    "last_touched_cycle": 18,
+    "closed_at": "2026-06-01T14:24:03.562146",
+    "updates": [
+      "Plan generated in Phase V.",
+      "Cycle complete. Modification applied: False."
+    ],
+    "outcome": "deferred"
   }
 ]

@@ -1210,3 +1210,81 @@ I will add a test case to `bag/tests.py` in the next cycle to verify `bag/few_sh
 2026-06-01 13:58:32,619 [INFO] request.json already pending — skipping email request this cycle.
 2026-06-01 13:58:32,619 [INFO] Cycle complete.
 2026-06-01 13:58:32,620 [INFO] [Evaluator] Only 4 experiences — skipping (need 5+).
+2026-06-01 14:21:54,120 [INFO] ═══════════════════════════════════
+2026-06-01 14:21:54,120 [INFO]   SAM — Operational Cycle Starting 
+2026-06-01 14:21:54,120 [INFO] ═══════════════════════════════════
+2026-06-01 14:21:54,403 [INFO] ── Phase I: Deep Learning ──
+2026-06-01 14:21:54,474 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 14:21:57,998 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 14:21:58,000 [ERROR] Gemini call failed (non-retryable): table cache has 4 columns but 3 values were supplied
+2026-06-01 14:21:58,000 [INFO] Phase I complete.
+2026-06-01 14:21:58,000 [INFO] ── Phase II: Spaced Repetition ──
+2026-06-01 14:22:06,002 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 14:22:51,589 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 14:22:51,591 [ERROR] Gemini call failed (non-retryable): table cache has 4 columns but 3 values were supplied
+2026-06-01 14:22:51,591 [INFO] Phase II complete.
+2026-06-01 14:22:51,591 [INFO] ── Phase III: Market & Code Ingestion ──
+2026-06-01 14:22:59,592 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 14:23:03,766 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 14:23:03,767 [ERROR] Gemini call failed (non-retryable): table cache has 4 columns but 3 values were supplied
+2026-06-01 14:23:03,768 [INFO] Phase III complete.
+2026-06-01 14:23:03,768 [INFO] ── Phase IV: The Synthesis ──
+2026-06-01 14:23:11,771 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 14:23:14,964 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 14:23:14,966 [INFO] IDEA_OF_THE_DAY.md written.
+2026-06-01 14:23:14,966 [INFO] ── Phase V: Development & Refactor ──
+2026-06-01 14:23:14,967 [INFO] motion.md read.
+2026-06-01 14:23:22,968 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 14:23:31,556 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 14:23:31,557 [INFO] Dot's action items surfaced: 2 item(s)
+2026-06-01 14:23:31,561 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 14:23:33,739 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 14:23:33,741 [ERROR] Gemini call failed (non-retryable): table cache has 4 columns but 3 values were supplied
+2026-06-01 14:23:33,741 [WARNING] Workshop layout JSON parse failed: Expecting value: line 1 column 2 (char 1) — using defaults.
+2026-06-01 14:23:33,743 [INFO] Workshop target folder for cycle 18: bag/Misc/
+2026-06-01 14:23:41,745 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 14:23:45,151 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 14:23:45,152 [INFO] Phase V complete.
+2026-06-01 14:23:45,152 [INFO] Worklog entry opened: Idea: Recursive Goal-State Decomposition (RGSD)
+2026-06-01 14:23:53,155 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 14:23:53,670 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 14:23:53,672 [INFO] ── Bag Module Health Check ──
+2026-06-01 14:23:53,673 [INFO] All bag modules are syntax-clean.
+2026-06-01 14:23:53,674 [INFO] Snapshot saved → sam_20260601T142353Z.py
+2026-06-01 14:23:53,675 [INFO] Bag snapshot saved → bag_20260601T142353Z.json (3 files)
+2026-06-01 14:23:53,676 [INFO] ── Self-Modification: Parsing Surgical Patch ──
+2026-06-01 14:24:01,677 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 14:24:03,507 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 14:24:03,509 [ERROR] Gemini call failed (non-retryable): table cache has 4 columns but 3 values were supplied
+2026-06-01 14:24:03,509 [WARNING] Could not parse patch operations as JSON: Expecting value: line 1 column 2 (char 1)
+2026-06-01 14:24:03,509 [INFO] No self-modification this cycle — running governance checks anyway.
+2026-06-01 14:24:03,561 [INFO] Behaviour check passed.
+2026-06-01 14:24:03,562 [INFO] Worklog entry closed: cycle-18-idea:-recursive-goal-state-dec (deferred)
+2026-06-01 14:24:03,562 [INFO] ── Phase VI: Cognitive Evolution ──
+2026-06-01 14:24:11,563 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 14:24:12,674 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 14:24:12,675 [INFO] Phase VI assessment: The last evolution suggestion was not applied; PROMPT_VERSION remains 1 and the PHASE_IV_PROMPT contains no scratchpad directive.
+2026-06-01 14:24:12,676 [INFO] Phase VI patch plan written → prompt_patch.json (target: PHASE_IV_PROMPT)
+2026-06-01 14:24:12,676 [INFO] Phase VI complete.
+2026-06-01 14:24:12,676 [INFO] Snapshot saved → sam_20260601T142412Z.py
+2026-06-01 14:24:12,677 [INFO] Bag snapshot saved → bag_20260601T142412Z.json (3 files)
+2026-06-01 14:24:12,678 [INFO] ── Phase VI: Applying Prompt Patch ──
+2026-06-01 14:24:12,678 [WARNING] Blocked patch to 'bag/prompts.py' — outside allowed scope.
+2026-06-01 14:24:12,678 [WARNING] Blocked patch to 'bag/prompts.py' — outside allowed scope.
+2026-06-01 14:24:12,678 [INFO] ── Phase VII: State Saving ──
+2026-06-01 14:24:20,679 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 14:24:21,630 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 14:24:21,632 [ERROR] Gemini call failed (non-retryable): table cache has 4 columns but 3 values were supplied
+2026-06-01 14:24:21,632 [INFO] 1% metric: [Gemini error: table cache has 4 columns but 3 values were supplied]
+2026-06-01 14:24:21,633 [INFO] goals.json updated.
+2026-06-01 14:24:21,643 [INFO] WHO_I_AM.md updated.
+2026-06-01 14:24:29,644 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 14:24:31,526 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 14:24:31,528 [ERROR] Gemini call failed (non-retryable): table cache has 4 columns but 3 values were supplied
+2026-06-01 14:24:31,528 [WARNING] Could not parse experience entry: Expecting value: line 1 column 2 (char 1)
+2026-06-01 14:24:31,528 [INFO] experiences.json updated — 5 entries.
+2026-06-01 14:24:31,528 [INFO] Cycle 18 complete. 1% metric: [Gemini error: table cache has 4 columns but 3 values were supplied]
+2026-06-01 14:24:31,529 [INFO] request.json already pending — skipping email request this cycle.
+2026-06-01 14:24:31,529 [INFO] Cycle complete.
+2026-06-01 14:24:31,530 [WARNING] [Evaluator] 1 issue(s) found:
+2026-06-01 14:24:31,530 [WARNING]   - Empty key_learnings in cycles: [18].

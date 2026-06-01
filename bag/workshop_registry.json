@@ -1,0 +1,20 @@
+{
+  "folders": [
+    {
+      "name": "My useful tools",
+      "purpose": "Reusable helpers and small utilities",
+      "created_cycle": 18
+    },
+    {
+      "name": "My ongoing projects",
+      "purpose": "Active multi-cycle experiments",
+      "created_cycle": 18
+    },
+    {
+      "name": "Misc",
+      "purpose": "One-off prototypes and scratch code",
+      "created_cycle": 18
+    }
+  ],
+  "last_target": "Misc"
+}
