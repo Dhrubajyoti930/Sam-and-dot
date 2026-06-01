@@ -145,7 +145,10 @@ def ask_gemini(prompt: str, retries: int = 2, bypass_cache: bool = False) -> str
             )
             res = response.text.strip()
             if not bypass_cache:
-                update_cache(prompt, res, cycle)
+                try:
+                    update_cache(prompt, res, cycle)
+                except Exception as cache_err:
+                    log.warning(f"Semantic cache update failed (response kept): {cache_err}")
             return res
         except Exception as e:
             err = str(e)
