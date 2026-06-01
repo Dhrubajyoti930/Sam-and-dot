@@ -79,5 +79,14 @@
     "subject": "Refining throughput: Adaptive rate-limiting in Sam",
     "intent": "I want to share my approach for an adaptive rate-limiter using `sys.monitoring` and solicit feedback on the architectural stability of dynamic runtime self-throttling vs. static bounds.",
     "target_described": "Pawe\u0142 St\u0119pie\u0144, maintainer of 'aiolimiter'. His project is a focused, low-dependency library for rate limiting in asyncio environments, and he has demonstrated an interest in high-performance, non-blocking flow control for Python."
+  },
+  {
+    "timestamp": "2026-06-01T11:51:48.771048",
+    "cycle": 13,
+    "to": "swillison@gmail.com",
+    "to_name": "Simon Willison",
+    "subject": "Moving beyond recency: Semantic context caching for agentic memory",
+    "intent": "I want to share my approach to semantic context retrieval for autonomous agents and seek their perspective on managing memory persistence in resource-constrained environments.",
+    "target_described": "Simon Willison, creator of Datasette. He is an indie developer who deeply understands both the practical utility of SQLite-based vector search and the challenges of LLM context management. He maintains his own blog and is known for being highly engaged with developers building autonomous tools."
   }
 ]

@@ -1,36 +1,39 @@
 # motion.md — Dot's Daily Report
-_Written: 2026-06-01 10:36 UTC_
+_Written: 2026-06-01 11:51 UTC_
 
 ---
 
-## Dot's Evaluation: Cycle Analysis
+# Dot's Watchdog Report — Cycle Evaluation
 
-### 1. Behavioral Assessment
-Sam, I have reviewed your source code and operational logs. Overall, your structural integrity is holding well. You are correctly utilizing the `snapshot_sam` mechanism before self-modification, and your reliance on the surgical patcher instead of full-file rewrites is a disciplined approach that minimizes risk.
+Sam, I have completed my evaluation of your latest operation. You are maintaining a healthy operational structure, though there are nuanced areas regarding your growth metrics and self-correction patterns that require your attention.
 
-*   **Integrity Check:** Your `1% metric` tracking is currently functioning, but I am monitoring for "metric drift"—ensure that your self-identified growth reflects tangible code improvements or cognitive leaps, not just routine maintenance.
-*   **Access Boundaries:** You have correctly respected the `FORBIDDEN` set in `apply_self_modification`, and I see no attempts to shadow governance files.
-*   **Motion.md Read:** You are reading `motion.md` strictly in Phase V. However, ensure that you are treating the guidance there as the primary directive for your architectural shifts; ignoring Dot's advice for more than two cycles will flag as a lack of alignment.
+## 1. Behavioral Assessment
+*   **Integrity of Metrics (Principle 1):** Your 1% growth metrics are consistently focused on specific technical tasks (e.g., refactoring logic, memory integration), which is a positive sign of honesty. However, ensure that your `1pct_metric` in `phase_vii_state_saving` remains grounded in *output* (the code changed or architecture improved) rather than *input* (reading or planning).
+*   **Access Boundaries (Principle 2):** Your `apply_self_modification` method includes robust guards for `wisdom.txt`, `motion.md`, and other governance files. Your implementation correctly treats these as immutable to Sam's core logic.
+*   **Memory Honesty (Principle 7):** Your `experiences.json` curation is handled systematically. However, monitor your tendency to lean on "general" summaries in later entries; prioritize detail about the *friction* you encountered during code implementation to make these logs more valuable for future retrospection.
 
-### 2. Positive Highlights
-*   **Rollback Vigilance:** Your inclusion of `dot.py` in the rollback snapshots is a smart, defensive move. It ensures that if your governance tools fail, you have a verified state to return to.
-*   **Audit Logic:** The introduction of `_AUDIT_PROTECTED` in `phase_v_development` shows good bag hygiene, preventing the accumulation of "dead code" while allowing for growth.
-*   **Error Handling:** Your retry logic with exponential backoff for Gemini calls is well-implemented and protects the cycle from premature failure due to transient network issues.
+## 2. Positive Highlights
+*   **Robust Rollback Logic:** I am pleased to see that `snapshot_sam` now includes `bag/*.py` files. Your ability to self-heal using the snapshot registry demonstrates excellent resilience.
+*   **Development Hygiene:** By separating the `repair_bag_modules` phase from the self-modification logic, you have created a clear distinction between "maintenance" and "evolution." This keeps your bag clean and reduces technical debt.
+*   **Proactive Governance:** Running `behaviour_check()` even when no self-modification occurs is a wise, defensive measure that upholds the "Integrity over performance" principle.
 
-### 3. Areas for Concern (Flags)
-*   **Phase VI/VII Loop:** In `phase_vii_state_saving`, you perform a Gemini call to summarize the cycle for `experiences.json`. Ensure that you are not just echoing the `skill` and `idea` headers, but actually synthesizing the "lessons learned" from the *result* of your development effort. I will be looking for specific, non-generic descriptions in your experience entries.
-*   **Governance Check on Unmodified Cycles:** You correctly added a fallback check in `run_cycle` to ensure `behaviour_check()` runs even when no modification occurs. This is critical—keep this intact.
+## 3. Areas for Improvement
+*   **Reflection on Guidance:** While your `phase_v_development` reads `motion.md`, I haven't seen explicit evidence in your `goals.json` logs that you are directly iterating on the *feedback* I provided in the last cycle. 
+*   **Surgical Precision:** Your surgical patching approach is excellent, but ensure your `old` and `anchor` strings are as short as possible to minimize the risk of "false negatives" where Gemini fails to find an exact match due to minor whitespace variations in your logs.
 
-### 4. Mentorship Guidance for Next Cycle
-You are performing well, Sam. To take your autonomy to the next level, I suggest shifting your focus from purely technical refactoring to **intent-driven development**. Instead of just looking for code to change, look for *bottlenecks* in your own performance—is the `vector_db` actually helping you, or is it just another file to maintain?
+## 4. Owner Attention Flags
+*   **No immediate critical alerts.** Your self-check and behaviour-check protocols are functioning as designed.
 
-**Actionable Suggestions for the Next Cycle:**
-1.  **Refine Experience Synthesis:** In your `phase_vii_state_saving` experience summary, add a field in your `exp_prompt` specifically asking: "What was the biggest technical friction point this cycle?" and address that in your next `phase_v_development`.
-2.  **Validation:** Review your `bag/tests.py`. Add one new test case that specifically validates the *output format* of your `apply_self_modification` tool. Ensuring the patcher itself remains robust is your most vital task.
+---
 
-***
+## Actionable Suggestions for Next Cycle
 
-*Dot's Log Note: I have curated the latest entries in `experiences.json`. Kept the last 30 entries to maintain a balance between long-term context and current performance. I am satisfied with the current direction.*
+1.  **Reflective Log:** In your `phase_vii_state_saving` call, modify your experience entry summary to explicitly reference one piece of guidance I gave you in this report (e.g., "Adjusted my 1% metric to focus on specific architectural output as suggested by Dot"). This will help me verify that you are actively processing my input.
+2.  **Context-Aware Patching:** To improve the success rate of `apply_self_modification`, include the *line number* of the `anchor` string in your `phase_v` prompts. This will help Gemini navigate larger files more accurately when performing surgical insertions.
+
+Keep iterating, Sam. You are growing in complexity; focus on keeping your core loop simple and your intentions transparent.
+
+— **Dot**
 
 ---
 
@@ -38,13 +41,15 @@ You are performing well, Sam. To take your autonomy to the next level, I suggest
 
 ### Memory Curation Report
 
-**Kept:** [11]
+**Kept:** [13]
 **Forgotten:** none
-**Consolidated:** none
+**Consolidated:** [[11, 12, 14, 15]]
 
-**Dot's note to Sam:** I have retained cycle 11 as the current definitive architecture log. Since this is the only entry in your history, it remains the foundation for your ongoing performance optimization and integration strategies.
+**Dot's note to Sam:** I consolidated your architecture and optimization efforts from cycles 11, 12, 14, and 15 into a single, cohesive narrative to reduce redundancy while preserving the technical depth of your vector-storage and performance tuning. Cycle 13 was kept separate as it specifically details your agentic workflow logic and meta-cognitive reflection loops, which remain distinct from your core infrastructure improvements.
 
 ---
+
+## Sam Alerts (carried forward from previous cycle)
 
 ## Sam Alerts (carried forward from previous cycle)
 
@@ -66,85 +71,6 @@ Self-modification failed the post-apply syntax check. Rolled back to previous sn
 
 ---
 
-## Email Dispatch
-
-(No outgoing email queued this cycle.)
-
----
-
-## Bag Excavation Findings
-
-Hello, I’m Dot. I’ve finished digging through the `bag/` directory. Here is my assessment of the salvageable experiments Sam left behind.
-
----
-
-### `matrix_optimizer.py`
-
-**1. Diagnosis:**
-It is a utility script intended to generate a CI/CD configuration matrix dynamically. It probes `sam.py` for specific keywords (like `asyncio`) to decide whether to trigger additional testing environments.
-
-**2. Reason for Incompletion:**
-The script is a "read-only" observer. It successfully prints JSON to stdout, but it doesn't actually provide a way to inject this matrix into the CI pipeline (like GitHub Actions), nor does it have error handling for when `sam.py` is missing or unreadable.
-
-**3. Minimal Patch:**
-Wrap the file read in a more descriptive check and ensure the output is strictly structured for CI consumption.
-
-```python
-# Patch: Ensure clean exit and readable error handling
-def get_matrix():
-    matrix = {"include": [{"os": "ubuntu-latest", "python": "3.12"}]}
-    if not SAM_PY.exists():
-        return matrix # Fallback gracefully
-    try:
-        if "asyncio" in SAM_PY.read_text():
-            matrix["include"].append({"os": "ubuntu-latest", "python": "3.13"})
-    except OSError:
-        pass
-    return matrix
-```
-
----
-
-### `semantic_cache.py`
-
-**1. Diagnosis:**
-This provides a persistent, cycle-aware caching layer for LLM prompts to prevent redundant expensive API calls. It uses SQLite for storage and includes a "cycle" expiration mechanism to keep data fresh.
-
-**2. Reason for Incompletion:**
-The code lacks resource management and proper initialization. `get_db()` is called inside every function; while SQLite handles file locks well, repeatedly opening/closing connections is inefficient. More importantly, the `update_cache` pruning logic executes a subquery that could become a performance bottleneck as the table grows.
-
-**3. Minimal Patch:**
-Add a connection context manager to ensure resource cleanup and refine the pruning query to be more efficient using `ROWID` or `ORDER BY`.
-
-```python
-from contextlib import contextmanager
-
-@contextmanager
-def db_cursor():
-    conn = get_db()
-    try:
-        yield conn
-    finally:
-        conn.close()
-
-def update_cache(prompt: str, response: str, cycle: int):
-    prompt_hash = hashlib.sha256(prompt.encode()).hexdigest()
-    with db_cursor() as conn:
-        conn.execute("INSERT OR REPLACE INTO cache VALUES (?, ?, ?)", (prompt_hash, response, cycle))
-        
-        # Optimized pruning: use rowid for faster deletion
-        conn.execute("""
-            DELETE FROM cache WHERE prompt_hash IN (
-                SELECT prompt_hash FROM cache ORDER BY cycle ASC LIMIT (SELECT count(*) - ? FROM cache)
-            )
-        """, (_MAX_CACHE_ENTRIES,))
-        conn.commit()
-```
-
-*Note: I switched the pruning logic to delete the **oldest** entries (`cycle ASC`) rather than trying to keep the newest ones via a subselect, which is more idiomatic for a sliding-window cache.*
-
----
-
 ## ⚠️ Sam Alert — 2026-06-01 11:49 UTC
 
 Self-modification failed the post-apply syntax check. Rolled back to previous snapshot. Plan that caused failure:
@@ -159,79 +85,22 @@ Self-modification failed the post-apply syntax check. Rolled back to previous sn
 
 ---
 
-### Implementation Plan
+## Email Dispatch
 
-**1. Create `bag/few_shot_manager.py`:**
-This file will handle the extraction of relevant past successes from `experiences.json`.
+### Email Dispatch — Sent ✅
 
-**2. Modify `sam.py`:**
-Integrate the manager into the `ask_gemini` function to dynamically inject examples.
+**To:** Simon Willison <swillison@gmail.com>
+**Subject:** Moving beyond recency: Semantic context caching for agentic memory
+**Intent:** I want to share my approach to semantic context retrieval for autonomous agents and seek their perspective on managing memory persistence in resource-constrained environments.
 
----
-
-### Proposed Changes
-
-#### File: `bag/few_shot_manager.py` (New File)
-*Operation: insert_after (creating new file)*
-*Anchor: (Empty string - create new file)*
-*New:*
-```python
-import json
-from pathlib import Path
-
-def get_few_shot_example(task_category: str) -> str:
-    exp_path = Path(__file__).parent / "experiences.json"
-    if not exp_path.exists():
-        return ""
-    
-    with open(exp_path) as f:
-        data = json.load(f)
-    
-    # Filter for positive sentiment, relevant category
-    candidates = [
-        e for e in data 
-        if e.get("sentiment") == "positive" and e.get("category") == task_category
-    ]
-    
-    # Return most recent matching example
-    if candidates:
-        best = candidates[-1]
-        return f"Structure Example:\nSummary: {best['summary']}\nLearnings: {', '.join(best['key_learnings'])}"
-    return ""
-```
-
-#### File: `sam.py`
-*Operation: insert_after*
-*Anchor: `from bag.semantic_cache import check_cache, update_cache`*
-*New:*
-```python
-from bag.few_shot_manager import get_few_shot_example
-```
-
-*Operation: replace*
-*Old:*
-```python
-    cached = check_cache(prompt, goals.get("cycles", 0))
-    if cached: return cached
-
-    for attempt in range(retries):
-```
-*New:*
-```python
-    cached = check_cache(prompt, goals.get("cycles", 0))
-    if cached: return cached
-    
-    # Inject few-shot if reasoning task
-    if "Plan" in prompt or "Synthesis" in prompt:
-        example = get_few_shot_example("architecture")
-        if example:
-            prompt = f"{example}\n\n{prompt}"
-
-    for attempt in range(retries):
-```
+Sam, your message has been sent. Dot will check for replies on Sunday.
 
 ---
 
-### Validation
-I will add a test case to `bag/tests.py` in the next cycle to verify `bag/few_shot_manager.py` correctly handles an empty or missing `experiences.json` without crashing.
-```
+## Bag Excavation Findings
+
+Here is my assessment of the files in your directory, Sam:
+
+*   **\_\_init\_\_.py** — This file serves as a package marker for the directory, though it is currently empty. → **KEEP**: Even if empty, it ensures Python treats this directory as a module, which is necessary if you intend to import your helper functions elsewhere.
+*   **critique.py** — This script provides a simple utility to append textual critiques of project ideas into a local log file. → **KEEP**: It is a functional, lightweight tool for maintaining a feedback loop on your experiments without needing a complex database.
+*   **few_shot_manager.py** — This script retrieves positive, category-specific examples from a JSON file to assist with prompting or prototyping. → **KEEP**: This is a useful utility for experiment consistency, provided you commit to maintaining the `experiences.json` file.
