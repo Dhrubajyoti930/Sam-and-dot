@@ -760,3 +760,58 @@ I have opted to integrate the throttle logic as a helper in `sam.py` that consum
 2026-06-01 05:53:24,882 [INFO] request.json written — Dot will handle sending.
 2026-06-01 05:53:24,883 [INFO] Cycle complete.
 2026-06-01 05:53:24,884 [INFO] [Evaluator] Only 2 experiences — skipping (need 5+).
+2026-06-01 11:10:26,847 [INFO] ═══════════════════════════════════
+2026-06-01 11:10:26,847 [INFO]   SAM — Operational Cycle Starting 
+2026-06-01 11:10:26,847 [INFO] ═══════════════════════════════════
+2026-06-01 11:10:27,044 [INFO] ── Phase I: Deep Learning ──
+2026-06-01 11:10:27,049 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:10:30,180 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:10:30,243 [INFO] Phase I complete.
+2026-06-01 11:10:30,243 [INFO] ── Phase II: Spaced Repetition ──
+2026-06-01 11:10:38,244 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:10:40,081 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:10:40,140 [INFO] Phase II complete.
+2026-06-01 11:10:40,140 [INFO] ── Phase III: Market & Code Ingestion ──
+2026-06-01 11:10:48,141 [INFO] Phase III complete.
+2026-06-01 11:10:48,141 [INFO] ── Phase IV: The Synthesis ──
+2026-06-01 11:10:56,144 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:11:00,215 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:11:00,220 [INFO] IDEA_OF_THE_DAY.md written.
+2026-06-01 11:11:00,220 [INFO] ── Phase V: Development & Refactor ──
+2026-06-01 11:11:00,220 [INFO] motion.md read.
+2026-06-01 11:11:08,221 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:11:12,309 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:11:12,314 [INFO] Phase V complete.
+2026-06-01 11:11:12,315 [INFO] Worklog entry opened: Idea: Semantic Intent-Driven Context Caching
+2026-06-01 11:11:12,315 [INFO] Audited: Deleted orphaned file worklog.py
+2026-06-01 11:11:12,315 [INFO] Audited: Deleted orphaned file profiler.py
+2026-06-01 11:11:12,315 [INFO] ── Bag Module Health Check ──
+2026-06-01 11:11:12,315 [INFO] All bag modules are syntax-clean.
+2026-06-01 11:11:12,316 [INFO] Snapshot saved → sam_20260601T111112Z.py
+2026-06-01 11:11:12,316 [INFO] Bag snapshot saved → bag_20260601T111112Z.json (7 files)
+2026-06-01 11:11:12,317 [INFO] ── Self-Modification: Parsing Surgical Patch ──
+2026-06-01 11:11:20,318 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:11:22,949 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:11:23,137 [INFO] Applied insert_after → bag/semantic_cache.py
+2026-06-01 11:11:23,137 [INFO] Applied replace → sam.py
+2026-06-01 11:11:23,137 [INFO] Applied replace → sam.py
+2026-06-01 11:11:23,344 [INFO] Behaviour check passed.
+2026-06-01 11:11:23,344 [INFO] Self-modification verified — syntax and behaviour both clean.
+2026-06-01 11:11:23,344 [INFO] Worklog entry closed: cycle-12-idea:-semantic-intent-driven-c (applied)
+2026-06-01 11:11:23,344 [INFO] ── Phase VI: Cognitive Evolution ──
+2026-06-01 11:11:31,345 [INFO] Phase VI complete.
+2026-06-01 11:11:31,345 [INFO] ── Phase VII: State Saving ──
+2026-06-01 11:11:39,346 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:11:40,327 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:11:40,329 [INFO] 1% metric: Semantic Intent-Driven Context Cache Retrieval Accuracy
+2026-06-01 11:11:40,330 [INFO] goals.json updated.
+2026-06-01 11:11:40,334 [INFO] WHO_I_AM.md updated.
+2026-06-01 11:11:48,335 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:11:49,495 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:11:49,498 [INFO] experiences.json updated — 2 entries.
+2026-06-01 11:11:49,498 [INFO] Cycle 12 complete. 1% metric: Semantic Intent-Driven Context Cache Retrieval Accuracy
+2026-06-01 11:11:57,500 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 11:11:58,829 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 11:11:58,832 [INFO] request.json written — Dot will handle sending.
+2026-06-01 11:11:58,832 [INFO] Cycle complete.
+2026-06-01 11:11:58,832 [INFO] [Evaluator] Only 2 experiences — skipping (need 5+).

@@ -549,17 +549,20 @@ def phase_iv_synthesis(market_data: str, skill: str) -> str:
     who_i_am    = load_who_i_am()
     personality = load_personality()
 
-    # Summarise recent experiences + Semantically relevant context
-    experiences = load_experiences()
-    # TODO: Implement embedding retrieval here. 
-    # Current fallback: Chronological recency.
-    recent_exp = experiences[-3:]
-    exp_lines = "\n".join(
-        f"- Cycle {e.get('cycle', '?')}: {e.get('summary', '')} "
-        f"[tags: {', '.join(e.get('tags', []))}]"
-        for e in recent_exp
-    )
-    memory_block = f"## Recent Historical Context:\n{exp_lines}\n"
+    # Summarise recent experiences so Sam doesn't repeat himself
+    recent_exp  = load_experiences()[-3:]
+    if recent_exp:
+        exp_lines = "\n".join(
+            f"- Cycle {e.get('cycle', '?')}: {e.get('summary', '')} "
+            f"[tags: {', '.join(e.get('tags', []))}]"
+            for e in recent_exp
+        )
+        memory_block = (
+            f"Your most recent experiences (do NOT repeat these — build on them or go elsewhere):\n"
+            f"{exp_lines}\n"
+        )
+    else:
+        memory_block = ""
 
     _sleep()
     prompt = (
@@ -751,9 +754,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
         f"You are Sam, an autonomous developer agent. Summarise cycle {cycle_num} "
         f"as a single experience entry. "
         f"Respond ONLY with a JSON object (no markdown) with these fields:\n"
-        f"  - 'category': ...\n"
-        f"  - 'summary': 2-3 sentence honest summary.\n"
-        f"  - 'context_summary': 1 sentence architectural/pattern summary for embedding retrieval.\n"
+        f"  - 'category': a short dynamic label that best fits this experience (e.g. 'architecture', 'debugging', 'market-research', 'communication')\n"
+        f"  - 'summary': 2-3 sentence honest summary of what happened this cycle\n"
         f"  - 'key_learnings': list of 2-3 strings\n"
         f"  - 'tags': list of relevant lowercase tags\n"
         f"  - 'sentiment': one of 'positive', 'neutral', 'mixed', 'negative'\n\n"

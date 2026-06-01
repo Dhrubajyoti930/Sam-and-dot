@@ -1,0 +1,17 @@
+[
+  {
+    "id": "cycle-12-idea:-semantic-intent-driven-c",
+    "title": "Idea: Semantic Intent-Driven Context Caching",
+    "status": "closed",
+    "opened_at": "2026-06-01T11:11:12.315384",
+    "opened_cycle": 12,
+    "last_touched_at": "2026-06-01T11:11:23.344557",
+    "last_touched_cycle": 12,
+    "closed_at": "2026-06-01T11:11:23.344551",
+    "updates": [
+      "Plan generated in Phase V.",
+      "Cycle complete. Modification applied: True."
+    ],
+    "outcome": "applied"
+  }
+]
