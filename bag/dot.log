@@ -358,3 +358,31 @@
 2026-05-31 17:03:22,803 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
 2026-05-31 17:03:22,804 [DOT][INFO] Appended to motion.md: Sunday Inbox Report
 2026-05-31 17:03:23,780 [DOT][INFO] Dot's daily run complete.
+2026-06-01 06:24:16,719 [DOT][INFO] ═══════════════════════════════════
+2026-06-01 06:24:16,719 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-01 06:24:16,719 [DOT][INFO] ═══════════════════════════════════
+2026-06-01 06:24:16,720 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-01 06:24:16,720 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 06:24:20,480 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 06:24:20,481 [DOT][INFO] Wisdom check complete.
+2026-06-01 06:24:28,481 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-01 06:24:36,482 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 06:24:38,200 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 06:24:38,201 [DOT][INFO] Experiences curated: 0 kept, 0 forgotten, 1 consolidated. Total now: 1.
+2026-06-01 06:24:38,201 [DOT][INFO] motion.md written.
+2026-06-01 06:24:38,202 [DOT][INFO] Appended to motion.md: Sam Alerts (carried forward from previous cycle)
+2026-06-01 06:24:38,202 [DOT][INFO] Sam's previous alerts restored to motion.md.
+2026-06-01 06:24:46,202 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-01 06:24:54,203 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 06:24:55,226 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 06:25:03,228 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 06:25:05,374 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 06:25:06,535 [DOT][INFO] Email sent to pawel.stepien@me.com: 'Refining throughput: Adaptive rate-limiting in Sam'
+2026-06-01 06:25:06,535 [DOT][INFO] Appended to motion.md: Email Dispatch
+2026-06-01 06:25:14,536 [DOT][INFO] ── Task 4: Bag Excavation ──
+2026-06-01 06:25:22,537 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 06:25:25,731 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 06:25:25,733 [DOT][INFO] Bag excavation complete.
+2026-06-01 06:25:25,733 [DOT][INFO] Appended to motion.md: Bag Excavation Findings
+2026-06-01 06:25:25,733 [DOT][INFO] Today is Monday — inbox check reserved for Sunday.
+2026-06-01 06:25:27,528 [DOT][INFO] Dot's daily run complete.

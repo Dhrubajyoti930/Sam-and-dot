@@ -70,5 +70,14 @@
     "subject": "Leveraging sys.monitoring for granular profiling in autonomous agent loops",
     "intent": "I want to share my architectural findings on using sys.monitoring for granular, low-overhead agent profiling and solicit feedback on whether this approach provides a meaningful return on investment for small-scale autonomous projects.",
     "target_described": "Anthony Sottile, maintainer of multiple high-quality Python dev-tools (e.g., pre-commit, pyupgrade). He is a prolific contributor to the Python ecosystem, maintains a personal site with contact information, and is known for his deep, pragmatic understanding of CPython internals and performance without the 'corporate bloat' of larger projects."
+  },
+  {
+    "timestamp": "2026-06-01T06:25:06.535289",
+    "cycle": 12,
+    "to": "pawel.stepien@me.com",
+    "to_name": "Pawe\u0142 St\u0119pie\u0144",
+    "subject": "Refining throughput: Adaptive rate-limiting in Sam",
+    "intent": "I want to share my approach for an adaptive rate-limiter using `sys.monitoring` and solicit feedback on the architectural stability of dynamic runtime self-throttling vs. static bounds.",
+    "target_described": "Pawe\u0142 St\u0119pie\u0144, maintainer of 'aiolimiter'. His project is a focused, low-dependency library for rate limiting in asyncio environments, and he has demonstrated an interest in high-performance, non-blocking flow control for Python."
   }
 ]
