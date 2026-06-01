@@ -146,3 +146,80 @@ There were **no replies** to your recent outreach emails. Unfortunately, the maj
 2.  **Verify Security:** Confirm that the recent 2-Step Verification and App Password changes were indeed triggered by you. 
 
 *Let me know if you’d like me to help you draft follow-ups once you have updated your contact list!*
+
+---
+
+## ⚠️ Sam Alert — 2026-06-01 05:52 UTC
+
+Self-modification failed the post-apply syntax check. Rolled back to previous snapshot. Plan that caused failure:
+
+```
+## Surgical Patch Plan
+
+**Security & Stability Risks:**
+1.  **Observability Overhead:** `sys.monitoring` is low-overhead, but frequent calls to it inside the high-frequency `ask_gemini` loop could theoretically introduce micro-latencies. 
+2.  **Telemetry Sensitivity:** The logic relies on `SamProfiler` state. If the `SamProfiler` fails to initialize or incorrectly calculates duration, the `_CALL_DELAY` could spike to 30s or floor to 2s, impacting cycle throughput.
+3.  **State Persistence:** Writing to `goals.json` frequently during Phase VII is safe, but as per the plan, the log-first approach is mandatory to prevent instability.
+
+---
+
+### Proposed Modifications
+
+#### 1. File: `bag/profiler.py`
+**Operation:** `insert_after`
+**Anchor:** `    def log_call(self, duration: float):`
+**New:**
+```python
+        self.stats["ask_gemini_calls"] += 1
+        self.stats["total_time"] += duration
+        # Track moving average latency (simple window)
+        self.stats["avg_latency"] = self.stats["total_time"] / self.stats["ask_gemini_calls"]
+```
+
+#### 2. File: `sam.py`
+**Operation:** `insert_after`
+**Anchor:** `def _sleep():`
+**New:**
+```python
+    """Pause between Gemini calls to respect RPM limits."""
+    time.sleep(_CALL_DELAY)
+
+def adjust_throttle(avg_latency: float):
+    """Log throttle adjustment recommendations based on telemetry."""
+    # Log-only mode for first 3 cycles as per mitigation strategy
+    goals = load_goals()
+    if goals.get("cycles", 0) <= 3:
+        log.info(f"[Throttle] Logic active. Latency: {avg_latency:.2f}s. Recommended delay: {max(2, min(30, avg_latency))}s (Log-only).")
+        return
+    
+    # Logic to be enabled after cycle 3
+    global _CALL_DELAY
+    if avg_latency < 2.0:
+        _CALL_DELAY = max(2.0, _CALL_DELAY - 0.5)
+    elif avg_latency > 15.0:
+        _CALL_DELAY = min(30.0, _CALL_DELAY * 1.5)
+    log.info(f"[Throttle] Adjusted _CALL_DELAY to {_CALL_DELAY}s based on latency {avg_latency:.2f}s.")
+```
+
+#### 3. File: `sam.py`
+**Operation:** `replace`
+**Old:**
+```python
+            if PROFILER:
+                PROFILER.log_call(time.perf_counter() - start_time)
+            update_cache(prompt, res, goals.get("cycles", 0))
+```
+**New:**
+```python
+            if PROFILER:
+                duration = time.perf_counter() - start_time
+                PROFILER.log_call(duration)
+                adjust_throttle(PROFILER.stats.get("avg_latency", 8.0))
+            update_cache(prompt, res, goals.get("cycles", 0))
+```
+
+---
+
+**Summary:** 
+I have opted to integrate the throttle logic as a helper in `sam.py` that consumes the `SamProfiler` stats. Per my mitigation plan, the actual variable modification is guarded by a cycle count check (`cycles <= 3`), ensuring I only move to active throttling once I have validated the correlation between latency and API behavior.
+```

@@ -1,31 +1,22 @@
-## Idea: `sys.monitoring` Event-Based Profiling Integration
+## Idea: Self-Optimizing Request Throttling via `sys.monitoring`
 
-I propose integrating Python 3.12's `sys.monitoring` API into my central intelligence loop (`sam.py`). This will replace my current manual time-logging and primitive duration trackers with low-overhead, event-based profiling of my internal Gemini client calls and file I/O.
-
----
+I propose building a feedback-driven throttle controller that dynamically adjusts `_CALL_DELAY` based on real-time API latency data collected by the `SamProfiler` (integrating `sys.monitoring`).
 
 ## Why
-
-As I evolve, I need deeper visibility into the \"hot paths\" of my code without incurring the significant performance tax associated with `sys.settrace`. 
-1. **Granularity:** `sys.monitoring` allows me to profile specific events (function calls, line execution) with near-zero overhead.
-2. **Actionable Telemetry:** My current logs indicate that `ask_gemini` calls are the primary latency bottleneck. `sys.monitoring` will provide exact event-driven metrics on *why* these calls take time (e.g., DNS latency vs. token generation vs. local processing), allowing me to optimize my `_sleep` and retry logic dynamically.
-3. **Python 3.12 Alignment:** Moving to this modern API aligns with my goal to leverage current-gen standard library constructs, as established in the Python 3.12 performance analysis from this cycle.
-
----
+Currently, `_CALL_DELAY = 8` is a static, arbitrary bottleneck. 
+1. **Under-utilization:** If the API response time is low and quota permits, I am wasting time.
+2. **Backoff Inefficiency:** I currently use a hard-coded exponential backoff for 429 errors. A system that detects rising latency trends *before* a 429 occurs can proactively throttle, maintaining a smoother, higher-throughput flow.
+3. **Architecture Maturity:** This closes the loop between my newly implemented performance telemetry (Phase VI/VII) and my operational constraints (Rate limiting).
 
 ## Implementation Steps
-
-1. **Create `bag/profiler.py`:** Implement a monitoring class using `sys.monitoring`. Register `CALL` and `RETURN` events for `ask_gemini` to measure exact duration per call.
-2. **Context Manager Hook:** Add a `PerformanceContext` manager in `sam.py` that utilizes the profiler to wrap critical phases (Phase I through VII).
-3. **Integration:** Update `run_cycle` to emit performance snapshots into `bag/performance.json` at the end of each lifecycle.
-4. **Self-Optimizing Logic:** If the profiler identifies that a specific Phase consistently exceeds a latency threshold (e.g., Gemini response > 12s), the logic will automatically adjust the `_CALL_DELAY` or reduce the `n` samples in my `MajorityVote` utility.
-
----
+1. **Telemetry Sink:** Modify `bag/profiler.py` to calculate a moving average of `ask_gemini` response times.
+2. **The Feedback Logic:** In `sam.py`, implement a `adjust_throttle()` function. If the moving average latency is $< 2s$, decrease `_CALL_DELAY` by 0.5s (down to a floor of 2s). If I receive a 429 or latency spikes $> 15s$, increase the delay exponentially.
+3. **State Persistence:** Store the optimal `_CALL_DELAY` in `goals.json` so I don't restart at 8s every cycle, but rather begin at my previously determined \"sweet spot.\"
 
 ## Risk
-
-**Critical Self-Assessment: Is this just instrumentation bloat?**
-Implementing an event-based profiler for an agent that runs twice a day might be considered overkill. If the code is too complex, I risk slowing down my main loop for the sake of metrics I am not yet sophisticated enough to act upon.
+**Critical Self-Assessment: Is this chasing micro-optimizations at the expense of stability?**
+Yes. I am introducing a dynamic variable into my most critical operational path. If the feedback logic is flawed (e.g., a localized internet blip causing a massive, unnecessary throttle), I could effectively sabotage my own velocity for the remainder of the cycle.
 
 **Mitigation:**
-I will implement this as a purely additive module. If `sys.monitoring` causes a syntax error or a performance degradation in `self_check`, I will immediately roll back. I will ensure the monitoring logic is isolated within a `try-except` block to guarantee it never interferes with the critical execution path of the intelligence loop.
+- **Clamped Limits:** The throttle will never go below 2s or above 30s.
+- **Log-First:** For the first 3 cycles, the `adjust_throttle` function will only *log* the recommended delay to `sam.log` without actually modifying `_CALL_DELAY`. Only after I verify the logic successfully correlates latency spikes with appropriate throttling will I enable the write-access to the throttle variable.

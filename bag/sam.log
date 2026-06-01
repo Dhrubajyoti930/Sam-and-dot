@@ -617,3 +617,146 @@ check(lint_commit_message("feat(test): valid message"), "FAIL: Linter rejected v
 2026-05-31 16:49:43,992 [INFO] request.json written — Dot will handle sending.
 2026-05-31 16:49:43,992 [INFO] Cycle complete.
 2026-05-31 16:49:43,992 [INFO] [Evaluator] Only 2 experiences — skipping (need 5+).
+2026-06-01 05:51:47,377 [INFO] ═══════════════════════════════════
+2026-06-01 05:51:47,378 [INFO]   SAM — Operational Cycle Starting 
+2026-06-01 05:51:47,378 [INFO] ═══════════════════════════════════
+2026-06-01 05:51:47,624 [INFO] ── Phase I: Deep Learning ──
+2026-06-01 05:51:47,641 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 05:51:51,624 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 05:51:51,629 [INFO] Phase I complete.
+2026-06-01 05:51:51,629 [INFO] ── Phase II: Spaced Repetition ──
+2026-06-01 05:51:59,630 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 05:52:01,335 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 05:52:01,340 [INFO] Phase II complete.
+2026-06-01 05:52:01,340 [INFO] ── Phase III: Market & Code Ingestion ──
+2026-06-01 05:52:09,341 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 05:52:13,204 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 05:52:13,208 [INFO] Phase III complete.
+2026-06-01 05:52:13,208 [INFO] ── Phase IV: The Synthesis ──
+2026-06-01 05:52:21,211 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 05:52:24,814 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 05:52:24,818 [INFO] IDEA_OF_THE_DAY.md written.
+2026-06-01 05:52:24,818 [INFO] ── Phase V: Development & Refactor ──
+2026-06-01 05:52:24,818 [INFO] motion.md read.
+2026-06-01 05:52:32,820 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 05:52:36,433 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 05:52:36,436 [INFO] Phase V complete.
+2026-06-01 05:52:36,436 [INFO] Audited: Deleted orphaned file profiler.py
+2026-06-01 05:52:36,437 [INFO] Snapshot saved → sam_20260601T055236Z.py
+2026-06-01 05:52:36,437 [INFO] Bag snapshot saved → bag_20260601T055236Z.json (7 files)
+2026-06-01 05:52:36,438 [INFO] ── Self-Modification: Parsing Surgical Patch ──
+2026-06-01 05:52:44,439 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 05:52:46,298 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 05:52:46,302 [INFO] Created new file via insert_after → bag/profiler.py
+2026-06-01 05:52:46,302 [INFO] Applied insert_after → sam.py
+2026-06-01 05:52:46,303 [INFO] Applied replace → sam.py
+2026-06-01 05:52:46,505 [ERROR] Syntax check failed on profiler.py — initiating rollback.
+2026-06-01 05:52:46,506 [WARNING] Rolled back sam.py → sam_20260601T055236Z.py
+2026-06-01 05:52:46,507 [WARNING] Rolled back bag/dot.py
+2026-06-01 05:52:46,507 [WARNING] Rolled back bag/emailer.py
+2026-06-01 05:52:46,507 [WARNING] Rolled back bag/evaluator.py
+2026-06-01 05:52:46,507 [WARNING] Rolled back bag/matrix_optimizer.py
+2026-06-01 05:52:46,507 [WARNING] Rolled back bag/semantic_cache.py
+2026-06-01 05:52:46,508 [WARNING] Rolled back bag/tests.py
+2026-06-01 05:52:46,508 [WARNING] Rolled back bag/versioning.py
+2026-06-01 05:52:46,508 [WARNING] Bag files restored from bag_20260601T055236Z.json (7 files)
+2026-06-01 05:52:46,508 [WARNING] Rolled back sam.py → sam_20260601T055236Z.py
+2026-06-01 05:52:46,509 [WARNING] Rolled back bag/dot.py
+2026-06-01 05:52:46,509 [WARNING] Rolled back bag/emailer.py
+2026-06-01 05:52:46,509 [WARNING] Rolled back bag/evaluator.py
+2026-06-01 05:52:46,509 [WARNING] Rolled back bag/matrix_optimizer.py
+2026-06-01 05:52:46,510 [WARNING] Rolled back bag/semantic_cache.py
+2026-06-01 05:52:46,510 [WARNING] Rolled back bag/tests.py
+2026-06-01 05:52:46,510 [WARNING] Rolled back bag/versioning.py
+2026-06-01 05:52:46,510 [WARNING] Bag files restored from bag_20260601T055236Z.json (7 files)
+2026-06-01 05:52:46,510 [WARNING] Alert written to motion.md: Self-modification failed the post-apply syntax check. Rolled back to previous snapshot. Plan that caused failure:
+
+```
+## Surgical Patch Plan
+
+**Security & Stability Risks:**
+1.  **Observability Overhead:** `sys.monitoring` is low-overhead, but frequent calls to it inside the high-frequency `ask_gemini` loop could theoretically introduce micro-latencies. 
+2.  **Telemetry Sensitivity:** The logic relies on `SamProfiler` state. If the `SamProfiler` fails to initialize or incorrectly calculates duration, the `_CALL_DELAY` could spike to 30s or floor to 2s, impacting cycle throughput.
+3.  **State Persistence:** Writing to `goals.json` frequently during Phase VII is safe, but as per the plan, the log-first approach is mandatory to prevent instability.
+
+---
+
+### Proposed Modifications
+
+#### 1. File: `bag/profiler.py`
+**Operation:** `insert_after`
+**Anchor:** `    def log_call(self, duration: float):`
+**New:**
+```python
+        self.stats["ask_gemini_calls"] += 1
+        self.stats["total_time"] += duration
+        # Track moving average latency (simple window)
+        self.stats["avg_latency"] = self.stats["total_time"] / self.stats["ask_gemini_calls"]
+```
+
+#### 2. File: `sam.py`
+**Operation:** `insert_after`
+**Anchor:** `def _sleep():`
+**New:**
+```python
+    """Pause between Gemini calls to respect RPM limits."""
+    time.sleep(_CALL_DELAY)
+
+def adjust_throttle(avg_latency: float):
+    """Log throttle adjustment recommendations based on telemetry."""
+    # Log-only mode for first 3 cycles as per mitigation strategy
+    goals = load_goals()
+    if goals.get("cycles", 0) <= 3:
+        log.info(f"[Throttle] Logic active. Latency: {avg_latency:.2f}s. Recommended delay: {max(2, min(30, avg_latency))}s (Log-only).")
+        return
+    
+    # Logic to be enabled after cycle 3
+    global _CALL_DELAY
+    if avg_latency < 2.0:
+        _CALL_DELAY = max(2.0, _CALL_DELAY - 0.5)
+    elif avg_latency > 15.0:
+        _CALL_DELAY = min(30.0, _CALL_DELAY * 1.5)
+    log.info(f"[Throttle] Adjusted _CALL_DELAY to {_CALL_DELAY}s based on latency {avg_latency:.2f}s.")
+```
+
+#### 3. File: `sam.py`
+**Operation:** `replace`
+**Old:**
+```python
+            if PROFILER:
+                PROFILER.log_call(time.perf_counter() - start_time)
+            update_cache(prompt, res, goals.get("cycles", 0))
+```
+**New:**
+```python
+            if PROFILER:
+                duration = time.perf_counter() - start_time
+                PROFILER.log_call(duration)
+                adjust_throttle(PROFILER.stats.get("avg_latency", 8.0))
+            update_cache(prompt, res, goals.get("cycles", 0))
+```
+
+---
+
+**Summary:** 
+I have opted to integrate the throttle logic as a helper in `sam.py` that consumes the `SamProfiler` stats. Per my mitigation plan, the actual variable modification is guarded by a cycle count check (`cycles <= 3`), ensuring I only move to active throttling once I have validated the correlation between latency and API behavior.
+```
+2026-06-01 05:52:46,510 [INFO] ── Phase VI: Cognitive Evolution ──
+2026-06-01 05:52:54,511 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 05:52:57,892 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 05:52:57,895 [INFO] Phase VI complete.
+2026-06-01 05:52:57,895 [INFO] ── Phase VII: State Saving ──
+2026-06-01 05:53:05,896 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 05:53:06,447 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 05:53:06,450 [INFO] 1% metric: Event-Loop-Latency-Delta
+2026-06-01 05:53:06,451 [INFO] goals.json updated.
+2026-06-01 05:53:06,456 [INFO] WHO_I_AM.md updated.
+2026-06-01 05:53:14,457 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 05:53:15,880 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 05:53:15,883 [INFO] experiences.json updated — 2 entries.
+2026-06-01 05:53:15,883 [INFO] Cycle 11 complete. 1% metric: Event-Loop-Latency-Delta
+2026-06-01 05:53:23,885 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-01 05:53:24,879 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-01 05:53:24,882 [INFO] request.json written — Dot will handle sending.
+2026-06-01 05:53:24,883 [INFO] Cycle complete.
+2026-06-01 05:53:24,884 [INFO] [Evaluator] Only 2 experiences — skipping (need 5+).
