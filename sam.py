@@ -282,6 +282,63 @@ def _alert_dot(message: str):
     log.warning(f"Alert written to motion.md: {message}")
 
 
+def repair_bag_modules() -> list:
+    """Scan bag/ for syntax-broken files and send each to Gemini for self-repair.
+    Returns list of filenames that were repaired.
+    Only touches files Sam created — AUDIT_PROTECTED files are skipped.
+    Uses one Gemini call per broken file found.
+    """
+    log.info("── Bag Module Health Check ──")
+
+    AUDIT_PROTECTED = {
+        "dot.py", "emailer.py", "evaluator.py", "matrix_optimizer.py",
+        "semantic_cache.py", "tests.py", "versioning.py", "worklog.py",
+    }
+
+    BAG = Path(__file__).parent / "bag"
+    broken = []
+    for f in sorted(BAG.glob("*.py")):
+        if f.name in AUDIT_PROTECTED:
+            continue
+        try:
+            compile(f.read_text(), f.name, "exec")
+        except SyntaxError as e:
+            broken.append((f, str(e)))
+            log.warning(f"Broken bag module detected: {f.name} — {e}")
+
+    if not broken:
+        log.info("All bag modules are syntax-clean.")
+        return []
+
+    repaired = []
+    for (f, error) in broken:
+        original = f.read_text()
+        log.info(f"Sending {f.name} to Gemini for self-repair...")
+        _sleep()
+        prompt = (
+            f"You are Sam, an autonomous developer. One of your workshop files has a syntax error.\n\n"
+            f"File: bag/{f.name}\n"
+            f"Error: {error}\n\n"
+            f"Full file contents:\n```python\n{original}\n```\n\n"
+            f"Fix ONLY the syntax error(s). Do not refactor, rename, or extend the file.\n"
+            f"Respond ONLY with the complete corrected Python file contents — no markdown fences,\n"
+            f"no explanation, just the raw Python code starting from the first line."
+        )
+        fixed = ask_gemini(prompt).strip()
+        fixed = fixed.removeprefix("```python").removeprefix("```").removesuffix("```").strip()
+
+        # Verify the fix before writing
+        try:
+            compile(fixed, f.name, "exec")
+            f.write_text(fixed)
+            log.info(f"Self-repaired: {f.name}")
+            repaired.append(f.name)
+        except SyntaxError as e2:
+            log.warning(f"Gemini fix for {f.name} still broken: {e2} — leaving original.")
+
+    return repaired
+
+
 def apply_self_modification(plan: str) -> bool:
     """Ask Gemini to extract surgical patch operations from the plan and apply them.
     Only sam.py and bag/*.py are writable. Returns True if anything was applied.
@@ -809,6 +866,9 @@ def run_cycle():
 
     # Phase V reads motion.md at the top — then plans
     plan = phase_v_development(idea, goals)
+
+    # Repair any broken bag/ modules Sam created before attempting self-modification
+    repair_bag_modules()
 
     # Self-modification — snapshot first, then apply, then verify
     snapshot_sam()
