@@ -179,7 +179,7 @@ def snapshot_sam() -> Path:
     log.info(f"Snapshot saved → {dest.name}")
 
     # ── Snapshot all writable bag/**/*.py (includes workshop subfolders) ──
-    from bag.workshop_paths import iter_writable_bag_py, relative_bag_posix
+    from bag.workshop_paths import is_writable_bag_py, iter_writable_bag_py, relative_bag_posix
 
     bag_snap = {
         relative_bag_posix(f, BAG): f.read_text(encoding="utf-8")
@@ -307,7 +307,7 @@ def repair_bag_modules() -> list:
     """
     log.info("── Bag Module Health Check ──")
 
-    from bag.workshop_paths import iter_writable_bag_py, relative_bag_posix
+    from bag.workshop_paths import is_writable_bag_py, iter_writable_bag_py, relative_bag_posix
 
     broken = []
     for f in iter_writable_bag_py(BAG):
@@ -578,7 +578,7 @@ def phase_v_development(idea: str, goals: dict) -> str:
         dot_constraint_block = ""
 
     from bag.workshop import format_layout_for_prompt, organize_for_cycle
-    from bag.workshop_paths import iter_writable_bag_py, relative_bag_posix
+    from bag.workshop_paths import is_writable_bag_py, iter_writable_bag_py, relative_bag_posix
 
     cycle_num = goals.get("cycles", 0) + 1
     target_folder = organize_for_cycle(BAG, idea, cycle_num, ask_gemini, log)
