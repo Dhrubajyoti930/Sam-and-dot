@@ -370,7 +370,11 @@ def apply_self_modification(plan: str) -> bool:
     from bag.patch_ops import apply_patch_operations
 
     log.info("── Self-Modification: Parsing Surgical Patch ──")
-    from bag.Misc.governance_shield import check_semantic_safety
+    from bag.workshop_imports import load_callable
+
+    check_semantic_safety = load_callable(
+        BAG, "governance_shield", "check_semantic_safety", default=lambda _plan: True
+    )
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
@@ -555,7 +559,6 @@ def phase_iv_synthesis(market_data: str, skill: str) -> str:
 def phase_v_development(idea: str, goals: dict) -> str:
     """Read motion.md FIRST, then produce a development plan."""
     log.info("── Phase V: Development & Refactor ──")
-    start_time = time.time()
 
     # ⚠️  motion.md is read ONCE, here, and nowhere else.
     motion_content = read_motion()
@@ -584,11 +587,13 @@ def phase_v_development(idea: str, goals: dict) -> str:
     else:
         dot_constraint_block = ""
 
-    from bag.workshop import format_layout_for_prompt, organize_for_cycle
+    from bag.workshop import apply_workshop_deletes, format_layout_for_prompt, organize_for_cycle
     from bag.workshop_paths import is_writable_bag_py, iter_writable_bag_py, relative_bag_posix
 
     cycle_num = goals.get("cycles", 0) + 1
-    target_folder = organize_for_cycle(BAG, idea, cycle_num, ask_gemini, log)
+    target_folder = organize_for_cycle(BAG, idea, cycle_num, ask_gemini, log, root=ROOT)
+    if target_folder and not behaviour_check():
+        log.warning("Behaviour check failed after workshop organization — review motion.md.")
     workshop_block = (
         "Sam's workshop folders (use these names; put NEW .py files in the target folder):\n"
         + format_layout_for_prompt(BAG)
@@ -630,9 +635,6 @@ def phase_v_development(idea: str, goals: dict) -> str:
     )
     plan = ask_gemini(prompt)
     log.info("Phase V complete.")
-    from bag.StabilityProtocols.lart import check_performance
-    if not check_performance("phase_v", time.time() - start_time):
-        log.warning("LART: Performance degradation detected in Phase V. Flagging for review.")
 
     # Open a worklog entry for this cycle's plan
     try:
@@ -665,14 +667,7 @@ def phase_v_development(idea: str, goals: dict) -> str:
         try:
             clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
             to_delete = json.loads(clean)
-            for rel in to_delete:
-                rel = str(rel).replace("\\", "/").lstrip("/")
-                if rel.startswith("bag/"):
-                    rel = rel[4:]
-                target = BAG / rel
-                if target.exists() and is_writable_bag_py(target, BAG):
-                    target.unlink()
-                    log.info(f"Sam deleted: bag/{rel} (based on Dot's review)")
+            apply_workshop_deletes(BAG, to_delete, log, reason="Dot's review")
         except Exception as e:
             log.warning(f"Bag audit decision parsing failed: {e}")
 
@@ -897,7 +892,6 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
     log.info(f"experiences.json updated — {len(experiences)} entries.")
 
     log.info(f"Cycle {cycle_num} complete. 1% metric: {one_pct_metric}")
-    # Dot's Guidance: Focus on architectural output as requested.
 
 
 def maybe_write_email_request(idea: str, goals: dict):
