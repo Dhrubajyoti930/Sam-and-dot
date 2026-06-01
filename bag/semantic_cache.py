@@ -7,14 +7,6 @@ DB_PATH = Path(__file__).parent.parent / "vector_db" / "semantic_cache.db"
 
 _MAX_CACHE_ENTRIES = 500  # Fix #11 — cap cache size
 
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-
-def get_context_similarity(query_embedding: list, target_embeddings: list):
-    """Calculate cosine similarity for context retrieval."""
-    if not target_embeddings: return 0.0
-    return cosine_similarity([query_embedding], target_embeddings).max()
-
 
 def get_db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
