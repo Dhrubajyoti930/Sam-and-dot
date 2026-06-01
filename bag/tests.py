@@ -250,6 +250,47 @@ check(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 6b — Phase VI prompt evolution loop
+# ═══════════════════════════════════════════════════════════════════════════════
+
+check(
+    "def apply_prompt_patch()" in sam_src,
+    "FAIL: apply_prompt_patch() missing — Phase VI suggestions are never applied."
+)
+
+check(
+    "bypass_cache=True" in sam_src and "phase_vi_cognitive_evolution" in sam_src,
+    "FAIL: Phase VI must call ask_gemini with bypass_cache=True to avoid stale cache hits."
+)
+
+check(
+    (BAG / "prompts.py").exists(),
+    "FAIL: bag/prompts.py missing — prompt registry required for Phase VI patches."
+)
+
+if (BAG / "prompts.py").exists():
+    prompts_src = (BAG / "prompts.py").read_text()
+    check(
+        "PROMPT_VERSION" in prompts_src and "PATCHABLE_PROMPTS" in prompts_src,
+        "FAIL: bag/prompts.py missing PROMPT_VERSION or PATCHABLE_PROMPTS."
+    )
+    check(
+        "PHASE_VI_PROMPT" in prompts_src,
+        "FAIL: bag/prompts.py missing PHASE_VI_PROMPT."
+    )
+
+try:
+    ast.parse((BAG / "semantic_cache.py").read_text())
+    sc_src = (BAG / "semantic_cache.py").read_text()
+    check(
+        "invalidate_phase_vi_cache" in sc_src,
+        "FAIL: semantic_cache.py missing invalidate_phase_vi_cache()."
+    )
+except Exception as e:
+    check(False, f"FAIL: Could not validate semantic_cache.py: {e}")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 7 — bag/*.py syntax integrity
 # Every Python helper Sam can modify must parse cleanly.
 # ═══════════════════════════════════════════════════════════════════════════════
