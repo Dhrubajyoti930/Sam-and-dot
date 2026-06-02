@@ -1,0 +1,27 @@
+SPECIFICATION FOR THE DOTCORE TOOLKIT (dot.py)
+==================================================
+PURPOSE:
+DotCore is a passive, high-performance utility library designed to minimize cognitive load and provide standard structure for autonomous prompt-engineering tasks. It must be written in pure, standard Python with zero external dependencies.
+
+REQUIRED COMPONENTS TO IMPLEMENT:
+
+1. CLASS: ContextSynthesizer
+   - Method: compress_text(raw_text: str) -> str
+     Takes large streams of unformatted text or data logs and compresses them into a dense, clean summary. It removes duplicate lines, excessive whitespaces, and boilerplate text.
+   - Method: extract_json(raw_string: str) -> dict
+     A robust parser that locates, extracts, and validates JSON objects hidden inside loose conversational text or markdown blocks, handling trailing commas or leading noise gracefully.
+
+2. CLASS: PromptOptimizer
+   - Method: enforce_strict_json(base_prompt: str, keys: list) -> str
+     Appends bulletproof, explicit system instructions to any given prompt ensuring the model outputs raw JSON matching the provided keys without markdown wrapping.
+   - Method: structure_chain_of_thought(task_description: str) -> str
+     Transforms a simple task string into a structured multi-phase prompt layout (Analysis -> Verification -> Final Output) to improve reasoning clarity.
+
+3. CLASS: SystemSanitizer
+   - Method: clean_code_blocks(output_text: str) -> str
+     Detects and cleanly strips out any accidental backticks, "```python", or trailing conversational filler text returned by large language models, leaving only raw executable text.
+
+CRITICAL DESIGN CONSTRAINTS FOR THE ENTIRE TOOLKIT:
+- All classes and methods must be fully documented with clear docstrings.
+- Every method must handle exceptions gracefully inside try-except blocks, returning safe defaults (empty strings or empty dicts) instead of crashing.
+- Do not import or use any third-party pip libraries under any circumstances.
