@@ -1,0 +1,36 @@
+{
+  "heart": "World/Sam/sam.py",
+  "brain": "World/Sam/My_memories/",
+  "watchdog": "World/Dot/dot.py",
+  "post_office": "World/mail/",
+  "modules": [
+    "Dot/Gemini_note_pad/prompts.py",
+    "Dot/bag/bag_paths.py",
+    "Dot/Others/semantic_cache.py",
+    "Dot/Others/__init__.py",
+    "Dot/hardware/__init__.py",
+    "Dot/hardware/emailer.py",
+    "Sam/Gemini_note_pad/prompts.py",
+    "Sam/Gemini_note_pad/__init__.py",
+    "Sam/bag/workshop_paths.py",
+    "Sam/bag/workshop.py",
+    "Sam/bag/workshop_imports.py",
+    "Sam/bag/governance.py",
+    "Sam/bag/matrix_optimizer.py",
+    "Sam/bag/bag_paths.py",
+    "Sam/bag/semantic_cache.py",
+    "Sam/bag/worklog.py",
+    "Sam/bag/patch_ops.py",
+    "Sam/bag/world_map.py",
+    "Sam/bag/__init__.py",
+    "Sam/bag/critique.py",
+    "Sam/bag/versioning.py",
+    "Sam/chest/rollback_registry/sam_20260602T110940Z.py",
+    "Sam/chest/rollback_registry/sam_20260602T110906Z.py",
+    "Sam/Others/__init__.py"
+  ],
+  "tests": [
+    "Dot/tests/tests.py"
+  ],
+  "last_updated": ""
+}
