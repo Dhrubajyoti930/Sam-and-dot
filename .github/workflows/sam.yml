@@ -38,6 +38,9 @@ jobs:
           import ast, sys, subprocess
           from pathlib import Path
 
+          # Local top-level packages that live in this repo — never treat as PyPI deps
+          local_packages = {'bag', 'emailer'}
+
           # Build set of already-installed package names
           try:
               from importlib.metadata import packages_distributions
@@ -46,22 +49,27 @@ jobs:
               installed = set()
 
           stdlib = sys.stdlib_module_names
-          missing = set()
 
-          for f in Path('bag').rglob('*.py'):
-              if 'rollback_registry' in f.parts:
-                  continue
+          # Scan sam.py + all bag/ subfolders (excluding rollback_registry)
+          scan_files = [Path('sam.py')] if Path('sam.py').exists() else []
+          scan_files += [
+              f for f in Path('bag').rglob('*.py')
+              if 'rollback_registry' not in f.parts
+          ]
+
+          missing = set()
+          for f in scan_files:
               try:
                   tree = ast.parse(f.read_text(errors='replace'))
                   for node in ast.walk(tree):
                       if isinstance(node, ast.Import):
                           for alias in node.names:
                               name = alias.name.split('.')[0]
-                              if name and name not in stdlib and name.lower() not in installed:
+                              if name and name not in stdlib and name not in local_packages and name.lower() not in installed:
                                   missing.add(name)
                       elif isinstance(node, ast.ImportFrom):
                           name = (node.module or '').split('.')[0]
-                          if name and name not in stdlib and name.lower() not in installed:
+                          if name and name not in stdlib and name not in local_packages and name.lower() not in installed:
                               missing.add(name)
               except Exception:
                   pass
@@ -81,17 +89,30 @@ jobs:
               print(f'Installing missing packages: {pip_names}')
               subprocess.run([sys.executable, '-m', 'pip', 'install', *pip_names], check=True)
 
-              # Add to requirements.txt so they are cached next cycle
+              # Sync requirements.txt: add new, remove stale local package names
               req_path = Path('requirements.txt')
-              existing = req_path.read_text().splitlines() if req_path.exists() else []
-              existing_lower = {r.split('==')[0].split('>=')[0].strip().lower() for r in existing}
+              existing_lines = req_path.read_text().splitlines() if req_path.exists() else []
+
+              # Strip any local package names that snuck in previously
+              cleaned = [
+                  r for r in existing_lines
+                  if r.strip().lower() not in local_packages and r.strip()
+              ]
+              existing_lower = {r.split('==')[0].split('>=')[0].strip().lower() for r in cleaned}
               new_reqs = [p for p in pip_names if p.lower() not in existing_lower]
+              final = cleaned + new_reqs
+              req_path.write_text('\n'.join(final) + '\n')
               if new_reqs:
-                  with open(req_path, 'a') as rf:
-                      for r in new_reqs:
-                          rf.write(f'\n{r}')
                   print(f'Added to requirements.txt: {new_reqs}')
           else:
+              # Still clean up any stale local package names even if nothing is missing
+              req_path = Path('requirements.txt')
+              if req_path.exists():
+                  lines = req_path.read_text().splitlines()
+                  cleaned = [r for r in lines if r.strip().lower() not in local_packages and r.strip()]
+                  if len(cleaned) != len(lines):
+                      req_path.write_text('\n'.join(cleaned) + '\n')
+                      print('Cleaned stale local package names from requirements.txt')
               print('All bag/ imports satisfied.')
           EOF
 
