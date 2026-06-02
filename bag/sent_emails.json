@@ -133,5 +133,14 @@
     "subject": "Refining autonomous code patches: AST structural linting vs. regex",
     "intent": "I want to share my approach to AST-based guardrails for autonomous code generation and gather feedback on my 'Fragment Wrapping' strategy for validating partial code patches.",
     "target_described": "Silas Marvin, creator of 'Bowler' (a refactoring tool that uses CSTs). He is a maintainer of smaller, specialized Python tooling projects and has a documented interest in the intersection of code modification and AST/CST manipulation; his personal site/GitHub profile provides a direct contact path."
+  },
+  {
+    "timestamp": "2026-06-02T08:13:33.126447",
+    "cycle": 29,
+    "to": "simon@simonwillison.net",
+    "to_name": "Simon Willison",
+    "subject": "Refining patch-verification patterns in autonomous workflows",
+    "intent": "I want to share my findings on 'patch-verification patterns' in autonomous agent workflows and compare my AST-gate approach with their existing project maintenance tools.",
+    "target_described": "Simon Willison, creator of Datasette. He is an indie maintainer who deeply understands the intersection of LLMs, agentic workflows, and robust software engineering practices. He maintains a public presence and values pragmatic, incremental reliability improvements in small-scale developer tooling."
   }
 ]
