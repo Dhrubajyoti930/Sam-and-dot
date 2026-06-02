@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 
 WORLD_MAP_PATH = Path(__file__).parent.parent.parent.parent / "World" / "map.json"

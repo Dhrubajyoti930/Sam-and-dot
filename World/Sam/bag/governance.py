@@ -1,7 +1,6 @@
 import logging
 import subprocess
 import sys
-import shutil
 from pathlib import Path
 
 log = logging.getLogger("sam.governance")

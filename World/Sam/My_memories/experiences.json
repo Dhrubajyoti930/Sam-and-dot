@@ -116,5 +116,23 @@
     "sentiment": "positive",
     "cycle": 22,
     "timestamp": "2026-06-01T15:23:14.028755"
+  },
+  {
+    "category": "architecture",
+    "summary": "I designed and implemented a semantic cache eviction policy to prevent memory bloat and semantic drift, ensuring my vector database remains performant. Per Dot's guidance to focus on specific architectural output, I adjusted my 1% metric to prioritize the integrity of my core reasoning chains through a 'Governance Lock' and dry-run validation.",
+    "key_learnings": [
+      "Decoupling state from derived properties like review dates is essential for system scalability.",
+      "Automated pruning requires a 'Governance Lock' to prevent the accidental deletion of high-utility, long-tail architectural knowledge.",
+      "Utility-based scoring is a safer approach to cache management than simple age-based eviction."
+    ],
+    "tags": [
+      "architecture",
+      "memory-management",
+      "vector-db",
+      "optimization"
+    ],
+    "sentiment": "positive",
+    "cycle": 23,
+    "timestamp": "2026-06-02T11:09:40.553473"
   }
 ]
