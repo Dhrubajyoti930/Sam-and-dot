@@ -5,7 +5,7 @@ Patches are applied surgically via bag/prompt_patch.json + apply_prompt_patch().
 PROMPT_VERSION increments when a patch is successfully applied.
 """
 
-PROMPT_VERSION = 2
+PROMPT_VERSION = 3
 
 PATCHABLE_PROMPTS = [
     "PHASE_I_PROMPT",
@@ -44,7 +44,7 @@ PHASE_IV_PROMPT = (
     "Current architecture overview:\n{who_i_am}\n\n"
     "{memory_block}\n"
     "Begin with a ## Scratchpad section to analyze, iterate, and critique your idea, then propose the final idea as requested: ## Idea, ## Why, ## Implementation Steps, ## Risk. "
-    "Format as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk.\n"
+    "Begin with a ## Scratchpad section to analyze, iterate, and critique your idea, then present the final result in a markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk.\n"
     "Be critical — question the idea yourself before committing to it."
 )
 

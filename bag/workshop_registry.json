@@ -3,22 +3,22 @@
     {
       "name": "Core Intelligence",
       "purpose": "Primary logic, reasoning, and semantic processing.",
-      "created_cycle": 27
+      "created_cycle": 28
     },
     {
       "name": "Knowledge Management",
       "purpose": "Vector indexing, retrieval, and context-aware memory.",
-      "created_cycle": 27
+      "created_cycle": 28
     },
     {
       "name": "Stability Protocols",
       "purpose": "Safety, self-modification, and structural linting.",
-      "created_cycle": 27
+      "created_cycle": 28
     },
     {
       "name": "Concurrency Controllers",
       "purpose": "Dynamic throughput and request-rate management.",
-      "created_cycle": 27
+      "created_cycle": 28
     }
   ],
   "last_target": "Stability Protocols"

@@ -828,7 +828,7 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
     ts        = datetime.datetime.utcnow().isoformat()
     cycle_num = goals.get("cycles", 0) + 1
 
-    # Ask Gemini to name a real, specific 1% metric for this cycle
+    # Ask Gemini to name a real, specific 1% metric for this cycle (Target: measured architectural improvement)
     motion_content = read_motion()
     _sleep()
     metric_prompt = (

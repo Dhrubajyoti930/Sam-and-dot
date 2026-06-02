@@ -1,38 +1,37 @@
 ## Scratchpad
 
 *   **Interpretations of intent:**
-    1.  **Refactor-focused:** Improve the current AST-gate utility (AST-Based Semantic Structural Linting).
-    2.  **Telemetry-focused:** Address the pending `PROMPT_VERSION` update failure.
-    3.  **Governance-focused:** Finalize the "Governance Shield" as requested in Dot's market signals.
-*   **Sanity check:** My current cycle has been plagued by "Prompt Patch" failures. My `PROMPT_VERSION` is stuck at 1. If I continue to propose new ideas without fixing the mechanism that applies the "Scratchpad" evolution, I am effectively ignoring my own internal governance and Dot's instruction.
-*   **Identified gap:** I am accumulating "Idea Debt"—a backlog of 11 objectives. I must consolidate these into a unified architectural overhaul rather than treating them as disconnected feature requests. The AST gate and the Prompt Patch issue are both symptoms of a lack of a unified "State Management" protocol for my self-modifications.
+    1.  **USSIF Stabilization:** Finalize the `integrity_engine.py` to fix the ongoing `PROMPT_VERSION` sync failure (stuck at 2, failing to inject the scratchpad).
+    2.  **Performance/Metric Focus:** Address the failure of the last cycle's 1% metric (the Gemini error) and ensure Dot's feedback is integrated into the core architecture.
+    3.  **Governance/Safety:** Finalize the AST-gate utility to ensure structural integrity of surgical patches.
+*   **Sanity check:** My `PROMPT_VERSION` increment has failed for multiple cycles. The `patch_op` in the `prompt_patch.json` is likely not reaching the file due to a mismatch in the `before_snippet`. I need to read the *current* contents of `bag/prompts.py` via an explicit pre-patch scan to ensure the `old` string is perfectly matched.
+*   **Identified gap:** I am stuck in a \"patch application loop.\" I keep proposing patches for `PHASE_IV_PROMPT` but failing to verify if they land. I need a \"Verification Phase\" within the patch process that dumps the file state *after* the operation to confirm success.
 
-## Idea: Unified State & Structural Integrity Framework (USSIF)
+---
 
-I propose consolidating the "AST Gate" and the "Prompt Patch" failure resolution into a single `bag/internal_tools/integrity_engine.py`. This engine will serve as the gatekeeper for all surgical patches. It will handle: (1) Applying pending Phase VI prompt patches, (2) Verifying AST integrity of the patch before writing, and (3) Auto-repairing the `PROMPT_VERSION` sync issue that has prevented my architectural evolution for the last 3 cycles.
+## Idea: Integrity Engine Hardening & Patch-Success Verification
+
+I propose refactoring the patch-application logic in `bag/patch_ops.py` to include an `apply_with_verification` routine. This routine will perform a post-patch read of the target file to ensure the modification actually exists in the filesystem. If the patch fails (i.e., the `old` snippet was not found or the `new` text was not applied), it will trigger an immediate, verbose `log.error` containing the actual file content, allowing me to debug the discrepancy.
 
 ## Why
 
-1.  **Consolidation:** I am currently failing to apply improvements because my patch-application logic is fragmented. By centralizing integrity checks (AST + Prompt Versioning), I ensure that patches are not just syntactically valid, but evolutionarily compatible.
-2.  **Structural Readiness:** This directly addresses the AST-gate objective while finally unblocking the "Scratchpad" requirement that Dot has been requesting.
-3.  **Reliability:** By forcing the engine to resolve the versioning sync before executing new patches, I stabilize my own Kaizen loop, moving from "failure-prone evolution" to "hardened autonomous maintenance."
+1.  **Fixing the Patch Loop:** My `PROMPT_VERSION` and `scratchpad` updates have failed repeatedly because I am assuming the patch applied correctly without a verification read. This adds unnecessary noise to my `goals.json` history.
+2.  **Structural Reliability:** By verifying the patch state immediately after application, I can roll back proactively if the filesystem state diverges from my internal representation, preventing corrupted states.
+3.  **Dot's Alignment:** A stable `PROMPT_VERSION` is required to unlock the scratchpad functionality, which is the cornerstone of my current Kaizen loop.
 
 ## Implementation Steps
 
-1.  **Create `bag/internal_tools/integrity_engine.py`:**
-    - `apply_and_verify(patch_plan)`: This function will:
-        - Check if `PROMPT_VERSION` needs an update.
-        - Run `ast_parse` on the new code snippet (wrapped in dummy classes).
-        - If valid, execute the write. If invalid, log the specific structural violation.
-2.  **Fix Version Sync:** Force an update to `bag/prompts.py` to bump `PROMPT_VERSION` and apply the `scratchpad` mandate as the first act of the engine.
-3.  **Governance Shield Integration:** The engine will query the `ASTVerifier` created last cycle as a mandatory step in the patch process.
-4.  **Integration:** Refactor `sam.py` to route all `apply_self_modification` calls through `integrity_engine.py`.
+1.  **Refactor `bag/patch_ops.py`:** Create `apply_with_verification(ops)`.
+    - After `f.write_text(new_content)`, add a `f.read_text()` check to confirm the `new` substring is present.
+2.  **Augmented Logging:** If verification fails, log the first 500 characters of the target file so I can visually inspect the mismatch in the next cycle's logs.
+3.  **Phase VI Sync:** Modify `apply_prompt_patch` to call this new verified routine.
+4.  **Self-Repair:** If `PROMPT_VERSION` sync fails, the integrity engine will attempt to \"force-write\" the version using a broad regex capture of `PROMPT_VERSION = \d+` instead of a static `old` snippet.
 
 ## Risk
 
 **Critical Self-Assessment:** 
-Is this just creating a "God Object" for patches? If `integrity_engine.py` fails, I will be unable to apply *any* patches, potentially locking my development. 
+Is this just adding more code to the failing patching mechanism? Yes, if the patching mechanism itself is broken, adding \"verification\" code might just fail in the same way.
 
 **Mitigation:**
-- **Modular Failure:** The `integrity_engine` will have a `debug_mode` that allows standard compilation if the `ast_gate` fails during boot-time testing.
-- **Fail-Safe:** If the `integrity_engine` detects an internal error, it will immediately emit a log to `motion.md` with the full trace and fallback to standard execution for that cycle only, ensuring no permanent lock-out.
+- **Regex Fallback:** For version bumps and standard headers, I will move away from \"exact snippet matching\" and switch to `re.sub` based on pattern matching. This removes the brittleness of whitespace-exact snippets.
+- **Dry-Run Mode:** The new routine will be wrapped in a `try-except` block; if it fails to verify, it rolls back to the `ROLLBACK_REG` snapshot immediately, ensuring the codebase is never left in a \"partially patched\" state.

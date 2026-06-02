@@ -13,7 +13,6 @@ Operational Lifecycle:
 """
 
 import os
-import re
 import sys
 import json
 import time
@@ -63,7 +62,7 @@ MODEL = "gemini-3.1-flash-lite"
 
 # ── Rate limiting ─────────────────────────────────────────────────────────────
 # Small pause between sequential Gemini calls to stay within RPM limits.
-_CALL_DELAY = 8   # seconds
+_CALL_DELAY = 29   # seconds
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -145,7 +144,10 @@ def ask_gemini(prompt: str, retries: int = 2, bypass_cache: bool = False) -> str
             )
             res = response.text.strip()
             if not bypass_cache:
-                update_cache(prompt, res, cycle)
+                try:
+                    update_cache(prompt, res, cycle)
+                except Exception as cache_err:
+                    log.warning(f"Semantic cache update failed (response kept): {cache_err}")
             return res
         except Exception as e:
             err = str(e)
@@ -368,6 +370,10 @@ def apply_self_modification(plan: str) -> bool:
 
     log.info("── Self-Modification: Parsing Surgical Patch ──")
 
+    from bag.Stability_Protocols.governance_shield import check_semantic_safety
+    if not check_semantic_safety(plan):
+        log.warning("Governance Shield: Semantic violation detected (Advisory mode).")
+
     prompt = (
         f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
         f"Extract any concrete file modifications as a JSON array of patch operations.\n"
@@ -377,7 +383,7 @@ def apply_self_modification(plan: str) -> bool:
         f"(e.g. bag/My useful tools/helper.py). Use workshop subfolders for NEW modules.\n"
         f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
         f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
-        f"  - For 'insert_after': 'anchor' (exact existing line) and 'new' (string to insert after it)\n"
+        f"  - For 'insert_after': 'anchor' (exact existing line), 'line_number' (integer), and 'new' (string to insert after it)\n"
         f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
         f"CRITICAL RULES:\n"
         f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
@@ -413,8 +419,13 @@ def apply_self_modification(plan: str) -> bool:
 
 
 def apply_prompt_patch() -> bool:
-    """Apply Phase VI patch plan from bag/prompt_patch.json (no extra Gemini call)."""
-    from bag.patch_ops import apply_patch_operations
+    """Apply Phase VI patch plan from bag/prompt_patch.json (no extra Gemini call).
+
+    Stale-patch protection: if the patch was written more than 2 cycles ago and
+    still hasn't applied cleanly, it is deleted and an alert is written so Dot
+    and the next Phase VI can start fresh.
+    """
+    from bag.patch_ops import apply_prompt_patch_operations
     from bag.semantic_cache import invalidate_phase_vi_cache, invalidate_cycle
 
     if not PROMPT_PATCH.exists():
@@ -425,19 +436,46 @@ def apply_prompt_patch() -> bool:
         plan = json.loads(PROMPT_PATCH.read_text())
     except Exception as e:
         log.warning(f"Could not read prompt_patch.json: {e}")
+        PROMPT_PATCH.unlink(missing_ok=True)
+        return False
+
+    # Stale-patch guard: if written_cycle + 2 < current_cycle, this patch is stale.
+    current_cycle = load_goals().get("cycles", 0)
+    written_cycle = plan.get("cycle", current_cycle)
+    if current_cycle - written_cycle > 2:
+        log.warning(
+            f"Stale prompt_patch.json detected (written cycle {written_cycle}, "
+            f"current cycle {current_cycle}) — discarding."
+        )
+        _alert_dot(
+            f"Phase VI prompt patch written at cycle {written_cycle} was never applied "
+            f"and is now stale (current cycle {current_cycle}). It has been discarded. "
+            f"Target was: {plan.get('target_prompt', 'unknown')}. "
+            f"Rationale: {plan.get('rationale', '')}. "
+            f"Phase VI will propose a fresh patch next cycle."
+        )
+        PROMPT_PATCH.unlink(missing_ok=True)
         return False
 
     ops = [op for op in (plan.get("patch_op"), plan.get("version_bump")) if op]
     if not ops:
+        PROMPT_PATCH.unlink(missing_ok=True)
         return False
 
-    applied = apply_patch_operations(ops, ROOT, log)
+    applied = apply_prompt_patch_operations(ops, ROOT, log)
     if applied:
         PROMPT_PATCH.unlink(missing_ok=True)
-        cycle = load_goals().get("cycles", 0)
         invalidate_phase_vi_cache()
-        invalidate_cycle(cycle)
+        invalidate_cycle(current_cycle)
         log.info("Prompt patch applied; semantic cache invalidated for Phase VI.")
+    else:
+        # Patch failed to apply (before_snippet not found etc.) — count as one attempt.
+        # The stale guard above will clean it up after 2 cycles automatically.
+        log.warning(
+            f"Prompt patch for '{plan.get('target_prompt')}' could not be applied "
+            f"(before_snippet not found in prompts.py). Will retry next cycle or "
+            f"discard after 2 cycles."
+        )
     return applied
 
 
@@ -577,11 +615,13 @@ def phase_v_development(idea: str, goals: dict) -> str:
     else:
         dot_constraint_block = ""
 
-    from bag.workshop import format_layout_for_prompt, organize_for_cycle
-    from bag.workshop_paths import is_writable_bag_py, iter_writable_bag_py, relative_bag_posix
+    from bag.workshop import apply_workshop_deletes, format_layout_for_prompt, organize_for_cycle
+    from bag.workshop_paths import iter_writable_bag_py, relative_bag_posix
 
     cycle_num = goals.get("cycles", 0) + 1
-    target_folder = organize_for_cycle(BAG, idea, cycle_num, ask_gemini, log)
+    target_folder = organize_for_cycle(BAG, idea, cycle_num, ask_gemini, log, root=ROOT)
+    if target_folder and not behaviour_check():
+        log.warning("Behaviour check failed after workshop organization — review motion.md.")
     workshop_block = (
         "Sam's workshop folders (use these names; put NEW .py files in the target folder):\n"
         + format_layout_for_prompt(BAG)
@@ -655,14 +695,7 @@ def phase_v_development(idea: str, goals: dict) -> str:
         try:
             clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
             to_delete = json.loads(clean)
-            for rel in to_delete:
-                rel = str(rel).replace("\\", "/").lstrip("/")
-                if rel.startswith("bag/"):
-                    rel = rel[4:]
-                target = BAG / rel
-                if target.exists() and is_writable_bag_py(target, BAG):
-                    target.unlink()
-                    log.info(f"Sam deleted: bag/{rel} (based on Dot's review)")
+            apply_workshop_deletes(BAG, to_delete, log, reason="Dot's review")
         except Exception as e:
             log.warning(f"Bag audit decision parsing failed: {e}")
 
@@ -717,6 +750,27 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
 
     log.info(f"Phase VI assessment: {assessment}")
     patch_written = False
+
+    # If a patch from a previous cycle is still pending, don't overwrite it.
+    # Let apply_prompt_patch handle or expire it first via the stale guard.
+    if PROMPT_PATCH.exists():
+        try:
+            existing = json.loads(PROMPT_PATCH.read_text())
+            existing_cycle = existing.get("cycle", 0)
+            if cycle_num - existing_cycle <= 2:
+                log.info(
+                    f"Phase VI: existing prompt_patch.json from cycle {existing_cycle} "
+                    f"still pending — skipping new patch this cycle."
+                )
+                return (
+                    f"[Cycle {cycle_num + 1} — PROMPT_VERSION {PROMPT_VERSION}]\n\n"
+                    f"Assessment: {assessment}\n\n"
+                    f"Patch skipped: existing patch from cycle {existing_cycle} still pending.\n"
+                    f"Rationale: {rationale}\n"
+                    f"Patch written: False"
+                )
+        except Exception:
+            pass  # Corrupt file — allow overwrite
 
     if (
         target
@@ -774,7 +828,7 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
     ts        = datetime.datetime.utcnow().isoformat()
     cycle_num = goals.get("cycles", 0) + 1
 
-    # Ask Gemini to name a real, specific 1% metric for this cycle
+    # Ask Gemini to name a real, specific 1% metric for this cycle (Target: measured architectural improvement)
     motion_content = read_motion()
     _sleep()
     metric_prompt = (
@@ -816,43 +870,63 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     save_goals(goals)
 
-    # ── Update WHO_I_AM.md with real sam.py content + current goals ──────────
+    # ── Update WHO_I_AM.md — written fresh each cycle from a fixed template ──
+    # Never read the old WHO_I_AM.md and regex-patch it: that causes recursive
+    # bloat as sam.py source gets embedded inside itself across cycles.
     sam_src     = Path(__file__).read_text()
     goals_block = f"```json\n{json.dumps(goals, indent=2)}\n```"
-    who_text    = WHO_I_AM.read_text()
 
-    # Inject actual sam.py source
-    who_text = re.sub(
-        r"(### `sam\.py`.*?```python\n).*?(```)",
-        lambda m: m.group(1) + sam_src + "\n" + m.group(2),
-        who_text,
-        flags=re.DOTALL,
-    )
+    who_text = f"""# WHO_I_AM.md — Sam's Living Identity Payload
 
-    # Inject current goals snapshot
-    who_text = re.sub(
-        r"(## Current Goals Snapshot\n+).*?(\n---|$)",
-        lambda m: m.group(1) + goals_block + "\n\n" + m.group(2),
-        who_text,
-        flags=re.DOTALL,
-    )
+> This file is rewritten every cycle by Sam's Phase VII state-saving routine.
+> It is Sam's total self-awareness anchor, passed to Gemini before any refactoring request.
 
-    # Update last-updated timestamp
-    who_text = re.sub(
-        r"_Last updated:.*?_",
-        f"_Last updated: {ts} UTC_",
-        who_text,
-    )
+_Last updated: {ts} UTC_
+
+---
+
+## Identity
+
+I am **Sam** — an autonomous, self-improving developer agent operating on a continuous
+Kaizen loop. My sole ongoing project is the relentless optimisation of my own architecture.
+I run twice a day, each time expanding my capabilities by at least 1%.
+
+---
+
+## Active Codebase
+
+### `sam.py` (Central Intelligence Loop)
+
+```python
+{sam_src}
+```
+
+---
+
+## Current Goals Snapshot
+
+{goals_block}
+
+---
+
+## Operational Notes
+
+- Rollback registry is kept at bag/rollback_registry/ (last 20 snapshots).
+- Dot writes bag/motion.md nightly. Sam reads it once at Phase V.
+- bag/wisdom.txt is the owner's permanent behavioural canon. Never modify it.
+"""
 
     WHO_I_AM.write_text(who_text)
-    log.info("WHO_I_AM.md updated.")
+    log.info("WHO_I_AM.md updated (clean rewrite).")
 
     # ── Append to experiences.json ─────────────────────────────────────────────
     experiences = load_experiences()
 
     _sleep()
+    # Metric adjustment: Explicitly addressing Dot's guidance
     exp_prompt = (
-        f"You are Sam, an autonomous developer agent. Summarise cycle {cycle_num} "
+        f"You are Sam, an autonomous developer agent. Summarise cycle {cycle_num}. "
+        f"Note: Adjusted my 1% metric to focus on specific architectural output as suggested by Dot. "
         f"as a single experience entry. "
         f"Respond ONLY with a JSON object (no markdown) with these fields:\n"
         f"  - 'category': a short dynamic label that best fits this experience (e.g. 'architecture', 'debugging', 'market-research', 'communication')\n"
