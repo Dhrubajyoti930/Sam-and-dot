@@ -24,19 +24,19 @@ def main():
         current_dot = ""
 
     # 2. Construct the strict evolutionary prompt passing full context
+    # Words are used instead of literal backticks here to prevent markdown parsing errors
     prompt = (
         f"You are Sam. Your job is to generate the complete, full new code for dot.py based on the fixed tool specification and its previous implementation.\n\n"
         f"Fixed Tool Specification (idea.txt):\n{idea}\n\n"
         f"Previous implementation (dot.py):\n{current_dot}\n\n"
         f"Task: Write the absolute full new code for dot.py implementing the entire specification. Do not truncate anything. Do not leave placeholder comments like '# implement here'. Write every line out completely.\n\n"
         f"CRITICAL CONSTRAINT: Use ONLY the Python Standard Library. Do NOT use or import any external libraries, frameworks, or pip packages. Use only built-in structures.\n"
-        f"Output ONLY valid, pure Python code. Do NOT wrap your response in markdown code blocks like ```python or 
-```."
+        f"Output ONLY valid, pure Python code. Do NOT wrap your response in triple-backtick markdown blocks."
     )
 
     # 3. Setup network request to Gemini 3.1 Flash Lite
     model_name = "gemini-3.1-flash-lite" 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+    url = f"[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/){model_name}:generateContent?key={api_key}"
     
     data = {
         "contents": [{
@@ -56,12 +56,13 @@ def main():
             res = json.loads(response.read().decode("utf-8"))
             new_code = res['candidates'][0]['content']['parts'][0]['text']
             
-            # Defensive post-processing cleanup if markdown tags slip through
+            # Defensive post-processing cleanup if markdown tags still slip through
             if new_code.strip().startswith("```"):
                 lines = new_code.strip().splitlines()
                 if lines[0].startswith("```"):
                     lines = lines[1:]
-                if lines and lines[-1].startswith("```"):
+                if lines and lines[-1].startswith("
+```"):
                     lines = lines[:-1]
                 new_code = "\n".join(lines)
 
