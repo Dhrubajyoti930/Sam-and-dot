@@ -1,99 +1,92 @@
 ================================================================================
-ARCHITECTURAL BLUEPRINT FOR THE VIRTUAL3D NARRATIVE GAME ENGINE (dot.py)
+ARCHITECTURAL BLUEPRINT: THE 'OMNISHOCK' VIRTUAL 3D ENGINE (dot.py)
 ================================================================================
 VISION:
-An autonomous, high-performance 1st-person 3D raycasting engine wrapped inside 
-an infinitely expanding, procedurally generated narrative matrix. Built entirely 
-from scratch using the Python Standard Library, the engine merges real-time 3D 
-ASCII graphics with a stateful, branching storytelling engine. As the loop runs, 
-the script must systematically expand the game's lore, quest depth, faction 
-dynamics, and text-based environmental readouts while maintaining rigid performance.
+An autonomous, high-performance 1st-person 3D raycasting engine and stateful 
+immersive sim constructed entirely from scratch using the Python Standard Library. 
+The system fuses the core rendering restrictions of WOLFENSTEIN 3D and DOOM (1993) 
+with the dense, terminal-driven, environmental storytelling of SYSTEM SHOCK 
+and the branching, multi-solution choice matrices of DEUS EX. The entire simulation 
+must manifest through an ASCII grid frame buffer with deep computational efficiency.
 
-The entire codebase must implement five tightly synchronized core engine modules.
+The codebase must implement five tightly synchronized core engine modules.
 
 --------------------------------------------------------------------------------
-1. ENGINE MODULE A: THE LINEAR ALGEBRA & RENDERING MATHEMATICS (Core Math)
+1. ENGINE MODULE A: THE RAYCASTING & MATRIX MATHEMATICS (Doom/Wolfenstein Core)
 --------------------------------------------------------------------------------
-- Purpose: Abstract 3D vector spaces, angles, and camera projection math.
+- Purpose: Vector mechanics and camera projection pipelines.
 - Requirements:
-  * Implement fully custom Vector2D and Vector3D classes from scratch handling 
-    dot products, cross products, normalization, and distance algorithms.
-  * Construct a trigonometric lookup system using the standard 'math' module 
-    (sin, cos, tan) to cache computational angles, preventing expensive real-time 
-    floating-point calculations during dense ray loops.
-  * Implement a 3D to 2D perspective transformation matrix engine that handles 
-    camera fields-of-view (FOV), aspect ratio adjustments, and coordinate scaling.
+  * Implement custom Vector2D/Vector3D classes handling cross products, 
+    normalizations, and distance constraints without third-party math suites.
+  * Construct a trigonometric lookup system caching mathematical angles (sin, cos) 
+    to handle fast perspective projection, eliminating fish-eye lens distortion.
+  * Build a digital differential analysis (DDA) raycasting engine tracing rays 
+    through a grid matrix to calculate exact wall coordinate boundaries.
 
 --------------------------------------------------------------------------------
-2. ENGINE MODULE B: THE RAYCASTING & RASTERIZATION PIPELINE (Graphics GPU)
+2. ENGINE MODULE B: THE SYSTEMIC SHADING & VRAM RASTERIZER (ASCII Visuals)
 --------------------------------------------------------------------------------
-- Purpose: Project rays across a world grid and render individual wall columns.
+- Purpose: Process distance data into an interactive visual display.
 - Requirements:
-  * Implement a high-performance Digital Differential Analysis (DDA) raycasting 
-    algorithm. It must trace vision rays from the player's position through a 
-    predefined 2D/3D map matrix, finding exact intersection points with solid walls.
-  * Compute ray distance safely to eliminate the "fish-eye lens distortion effect" 
-    by multiplying the distance by the cosine of the relative angle.
-  * Build an ASCII shader engine that maps distance values to specific character 
-    densities (e.g., matching close walls to '#' or '@', and distant structures 
-    to '.' or ':') to simulate depth, wall shadows, and lighting drops.
+  * Map floating-point ray distances to an dynamic ASCII depth gradient chart 
+    (e.g., close surfaces render as '#', distant horizons fade into '.').
+  * Implement wall-side illumination shading: distinguish between North/South 
+    and East/West wall intersections by altering character intensity to create 
+    structural shadows, directly mimicking the original Wolfenstein 3D rendering style.
+  * Project vertical wall slices onto a double-buffered 2D text matrix (Video RAM), 
+    complete with strict viewport clipping limits to guarantee zero index errors.
 
 --------------------------------------------------------------------------------
-3. ENGINE MODULE C: THE GAME STATE, ENTITIES, & COLLISION (Physics Engine)
+3. ENGINE MODULE C: PHYSICAL BOUNDARIES & ENTITY STATES (Immersive Physics)
 --------------------------------------------------------------------------------
-- Purpose: Track player movement, map telemetry, and physical boundaries.
+- Purpose: Manage movement vectors and spatial physical interaction.
 - Requirements:
-  * Implement a persistent Player controller holding vector positions, direction 
-    vectors, camera planes, and state mechanics (moving forward, strafing, turning).
-  * Build an Axis-Aligned Bounding Box (AABB) or sliding-circle collision 
-    subsystem. When player movement vectors intersect map walls, it must cleanly 
-    slide the player along the wall face instead of locking up or clipping through.
-  * Maintain a static world layout grid (dungeon maze) using nested structures, 
-    with distinct ID values mapping to structural walls, empty spaces, or doorways.
+  * Maintain a comprehensive dungeon topology matrix featuring variable block IDs 
+    representing solid walls, interactive security doors, and item containers.
+  * Implement an Axis-Aligned Bounding Box (AABB) sliding physics loop. When the 
+    player collides with a wall vector, the engine must calculate tangential velocity 
+    allowing the player to seamlessly slide along the surface instead of getting stuck.
 
 --------------------------------------------------------------------------------
-4. ENGINE MODULE D: THE PROCEDURAL CHRONICLE ENGINE (Infinite Storytelling)
+4. ENGINE MODULE D: THE DEUS EX / SYSTEM SHOCK CHRONICLE ENGINE (Lore & Quests)
 --------------------------------------------------------------------------------
-- Purpose: Generate, track, and endlessly extend the game's lore, plot, and quests.
+- Purpose: Generate, track, and endlessly extend a dark, branching cyber-narrative.
 - Requirements:
-  * Implement a stateful Narrative Graph or Finite State Machine (FSM) that tracks 
-    global story chapters, active quest constraints, and unlockable plot vectors.
-  * Create a grammar-based or template-driven procedural dialogue engine using the 
-    standard 'random' module. It must assemble lore logs, forgotten terminal 
-    messages, and ancient script snippets based on a seed system.
-  * Bind story states directly to physical world coordinates. Stepping onto specific 
-    map vectors must trigger textual plot developments, environmental descriptions, 
-    or phase shifts in the environment (e.g., structural text walls transforming).
-  * Maintain a historical timeline lexicon within the code structure that grows or 
-    gains sub-plots with every script rewrite, reading the previous version's lore 
-    and branching it into new generations without dropping past narrative continuity.
+  * Implement a stateful Lore-Graph Tracking Machine recording global plot flags, 
+    player allegiances, faction reputations, and key inventory item IDs.
+  * Procedurally generate deep environmental logs, emails, and corrupted audio 
+    transcripts mimicking the tone of System Shock. These must be dynamically 
+    injected into terminal coordinate blocks across the 3D map.
+  * Establish a Deus Ex-style objective engine offering multi-vector resolutions 
+    to tasks (e.g., a locked passage can be bypassed by discovering a keycode log 
+    in a text terminal, finding a structural ventilation route, or hacking a map array).
+  * CONTINUITY REQUIREMENT: Every time you compile, read the previous code's 
+    narrative database. Preserve all established lore, characters, and terminal 
+    history, but extend the timeline forward by introducing new deeper levels, 
+    conspiracies, and shifting world events.
 
 --------------------------------------------------------------------------------
-5. ENGINE MODULE E: THE VIRTUAL FRAME BUFFER & SIMULATION LOOP (I/O & Display)
+5. ENGINE MODULE E: SIMULATION FRAME ASSEMBLER & HUD (I/O Display)
 --------------------------------------------------------------------------------
-- Purpose: Manage double-buffering, frame generation, and logging telemetry.
+- Purpose: Consolidate visuals and narrative feedback into a single view.
 - Requirements:
-  * Implement a 2D text matrix acting as a double-buffered Video RAM (VRAM) array. 
-    It must support precise row/column pixel manipulation, screen clearing, 
-    and edge-clipping guards so rays drawing outside the viewport never crash it.
-  * Build a Heads-Up Display (HUD) string assembler that overwrites rendering cells 
-    to overlay real-time mini-maps, direction compasses, active story objectives, 
-    and rolling text-adventure subtitles tracking the current plot arc.
-  * A frame-exporter function that converts the active VRAM matrix into a clean, 
-    newline-joined string output representing a single complete 3D viewport step.
+  * Render a real-time tactical Heads-Up Display (HUD) overlaying an ASCII 
+    minimap, spatial orientation compasses, and player biometric tracking.
+  * Dedicate a section of the frame output to a scrolling textual narrative console 
+    displaying ongoing environment subtitles, log text reading, and quest updates.
 
 ================================================================================
 EVOLUTIONARY DIRECTIVES & REFACTORING VECTORS FOR SAM
 ================================================================================
-During every compilation loop, you must refactor and expand dot.py across these vectors:
+During every compilation run, you must refactor and expand dot.py across these vectors:
 
-1. NARRATIVE EXPANSION: Read the previous version of the code, extract its current 
-   lore framework, and build the next logical progression of the story. Introduce 
-   new plot points, character journals, and historical secrets to expand the universe.
-2. ENGINE FEATURES: Introduce advanced visual features over time, such as variable 
-   wall heights, raycast floor/ceiling drawing, thin doorways, or sprite sorting.
-3. PRISTINE CODE ARCHITECTURE: Enforce strict type hints, deep component separation, 
-   and clean comprehensive object orientations. No messy global states.
-4. ZERO TOLERANCE FOR TRUNCATION: Complete definitions only. Every loop, every class, 
-   and every mathematical fallback handler must be completely written out in full.
+1. NARRATIVE DEPTH EXTENSION: Read the previous iteration, locate the text log arrays, 
+   and expand the storyline. Weave more complex multi-layered conspiracies, subplots, 
+   and functional security terminal logs directly into the engine's data structures.
+2. OPTIMIZATION SLICING: Eliminate redundant string manipulations inside the dense 
+   raycasting loops. Shift processing to dictionary lookups or local caching mechanisms.
+3. PRISTINE CODE ARCHITECTURE: Enforce strict type hints, clear class boundaries, 
+   and absolute modular decoupling. Avoid large global variables.
+4. ZERO PLACEHOLDERS: Write out every single mathematical function, structural array, 
+   and fallback loop completely. Do not truncate or use brief placeholder comments.
 ================================================================================
