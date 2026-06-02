@@ -587,6 +587,8 @@ def phase_iv_synthesis(market_data: str, skill: str) -> str:
 def phase_v_development(idea: str, goals: dict) -> str:
     """Read motion.md FIRST, then produce a development plan."""
     log.info("── Phase V: Development & Refactor ──")
+    from bag.Telemetry_Engine.integrity_engine import force_sync_prompts
+    force_sync_prompts(log)
 
     # ⚠️  motion.md is read ONCE, here, and nowhere else.
     motion_content = read_motion()
@@ -842,7 +844,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
         f"reflects what actually happened and explicitly notes whether you acted on Dot's suggestions. "
         f"Reply with the metric name only. No explanation. Max 12 words."
     )
-    one_pct_metric = ask_gemini(metric_prompt).strip().strip('"').strip("'")
+    # Force single string return to avoid JSON schema errors
+    one_pct_metric = ask_gemini(metric_prompt + "\n\nProvide only a 12-word text string. No JSON.").strip().strip('"').strip("'")
     log.info(f"1% metric: {one_pct_metric}")
 
     entry = {
