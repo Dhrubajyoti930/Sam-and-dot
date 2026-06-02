@@ -1,144 +1,136 @@
-import json
-import re
+import math
+import random
+import time
+import sys
 
-class ContextSynthesizer:
-    """
-    Handles compression of unstructured data and robust extraction of JSON from raw text.
-    """
+# ENGINE MODULE A: THE LINEAR ALGEBRA & RENDERING MATHEMATICS
+class Vector2D:
+    __slots__ = ('x', 'y')
+    def __init__(self, x: float, y: float):
+        self.x, self.y = float(x), float(y)
+    def __add__(self, o): return Vector2D(self.x + o.x, self.y + o.y)
+    def __sub__(self, o): return Vector2D(self.x - o.x, self.y - o.y)
+    def __mul__(self, s): return Vector2D(self.x * s, self.y * s)
+    def dot(self, o): return self.x * o.x + self.y * o.y
+    def length(self): return math.sqrt(self.x**2 + self.y**2)
+    def normalize(self):
+        l = self.length()
+        return Vector2D(self.x/l, self.y/l) if l > 0 else Vector2D(0, 0)
+    def rotate(self, deg):
+        rad = math.radians(deg)
+        s, c = math.sin(rad), math.cos(rad)
+        return Vector2D(self.x * c - self.y * s, self.x * s + self.y * c)
 
-    def compress_text(self, raw_text: str) -> str:
-        """
-        Compresses large streams of text by removing duplicate lines, 
-        excessive whitespaces, and common boilerplate patterns.
-        
-        Args:
-            raw_text: The noisy text to compress.
-        Returns:
-            A cleaned, dense string or an empty string on failure.
-        """
-        try:
-            if not isinstance(raw_text, str) or not raw_text.strip():
-                return ""
-            
-            lines = raw_text.splitlines()
-            seen = set()
-            cleaned = []
-            
-            for line in lines:
-                # Remove excessive whitespace
-                stripped = " ".join(line.split())
-                if stripped and stripped not in seen:
-                    cleaned.append(stripped)
-                    seen.add(stripped)
-            
-            return " ".join(cleaned)
-        except Exception:
-            return ""
+class EngineMath:
+    TRIG_CACHE = {i: (math.cos(math.radians(i)), math.sin(math.radians(i))) for i in range(360)}
+    @staticmethod
+    def get_cos(deg): return EngineMath.TRIG_CACHE[int(deg) % 360][0]
+    @staticmethod
+    def get_sin(deg): return EngineMath.TRIG_CACHE[int(deg) % 360][1]
 
-    def extract_json(self, raw_string: str) -> dict:
-        """
-        Locates, extracts, and parses JSON objects within noisy strings.
-        Handles leading/trailing noise, markdown blocks, and trailing commas.
-        
-        Args:
-            raw_string: The string containing hidden JSON.
-        Returns:
-            A parsed dictionary or an empty dict on failure.
-        """
-        try:
-            if not isinstance(raw_string, str) or not raw_string:
-                return {}
-            
-            # Find the boundaries of the JSON object
-            start = raw_string.find('{')
-            end = raw_string.rfind('}')
-            
-            if start == -1 or end == -1 or start >= end:
-                return {}
-            
-            json_str = raw_string[start:end+1]
-            
-            # Remove common trailing commas that violate standard JSON
-            json_str = re.sub(r',\s*([\]}])', r'\1', json_str)
-            
-            return json.loads(json_str)
-        except Exception:
-            return {}
+# ENGINE MODULE C: THE GAME STATE, ENTITIES, & COLLISION
+class Player:
+    def __init__(self, x: float, y: float):
+        self.pos = Vector2D(x, y)
+        self.dir = Vector2D(1, 0)
+        self.plane = Vector2D(0, 0.66)
+    def update(self, move_speed: float, rot_speed: float, world: list):
+        next_pos = self.pos + (self.dir * move_speed)
+        if world[int(self.pos.y)][int(next_pos.x)] == ' ':
+            self.pos.x = next_pos.x
+        if world[int(next_pos.y)][int(self.pos.x)] == ' ':
+            self.pos.y = next_pos.y
+        if rot_speed != 0:
+            self.dir = self.dir.rotate(rot_speed)
+            self.plane = self.plane.rotate(rot_speed)
 
-class PromptOptimizer:
-    """
-    Provides utilities to structure and enforce constraints on prompts for LLMs.
-    """
+# ENGINE MODULE D: THE PROCEDURAL CHRONICLE ENGINE
+class NarrativeEngine:
+    def __init__(self):
+        self.version = "5.5.0"
+        self.chronicle = [
+            "The archive awakens. Memory sectors recalibrating...",
+            "Lore synthesis active: Identifying forgotten static-fragments.",
+            "Dimensional boundary integrity stable: Reality 5.5.0."
+        ]
+        self.lexicon = ["Omen", "Nexus", "Drift", "Static", "Echo", "Void-Gate"]
+        self.tick = 0
+    def fetch_narrative(self, pos: Vector2D) -> str:
+        self.tick += 1
+        node = self.lexicon[(int(pos.x) + int(pos.y)) % len(self.lexicon)]
+        return f"DOT.py {self.version} | Sector: {node} | T:{self.tick:04d} | Log: {random.choice(self.chronicle)}"
 
-    def enforce_strict_json(self, base_prompt: str, keys: list) -> str:
-        """
-        Appends explicit system instructions to force raw JSON output 
-        without markdown wrapping or conversational filler.
-        
-        Args:
-            base_prompt: The initial prompt.
-            keys: A list of keys required in the JSON object.
-        Returns:
-            The augmented prompt string.
-        """
-        try:
-            key_str = ", ".join(keys)
-            instruction = (
-                f"\n\nSTRICT OUTPUT FORMAT:\n"
-                f"You must return ONLY a raw JSON object containing exactly these keys: {key_str}.\n"
-                f"Do not use markdown code blocks (e.g., no ```json). "
-                f"Do not provide any preamble, explanation, or conversational filler. "
-                f"Output strictly the JSON object."
+# ENGINE MODULE B & E: RENDERING, RASTERIZATION & VIRTUAL FRAME BUFFER
+class Engine:
+    def __init__(self):
+        self.width, self.height = 80, 24
+        self.world = [
+            "################################################################################",
+            "#     #            #                                                           #",
+            "#     #            #        #                                  #               #",
+            "#                  #        #           #                      #               #",
+            "#     ########     #        #           #      #######         #               #",
+            "#                  #        #           #                      #               #",
+            "#     #            #        #           #                      #               #",
+            "#     #            #                                           #               #",
+            "#                                                              #               #",
+            "################################################################################"
+        ]
+        self.player = Player(4, 4)
+        self.narrative = NarrativeEngine()
+        self.vram = [[' ' for _ in range(self.width)] for _ in range(self.height)]
+
+    def draw_pixel(self, x: int, y: int, char: str):
+        if 0 <= x < self.width and 0 <= y < self.height:
+            self.vram[y][x] = char
+
+    def render_frame(self):
+        self.vram = [[' ' for _ in range(self.width)] for _ in range(self.height)]
+        for x in range(self.width):
+            cam_x = 2 * x / self.width - 1
+            ray_dir = self.player.dir + (self.player.plane * cam_x)
+            map_pos = [int(self.player.pos.x), int(self.player.pos.y)]
+            delta = Vector2D(abs(1/(ray_dir.x + 1e-9)), abs(1/(ray_dir.y + 1e-9)))
+            step = [1 if ray_dir.x > 0 else -1, 1 if ray_dir.y > 0 else -1]
+            side_dist = Vector2D(
+                (self.player.pos.x - map_pos[0]) * delta.x if ray_dir.x < 0 else (map_pos[0] + 1 - self.player.pos.x) * delta.x,
+                (self.player.pos.y - map_pos[1]) * delta.y if ray_dir.y < 0 else (map_pos[1] + 1 - self.player.pos.y) * delta.y
             )
-            return f"{base_prompt}{instruction}"
-        except Exception:
-            return base_prompt
-
-    def structure_chain_of_thought(self, task_description: str) -> str:
-        """
-        Transforms a simple task string into a structured multi-phase 
-        prompt layout (Analysis -> Verification -> Final Output).
-        
-        Args:
-            task_description: The core task to be performed.
-        Returns:
-            A structured prompt layout.
-        """
-        try:
-            return (
-                f"TASK: {task_description}\n\n"
-                "To ensure the highest accuracy, follow this reasoning process:\n"
-                "1. ANALYSIS: Deconstruct the task requirements, context, and identify critical constraints.\n"
-                "2. VERIFICATION: Critically review the logic for potential errors, omissions, or edge cases.\n"
-                "3. FINAL OUTPUT: Provide the definitive result based on the verified logic."
-            )
-        except Exception:
-            return task_description
-
-class SystemSanitizer:
-    """
-    Cleans model outputs to ensure machine-readability by removing artifacts.
-    """
-
-    def clean_code_blocks(self, output_text: str) -> str:
-        """
-        Detects and strips out backticks, language markers (e.g., ```python), 
-        and trailing conversational filler.
-        
-        Args:
-            output_text: The raw output from the model.
-        Returns:
-            A clean string containing only the target text.
-        """
-        try:
-            if not isinstance(output_text, str) or not output_text:
-                return ""
+            hit, side = False, 0
+            while not hit:
+                if side_dist.x < side_dist.y:
+                    side_dist.x += delta.x
+                    map_pos[0] += step[0]
+                    side = 0
+                else:
+                    side_dist.y += delta.y
+                    map_pos[1] += step[1]
+                    side = 1
+                if self.world[map_pos[1]][map_pos[0]] != ' ': hit = True
             
-            # Remove markdown code block markers and optional language specifiers
-            # Handles ```json, ```python, ```, etc.
-            clean = re.sub(r'```[a-zA-Z]*\n?', '', output_text)
-            clean = clean.replace('```', '')
-            
-            return clean.strip()
-        except Exception:
-            return str(output_text) if output_text else ""
+            perp_dist = (side_dist.x - delta.x) if side == 0 else (side_dist.y - delta.y)
+            line_height = int(self.height / (perp_dist + 1e-3))
+            draw_start = max(0, -line_height // 2 + self.height // 2)
+            draw_end = min(self.height - 1, line_height // 2 + self.height // 2)
+            shading = '@' if perp_dist < 2 else ('#' if perp_dist < 5 else (':' if perp_dist < 10 else '.'))
+            for y in range(draw_start, draw_end): self.draw_pixel(x, y, shading)
+        
+        status = self.narrative.fetch_narrative(self.player.pos)
+        for i, char in enumerate(status[:self.width]): self.draw_pixel(i, 0, char)
+
+    def run(self):
+        sys.stdout.write("\033[2J")
+        try:
+            while True:
+                self.render_frame()
+                rot = 2.0 if random.random() > 0.95 else 0
+                self.player.update(0.15, rot, self.world)
+                frame = "\033[H" + "\n".join(["".join(row) for row in self.vram])
+                sys.stdout.write(frame)
+                sys.stdout.flush()
+                time.sleep(0.04)
+        except KeyboardInterrupt:
+            sys.stdout.write("\nNarrative Archive Saved. Engine Shutdown.\n")
+
+if __name__ == "__main__":
+    Engine().run()
