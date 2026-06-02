@@ -4,5 +4,11 @@
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
     "review_due_cycle": 27
+  },
+  {
+    "cycle": 24,
+    "topic": "feature: Verified Market Scan (Phase III)",
+    "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
+    "review_due_cycle": 28
   }
 ]

@@ -6,6 +6,7 @@
   "modules": [
     "Dot/Gemini_note_pad/prompts.py",
     "Dot/bag/bag_paths.py",
+    "Dot/bag/worklog.py",
     "Dot/Others/semantic_cache.py",
     "Dot/Others/__init__.py",
     "Dot/hardware/__init__.py",
@@ -23,10 +24,14 @@
     "Sam/bag/patch_ops.py",
     "Sam/bag/world_map.py",
     "Sam/bag/__init__.py",
+    "Sam/bag/governance_shield.py",
     "Sam/bag/critique.py",
+    "Sam/bag/evaluator.py",
     "Sam/bag/versioning.py",
     "Sam/chest/rollback_registry/sam_20260602T110940Z.py",
     "Sam/chest/rollback_registry/sam_20260602T110906Z.py",
+    "Sam/chest/rollback_registry/sam_20260602T125552Z.py",
+    "Sam/chest/rollback_registry/sam_20260602T125627Z.py",
     "Sam/Others/__init__.py"
   ],
   "tests": [
