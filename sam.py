@@ -372,11 +372,9 @@ def apply_self_modification(plan: str) -> bool:
     log.info("── Self-Modification: Parsing Surgical Patch ──")
     from bag.workshop_imports import load_callable
 
-    check_semantic_safety = load_callable(
-        BAG, "governance_shield", "check_semantic_safety", default=lambda _plan: True
-    )
+    from bag.Stability_Protocols.governance_shield import check_semantic_safety
     if not check_semantic_safety(plan):
-        log.warning("Governance Shield: Semantic violation detected (Warning mode).")
+        log.warning("Governance Shield: Semantic violation detected (Advisory mode).")
 
     prompt = (
         f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
