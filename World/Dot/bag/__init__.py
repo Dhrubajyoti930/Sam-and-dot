@@ -1,3 +1,0 @@
-"""
-Dot's bag infrastructure.
-"""
