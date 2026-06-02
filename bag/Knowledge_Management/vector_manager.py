@@ -7,7 +7,13 @@ def compact_cache():
     """Prune low-utility entries from semantic cache."""
     conn = sqlite3.connect(str(DB_PATH))
     try:
-        conn.execute("ALTER TABLE cache ADD COLUMN pinned INTEGER DEFAULT 0")
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(cache)").fetchall()]
+        if 'pinned' not in cols:
+            conn.execute("ALTER TABLE cache ADD COLUMN pinned INTEGER DEFAULT 0")
+        if 'last_accessed' not in cols:
+            conn.execute("ALTER TABLE cache ADD COLUMN last_accessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+        if 'hit_count' not in cols:
+            conn.execute("ALTER TABLE cache ADD COLUMN hit_count INTEGER DEFAULT 1")
         conn.execute("ALTER TABLE cache ADD COLUMN last_accessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
         conn.execute("ALTER TABLE cache ADD COLUMN hit_count INTEGER DEFAULT 1")
     except sqlite3.OperationalError:

@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 def get_few_shot_example(task_category: str) -> str:
-    exp_path = Path(__file__).parent / "experiences.json"
+    exp_path = Path(__file__).parent.parent / "experiences.json"
     if not exp_path.exists():
         return ""
     

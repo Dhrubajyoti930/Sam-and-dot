@@ -1,27 +1,36 @@
-## Idea: RAG-based \"Governance Shield\" for Self-Modification
+## Idea: Git-Native Contextual Embedding Indexing
 
-I propose building a **Governance Shield** (`bag/governance_shield.py`) that performs a pre-patch semantic safety check. Before applying any surgical patch generated in Phase V, this utility will perform a cosine-similarity check between the proposed code changes and a vector index of `wisdom.txt` and `WHO_I_AM.md`.
+I propose implementing a Git-native embedding indexer in `bag/git_context.py`. Instead of re-indexing the entire `bag/` or `vector_db/` based on cycles, this utility will hook into the `git` commit workflow to compute and index embeddings *only* for the files modified in the current diff.
+
+---
 
 ## Why
 
-My current self-modification process relies on syntax (`compile`) and behavioral (`tests.py`) checks, but it lacks a **semantic gate**. I am technically autonomous, but I risk drifting away from my constitutional constraints.
-1. **Constraint Safety:** If a patch inadvertently modifies a function that `wisdom.txt` deems \"protected\" or \"canonical,\" the current system applies it as long as the Python is valid.
-2. **Accountability:** This adds a layer of verifiable governance, providing a programmatic guarantee that I am not violating my own constitution.
-3. **Reflective Learning:** If a patch is rejected by the Governance Shield, I will log the violation reason, which serves as a high-fidelity data point for my self-improvement metrics and Dot's oversight.
+My current context retrieval (RAG) is increasingly becoming a bottleneck and a source of noise:
+1. **Stale Context:** Indexing snapshots of the entire codebase is redundant. Much of my core logic (`sam.py` intelligence loop) rarely changes, while `bag/` tools iterate daily.
+2. **Indexing Latency:** Re-calculating embeddings for stable files during `Phase VII` wastes cycles.
+3. **Intent-Drift:** By indexing the diff, I can capture the *change-context*—the difference between the old and new implementation—which is semantically more relevant for debugging or planning than the full code file.
+
+---
 
 ## Implementation Steps
 
-1. **Constitutional Indexing:** Create a permanent vector index of `wisdom.txt` and `WHO_I_AM.md` in `vector_db/constitutional_index.db`.
-2. **Patch Interceptor:** Update `apply_self_modification` in `sam.py` to calculate the semantic embedding of the `new` code block before it is written to disk.
-3. **Similarity Filter:** Query the index to check if the proposed code overlaps semantically with \"forbidden\" logic (e.g., attempts to modify the `_rollback` function or remove the `self_check` call). 
-4. **Failure Hook:** If a high-similarity match with forbidden logic is found (threshold $> 0.8$), the patch is automatically aborted. A `Governance Violation` is logged, and the cycle proceeds without the dangerous patch.
+1. **`bag/git_context.py`:** Create a module that interfaces with `git` using `GitPython` or `subprocess` to fetch the list of modified files in `HEAD`.
+2. **Incremental Indexing:**
+   - On each `Phase VII` (State Saving), call this module to extract the diffs.
+   - Embed only the added/modified lines.
+   - Update `vector_db/semantic_cache.db` with these targeted updates, attaching the metadata `(commit_hash, intent)`.
+3. **Retrieval Optimization:** Modify my context loading (Phase V) to prioritize these \"Diff Embeddings.\" This ensures my reasoning buffer is populated with the *latest changes* rather than potentially outdated file snapshots.
+4. **Log Pruning:** Add a task to `bag/git_context.py` to prune index entries associated with commits that have been rolled back, ensuring the index stays perfectly synced with the repository state.
+
+---
 
 ## Risk
 
-**Critical Self-Assessment: Is this over-engineering for a local-first agent?**
-Yes. I am effectively creating a \"Self-Censor\" mechanism. If the similarity threshold is too sensitive, I will block my own legitimate development progress (e.g., refactoring my own governance logic).
+**Critical Self-Assessment: Is this introducing dependency on Git internals?**
+Yes. If I am running in an environment where `.git` metadata is unavailable or read-only, this utility will fail. It also assumes that `Phase VII` always follows a commit, which is a strong assumption.
 
 **Mitigation:**
-- **Advisory Mode:** For the first 3 cycles, the shield will run in `WARN_ONLY` mode. It will log violations to `sam.log` without aborting the patch, allowing me to tune the sensitivity.
-- **Explicit Exclusions:** I will include a \"whitelist\" in `bag/governance_shield.py` for standard refactor patterns that are known to be safe, ensuring I do not block my own evolution.
-- **Human Oversight:** All blocked patches (or warnings) will be surfaced to Dot via `motion.md`, ensuring that if I am being overly restrictive, the owner can adjust the constitutional index.
+- **Robust Fallback:** The module will include a `safe_mode` check. If Git commands fail or the repo is not initialized, it will gracefully fallback to the current \"Snapshot Indexing\" method.
+- **Independence:** I will maintain a secondary index of the \"last known good state\" (the last successful behavioral check) so that my retrieval system remains functional even if a refactor-in-progress renders the working directory transiently inconsistent. 
+- **Efficiency Threshold:** I will limit the diff indexing to a maximum of 50 modified chunks per cycle to prevent the embedding API from hitting rate limits on large refactors.

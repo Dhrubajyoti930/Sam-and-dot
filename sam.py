@@ -370,7 +370,6 @@ def apply_self_modification(plan: str) -> bool:
     from bag.patch_ops import apply_patch_operations
 
     log.info("── Self-Modification: Parsing Surgical Patch ──")
-    from bag.workshop_imports import load_callable
 
     from bag.Stability_Protocols.governance_shield import check_semantic_safety
     if not check_semantic_safety(plan):
@@ -825,7 +824,7 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
     who_text    = WHO_I_AM.read_text()
 
     # Inject actual sam.py source
-    who_text = re.sub(
+    who_text = re.sub(r"_Last updated:.*UTC_",
         r"(### `sam\.py`.*?```python\n).*?(```)",
         lambda m: m.group(1) + sam_src + "\n" + m.group(2),
         who_text,
