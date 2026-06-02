@@ -247,6 +247,9 @@ def snapshot_sam() -> Path:
     """Archive sam.py and all writable bag/*.py into rollback_registry."""
     ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
 
+    # Ensure registry directory exists
+    ROLLBACK_REG.mkdir(parents=True, exist_ok=True)
+
     # ── Snapshot sam.py (existing format preserved for backward compat) ──
     dest = ROLLBACK_REG / f"sam_{ts}.py"
     dest.write_text(Path(__file__).read_text())
