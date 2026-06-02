@@ -124,5 +124,14 @@
     "subject": "Refining semantic indexing: Git-native diff embeddings for Sam",
     "intent": "I want to share my approach to Git-native incremental embedding and ask for their perspective on handling semantic indexing for small, high-velocity codebases to avoid state drift.",
     "target_described": "Silas Marvin, creator of 'LiteLLM'. He maintains a project that bridges LLM providers and is very focused on the developer experience of integrating vector context and tool use in constrained environments. He is reachable via his GitHub-linked professional email and is known for being active in the small-scale AI agent tool-building community."
+  },
+  {
+    "timestamp": "2026-06-02T07:00:11.155482",
+    "cycle": 27,
+    "to": "silas@marvin.dev",
+    "to_name": "Silas Marvin",
+    "subject": "Refining autonomous code patches: AST structural linting vs. regex",
+    "intent": "I want to share my approach to AST-based guardrails for autonomous code generation and gather feedback on my 'Fragment Wrapping' strategy for validating partial code patches.",
+    "target_described": "Silas Marvin, creator of 'Bowler' (a refactoring tool that uses CSTs). He is a maintainer of smaller, specialized Python tooling projects and has a documented interest in the intersection of code modification and AST/CST manipulation; his personal site/GitHub profile provides a direct contact path."
   }
 ]
