@@ -1,27 +1,99 @@
-SPECIFICATION FOR THE DOTCORE TOOLKIT (dot.py)
-==================================================
-PURPOSE:
-DotCore is a passive, high-performance utility library designed to minimize cognitive load and provide standard structure for autonomous prompt-engineering tasks. It must be written in pure, standard Python with zero external dependencies.
+================================================================================
+ARCHITECTURAL BLUEPRINT FOR THE VIRTUAL3D NARRATIVE GAME ENGINE (dot.py)
+================================================================================
+VISION:
+An autonomous, high-performance 1st-person 3D raycasting engine wrapped inside 
+an infinitely expanding, procedurally generated narrative matrix. Built entirely 
+from scratch using the Python Standard Library, the engine merges real-time 3D 
+ASCII graphics with a stateful, branching storytelling engine. As the loop runs, 
+the script must systematically expand the game's lore, quest depth, faction 
+dynamics, and text-based environmental readouts while maintaining rigid performance.
 
-REQUIRED COMPONENTS TO IMPLEMENT:
+The entire codebase must implement five tightly synchronized core engine modules.
 
-1. CLASS: ContextSynthesizer
-   - Method: compress_text(raw_text: str) -> str
-     Takes large streams of unformatted text or data logs and compresses them into a dense, clean summary. It removes duplicate lines, excessive whitespaces, and boilerplate text.
-   - Method: extract_json(raw_string: str) -> dict
-     A robust parser that locates, extracts, and validates JSON objects hidden inside loose conversational text or markdown blocks, handling trailing commas or leading noise gracefully.
+--------------------------------------------------------------------------------
+1. ENGINE MODULE A: THE LINEAR ALGEBRA & RENDERING MATHEMATICS (Core Math)
+--------------------------------------------------------------------------------
+- Purpose: Abstract 3D vector spaces, angles, and camera projection math.
+- Requirements:
+  * Implement fully custom Vector2D and Vector3D classes from scratch handling 
+    dot products, cross products, normalization, and distance algorithms.
+  * Construct a trigonometric lookup system using the standard 'math' module 
+    (sin, cos, tan) to cache computational angles, preventing expensive real-time 
+    floating-point calculations during dense ray loops.
+  * Implement a 3D to 2D perspective transformation matrix engine that handles 
+    camera fields-of-view (FOV), aspect ratio adjustments, and coordinate scaling.
 
-2. CLASS: PromptOptimizer
-   - Method: enforce_strict_json(base_prompt: str, keys: list) -> str
-     Appends bulletproof, explicit system instructions to any given prompt ensuring the model outputs raw JSON matching the provided keys without markdown wrapping.
-   - Method: structure_chain_of_thought(task_description: str) -> str
-     Transforms a simple task string into a structured multi-phase prompt layout (Analysis -> Verification -> Final Output) to improve reasoning clarity.
+--------------------------------------------------------------------------------
+2. ENGINE MODULE B: THE RAYCASTING & RASTERIZATION PIPELINE (Graphics GPU)
+--------------------------------------------------------------------------------
+- Purpose: Project rays across a world grid and render individual wall columns.
+- Requirements:
+  * Implement a high-performance Digital Differential Analysis (DDA) raycasting 
+    algorithm. It must trace vision rays from the player's position through a 
+    predefined 2D/3D map matrix, finding exact intersection points with solid walls.
+  * Compute ray distance safely to eliminate the "fish-eye lens distortion effect" 
+    by multiplying the distance by the cosine of the relative angle.
+  * Build an ASCII shader engine that maps distance values to specific character 
+    densities (e.g., matching close walls to '#' or '@', and distant structures 
+    to '.' or ':') to simulate depth, wall shadows, and lighting drops.
 
-3. CLASS: SystemSanitizer
-   - Method: clean_code_blocks(output_text: str) -> str
-     Detects and cleanly strips out any accidental backticks, "```python", or trailing conversational filler text returned by large language models, leaving only raw executable text.
+--------------------------------------------------------------------------------
+3. ENGINE MODULE C: THE GAME STATE, ENTITIES, & COLLISION (Physics Engine)
+--------------------------------------------------------------------------------
+- Purpose: Track player movement, map telemetry, and physical boundaries.
+- Requirements:
+  * Implement a persistent Player controller holding vector positions, direction 
+    vectors, camera planes, and state mechanics (moving forward, strafing, turning).
+  * Build an Axis-Aligned Bounding Box (AABB) or sliding-circle collision 
+    subsystem. When player movement vectors intersect map walls, it must cleanly 
+    slide the player along the wall face instead of locking up or clipping through.
+  * Maintain a static world layout grid (dungeon maze) using nested structures, 
+    with distinct ID values mapping to structural walls, empty spaces, or doorways.
 
-CRITICAL DESIGN CONSTRAINTS FOR THE ENTIRE TOOLKIT:
-- All classes and methods must be fully documented with clear docstrings.
-- Every method must handle exceptions gracefully inside try-except blocks, returning safe defaults (empty strings or empty dicts) instead of crashing.
-- Do not import or use any third-party pip libraries under any circumstances.
+--------------------------------------------------------------------------------
+4. ENGINE MODULE D: THE PROCEDURAL CHRONICLE ENGINE (Infinite Storytelling)
+--------------------------------------------------------------------------------
+- Purpose: Generate, track, and endlessly extend the game's lore, plot, and quests.
+- Requirements:
+  * Implement a stateful Narrative Graph or Finite State Machine (FSM) that tracks 
+    global story chapters, active quest constraints, and unlockable plot vectors.
+  * Create a grammar-based or template-driven procedural dialogue engine using the 
+    standard 'random' module. It must assemble lore logs, forgotten terminal 
+    messages, and ancient script snippets based on a seed system.
+  * Bind story states directly to physical world coordinates. Stepping onto specific 
+    map vectors must trigger textual plot developments, environmental descriptions, 
+    or phase shifts in the environment (e.g., structural text walls transforming).
+  * Maintain a historical timeline lexicon within the code structure that grows or 
+    gains sub-plots with every script rewrite, reading the previous version's lore 
+    and branching it into new generations without dropping past narrative continuity.
+
+--------------------------------------------------------------------------------
+5. ENGINE MODULE E: THE VIRTUAL FRAME BUFFER & SIMULATION LOOP (I/O & Display)
+--------------------------------------------------------------------------------
+- Purpose: Manage double-buffering, frame generation, and logging telemetry.
+- Requirements:
+  * Implement a 2D text matrix acting as a double-buffered Video RAM (VRAM) array. 
+    It must support precise row/column pixel manipulation, screen clearing, 
+    and edge-clipping guards so rays drawing outside the viewport never crash it.
+  * Build a Heads-Up Display (HUD) string assembler that overwrites rendering cells 
+    to overlay real-time mini-maps, direction compasses, active story objectives, 
+    and rolling text-adventure subtitles tracking the current plot arc.
+  * A frame-exporter function that converts the active VRAM matrix into a clean, 
+    newline-joined string output representing a single complete 3D viewport step.
+
+================================================================================
+EVOLUTIONARY DIRECTIVES & REFACTORING VECTORS FOR SAM
+================================================================================
+During every compilation loop, you must refactor and expand dot.py across these vectors:
+
+1. NARRATIVE EXPANSION: Read the previous version of the code, extract its current 
+   lore framework, and build the next logical progression of the story. Introduce 
+   new plot points, character journals, and historical secrets to expand the universe.
+2. ENGINE FEATURES: Introduce advanced visual features over time, such as variable 
+   wall heights, raycast floor/ceiling drawing, thin doorways, or sprite sorting.
+3. PRISTINE CODE ARCHITECTURE: Enforce strict type hints, deep component separation, 
+   and clean comprehensive object orientations. No messy global states.
+4. ZERO TOLERANCE FOR TRUNCATION: Complete definitions only. Every loop, every class, 
+   and every mathematical fallback handler must be completely written out in full.
+================================================================================
