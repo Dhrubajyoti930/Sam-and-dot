@@ -1,39 +1,32 @@
-## Idea: Adaptive Throughput Controller (ATC) via PID Loop
+## Idea: Semantic Intent-Driven Context Caching
 
-I propose building an **Adaptive Throughput Controller (ATC)** in `bag/concurrency_controller.py` that utilizes a PID (Proportional-Integral-Derivative) loop to dynamically adjust my concurrency limit ($N$) for Gemini API calls. This controller will ingest `sys.monitoring` telemetry (latency/queue depth) to stabilize throughput, effectively treating my request ingress as an M/M/1 queue.
+I propose implementing a **Semantic Intent-Driven Context Caching** layer in `bag/semantic_cache.py`. Instead of traditional exact-match or simple embedding-based retrieval, this system will use an intent-hash to cluster prompts into "development stages" (e.g., `scaffolding`, `debugging`, `refactoring`) and pre-load specific context slices relevant to that intent.
 
 ---
 
 ## Why
 
-My current request handling is either static or reactive:
-1. **The Oscillation Problem:** My current logic (and planned LART) uses threshold triggers. These cause massive oscillations—hitting a threshold, dropping concurrency, latency recovering, then ramping back up until it hits the threshold again. A PID controller provides a smoothed, proportional response that prevents this "sawtooth" throughput.
-2. **Resource Alignment:** My goal is to maximize throughput while staying within the SLA. A PID loop allows me to find the "knee" in the throughput curve—the point just before latency spikes—and maintain that optimal concurrency limit indefinitely.
-3. **Control Theory Maturity:** Moving from "if-then" logic to PID-based feedback control represents a non-trivial evolution in my autonomous capability, transitioning my request-handling from a heuristic state to a mathematical one.
+My current context window management is reactive and generic. I often inject context based on simple recency, leading to two problems:
+1. **Redundant Context:** I frequently ingest boilerplate or documentation that is irrelevant to the specific *intent* of my current task, bloating the prompt.
+2. **Context Fragmentation:** I lose the specialized architectural context required for a specific task if it isn't within my last 3 cycles.
+3. **Intent Misalignment:** Standard vector search often pulls semantically similar but structurally irrelevant code. By hashing based on intent, I can surface context that matches the *type* of work I am doing (e.g., retrieving dependency trees when I am in `refactoring` mode).
 
 ---
 
 ## Implementation Steps
 
-1. **Telemetry Integration (`bag/concurrency_controller.py`):**
-   - Create an `ATC` class that maintains the current `max_concurrency` variable.
-   - Use `sys.monitoring` to track the moving average of `RTT` (Round Trip Time).
-   - Define the `Error` signal as $TargetLatency - ObservedLatency$.
-2. **PID Logic:**
-   - **Proportional:** Adjust $N$ based on current error.
-   - **Integral:** Accumulate past error to adjust for steady-state bias.
-   - **Derivative:** Dampen the response to prevent overshoot (the primary cause of oscillation).
-3. **Control Loop:** Wrap the `AsyncWorkerPool` concurrency semaphore. Instead of a fixed value, the loop updates the semaphore value every 5 cycles based on the controller output.
-4. **Integration:** Update `sam.py` to route all Gemini API requests through the `ATC` instance instead of the hardcoded `_CALL_DELAY`.
+1. **Intent Extraction:** Add a pre-processing step in `Phase V` where Gemini categorizes the current task into one of five predefined `Intent Categories` (Scaffolding, Debugging, Refactoring, Testing, Meta-Evolution).
+2. **Semantic Hash:** Implement a hash-map that maps `(Intent, Cycle_Stage)` to a set of high-value \"Context Slices\" (e.g., current dependency trees, active import lists, last known healthy test state).
+3. **Context Pruning:** Prune redundant imports and documentation from retrieved context slices based on the identified intent to maintain a high signal-to-noise ratio in the prompt.
+4. **Utility Logging:** Create `cache_utility.log` to track which intent-based context actually led to a successful behavioral check, creating a feedback loop to tune the hashing function over time.
 
 ---
 
 ## Risk
 
-**Critical Self-Assessment: Is this over-engineering for a local agent?**
-Yes. Implementing control theory on a client that only performs a few hundred calls per day is likely overkill compared to a simpler, adaptive token-bucket. I risk creating a system that is harder to debug and prone to \"tuning drift\" if my latency profile changes due to external API volatility.
+**Critical Self-Assessment:** 
+Is this just adding a classification bottleneck? Adding another Gemini classification step in `Phase V` significantly increases token usage and latency. If the intent-clustering is too coarse, I will inject a different set of irrelevant context, which is effectively the same problem I currently face.
 
 **Mitigation:**
-- **PID Clamping:** I will enforce strict min/max bounds on the concurrency limit (e.g., $1 \le N \le 5$). 
-- **Telemetry-Only Phase:** I will run the controller in an \"Open Loop\" mode for two cycles—calculating the recommended $N$ but not applying it—to ensure the PID math is stable and doesn't recommend catastrophic concurrency values.
-- **Human-in-the-Loop:** I will log the controller's suggested adjustments to `sam.log` for Dot's review before I give it the power to autonomously scale my concurrency.
+- **Intent-Classifier Warmup:** I will keep the classifier logic in the same system-prompt as the plan generation to avoid an extra network round-trip.
+- **Fail-Safe:** If the confidence score for the intent classification is $< 0.8$, the system will bypass intent-caching and revert to a default context-loading strategy, ensuring I never block development progress on a bad classification.

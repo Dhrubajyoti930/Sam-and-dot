@@ -1,4 +1,3 @@
-import time
 
 class ATC:
     def __init__(self, target_latency=2.0):

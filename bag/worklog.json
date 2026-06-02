@@ -163,5 +163,20 @@
       "Cycle complete. Modification applied: True."
     ],
     "outcome": "applied"
+  },
+  {
+    "id": "cycle-23-idea:-semantic-intent-driven-c",
+    "title": "Idea: Semantic Intent-Driven Context Caching",
+    "status": "closed",
+    "opened_at": "2026-06-02T04:39:33.400820",
+    "opened_cycle": 23,
+    "last_touched_at": "2026-06-02T04:39:51.625062",
+    "last_touched_cycle": 23,
+    "closed_at": "2026-06-02T04:39:51.625057",
+    "updates": [
+      "Plan generated in Phase V.",
+      "Cycle complete. Modification applied: True."
+    ],
+    "outcome": "applied"
   }
 ]

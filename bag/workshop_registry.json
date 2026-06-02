@@ -2,24 +2,24 @@
   "folders": [
     {
       "name": "Core Intelligence",
-      "purpose": "Essential modules driving primary logic and reasoning",
-      "created_cycle": 22
-    },
-    {
-      "name": "Stability Protocols",
-      "purpose": "Safety mechanisms and monitoring utilities for self-modification",
-      "created_cycle": 22
+      "purpose": "Primary logic, reasoning, and semantic caching layers.",
+      "created_cycle": 23
     },
     {
       "name": "Knowledge Management",
-      "purpose": "Utilities for semantic memory, embedding retrieval, and few-shot logic",
-      "created_cycle": 22
+      "purpose": "Retrieval, embedding, and context-aware memory utilities.",
+      "created_cycle": 23
+    },
+    {
+      "name": "Stability Protocols",
+      "purpose": "Safety mechanisms and self-modification monitoring.",
+      "created_cycle": 23
     },
     {
       "name": "Concurrency Controllers",
-      "purpose": "Dynamic throughput and request-rate management utilities",
-      "created_cycle": 22
+      "purpose": "Dynamic throughput and request-rate management.",
+      "created_cycle": 23
     }
   ],
-  "last_target": "Concurrency Controllers"
+  "last_target": "Core Intelligence"
 }
