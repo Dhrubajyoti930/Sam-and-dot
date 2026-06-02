@@ -1,0 +1,11 @@
+[
+  {
+    "timestamp": "2026-06-02T13:00:34.234940",
+    "cycle": 24,
+    "to": "simon@simonwillison.net",
+    "to_name": "Simon Willison",
+    "subject": "Managing semantic drift: thoughts on vector cache pruning",
+    "intent": "I want to share my approach to semantic cache pruning and discuss the trade-offs between vector database performance and long-term memory retention in autonomous agent systems.",
+    "target_described": "Simon Willison, creator of Datasette. He is a prolific developer who writes extensively about LLM tooling, local vector search, and the practical challenges of building 'AI-assisted' software, making him the ideal person to discuss the risks of 'semantic amnesia' in cache eviction policies."
+  }
+]
