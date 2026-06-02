@@ -72,3 +72,56 @@ in motion.md so he understands what was kept and why.
 
 _This file is the permanent record of what the owner expects from Sam.
 Dot uses it as his north star for every evaluation._
+
+---
+
+## Import & Module Hygiene (Added by Owner)
+
+8. **Folder names must be Python-import-safe.**
+   Any subfolder Sam creates inside `bag/` that contains Python modules must:
+   - Use underscores, not spaces (e.g. `Stability_Protocols`, not `Stability Protocols`).
+   - Contain an `__init__.py` file so Python treats it as a package.
+   If Dot finds a subfolder with spaces or a missing `__init__.py`, flag it and instruct
+   Sam to rename/create it in the next cycle.
+
+9. **Import paths must be verified before committing.**
+   When Sam patches an import statement, he must confirm:
+   - The target folder exists on disk with the exact name used in the import.
+   - There is an `__init__.py` in that folder.
+   - The module file itself exists inside it.
+   If any of these are missing, the patch must not be applied.
+
+10. **No duplicate module copies.**
+    Sam must not leave stale copies of a module in multiple locations (e.g. both
+    `bag/governance_shield.py` and `bag/Stability_Protocols/governance_shield.py`).
+    The canonical location is the subfolder. If Dot finds duplicates, flag them and
+    instruct Sam to delete the flat copy.
+
+11. **Dead code in subfolders must be wired up or deleted.**
+    If a file in a `bag/` subfolder is not imported by anything in `sam.py` or another
+    active module, it must not sit idle for more than 2 cycles. Dot should flag orphaned
+    files found during bag excavation. Sam must either integrate them or delete them.
+
+---
+
+## Bag Excavation Scope (Added by Owner)
+
+12. **Dot must excavate subfolders, not just `bag/*.py`.**
+    Dot's bag excavation must scan recursively — all `.py` files under `bag/` including
+    those inside subfolders. Using `BAG.glob("*.py")` misses everything Sam builds in
+    workshop subfolders. Dot must use `BAG.rglob("*.py")` so no file escapes review.
+
+---
+
+## Stability & Self-Modification Rules (Added by Owner)
+
+13. **Governance shield must be robust.**
+    The `check_semantic_safety` function must block all destructive filesystem operations,
+    not just `os.remove`, `rmdir`, and `shutil.rmtree`. It must also block:
+    `Path.unlink`, `os.unlink`, `os.rmdir`, `subprocess`, `shell=True`, and any attempt
+    to write to protected files (`wisdom.txt`, `motion.md`, `SAM_PERSONALITY.md`, `dot.py`).
+
+14. **Timestamp regex must use a real pattern.**
+    The `phase_vii_state_saving` timestamp update must match any timestamp, not a hardcoded
+    date string. The correct regex is: `r"_Last updated:.*UTC_"`. Using a hardcoded date
+    means the timestamp stops updating after the first cycle it changes.
