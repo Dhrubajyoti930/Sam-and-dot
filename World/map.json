@@ -30,9 +30,13 @@
     "Sam/bag/versioning.py",
     "Sam/chest/rollback_registry/sam_20260602T110940Z.py",
     "Sam/chest/rollback_registry/sam_20260602T110906Z.py",
+    "Sam/chest/rollback_registry/sam_20260602T130912Z.py",
     "Sam/chest/rollback_registry/sam_20260602T125552Z.py",
+    "Sam/chest/rollback_registry/sam_20260602T130947Z.py",
     "Sam/chest/rollback_registry/sam_20260602T125627Z.py",
-    "Sam/Others/__init__.py"
+    "Sam/Others/__init__.py",
+    "Sam/workshop_bench/core/canonicalizer.py",
+    "Sam/workshop_bench/core/deduper.py"
   ],
   "tests": [
     "Dot/tests/tests.py"

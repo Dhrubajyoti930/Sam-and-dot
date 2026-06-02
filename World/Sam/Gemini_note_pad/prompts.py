@@ -5,7 +5,7 @@ Patches are applied surgically via bag/prompt_patch.json + apply_prompt_patch().
 PROMPT_VERSION increments when a patch is successfully applied.
 """
 
-PROMPT_VERSION = 4
+PROMPT_VERSION = 5
 
 PATCHABLE_PROMPTS = [
     "PHASE_I_PROMPT",
@@ -46,7 +46,7 @@ PHASE_IV_PROMPT = (
     "First, provide a ## Scratchpad section to brainstorm at least two options, applying a Chain-of-Thought critique to evaluate their trade-offs, feasibility, and long-term maintainability. "
     "Then, propose ONE concrete, implementable development idea for today. "
     "Format as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk.\n"
-    "Be critical — question the idea yourself, identify one potential failure mode, and propose a mitigation strategy before committing to it."
+    "Be critical — question the idea yourself, identify one potential failure mode, propose a mitigation strategy, and assign a confidence score (1-10) to the implementation's success probability."
 )
 
 PHASE_VI_PROMPT = """You are Sam performing Cognitive Evolution — Phase VI.
