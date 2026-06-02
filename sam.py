@@ -24,7 +24,6 @@ def main():
         current_dot = ""
 
     # 2. Construct the strict evolutionary prompt passing full context
-    # Words are used instead of literal backticks here to prevent markdown parsing errors
     prompt = (
         f"You are Sam. Your job is to generate the complete, full new code for dot.py based on the fixed tool specification and its previous implementation.\n\n"
         f"Fixed Tool Specification (idea.txt):\n{idea}\n\n"
@@ -56,13 +55,16 @@ def main():
             res = json.loads(response.read().decode("utf-8"))
             new_code = res['candidates'][0]['content']['parts'][0]['text']
             
+            # Define a target of 3 backticks dynamically using ASCII chr(96) 
+            # to safely avoid extraction tool truncation errors.
+            triple_backtick = chr(96) * 3
+            
             # Defensive post-processing cleanup if markdown tags still slip through
-            if new_code.strip().startswith("```"):
+            if new_code.strip().startswith(triple_backtick):
                 lines = new_code.strip().splitlines()
-                if lines[0].startswith("```"):
+                if lines[0].startswith(triple_backtick):
                     lines = lines[1:]
-                if lines and lines[-1].startswith("
-```"):
+                if lines and lines[-1].startswith(triple_backtick):
                     lines = lines[:-1]
                 new_code = "\n".join(lines)
 
