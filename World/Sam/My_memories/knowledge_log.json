@@ -1,8 +1,0 @@
-[
-  {
-    "cycle": 23,
-    "topic": "feature: Spaced Repetition engine (Phase II)",
-    "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nSpaced repetition is the algorithmic management of the \"forgetting curve.\" At its core, the goal is to schedule reviews at the optimal intervals to maximize long-term retention while minimizing cognitive load. Modern SRS implementations rely on three primary technical pillars:\n\n#### 1. Scheduling Algorithms (SM-2 vs. FSRS)\nThe **SM-2 algorithm** (SuperMemo-2) remains the industry baseline. It utilizes an \"Ease Factor\" (EF) that adjusts base",
-    "review_due_cycle": 27
-  }
-]
