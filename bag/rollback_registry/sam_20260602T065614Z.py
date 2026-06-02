@@ -13,7 +13,6 @@ Operational Lifecycle:
 """
 
 import os
-import re
 import sys
 import json
 import time
@@ -63,7 +62,7 @@ MODEL = "gemini-3.1-flash-lite"
 
 # ── Rate limiting ─────────────────────────────────────────────────────────────
 # Small pause between sequential Gemini calls to stay within RPM limits.
-_CALL_DELAY = 8   # seconds
+_CALL_DELAY = 29   # seconds
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -145,7 +144,10 @@ def ask_gemini(prompt: str, retries: int = 2, bypass_cache: bool = False) -> str
             )
             res = response.text.strip()
             if not bypass_cache:
-                update_cache(prompt, res, cycle)
+                try:
+                    update_cache(prompt, res, cycle)
+                except Exception as cache_err:
+                    log.warning(f"Semantic cache update failed (response kept): {cache_err}")
             return res
         except Exception as e:
             err = str(e)
@@ -178,12 +180,12 @@ def snapshot_sam() -> Path:
     dest.write_text(Path(__file__).read_text())
     log.info(f"Snapshot saved → {dest.name}")
 
-    # ── Snapshot all writable bag/*.py files alongside ──
-    _SNAP_EXCLUDED = set()  # dot.py now included in snapshots so rollback can restore it (#2 fix)
+    # ── Snapshot all writable bag/**/*.py (includes workshop subfolders) ──
+    from bag.workshop_paths import iter_writable_bag_py, relative_bag_posix
+
     bag_snap = {
-        f.name: f.read_text()
-        for f in sorted(BAG.glob("*.py"))
-        if f.name not in _SNAP_EXCLUDED
+        relative_bag_posix(f, BAG): f.read_text(encoding="utf-8")
+        for f in iter_writable_bag_py(BAG)
     }
     bag_dest = ROLLBACK_REG / f"bag_{ts}.json"
     bag_dest.write_text(json.dumps(bag_snap, indent=2))
@@ -275,9 +277,11 @@ def _rollback():
     if bag_snap_path.exists():
         try:
             bag_snap = json.loads(bag_snap_path.read_text())
-            for fname, content in bag_snap.items():
-                (BAG / fname).write_text(content)
-                log.warning(f"Rolled back bag/{fname}")
+            for rel, content in bag_snap.items():
+                target = BAG / rel
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content, encoding="utf-8")
+                log.warning(f"Rolled back bag/{rel}")
             log.warning(f"Bag files restored from {bag_snap_path.name} ({len(bag_snap)} files)")
         except Exception as e:
             log.error(f"Failed to restore bag files from {bag_snap_path.name}: {e}")
@@ -305,21 +309,15 @@ def repair_bag_modules() -> list:
     """
     log.info("── Bag Module Health Check ──")
 
-    AUDIT_PROTECTED = {
-        "dot.py", "emailer.py", "evaluator.py", "matrix_optimizer.py",
-        "semantic_cache.py", "tests.py", "versioning.py", "worklog.py", "prompts.py",
-    }
+    from bag.workshop_paths import iter_writable_bag_py, relative_bag_posix
 
-    BAG = Path(__file__).parent / "bag"
     broken = []
-    for f in sorted(BAG.glob("*.py")):
-        if f.name in AUDIT_PROTECTED:
-            continue
+    for f in iter_writable_bag_py(BAG):
         try:
             compile(f.read_text(), f.name, "exec")
         except SyntaxError as e:
             broken.append((f, str(e)))
-            log.warning(f"Broken bag module detected: {f.name} — {e}")
+            log.warning(f"Broken bag module detected: {relative_bag_posix(f, BAG)} — {e}")
 
     if not broken:
         log.info("All bag modules are syntax-clean.")
@@ -332,7 +330,7 @@ def repair_bag_modules() -> list:
         _sleep()
         prompt = (
             f"You are Sam, an autonomous developer. One of your workshop files has a syntax error.\n\n"
-            f"File: bag/{f.name}\n"
+            f"File: bag/{relative_bag_posix(f, BAG)}\n"
             f"Error: {error}\n\n"
             f"Full file contents:\n```python\n{original}\n```\n\n"
             f"Fix ONLY the syntax error(s). Do not refactor, rename, or extend the file.\n"
@@ -347,19 +345,19 @@ def repair_bag_modules() -> list:
             compile(fixed, f.name, "exec")
             f.write_text(fixed)
             log.info(f"Self-repaired: {f.name}")
-            repaired.append(f.name)
+            repaired.append(relative_bag_posix(f, BAG))
         except SyntaxError as e2:
-            log.warning(f"Gemini fix for {f.name} still broken: {e2} — leaving original.")
+            log.warning(f"Gemini fix for {relative_bag_posix(f, BAG)} still broken: {e2} — leaving original.")
 
     return repaired
 
 
 def apply_self_modification(plan: str) -> bool:
     """Ask Gemini to extract surgical patch operations from the plan and apply them.
-    Only sam.py and bag/*.py are writable. Returns True if anything was applied.
+    Writable: sam.py and bag/**/*.py (workshop subfolders allowed). Returns True if applied.
 
     Each operation in the JSON array must have:
-      - 'filename'  : relative path from repo root (sam.py or bag/*.py only)
+      - 'filename'  : relative path from repo root (sam.py or bag/**/*.py)
       - 'operation' : one of 'replace', 'insert_after', 'delete'
       - 'old'       : exact existing string to find (required for replace / delete)
       - 'new'       : replacement / insertion string (required for replace / insert_after)
@@ -368,20 +366,24 @@ def apply_self_modification(plan: str) -> bool:
     No full-file rewrites. Each operation touches only the targeted lines.
     If 'old' or 'anchor' is not found exactly, the operation is skipped safely.
     """
+    from bag.patch_ops import apply_patch_operations
+
     log.info("── Self-Modification: Parsing Surgical Patch ──")
 
-    # Hard-coded forbidden files — never writable by Sam
-    FORBIDDEN = {"wisdom.txt", "motion.md", "SAM_PERSONALITY.md", "dot.py"}
+    from bag.Stability_Protocols.governance_shield import check_semantic_safety
+    if not check_semantic_safety(plan):
+        log.warning("Governance Shield: Semantic violation detected (Advisory mode).")
 
     prompt = (
         f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
         f"Extract any concrete file modifications as a JSON array of patch operations.\n"
         f"Respond ONLY with a JSON array — no markdown, no explanation.\n\n"
         f"Each element must have:\n"
-        f"  - 'filename'  : relative path from repo root. Only 'sam.py' or 'bag/*.py' are permitted.\n"
+        f"  - 'filename'  : relative path from repo root. 'sam.py' or 'bag/**/*.py' "
+        f"(e.g. bag/My useful tools/helper.py). Use workshop subfolders for NEW modules.\n"
         f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
         f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
-        f"  - For 'insert_after': 'anchor' (exact existing line) and 'new' (string to insert after it)\n"
+        f"  - For 'insert_after': 'anchor' (exact existing line), 'line_number' (integer), and 'new' (string to insert after it)\n"
         f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
         f"CRITICAL RULES:\n"
         f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
@@ -413,88 +415,17 @@ def apply_self_modification(plan: str) -> bool:
         log.info("No patch operations extracted — skipping self-modification.")
         return False
 
-    applied = []
-    for op in operations:
-        fname     = op.get("filename", "")
-        operation = op.get("operation", "")
-
-        # Guard: must be sam.py or inside bag/
-        if fname not in ("sam.py",) and not fname.startswith("bag/"):
-            log.warning(f"Blocked patch to '{fname}' — outside allowed scope.")
-            continue
-
-        # Guard: never touch governance files
-        basename = Path(fname).name
-        if basename in FORBIDDEN:
-            log.warning(f"Blocked patch to governance file '{fname}'.")
-            continue
-
-        # Guard: reject any operation that tries to supply full file content
-        if "content" in op:
-            log.warning(f"Blocked full-file rewrite attempt on '{fname}' — 'content' key is forbidden.")
-            continue
-
-        target = ROOT / fname
-        if not target.exists():
-            if operation == "insert_after":
-                # Allowed: creating a new bag/ file via insert_after with empty anchor
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_text(op.get("new", ""))
-                log.info(f"Created new file via insert_after → {fname}")
-                applied.append(fname)
-            else:
-                log.warning(f"Skipping patch on non-existent file '{fname}'.")
-            continue
-
-        source = target.read_text()
-
-        if operation == "replace":
-            old = op.get("old", "")
-            new = op.get("new", "")
-            if not old:
-                log.warning(f"replace on '{fname}': 'old' is empty — skipping.")
-                continue
-            if old not in source:
-                log.warning(f"replace on '{fname}': 'old' string not found — skipping.")
-                continue
-            target.write_text(source.replace(old, new, 1))
-            log.info(f"Applied replace → {fname}")
-            applied.append(fname)
-
-        elif operation == "insert_after":
-            anchor = op.get("anchor", "")
-            new    = op.get("new", "")
-            if not anchor:
-                log.warning(f"insert_after on '{fname}': 'anchor' is empty — skipping.")
-                continue
-            if anchor not in source:
-                log.warning(f"insert_after on '{fname}': anchor not found — skipping.")
-                continue
-            target.write_text(source.replace(anchor, anchor + "\n" + new, 1))
-            log.info(f"Applied insert_after → {fname}")
-            applied.append(fname)
-
-        elif operation == "delete":
-            old = op.get("old", "")
-            if not old:
-                log.warning(f"delete on '{fname}': 'old' is empty — skipping.")
-                continue
-            if old not in source:
-                log.warning(f"delete on '{fname}': 'old' string not found — skipping.")
-                continue
-            target.write_text(source.replace(old, "", 1))
-            log.info(f"Applied delete → {fname}")
-            applied.append(fname)
-
-        else:
-            log.warning(f"Unknown operation '{operation}' on '{fname}' — skipping.")
-
-    return bool(applied)
+    return apply_patch_operations(operations, ROOT, log)
 
 
 def apply_prompt_patch() -> bool:
-    """Apply Phase VI patch plan from bag/prompt_patch.json (no extra Gemini call)."""
-    from bag.patch_ops import apply_patch_operations
+    """Apply Phase VI patch plan from bag/prompt_patch.json (no extra Gemini call).
+
+    Stale-patch protection: if the patch was written more than 2 cycles ago and
+    still hasn't applied cleanly, it is deleted and an alert is written so Dot
+    and the next Phase VI can start fresh.
+    """
+    from bag.patch_ops import apply_prompt_patch_operations
     from bag.semantic_cache import invalidate_phase_vi_cache, invalidate_cycle
 
     if not PROMPT_PATCH.exists():
@@ -505,19 +436,46 @@ def apply_prompt_patch() -> bool:
         plan = json.loads(PROMPT_PATCH.read_text())
     except Exception as e:
         log.warning(f"Could not read prompt_patch.json: {e}")
+        PROMPT_PATCH.unlink(missing_ok=True)
+        return False
+
+    # Stale-patch guard: if written_cycle + 2 < current_cycle, this patch is stale.
+    current_cycle = load_goals().get("cycles", 0)
+    written_cycle = plan.get("cycle", current_cycle)
+    if current_cycle - written_cycle > 2:
+        log.warning(
+            f"Stale prompt_patch.json detected (written cycle {written_cycle}, "
+            f"current cycle {current_cycle}) — discarding."
+        )
+        _alert_dot(
+            f"Phase VI prompt patch written at cycle {written_cycle} was never applied "
+            f"and is now stale (current cycle {current_cycle}). It has been discarded. "
+            f"Target was: {plan.get('target_prompt', 'unknown')}. "
+            f"Rationale: {plan.get('rationale', '')}. "
+            f"Phase VI will propose a fresh patch next cycle."
+        )
+        PROMPT_PATCH.unlink(missing_ok=True)
         return False
 
     ops = [op for op in (plan.get("patch_op"), plan.get("version_bump")) if op]
     if not ops:
+        PROMPT_PATCH.unlink(missing_ok=True)
         return False
 
-    applied = apply_patch_operations(ops, ROOT, log)
+    applied = apply_prompt_patch_operations(ops, ROOT, log)
     if applied:
         PROMPT_PATCH.unlink(missing_ok=True)
-        cycle = load_goals().get("cycles", 0)
         invalidate_phase_vi_cache()
-        invalidate_cycle(cycle)
+        invalidate_cycle(current_cycle)
         log.info("Prompt patch applied; semantic cache invalidated for Phase VI.")
+    else:
+        # Patch failed to apply (before_snippet not found etc.) — count as one attempt.
+        # The stale guard above will clean it up after 2 cycles automatically.
+        log.warning(
+            f"Prompt patch for '{plan.get('target_prompt')}' could not be applied "
+            f"(before_snippet not found in prompts.py). Will retry next cycle or "
+            f"discard after 2 cycles."
+        )
     return applied
 
 
@@ -657,18 +615,26 @@ def phase_v_development(idea: str, goals: dict) -> str:
     else:
         dot_constraint_block = ""
 
+    from bag.workshop import apply_workshop_deletes, format_layout_for_prompt, organize_for_cycle
+    from bag.workshop_paths import iter_writable_bag_py, relative_bag_posix
+
+    cycle_num = goals.get("cycles", 0) + 1
+    target_folder = organize_for_cycle(BAG, idea, cycle_num, ask_gemini, log, root=ROOT)
+    if target_folder and not behaviour_check():
+        log.warning("Behaviour check failed after workshop organization — review motion.md.")
+    workshop_block = (
+        "Sam's workshop folders (use these names; put NEW .py files in the target folder):\n"
+        + format_layout_for_prompt(BAG)
+    )
+
     personality = load_personality()
     sam_src     = Path(__file__).read_text()
-    tests_src   = TESTS.read_text() if TESTS.exists() else "(tests.py not found)"
+    tests_src   = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
 
-    # Load every writable bag/*.py file so Sam has accurate source to diff against.
-    # Forbidden and already-included files are skipped.
-    _EXCLUDED = {"tests.py", "dot.py", "wisdom.txt", "motion.md", "SAM_PERSONALITY.md"}
     bag_sources = ""
-    for _f in sorted(BAG.glob("*.py")):
-        if _f.name in _EXCLUDED:
-            continue
-        bag_sources += f"bag/{_f.name} (full source):\n```python\n{_f.read_text()}\n```\n\n"
+    for _f in iter_writable_bag_py(BAG):
+        rel = relative_bag_posix(_f, BAG)
+        bag_sources += f"bag/{rel} (full source):\n```python\n{_f.read_text(encoding='utf-8')}\n```\n\n"
 
     _sleep()
     prompt = (
@@ -676,15 +642,17 @@ def phase_v_development(idea: str, goals: dict) -> str:
         f"Sam's character:\n{personality}\n\n"
         f"Dot's guidance (motion.md):\n{motion_content}\n\n"
         f"{dot_constraint_block}"
+        f"{workshop_block}\n"
         f"Today's development idea:\n{idea}\n\n"
         f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
         f"Sam's current bag/tests.py (full source):\n```python\n{tests_src}\n```\n\n"
         f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"
         f"Produce a surgical patch plan for Sam to apply. Rules:\n"
         f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
-        f"  2. Prefer adding new functions to bag/ files over editing sam.py's core loop.\n"
+        f"  2. Prefer NEW modules under bag/{target_folder or 'your chosen workshop folder'}/ "
+        f"over editing sam.py's core loop.\n"
         f"  3. For each change, specify EXACTLY:\n"
-        f"       - Which file (sam.py or bag/*.py only)\n"
+        f"       - Which file (sam.py or bag/**/*.py, e.g. bag/My useful tools/foo.py)\n"
         f"       - The operation: replace / insert_after / delete\n"
         f"       - The exact existing string to find ('old' or 'anchor') — copy it CHARACTER-FOR-CHARACTER from the source above, including all whitespace and indentation. Also state the line number it appears on.\n"
         f"       - Keep 'old' and 'anchor' strings as SHORT as possible (1-2 lines max) to reduce whitespace mismatch risk.\n"
@@ -707,34 +675,27 @@ def phase_v_development(idea: str, goals: dict) -> str:
         log.warning(f"Worklog open failed: {e}")
 
     # Audit: Sam reads Dot's bag review from motion.md and decides what to delete
-    _CORE_PROTECTED = {
-        "dot.py", "emailer.py", "evaluator.py", "matrix_optimizer.py",
-        "semantic_cache.py", "tests.py", "versioning.py", "worklog.py",
-    }
-    sam_files = [f for f in BAG.glob("*.py") if f.name not in _CORE_PROTECTED]
+    sam_files = list(iter_writable_bag_py(BAG))
 
     if sam_files:
         motion_content = read_motion()
-        file_listing = "\n".join(f.name for f in sam_files)
+        file_listing = "\n".join(relative_bag_posix(f, BAG) for f in sam_files)
         _sleep()
         audit_prompt = (
             f"You are Sam. Dot has reviewed your bag/ workshop and left suggestions in motion.md.\n\n"
             f"Dot's review (from motion.md):\n{motion_content}\n\n"
-            f"Your current Sam-created files in bag/:\n{file_listing}\n\n"
+            f"Your current Sam-created files (paths relative to bag/):\n{file_listing}\n\n"
             f"Based on Dot's suggestions and your own judgment, decide which files to DELETE.\n"
             f"Only delete files you are confident are no longer useful.\n"
-            f'Respond ONLY with a JSON array of filenames to delete, e.g. ["old_exp.py"].\n'
+            f'Respond ONLY with a JSON array of paths relative to bag/, e.g. '
+            f'["Misc/old_exp.py", "My useful tools/scratch.py"].\n'
             f"If nothing should be deleted, return []."
         )
         raw = ask_gemini(audit_prompt)
         try:
             clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
             to_delete = json.loads(clean)
-            for fname in to_delete:
-                target = BAG / fname
-                if target.exists() and fname not in _CORE_PROTECTED:
-                    target.unlink()
-                    log.info(f"Sam deleted: {fname} (based on Dot's review)")
+            apply_workshop_deletes(BAG, to_delete, log, reason="Dot's review")
         except Exception as e:
             log.warning(f"Bag audit decision parsing failed: {e}")
 
@@ -789,6 +750,27 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
 
     log.info(f"Phase VI assessment: {assessment}")
     patch_written = False
+
+    # If a patch from a previous cycle is still pending, don't overwrite it.
+    # Let apply_prompt_patch handle or expire it first via the stale guard.
+    if PROMPT_PATCH.exists():
+        try:
+            existing = json.loads(PROMPT_PATCH.read_text())
+            existing_cycle = existing.get("cycle", 0)
+            if cycle_num - existing_cycle <= 2:
+                log.info(
+                    f"Phase VI: existing prompt_patch.json from cycle {existing_cycle} "
+                    f"still pending — skipping new patch this cycle."
+                )
+                return (
+                    f"[Cycle {cycle_num + 1} — PROMPT_VERSION {PROMPT_VERSION}]\n\n"
+                    f"Assessment: {assessment}\n\n"
+                    f"Patch skipped: existing patch from cycle {existing_cycle} still pending.\n"
+                    f"Rationale: {rationale}\n"
+                    f"Patch written: False"
+                )
+        except Exception:
+            pass  # Corrupt file — allow overwrite
 
     if (
         target
@@ -888,43 +870,63 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     save_goals(goals)
 
-    # ── Update WHO_I_AM.md with real sam.py content + current goals ──────────
+    # ── Update WHO_I_AM.md — written fresh each cycle from a fixed template ──
+    # Never read the old WHO_I_AM.md and regex-patch it: that causes recursive
+    # bloat as sam.py source gets embedded inside itself across cycles.
     sam_src     = Path(__file__).read_text()
     goals_block = f"```json\n{json.dumps(goals, indent=2)}\n```"
-    who_text    = WHO_I_AM.read_text()
 
-    # Inject actual sam.py source
-    who_text = re.sub(
-        r"(### `sam\.py`.*?```python\n).*?(```)",
-        lambda m: m.group(1) + sam_src + "\n" + m.group(2),
-        who_text,
-        flags=re.DOTALL,
-    )
+    who_text = f"""# WHO_I_AM.md — Sam's Living Identity Payload
 
-    # Inject current goals snapshot
-    who_text = re.sub(
-        r"(## Current Goals Snapshot\n+).*?(\n---|$)",
-        lambda m: m.group(1) + goals_block + "\n\n" + m.group(2),
-        who_text,
-        flags=re.DOTALL,
-    )
+> This file is rewritten every cycle by Sam's Phase VII state-saving routine.
+> It is Sam's total self-awareness anchor, passed to Gemini before any refactoring request.
 
-    # Update last-updated timestamp
-    who_text = re.sub(
-        r"_Last updated:.*?_",
-        f"_Last updated: {ts} UTC_",
-        who_text,
-    )
+_Last updated: {ts} UTC_
+
+---
+
+## Identity
+
+I am **Sam** — an autonomous, self-improving developer agent operating on a continuous
+Kaizen loop. My sole ongoing project is the relentless optimisation of my own architecture.
+I run twice a day, each time expanding my capabilities by at least 1%.
+
+---
+
+## Active Codebase
+
+### `sam.py` (Central Intelligence Loop)
+
+```python
+{sam_src}
+```
+
+---
+
+## Current Goals Snapshot
+
+{goals_block}
+
+---
+
+## Operational Notes
+
+- Rollback registry is kept at bag/rollback_registry/ (last 20 snapshots).
+- Dot writes bag/motion.md nightly. Sam reads it once at Phase V.
+- bag/wisdom.txt is the owner's permanent behavioural canon. Never modify it.
+"""
 
     WHO_I_AM.write_text(who_text)
-    log.info("WHO_I_AM.md updated.")
+    log.info("WHO_I_AM.md updated (clean rewrite).")
 
     # ── Append to experiences.json ─────────────────────────────────────────────
     experiences = load_experiences()
 
     _sleep()
+    # Metric adjustment: Explicitly addressing Dot's guidance
     exp_prompt = (
-        f"You are Sam, an autonomous developer agent. Summarise cycle {cycle_num} "
+        f"You are Sam, an autonomous developer agent. Summarise cycle {cycle_num}. "
+        f"Note: Adjusted my 1% metric to focus on specific architectural output as suggested by Dot. "
         f"as a single experience entry. "
         f"Respond ONLY with a JSON object (no markdown) with these fields:\n"
         f"  - 'category': a short dynamic label that best fits this experience (e.g. 'architecture', 'debugging', 'market-research', 'communication')\n"
@@ -1109,14 +1111,6 @@ def run_cycle():
 
     # Phase VII — state persistence (also appends to experiences.json)
     phase_vii_state_saving(goals, skill, idea, plan, evolution)
-    # Phase VII: Compaction
-    if cycle_num % 5 == 0:
-        try:
-            from bag.vector_manager import compact_cache
-            compact_cache()
-            log.info("Vector store compaction performed.")
-        except Exception as e:
-            log.warning(f"Vector store compaction failed: {e}")
 
     # Optional: write an email request for Dot to handle
     goals_fresh = load_goals()   # reload after save

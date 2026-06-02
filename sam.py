@@ -371,7 +371,6 @@ def apply_self_modification(plan: str) -> bool:
     log.info("── Self-Modification: Parsing Surgical Patch ──")
 
     from bag.Stability_Protocols.governance_shield import check_semantic_safety
-    from bag.Stability_Protocols.ast_gate import ASTVerifier
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Advisory mode).")
 

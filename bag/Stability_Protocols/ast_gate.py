@@ -7,7 +7,7 @@ class ASTVerifier:
         # Wrap fragments to allow parsing
         wrapped_plan = f"class AuditWrapper:\n    def check(self):\n{plan}"
         try:
-            tree = ast.parse(wrapped_plan)
+            ast.parse(wrapped_plan)
             # Future: Add visitor to check for blacklisted nodes
             log.info("AST Governance: Structural audit passed.")
         except SyntaxError as e:
