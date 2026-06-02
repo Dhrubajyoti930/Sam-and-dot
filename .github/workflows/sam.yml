@@ -123,9 +123,8 @@ jobs:
 
       - name: Lint critical files
         run: |
-          ruff check World/Sam/sam.py --select F --ignore F841
+          ruff check World/Sam/sam.py World/Dot/dot.py --select F --ignore F841
           ruff check World/Sam/bag/ --select F || true
-          ruff check World/Dot/dot.py --select F
 
       - name: Run Sam's operational cycle
         env:
