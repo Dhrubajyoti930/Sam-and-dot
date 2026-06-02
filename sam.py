@@ -35,7 +35,10 @@ def main():
 
     # 3. Setup network request to Gemini 3.1 Flash Lite
     model_name = "gemini-3.1-flash-lite" 
-    url = f"[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/){model_name}:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+    
+    # This debug line will show you exactly what string Python is processing
+    print(f"DEBUG: Launching call to URL -> {url}")
     
     data = {
         "contents": [{
