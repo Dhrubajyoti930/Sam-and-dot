@@ -3,6 +3,7 @@ import json
 import urllib.request
 
 def main():
+    # Authenticate strictly using GEM_KEY_SAM
     api_key = os.environ.get("GEM_KEY_SAM")
     if not api_key:
         print("Error: GEM_KEY_SAM environment variable not found.")
@@ -29,12 +30,13 @@ def main():
         f"Previous implementation (dot.py):\n{current_dot}\n\n"
         f"Task: Write the absolute full new code for dot.py implementing the entire specification. Do not truncate anything. Do not leave placeholder comments like '# implement here'. Write every line out completely.\n\n"
         f"CRITICAL CONSTRAINT: Use ONLY the Python Standard Library. Do NOT use or import any external libraries, frameworks, or pip packages. Use only built-in structures.\n"
-        f"Output ONLY valid, pure Python code. Do NOT wrap your response in markdown code blocks like ```python or ```."
+        f"Output ONLY valid, pure Python code. Do NOT wrap your response in markdown code blocks like ```python or 
+```."
     )
 
     # 3. Setup network request to Gemini 3.1 Flash Lite
     model_name = "gemini-3.1-flash-lite" 
-    url = f"[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/){model_name}:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
     
     data = {
         "contents": [{
