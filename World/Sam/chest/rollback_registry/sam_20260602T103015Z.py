@@ -774,9 +774,7 @@ def phase_v_development(idea: str, goals: dict) -> str:
     except Exception as e:
         log.warning(f"Worklog open failed: {e}")
 
-    # Audit: Automate orphan cleanup via dependency analysis
-    orphans = find_orphans(SAM_DIR, Path(__file__))
-    log.info(f"Dependency analysis identified {len(orphans)} potential orphans.")
+    # Audit: Sam reads Dot's bag review from motion.md and decides what to delete
     movable_files = list(iter_movable_bag_files(BAG))
 
     if movable_files:

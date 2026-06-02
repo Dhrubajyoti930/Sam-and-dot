@@ -302,7 +302,7 @@ def curate_experiences() -> str:
     raw = ask_gemini(prompt)
     curation = _parse_gemini_json(raw)
     if not curation or not isinstance(curation, dict):
-        log.warning(f"Could not parse curation result.")
+        log.warning("Could not parse curation result.")
         return "(Experiences curation produced unparseable output — no changes made.)"
 
     keep         = set(curation.get("keep", []))
@@ -426,7 +426,7 @@ def dispatch_email() -> str:
     raw_email = ask_gemini(compose_prompt)
     composed = _parse_gemini_json(raw_email)
     if not composed or not isinstance(composed, dict):
-        log.error(f"Could not parse composed email.")
+        log.error("Could not parse composed email.")
         clear_request()
         return "(Email composition failed — request cleared.)"
 
