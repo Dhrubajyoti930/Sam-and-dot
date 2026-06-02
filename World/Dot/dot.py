@@ -62,7 +62,7 @@ if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_DOT secret is not set.")
 CLIENT = genai.Client(api_key=GEM_KEY)
 
-MODELS = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro"]
+MODELS = ["gemini-3.1-flash-lite"]
 _CURRENT_MODEL_INDEX = 0
 
 # ── Rate limiting ─────────────────────────────────────────────────────────────
