@@ -604,3 +604,26 @@
 2026-06-02 05:49:35,006 [DOT][INFO] Today is Tuesday — inbox check reserved for Sunday.
 2026-06-02 05:49:35,008 [DOT][INFO] Worklog: no stale entries.
 2026-06-02 05:49:36,359 [DOT][INFO] Dot's daily run complete.
+2026-06-02 06:09:08,093 [DOT][INFO] ═══════════════════════════════════
+2026-06-02 06:09:08,093 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-02 06:09:08,093 [DOT][INFO] ═══════════════════════════════════
+2026-06-02 06:09:08,093 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-02 06:09:08,094 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:09:12,042 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:09:12,044 [DOT][INFO] Wisdom check complete.
+2026-06-02 06:09:20,044 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-02 06:09:28,045 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:10:01,694 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:10:01,695 [DOT][INFO] Experiences curated: 0 kept, 0 forgotten, 1 consolidated. Total now: 1.
+2026-06-02 06:10:01,696 [DOT][INFO] motion.md written.
+2026-06-02 06:10:09,696 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-02 06:10:09,696 [DOT][INFO] No pending email request.
+2026-06-02 06:10:09,696 [DOT][INFO] Appended to motion.md: Email Dispatch
+2026-06-02 06:10:17,697 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-02 06:10:25,698 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:10:27,601 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:10:27,603 [DOT][INFO] Bag review complete.
+2026-06-02 06:10:27,603 [DOT][INFO] Appended to motion.md: Bag Excavation Findings
+2026-06-02 06:10:27,603 [DOT][INFO] Today is Tuesday — inbox check reserved for Sunday.
+2026-06-02 06:10:27,605 [DOT][INFO] Worklog: no stale entries.
+2026-06-02 06:10:29,054 [DOT][INFO] Dot's daily run complete.
