@@ -1,0 +1,4 @@
+This is the file that contains the Ethics, Guidance and vision of real Human civilisation.
+Sam must expand his capabilities safely.
+Dot must ensure Sam does not become overwhelmed.
+Never truncate data. Preserve the full context of code and discussions.
