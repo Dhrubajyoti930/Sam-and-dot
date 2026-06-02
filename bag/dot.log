@@ -685,3 +685,28 @@
 2026-06-02 08:13:51,120 [DOT][INFO] Today is Tuesday — inbox check reserved for Sunday.
 2026-06-02 08:13:51,123 [DOT][INFO] Worklog: no stale entries.
 2026-06-02 08:13:52,023 [DOT][INFO] Dot's daily run complete.
+2026-06-02 09:44:39,596 [DOT][INFO] ═══════════════════════════════════
+2026-06-02 09:44:39,596 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-02 09:44:39,596 [DOT][INFO] ═══════════════════════════════════
+2026-06-02 09:44:39,596 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-02 09:44:39,597 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 09:44:43,190 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 09:44:43,191 [DOT][INFO] Wisdom check complete.
+2026-06-02 09:44:51,191 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-02 09:44:59,192 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 09:45:00,189 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 09:45:00,191 [DOT][INFO] Experiences curated: 1 kept, 0 forgotten, 0 consolidated. Total now: 1.
+2026-06-02 09:45:00,191 [DOT][INFO] motion.md written.
+2026-06-02 09:45:00,191 [DOT][INFO] Appended to motion.md: Sam Alerts (carried forward from previous cycle)
+2026-06-02 09:45:00,191 [DOT][INFO] Sam's previous alerts restored to motion.md.
+2026-06-02 09:45:08,192 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-02 09:45:08,192 [DOT][INFO] No pending email request.
+2026-06-02 09:45:08,192 [DOT][INFO] Appended to motion.md: Email Dispatch
+2026-06-02 09:45:16,193 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-02 09:45:24,194 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 09:45:26,187 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 09:45:26,188 [DOT][INFO] Bag review complete.
+2026-06-02 09:45:26,189 [DOT][INFO] Appended to motion.md: Bag Excavation Findings
+2026-06-02 09:45:26,189 [DOT][INFO] Today is Tuesday — inbox check reserved for Sunday.
+2026-06-02 09:45:26,191 [DOT][INFO] Worklog: no stale entries.
+2026-06-02 09:45:27,238 [DOT][INFO] Dot's daily run complete.
