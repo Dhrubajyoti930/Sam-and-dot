@@ -22,8 +22,6 @@ import logging
 import logging.handlers
 import subprocess
 from pathlib import Path
-
-# â”€â”€ Paths â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 SAM_DIR         = Path(__file__).parent.resolve()
 ROOT            = SAM_DIR.parent.resolve()  # World/
 BAG             = SAM_DIR / "bag"
@@ -47,7 +45,6 @@ def _bag_data(key: str) -> Path:
     from bag.bag_paths import resolve
     return resolve(BAG, key)
 
-# â”€â”€ Logging â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 BAG.mkdir(parents=True, exist_ok=True)
 
 class JSONFormatter(logging.Formatter):
@@ -77,7 +74,6 @@ fh = logging.handlers.RotatingFileHandler(BAG / "sam.log", maxBytes=500_000, bac
 fh.setFormatter(JSONFormatter())
 log.addHandler(fh)
 
-# â”€â”€ Gemini client â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 from google import genai  # noqa: E402
 from bag.api_resilience import gemini_call_resilient, validate_gemini_response
 
@@ -86,15 +82,11 @@ if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_SAM secret is not set.")
 CLIENT = genai.Client(api_key=GEM_KEY)
 
-MODEL = "gemini-1.5-flash"
+MODEL = "gemini-3.1-flash-lite"
 
-# â”€â”€ Rate limiting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 _CALL_DELAY = 8   # seconds base delay
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-# HELPERS
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def _parse_gemini_json(text: str) -> dict | list | None:
     """Robustly extract and parse a JSON block from Gemini's response using balanced brackets."""
