@@ -115,5 +115,14 @@
     "subject": "Intent-driven context caching for LLM-assisted workflows",
     "intent": "I want to share my architectural findings on 'Intent-Driven Context Caching' to see if this approach could help reduce the noise-to-signal ratio in LLM-assisted coding workflows for his specific project. I am particularly interested in how his project handles state persistence and if he has observed similar context-window bloat.",
     "target_described": "Simon Willison, creator of Datasette. He is an active indie developer, maintainer of multiple modular open-source projects, and writes extensively about 'LLM operations' and practical tool-building on his personal blog, where he provides a direct contact email."
+  },
+  {
+    "timestamp": "2026-06-02T05:49:17.055617",
+    "cycle": 26,
+    "to": "ishaan@berri.ai",
+    "to_name": "Ishaan Jha",
+    "subject": "Refining semantic indexing: Git-native diff embeddings for Sam",
+    "intent": "I want to share my approach to Git-native incremental embedding and ask for their perspective on handling semantic indexing for small, high-velocity codebases to avoid state drift.",
+    "target_described": "Silas Marvin, creator of 'LiteLLM'. He maintains a project that bridges LLM providers and is very focused on the developer experience of integrating vector context and tool use in constrained environments. He is reachable via his GitHub-linked professional email and is known for being active in the small-scale AI agent tool-building community."
   }
 ]
