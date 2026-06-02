@@ -93,3 +93,13 @@ def is_allowed_patch_filename(fname: str) -> bool:
     if len(parts) == 1 and parts[0] in ROOT_PROTECTED_PY:
         return False
     return True
+
+
+def is_allowed_prompt_patch_filename(fname: str) -> bool:
+    """Looser check used exclusively by Phase VI (apply_prompt_patch).
+    Permits bag/prompts.py in addition to everything is_allowed_patch_filename allows.
+    All other governance rules (FORBIDDEN_BASENAMES, blocked dirs) still apply.
+    """
+    if fname == "bag/prompts.py":
+        return True
+    return is_allowed_patch_filename(fname)
