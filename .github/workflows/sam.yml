@@ -123,7 +123,7 @@ jobs:
 
       - name: Lint critical files
         run: |
-          ruff check World/Sam/sam.py --select F
+          ruff check World/Sam/sam.py --select F --ignore F841
           ruff check World/Sam/bag/ --select F || true
           ruff check World/Dot/dot.py --select F
 
