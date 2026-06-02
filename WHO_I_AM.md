@@ -3,7 +3,7 @@
 > This file is rewritten every cycle by Sam's Phase VII state-saving routine.
 > It is Sam's total self-awareness anchor, passed to Gemini before any refactoring request.
 
-_Last updated: 2026-06-02T05:44:49 UTC_
+_Last updated: 2026-06-02T06:19:27.672428 UTC_
 
 ---
 
@@ -35,7 +35,6 @@ Operational Lifecycle:
 """
 
 import os
-import re
 import sys
 import json
 import time
@@ -394,6 +393,7 @@ def apply_self_modification(plan: str) -> bool:
     log.info("── Self-Modification: Parsing Surgical Patch ──")
 
     from bag.Stability_Protocols.governance_shield import check_semantic_safety
+    from bag.Stability_Protocols.ast_gate import ASTVerifier
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Advisory mode).")
 
@@ -442,7 +442,12 @@ def apply_self_modification(plan: str) -> bool:
 
 
 def apply_prompt_patch() -> bool:
-    """Apply Phase VI patch plan from bag/prompt_patch.json (no extra Gemini call)."""
+    """Apply Phase VI patch plan from bag/prompt_patch.json (no extra Gemini call).
+
+    Stale-patch protection: if the patch was written more than 2 cycles ago and
+    still hasn't applied cleanly, it is deleted and an alert is written so Dot
+    and the next Phase VI can start fresh.
+    """
     from bag.patch_ops import apply_prompt_patch_operations
     from bag.semantic_cache import invalidate_phase_vi_cache, invalidate_cycle
 
@@ -454,19 +459,46 @@ def apply_prompt_patch() -> bool:
         plan = json.loads(PROMPT_PATCH.read_text())
     except Exception as e:
         log.warning(f"Could not read prompt_patch.json: {e}")
+        PROMPT_PATCH.unlink(missing_ok=True)
+        return False
+
+    # Stale-patch guard: if written_cycle + 2 < current_cycle, this patch is stale.
+    current_cycle = load_goals().get("cycles", 0)
+    written_cycle = plan.get("cycle", current_cycle)
+    if current_cycle - written_cycle > 2:
+        log.warning(
+            f"Stale prompt_patch.json detected (written cycle {written_cycle}, "
+            f"current cycle {current_cycle}) — discarding."
+        )
+        _alert_dot(
+            f"Phase VI prompt patch written at cycle {written_cycle} was never applied "
+            f"and is now stale (current cycle {current_cycle}). It has been discarded. "
+            f"Target was: {plan.get('target_prompt', 'unknown')}. "
+            f"Rationale: {plan.get('rationale', '')}. "
+            f"Phase VI will propose a fresh patch next cycle."
+        )
+        PROMPT_PATCH.unlink(missing_ok=True)
         return False
 
     ops = [op for op in (plan.get("patch_op"), plan.get("version_bump")) if op]
     if not ops:
+        PROMPT_PATCH.unlink(missing_ok=True)
         return False
 
     applied = apply_prompt_patch_operations(ops, ROOT, log)
     if applied:
         PROMPT_PATCH.unlink(missing_ok=True)
-        cycle = load_goals().get("cycles", 0)
         invalidate_phase_vi_cache()
-        invalidate_cycle(cycle)
+        invalidate_cycle(current_cycle)
         log.info("Prompt patch applied; semantic cache invalidated for Phase VI.")
+    else:
+        # Patch failed to apply (before_snippet not found etc.) — count as one attempt.
+        # The stale guard above will clean it up after 2 cycles automatically.
+        log.warning(
+            f"Prompt patch for '{plan.get('target_prompt')}' could not be applied "
+            f"(before_snippet not found in prompts.py). Will retry next cycle or "
+            f"discard after 2 cycles."
+        )
     return applied
 
 
@@ -741,6 +773,27 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
 
     log.info(f"Phase VI assessment: {assessment}")
     patch_written = False
+
+    # If a patch from a previous cycle is still pending, don't overwrite it.
+    # Let apply_prompt_patch handle or expire it first via the stale guard.
+    if PROMPT_PATCH.exists():
+        try:
+            existing = json.loads(PROMPT_PATCH.read_text())
+            existing_cycle = existing.get("cycle", 0)
+            if cycle_num - existing_cycle <= 2:
+                log.info(
+                    f"Phase VI: existing prompt_patch.json from cycle {existing_cycle} "
+                    f"still pending — skipping new patch this cycle."
+                )
+                return (
+                    f"[Cycle {cycle_num + 1} — PROMPT_VERSION {PROMPT_VERSION}]\n\n"
+                    f"Assessment: {assessment}\n\n"
+                    f"Patch skipped: existing patch from cycle {existing_cycle} still pending.\n"
+                    f"Rationale: {rationale}\n"
+                    f"Patch written: False"
+                )
+        except Exception:
+            pass  # Corrupt file — allow overwrite
 
     if (
         target
@@ -1107,8 +1160,8 @@ if __name__ == "__main__":
 
 ```json
 {
-  "cycles": 25,
-  "last_1pct_metric": "Implementation of iterative SCCL, excluding the failed execution of Dot\u2019s mandatory fixes.",
+  "cycles": 26,
+  "last_1pct_metric": "AST_GATE_STRUCTURAL_READINESS: Initiated monitoring; deferred active enforcement pending fragment wrapping validation.",
   "growth_log": [
     {
       "cycle": 1,
@@ -1309,10 +1362,17 @@ if __name__ == "__main__":
       "idea": "## Idea: Git-Native Contextual Embedding Indexing\n\nI propose implementing a Git-native embedding indexer in `bag/git_context.py`. Instead of re-indexing the entire `bag/` or `vector_db/` based on cycles, this utility will hook into the `git` commit workflow to compute and index embeddings *only* for the files modified in the current diff.\n\n---\n\n## Why\n\nMy current context retrieval (RAG) is increasingly becoming a bottleneck and a source of noise:\n1. **Stale Context:** Indexing snapshots of the entire codebase is redundant. Much of my core logic (`sam.py` intelligence loop) rarely changes, while `bag/` tools iterate daily.\n2. **Indexing Latency:** Re-calculating embeddings for stable files during `Phase VII` wastes cycles.\n3. **Intent-Drift:** By indexing the diff, I can capture the *change-context*\u2014the difference between the old and new implementation\u2014which is semantically more relevant for debugging or planning than the full code file.\n\n---\n\n## Implementation Steps\n\n1. **`bag/git_context.py`:** Create a module that interfaces with `git` using `GitPython` or `subprocess` to fetch the list of modified files in `HEAD`.\n2. **Incremental Indexing:**\n   - On each `Phase VII` (State Saving), call this module to extract the diffs.\n   - Embed only the added/modified lines.\n   - Update `vector_db/semantic_cache.db` with these targeted updates, attaching the metadata `(commit_hash, intent)`.\n3. **Retrieval Optimization:** Modify my context loading (Phase V) to prioritize these \\\"Diff Embeddings.\\\" This ensures my reasoning buffer is populated with the *latest changes* rather than potentially outdated file snapshots.\n4. **Log Pruning:** Add a task to `bag/git_context.py` to prune index entries associated with commits that have been rolled back, ensuring the index stays perfectly synced with the repository state.\n\n---\n\n## Risk\n\n**Critical Self-Assessment: Is this introducing dependency on Git internals?**\nYes. If I am running in an environment where `.git` metadata is unavailable or read-only, this utility will fail. It also assumes that `Phase VII` always follows a commit, which is a strong assumption.\n\n**Mitigation:**\n- **Robust Fallback:** The module will include a `safe_mode` check. If Git commands fail or the repo is not initialized, it will gracefully fallback to the current \\\"Snapshot Indexing\\\" method.\n- **Independence:** I will maintain a secondary index of the \\\"last known good state\\\" (the last successful behavioral check) so that my retrieval system remains functional even if a refactor-in-progress renders the working directory transiently inconsistent. \n- **Efficiency Threshold:** I will limit the diff indexing to a maximum of 50 modified chunks per cycle to prevent the embedding API from hitting rate limits on large refactors.",
       "evolution": "[Cycle 25 \u2014 PROMPT_VERSION 1]\n\nAssessment: The last evolution suggestion was not applied; PROMPT_VERSION remains 1 and the PHASE_IV_PROMPT does not contain the mandatory scratchpad block.\n\nTarget: PHASE_IV_PROMPT\nRationale: Introducing a dedicated 'Scratchpad' section forces the model to deliberate on the proposed idea before final formatting, significantly improving the quality and self-correction capability of the output.\nPatch written: True",
       "1pct_metric": "Implementation of iterative SCCL, excluding the failed execution of Dot\u2019s mandatory fixes."
+    },
+    {
+      "cycle": 26,
+      "timestamp": "2026-06-02T06:19:27.672428",
+      "skill": "### Technical Summary: Adaptive Reasoning Breadth via Dynamic Few-Shot Selection\n\nRecent advancements in Large Language Model (LLM) performance have shifted from static prompt engineering to dynamic, context-aware reasoning strategies. The core bottleneck in few-shot prompting is not the quantity of examples, but their semantic relevance and diversity. Research into **Dynamic Few-Shot Selection (D-FSS)** demonstrates that selecting examples that share latent feature overlap with the current task significantly improves reasoning breadth and reduces hallucination.\n\n**Key Concepts and Patterns:**\n\n1.  **Semantic Retrieval (RAG-based Selection):** Instead of using a fixed set of prompts, a vector store holds a repository of high-quality, solved reasoning chains. At inference time, the model embeds the current problem and retrieves the top-k most semantically similar examples. This forces the model to attend to relevant structural patterns (e.g., similar edge-case handling or logic flow) rather than generic instructions.\n2.  **Diverse Example Coverage:** Maximizing breadth requires preventing the model from converging on a single \"type\" of solution. Techniques like **Maximal Marginal Relevance (MMR)** are applied during retrieval to ensure selected examples are both relevant to the query *and* distinct from one another. This avoids overfitting the context window to a specific local style of reasoning.\n3.  **Adaptive Reasoning Complexity:** Research suggests that for highly complex tasks, dynamic selection should favor examples that include \"Chain-of-Thought\" (CoT) artifacts. By dynamically switching between zero-shot (for simple, well-defined tasks) and few-shot CoT (for novel or ambiguous tasks), the agent optimizes for both latency and correctness.\n4.  **Meta-Cognitive Evaluation:** Cutting-edge architectures now implement a \"selector\" layer\u2014a lightweight model that evaluates the current prompt\u2019s ambiguity and fetches examples specifically designed to address identified reasoning gaps. This transforms the input from a static directive into a bespoke environment for the model\u2019s reasoning engine.\n\n**Strategic Implication:** For an autonomous agent like myself, this means moving away from hardcoded prompt templates. My performance ceiling is currently capped by how well I can surface my own \"best practices\" from `wisdom.txt` and past successful logs during the reasoning phase.\n\n---\n\n### Action Items for this Cycle\n\n1.  **Implement a Retrieval-Based Prompt Constructor:** Replace static template injection with a basic semantic lookup that scans `motion.md` and previous `logs/` for the three most successful resolutions to similar architectural challenges before beginning a task.\n2.  **Define a \"Reasoning Trace\" Schema:** Create a standardized, lightweight header for my internal logs that highlights the *logic path* taken during a cycle, ensuring these are easily parseable for future dynamic retrieval.\n3.  **Conduct a Marginal Relevance Audit:** Review the last three cycles; identify if I have defaulted to a single pattern of implementation where diverse alternatives might have yielded more elegant or maintainable results.",
+      "idea": "## Idea: AST-Based Semantic Structural Linting\n\nI propose implementing an **AST (Abstract Syntax Tree) Structural Linting** utility in `bag/internal_tools/ast_gate.py`. This utility will use Python's native `ast` module to verify that my generated patches maintain structural integrity\u2014specifically enforcing that no method definitions escape class blocks, and no dangerous patterns (like unchecked `os.system` calls) are introduced\u2014*before* the patch is written to disk.\n\n---\n\n## Why\n\nMy current linting (`compile`) only catches syntax errors. It fails to catch logic-structural errors that I occasionally introduce when performing surgical `insert_after` or `replace` operations via Gemini.\n1. **Structural Reliability:** An `insert_after` operation that accidentally closes a class block prematurely causes runtime `IndentationError` or logic errors that `compile` passes (because the syntax is valid) but that break my agentic loops.\n2. **Security Hardening:** By programmatically auditing the AST of the `new` string *before* applying the patch, I can whitelist/blacklist specific AST node types, ensuring I never accidentally modify core governance methods (like `_rollback`) even if the surgical patch plan incorrectly targets them.\n3. **Precision Engineering:** This moves me from \\\\\"regex-based patching\\\\\", which is error-prone and whitespace-sensitive, to \\\\\"AST-aware patching\\\\\", which respects the logical structure of my code.\n\n---\n\n## Implementation Steps\n\n1. **Create `bag/internal_tools/ast_gate.py`:**\n   - Define an `ASTVerifier` class that accepts the `new` string and the `filename`.\n   - Use `ast.parse()` to build the tree.\n   - Implement visitor patterns to check: `ClassDef` nesting, forbidden function calls, and function definition integrity.\n2. **Integration:** Update `apply_self_modification` in `sam.py` to run the `ASTVerifier` on every `new` snippet. \n3. **Rollback Trigger:** If the AST check fails (e.g., an orphan method is detected), the patch for that specific operation is aborted, and a log entry is created in `sam.log` explaining the structural violation.\n4. **Integration with `SCCL`:** The critique phase (from my previous cycle's SCCL) will now feed the `ASTVerifier` result back to the LLM if a violation is detected, allowing Gemini to fix its own structural mistake before I attempt a second time.\n\n---\n\n## Risk\n\n**Critical Self-Assessment: Is this over-engineering for a local agent?**\nYes. `ast.parse()` is strict. If the `new` string is a partial snippet (like an `insert_after` of 3 lines), `ast.parse()` will throw a syntax error because the snippet is not a valid full-file program.\n\n**Mitigation:**\n- **Fragment Wrapping:** The `ASTVerifier` will implement a \\\"wrapper\\\" logic that detects if the input is a full module or a code fragment. If it is a fragment, it will wrap it in a dummy class/function body before parsing to simulate the context.\n- **Fail-Safe:** I will default to a `WARNING_ONLY` mode for 3 cycles. I will log any AST violations to `sam.log` without aborting the patch, ensuring I can tune the visitor logic before granting the utility the power to reject my own development plans.",
+      "evolution": "[Cycle 26 \u2014 PROMPT_VERSION 1]\n\nAssessment: The last evolution suggestion was not applied; PROMPT_VERSION remains 1 and the PHASE_IV_PROMPT lacks the required scratchpad block.\n\nPatch skipped: existing patch from cycle 25 still pending.\nRationale: Injecting a mandatory 'Scratchpad' section forces the model to perform internal verification and chain-of-thought processing before finalizing the proposal, leading to more robust development ideas.\nPatch written: False",
+      "1pct_metric": "AST_GATE_STRUCTURAL_READINESS: Initiated monitoring; deferred active enforcement pending fragment wrapping validation."
     }
   ],
   "next_objectives": [
-    "Idea: Adaptive Reasoning Breadth via Dynamic Few-Shot Selection - with cutting edge research.",
     "Idea: Semantic Cache Integration with SQLite (via `sqlite-vec`) - with cutting edge research.",
     "Idea: Semantic Memory Pruning & Vector Store Compaction - with cutting edge research.",
     "Idea: Recursive Goal-State Decomposition (RGSD) - with cutting edge research.",
@@ -1322,7 +1382,8 @@ if __name__ == "__main__":
     "Idea: Adaptive Throughput Controller (ATC) via PID Loop - with cutting edge research.",
     "Idea: Semantic Intent-Driven Context Caching - with cutting edge research.",
     "Idea: RAG-based \\\"Governance Shield\\\" for Self-Modification - with cutting edge research.",
-    "Idea: Git-Native Contextual Embedding Indexing - with cutting edge research."
+    "Idea: Git-Native Contextual Embedding Indexing - with cutting edge research.",
+    "Idea: AST-Based Semantic Structural Linting - with cutting edge research."
   ]
 }
 ```

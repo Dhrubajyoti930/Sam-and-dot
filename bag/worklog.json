@@ -208,5 +208,20 @@
       "Cycle complete. Modification applied: True."
     ],
     "outcome": "applied"
+  },
+  {
+    "id": "cycle-26-idea:-ast-based-semantic-struc",
+    "title": "Idea: AST-Based Semantic Structural Linting",
+    "status": "closed",
+    "opened_at": "2026-06-02T06:17:56.639729",
+    "opened_cycle": 26,
+    "last_touched_at": "2026-06-02T06:18:57.400983",
+    "last_touched_cycle": 26,
+    "closed_at": "2026-06-02T06:18:57.400976",
+    "updates": [
+      "Plan generated in Phase V.",
+      "Cycle complete. Modification applied: True."
+    ],
+    "outcome": "applied"
   }
 ]

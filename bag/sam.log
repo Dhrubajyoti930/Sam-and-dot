@@ -2160,3 +2160,107 @@ def get_context_slice(intent: str) -> str:
 2026-06-02 05:45:49,537 [INFO] request.json written — Dot will handle sending.
 2026-06-02 05:45:49,537 [INFO] Cycle complete.
 2026-06-02 05:45:49,538 [INFO] [Evaluator] Memory integrity check passed — 6 experiences, quality OK.
+2026-06-02 06:15:13,109 [INFO] ═══════════════════════════════════
+2026-06-02 06:15:13,109 [INFO]   SAM — Operational Cycle Starting 
+2026-06-02 06:15:13,109 [INFO] ═══════════════════════════════════
+2026-06-02 06:15:13,384 [INFO] ── Phase I: Deep Learning ──
+2026-06-02 06:15:13,411 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:15:16,563 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:15:16,571 [INFO] Phase I complete.
+2026-06-02 06:15:16,571 [INFO] ── Phase II: Spaced Repetition ──
+2026-06-02 06:15:45,573 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:15:47,009 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:15:47,013 [INFO] Phase II complete.
+2026-06-02 06:15:47,013 [INFO] ── Phase III: Market & Code Ingestion ──
+2026-06-02 06:16:16,014 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:16:19,016 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:16:19,020 [INFO] Phase III complete.
+2026-06-02 06:16:19,020 [INFO] ── Phase IV: The Synthesis ──
+2026-06-02 06:16:48,022 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:16:52,225 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:16:52,227 [INFO] IDEA_OF_THE_DAY.md written.
+2026-06-02 06:16:52,227 [INFO] ── Phase V: Development & Refactor ──
+2026-06-02 06:16:52,227 [INFO] motion.md read.
+2026-06-02 06:17:21,229 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:17:22,172 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:17:22,174 [INFO] Dot's action items surfaced: 3 item(s)
+2026-06-02 06:17:22,180 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:17:23,780 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:17:23,785 [INFO] Workshop target folder for cycle 26: bag/Stability Protocols/
+2026-06-02 06:17:23,785 [INFO] Workshop move: bag/Concurrency_Controllers/__init__.py → bag/Concurrency Controllers/__init__.py
+2026-06-02 06:17:23,785 [INFO] Workshop move: bag/Core_Intelligence/__init__.py → bag/Core Intelligence/__init__.py
+2026-06-02 06:17:23,785 [INFO] Workshop move: bag/Knowledge_Management/__init__.py → bag/Knowledge Management/__init__.py
+2026-06-02 06:17:23,786 [INFO] Workshop move: bag/Knowledge_Management/few_shot_manager.py → bag/Knowledge Management/few_shot_manager.py
+2026-06-02 06:17:23,786 [INFO] Workshop move: bag/Knowledge_Management/vector_manager.py → bag/Knowledge Management/vector_manager.py
+2026-06-02 06:17:23,786 [INFO] Workshop move: bag/Stability_Protocols/__init__.py → bag/Stability Protocols/__init__.py
+2026-06-02 06:17:23,786 [INFO] Workshop move: bag/Stability_Protocols/governance_shield.py → bag/Stability Protocols/governance_shield.py
+2026-06-02 06:17:23,786 [INFO] Workshop reorganized: 7 file(s) moved.
+2026-06-02 06:17:23,802 [INFO] Imports updated after workshop move → sam.py
+2026-06-02 06:17:23,862 [ERROR] Compile failed after workshop move: sam.py — File "/home/runner/work/Sam-and-dot/Sam-and-dot/sam.py", line 373
+    from bag.Stability Protocols.governance_shield import check_semantic_safety
+                       ^^^^^^^^^
+SyntaxError: invalid syntax
+2026-06-02 06:17:24,585 [ERROR] Workshop moves broke repo integrity — rolling back file moves and imports.
+2026-06-02 06:17:24,585 [WARNING] Rolled back workshop move: bag/Concurrency Controllers/__init__.py → bag/Concurrency_Controllers/__init__.py
+2026-06-02 06:17:24,586 [WARNING] Rolled back workshop move: bag/Core Intelligence/__init__.py → bag/Core_Intelligence/__init__.py
+2026-06-02 06:17:24,586 [WARNING] Rolled back workshop move: bag/Knowledge Management/__init__.py → bag/Knowledge_Management/__init__.py
+2026-06-02 06:17:24,586 [WARNING] Rolled back workshop move: bag/Knowledge Management/few_shot_manager.py → bag/Knowledge_Management/few_shot_manager.py
+2026-06-02 06:17:24,586 [WARNING] Rolled back workshop move: bag/Knowledge Management/vector_manager.py → bag/Knowledge_Management/vector_manager.py
+2026-06-02 06:17:24,586 [WARNING] Rolled back workshop move: bag/Stability Protocols/__init__.py → bag/Stability_Protocols/__init__.py
+2026-06-02 06:17:24,586 [WARNING] Rolled back workshop move: bag/Stability Protocols/governance_shield.py → bag/Stability_Protocols/governance_shield.py
+2026-06-02 06:17:24,601 [INFO] Imports updated after workshop move → sam.py
+2026-06-02 06:17:24,663 [WARNING] Workshop moves were rolled back to keep the repo healthy.
+2026-06-02 06:17:24,663 [INFO] Workshop delete: bag/__init__.py (workshop cleanup)
+2026-06-02 06:17:24,663 [INFO] Workshop cleanup: 1 file(s) deleted.
+2026-06-02 06:17:24,718 [INFO] Behaviour check passed.
+2026-06-02 06:17:53,721 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:17:56,638 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:17:56,639 [INFO] Phase V complete.
+2026-06-02 06:17:56,640 [INFO] Worklog entry opened: Idea: AST-Based Semantic Structural Linting
+2026-06-02 06:18:25,643 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:18:26,270 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:18:26,273 [INFO] ── Bag Module Health Check ──
+2026-06-02 06:18:26,275 [INFO] All bag modules are syntax-clean.
+2026-06-02 06:18:26,275 [INFO] Snapshot saved → sam_20260602T061826Z.py
+2026-06-02 06:18:26,277 [INFO] Bag snapshot saved → bag_20260602T061826Z.json (7 files)
+2026-06-02 06:18:26,277 [INFO] Pruned old snapshot → sam_20260601T114933Z.py
+2026-06-02 06:18:26,278 [INFO] Pruned old bag snapshot → bag_20260601T114933Z.json
+2026-06-02 06:18:26,278 [INFO] ── Self-Modification: Parsing Surgical Patch ──
+2026-06-02 06:18:55,280 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:18:57,064 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:18:57,067 [INFO] Created new file via insert_after → bag/Stability_Protocols/ast_gate.py
+2026-06-02 06:18:57,067 [INFO] Applied insert_after → sam.py
+2026-06-02 06:18:57,068 [WARNING] insert_after on 'sam.py': anchor not found — skipping.
+2026-06-02 06:18:57,400 [INFO] Behaviour check passed.
+2026-06-02 06:18:57,400 [INFO] Self-modification verified — syntax and behaviour both clean.
+2026-06-02 06:18:57,401 [INFO] Worklog entry closed: cycle-26-idea:-ast-based-semantic-struc (applied)
+2026-06-02 06:18:57,401 [INFO] ── Phase VI: Cognitive Evolution ──
+2026-06-02 06:19:26,402 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:19:27,329 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:19:27,330 [INFO] Phase VI assessment: The last evolution suggestion was not applied; PROMPT_VERSION remains 1 and the PHASE_IV_PROMPT lacks the required scratchpad block.
+2026-06-02 06:19:27,331 [INFO] Phase VI: existing prompt_patch.json from cycle 25 still pending — skipping new patch this cycle.
+2026-06-02 06:19:27,331 [INFO] Snapshot saved → sam_20260602T061927Z.py
+2026-06-02 06:19:27,333 [INFO] Bag snapshot saved → bag_20260602T061927Z.json (8 files)
+2026-06-02 06:19:27,333 [INFO] Pruned old snapshot → sam_20260601T121457Z.py
+2026-06-02 06:19:27,333 [INFO] Pruned old bag snapshot → bag_20260601T121457Z.json
+2026-06-02 06:19:27,333 [INFO] ── Phase VI: Applying Prompt Patch ──
+2026-06-02 06:19:27,334 [INFO] Applied prompt patch replace → bag/prompts.py
+2026-06-02 06:19:27,334 [INFO] Applied prompt patch replace → bag/prompts.py
+2026-06-02 06:19:27,341 [INFO] Prompt patch applied; semantic cache invalidated for Phase VI.
+2026-06-02 06:19:27,672 [INFO] Behaviour check passed.
+2026-06-02 06:19:27,672 [INFO] Phase VI prompt patch verified.
+2026-06-02 06:19:27,672 [INFO] ── Phase VII: State Saving ──
+2026-06-02 06:19:56,674 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:19:57,344 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:19:57,347 [INFO] 1% metric: AST_GATE_STRUCTURAL_READINESS: Initiated monitoring; deferred active enforcement pending fragment wrapping validation.
+2026-06-02 06:19:57,349 [INFO] goals.json updated.
+2026-06-02 06:19:57,350 [INFO] WHO_I_AM.md updated (clean rewrite).
+2026-06-02 06:20:26,352 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:20:27,689 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:20:27,692 [INFO] experiences.json updated — 2 entries.
+2026-06-02 06:20:27,692 [INFO] Cycle 26 complete. 1% metric: AST_GATE_STRUCTURAL_READINESS: Initiated monitoring; deferred active enforcement pending fragment wrapping validation.
+2026-06-02 06:20:56,694 [INFO] AFC is enabled with max remote calls: 10.
+2026-06-02 06:20:57,728 [INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-02 06:20:57,731 [INFO] request.json written — Dot will handle sending.
+2026-06-02 06:20:57,731 [INFO] Cycle complete.
+2026-06-02 06:20:57,732 [INFO] [Evaluator] Only 2 experiences — skipping (need 5+).
