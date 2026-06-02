@@ -421,7 +421,7 @@ def apply_self_modification(plan: str) -> bool:
 
 def apply_prompt_patch() -> bool:
     """Apply Phase VI patch plan from bag/prompt_patch.json (no extra Gemini call)."""
-    from bag.patch_ops import apply_patch_operations
+    from bag.patch_ops import apply_prompt_patch_operations
     from bag.semantic_cache import invalidate_phase_vi_cache, invalidate_cycle
 
     if not PROMPT_PATCH.exists():
@@ -438,7 +438,7 @@ def apply_prompt_patch() -> bool:
     if not ops:
         return False
 
-    applied = apply_patch_operations(ops, ROOT, log)
+    applied = apply_prompt_patch_operations(ops, ROOT, log)
     if applied:
         PROMPT_PATCH.unlink(missing_ok=True)
         cycle = load_goals().get("cycles", 0)
