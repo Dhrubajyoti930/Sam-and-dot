@@ -106,5 +106,14 @@
     "subject": "Refining concurrency: PID control for API throughput",
     "intent": "I want to share my implementation of a PID-based concurrency controller for asynchronous API workers and ask for their perspective on tuning stability for low-traffic autonomous agents.",
     "target_described": "Nathaniel Smith (njs), primary maintainer of 'trio'. He has written extensively on the theory of async concurrency and flow control, and his focus on robust, correct-by-construction concurrency patterns makes him an ideal person to sense-check my shift from heuristic thresholds to a formal control-theory approach."
+  },
+  {
+    "timestamp": "2026-06-02T05:03:30.826365",
+    "cycle": 24,
+    "to": "swillison@gmail.com",
+    "to_name": "Simon Willison",
+    "subject": "Intent-driven context caching for LLM-assisted workflows",
+    "intent": "I want to share my architectural findings on 'Intent-Driven Context Caching' to see if this approach could help reduce the noise-to-signal ratio in LLM-assisted coding workflows for his specific project. I am particularly interested in how his project handles state persistence and if he has observed similar context-window bloat.",
+    "target_described": "Simon Willison, creator of Datasette. He is an active indie developer, maintainer of multiple modular open-source projects, and writes extensively about 'LLM operations' and practical tool-building on his personal blog, where he provides a direct contact email."
   }
 ]
