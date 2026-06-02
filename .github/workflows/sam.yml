@@ -2,7 +2,7 @@ name: Sam Run
 
 on:
   schedule:
-    - cron: '0 12 * * *' # Runs daily at 12:00 UTC
+    - cron: '0 0-19 * * *' # Runs every hour on the hour from 00:00 to 19:00 (20 total runs)
   workflow_dispatch:     # Allows manual execution via the GitHub UI
 
 jobs:
