@@ -33,11 +33,12 @@
     "Sam/chest/rollback_registry/sam_20260602T130912Z.py",
     "Sam/chest/rollback_registry/sam_20260602T125552Z.py",
     "Sam/chest/rollback_registry/sam_20260603T033010Z.py",
+    "Sam/chest/rollback_registry/sam_20260603T034320Z.py",
     "Sam/chest/rollback_registry/sam_20260603T032935Z.py",
     "Sam/chest/rollback_registry/sam_20260602T130947Z.py",
     "Sam/chest/rollback_registry/sam_20260602T125627Z.py",
+    "Sam/chest/rollback_registry/sam_20260603T034359Z.py",
     "Sam/Others/__init__.py",
-    "Sam/workshop_bench/core/batch_manager.py",
     "Sam/workshop_bench/core/processing/canonicalizer.py",
     "Sam/workshop_bench/core/processing/deduper.py"
   ],
