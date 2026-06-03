@@ -66,7 +66,7 @@ CLIENT = genai.Client(api_key=GEM_KEY)
 MODEL = "gemini-3.1-flash-lite"
 
 # Set to False to run Sunday tasks every cycle (testing); True for production
-SUNDAY_ONLY = False
+SUNDAY_ONLY = True
 
 # ── Rate limiting ─────────────────────────────────────────────────────────────
 _CALL_DELAY = 8  # seconds
@@ -358,6 +358,7 @@ def curate_experiences() -> str:
         "Be conservative — when in doubt, keep. Only forget truly redundant or outdated entries."
     )
     raw = ask_gemini(prompt)
+    log.info(f"Curation raw response (first 200): {raw[:200]}")  # debug
     curation = _parse_gemini_json(raw)
     if not curation or not isinstance(curation, dict):
         log.warning("Could not parse curation result.")
