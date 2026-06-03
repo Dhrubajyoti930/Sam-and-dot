@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 28
+    "review_due_cycle": 43
   },
   {
     "cycle": 25,
@@ -34,5 +34,11 @@
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
     "review_due_cycle": 32
+  },
+  {
+    "cycle": 29,
+    "topic": "Scratchpad - with cutting edge research.",
+    "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
+    "review_due_cycle": 33
   }
 ]
