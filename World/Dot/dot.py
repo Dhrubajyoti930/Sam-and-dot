@@ -433,29 +433,58 @@ def dispatch_email() -> str:
     context            = request.get("context", "")
     cycle              = request.get("cycle", "?")
 
-    # Step A: Ask Gemini to find a real recipient email with rigorous source verification
+    # Step A: Two-call web search verification
+    # Call 1 — web search to find the real email address
     _sleep()
-    recipient_prompt = (
-        f"You are Dot, a rigorous verification agent for Sam (an autonomous developer).\n"
-        f"Sam wants to reach out to: {target_description}\n"
+    search_prompt = (
+        f"Search the web for the personal email address of: {target_description}\n"
         f"Intent: {intent}\n\n"
-        f"Your task is to find the recipient's OFFICIAL PERSONAL public email address.\n"
-        f"STRICT RULES:\n"
-        f"1. ONLY return 'found': true if you find an address on a PERSONAL site, GitHub README, "
-        f"Twitter/X bio, or verified maintainer profile (PyPI/npm).\n"
-        f"2. ABSOLUTELY REJECT: Generic inboxes (info@, support@), company-wide aliases, or mailing lists.\n"
-        f"3. ABSOLUTELY REJECT: Scraped data from unofficial 'directory' sites.\n"
-        f"4. If there is ANY ambiguity or if multiple candidates exist, return 'found': false.\n\n"
-        f"Respond ONLY with a JSON object:\n"
-        f"  - 'found': true or false\n"
-        f"  - 'email': the confirmed email address string\n"
-        f"  - 'name': the person's full name\n"
-        f"  - 'source_url': THE EXACT URL where the email is listed (MANDATORY if found)\n"
-        f"  - 'confidence': 1-10 (must be 9+ to send)\n"
-        f"  - 'reasoning': one sentence explaining the verification.\n"
+        f"Look at their personal website, GitHub profile README, PyPI/npm maintainer page, "
+        f"or Twitter/X bio. Report EXACTLY what you find — quote the source URL and the "
+        f"email address as it appears. If you cannot find a personal email on an official "
+        f"source, say so explicitly. Do NOT guess or infer an email address."
     )
-    raw_recipient = ask_gemini(recipient_prompt)
+    try:
+        search_response = CLIENT.models.generate_content(
+            model=MODEL,
+            contents=search_prompt,
+            config={
+                "max_output_tokens": 2048,
+                "temperature": 0.1,
+                "tools": [{"google_search": {}}],
+            }
+        )
+        search_result = search_response.text.strip() if search_response and search_response.text else ""
+        log.info(f"Web search result (first 200): {search_result[:200]}")
+    except Exception as e:
+        log.error(f"Web search call failed: {e}")
+        search_result = ""
+
+    if not search_result:
+        clear_request()
+        append_motion("Email Verification Failed",
+                      f"Sam, web search for _{target_description}_ returned no results. Request cleared.")
+        return "(Email verification failed: web search returned nothing — request cleared.)"
+
+    # Call 2 — extract structured JSON from the search result
+    _sleep()
+    extract_prompt = (
+        f"You are Dot, extracting email verification data from a web search result.\n\n"
+        f"Search result:\n{search_result}\n\n"
+        f"Based ONLY on what is explicitly stated in the search result above "
+        f"(do not infer or guess anything not present), respond with a JSON object:\n"
+        f"  - 'found': true only if a personal email appears explicitly in the search result\n"
+        f"  - 'email': the exact email address string (empty string if not found)\n"
+        f"  - 'name': the person's full name\n"
+        f"  - 'source_url': the exact URL where the email was found\n"
+        f"  - 'confidence': 1-10 (10 = email explicitly visible on official personal source)\n"
+        f"  - 'reasoning': one sentence citing the exact source\n\n"
+        f"If the search result does not explicitly show a personal email address, "
+        f"set 'found': false and 'confidence': 0. Do not guess."
+    )
+    raw_recipient = ask_gemini(extract_prompt)
     recipient = _parse_gemini_json(raw_recipient) or {"found": False, "email": "", "name": target_description}
+    log.info(f"Verification result: found={recipient.get('found')}, confidence={recipient.get('confidence')}, email={recipient.get('email')}")
 
     # High-Confidence Gate
     if not recipient.get("found") or not recipient.get("email") or recipient.get("confidence", 0) < 9:
