@@ -112,3 +112,33 @@
 2026-06-03 04:52:46,631 [DOT][INFO] Today is Wednesday — inbox check reserved for Sunday.
 2026-06-03 04:52:46,632 [DOT][INFO] Worklog: no stale entries.
 2026-06-03 04:52:48,006 [DOT][INFO] Dot's daily run complete.
+2026-06-03 05:07:30,663 [DOT][INFO] ═══════════════════════════════════
+2026-06-03 05:07:30,664 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-03 05:07:30,664 [DOT][INFO] ═══════════════════════════════════
+2026-06-03 05:07:30,664 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-03 05:07:38,715 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-03 05:07:42,665 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-03 05:07:42,666 [DOT][INFO] Wisdom check complete.
+2026-06-03 05:07:50,666 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-03 05:08:06,670 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-03 05:08:08,531 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-03 05:08:08,535 [DOT][WARNING] Could not parse curation result.
+2026-06-03 05:08:08,536 [DOT][INFO] Letter written to Sam: Letter_20260603T050808Z.md
+2026-06-03 05:08:16,536 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-03 05:08:16,536 [DOT][INFO] No pending email request.
+2026-06-03 05:08:16,537 [DOT][INFO] Appended to Letter_20260603T050808Z.md: Email Dispatch
+2026-06-03 05:08:24,537 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-03 05:08:32,538 [DOT][INFO] Dot cache hit.
+2026-06-03 05:08:32,539 [DOT][INFO] Bag review complete.
+2026-06-03 05:08:32,539 [DOT][INFO] Appended to Letter_20260603T050808Z.md: Bag Excavation Findings
+2026-06-03 05:08:40,539 [DOT][INFO] ── Task 5: Sunday Inbox Check ──
+2026-06-03 05:08:58,485 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-03 05:09:00,105 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-03 05:09:00,109 [DOT][INFO] Appended to Letter_20260603T050808Z.md: Sunday Inbox Report
+2026-06-03 05:09:00,109 [DOT][INFO] Task 6: Adding external signal for Sam.
+2026-06-03 05:09:08,110 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-03 05:09:08,672 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-03 05:09:08,675 [DOT][INFO] Added external topic for Sam: Agentic Workflows
+2026-06-03 05:09:08,676 [DOT][INFO] Appended to Letter_20260603T050808Z.md: Sunday Special
+2026-06-03 05:09:08,677 [DOT][INFO] Worklog: no stale entries.
+2026-06-03 05:09:09,743 [DOT][INFO] Dot's daily run complete.
