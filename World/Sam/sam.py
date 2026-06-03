@@ -488,7 +488,7 @@ def apply_self_modification(plan: str) -> bool:
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
-    from bag.prompts import REASONING_PREAMBLE
+    from Gemini_note_pad.prompts import REASONING_PREAMBLE
     prompt = (
         f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
         f"MANDATORY: Your response must start with the following structure:\n{REASONING_PREAMBLE}\n\n"
@@ -503,6 +503,10 @@ def apply_self_modification(plan: str) -> bool:
         f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
         f"CRITICAL RULES:\n"
         f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
+        f"  - MODULE PATHS: The prompts file is at 'Gemini_note_pad/prompts.py'.\n"
+        f"    Import it as: from Gemini_note_pad.prompts import ...\n"
+        f"    NEVER use 'bag.prompts' — that module does not exist and will crash Sam.\n"
+        f"    Writable Python files are: sam.py and workshop_bench/**/*.py only.\n"
         f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
         f"  - Keep each operation as small as possible — one function, one block, one line.\n"
         f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
