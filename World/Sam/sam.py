@@ -70,7 +70,7 @@ CLIENT = genai.Client(api_key=GEM_KEY)
 MODEL = "gemini-3.1-flash-lite"
 
 # ── Rate limiting ─────────────────────────────────────────────────────────────
-_CALL_DELAY = 8   # seconds base delay
+_CALL_DELAY = 15   # seconds base delay
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
