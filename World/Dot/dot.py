@@ -66,7 +66,7 @@ CLIENT = genai.Client(api_key=GEM_KEY)
 MODEL = "gemini-3.1-flash-lite"
 
 # Set to False to run Sunday tasks every cycle (testing); True for production
-SUNDAY_ONLY = True
+SUNDAY_ONLY = False
 
 # ── Rate limiting ─────────────────────────────────────────────────────────────
 _CALL_DELAY = 8  # seconds
