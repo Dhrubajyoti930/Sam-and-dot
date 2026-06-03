@@ -80,12 +80,12 @@ def is_allowed_patch_filename(fname: str) -> bool:
 
     # Allow patching only within workshop_bench/ — never bag/ or its subdirs
     if fname.startswith(f"{WORKSHOP_ROOT}/"):
-        # Reject workshop_bench/bag/... — Gemini sometimes nests bag inside workshop_bench
         parts = p.parts
+        # Reject workshop_bench/bag/... — Gemini sometimes nests bag inside workshop_bench
         if GOVERNANCE_ROOT in parts:
             return False
-        if p.name in INFRA_FILENAMES:
-            return False
+        # INFRA_FILENAMES protects bag/ files — do NOT block workshop files
+        # with the same name (e.g. workshop_bench/core/critique.py is fine)
         if any(part in BLOCKED_DIR_NAMES for part in parts):
             return False
         return p.suffix == ".py"
