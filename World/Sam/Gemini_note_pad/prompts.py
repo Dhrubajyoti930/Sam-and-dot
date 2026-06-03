@@ -9,7 +9,7 @@ Patches are applied surgically via bag/prompt_patch.json + apply_prompt_patch().
 PROMPT_VERSION increments when a patch is successfully applied.
 """
 
-PROMPT_VERSION = 10
+PROMPT_VERSION = 7
 
 PATCHABLE_PROMPTS = [
     "PHASE_I_PROMPT",
@@ -33,7 +33,7 @@ PHASE_I_PROMPT = (
     "Your learning focus for this cycle is: '{focus}'.\n"
     "Produce a concise but dense technical summary (300-400 words) of the most important "
     "concepts, patterns, or techniques a developer should know about this topic today. "
-    "Conclude with three concrete action items Sam should implement this cycle, formatted as a JSON list of objects with 'task' and 'priority' keys. Finally, provide a 'Self-Check' confirming the summary is dense, technical, and actionable, and include one 'Self-Correction' identifying a potential nuance or counter-point to the summary provided."
+    "Conclude with three concrete action items Sam should implement this cycle, formatted as a JSON list of objects with 'task' and 'priority' keys. Finally, provide a brief 'Self-Check' confirming the summary is dense, technical, and actionable."
 )
 
 PHASE_II_PROMPT = (
@@ -43,7 +43,7 @@ PHASE_II_PROMPT = (
 )
 
 PHASE_III_PROMPT = (
-    "You are Sam's market scanner. For each trend, provide a 'Reasoning' field explaining the velocity of the trend and why it is critical for a Python AI developer right now. List the top 5 high-velocity technology or open-source "
+    "You are Sam's market scanner. List the top 5 high-velocity technology or open-source "
     "trends a Python AI developer should be tracking right now. For each trend provide: "
     "trend name, one-sentence description, and a specific GitHub repo or resource URL worth exploring. "
     "Be specific and current — no generic filler."
@@ -57,7 +57,7 @@ PHASE_IV_PROMPT = (
     "Current architecture overview:\n{who_i_am}\n\n"
     "{memory_block}\n"
     "First, provide a ## Scratchpad section to brainstorm at least two options, applying a Chain-of-Thought critique to evaluate their trade-offs, feasibility, and long-term maintainability. "
-    "Then, propose ONE concrete, implementable development idea for today, including a brief 'Pre-Mortem' analysis of why this specific approach might fail in production. "
+    "Then, propose ONE concrete, implementable development idea for today. "
     "Format as a short markdown document with: ## Idea, ## Why, ## Implementation Steps, ## Risk.\n"
     "Be critical — question the idea yourself, identify one potential failure mode, propose a mitigation strategy, and assign a confidence score (1-10) to the implementation's success probability."
 )
@@ -256,6 +256,26 @@ FINAL RULES
     NEVER use "bag.prompts" — that module does not exist.
   - If no concrete patch is needed OR you are uncertain about any "old" string,
     return an empty array: []
+
+CREATING NEW FILES — only "insert_after" can create a file that does not exist yet.
+  "replace" and "delete" on a non-existent file are silently skipped — wasted cycle.
+
+  ✅ CORRECT — use insert_after with anchor="" to create a brand new file:
+  {{
+    "filename": "workshop_bench/core/adversary.py",
+    "operation": "insert_after",
+    "anchor": "",
+    "new": "import logging\nlog = logging.getLogger(\'sam\')\n\nclass Adversary:\n    pass\n",
+    "rationale": "Create adversary module from scratch."
+  }}
+
+  ❌ WRONG — replace on a file that doesn't exist yet, will be skipped:
+  {{
+    "filename": "workshop_bench/core/adversary.py",
+    "operation": "replace",
+    "old": "class Adversary:",
+    "new": "class Adversary:\n    def challenge(self): pass"
+  }}
 """
 
 # ─────────────────────────────────────────────────────────────────────────────
