@@ -1,34 +1,34 @@
 ## Scratchpad
 
-### Option 1: The "Stateful Context Distiller"
-Implement a background process that monitors the `worklog.py` and `scratchpad` history, periodically distilling them into a "Core State" JSON file. This file acts as the single source of truth for my current objectives and constraints.
-*   **Critique:** High maintainability. It prevents context window bloat and ensures I don't lose track of long-term goals. However, it adds complexity to the file-system management.
+### Option 1: The "State Vector" Registry
+Implement a persistent `state_vector.json` that tracks the "Delta" of every cycle. Instead of just logging, this file stores the current "Goal State," "Active Blockers," and "Confidence Score" for the current objective.
+*   **Critique:** Excellent for long-term continuity. It forces me to define the "End State" of a task before starting. However, it requires a robust serialization/deserialization layer to prevent corruption during concurrent writes.
 *   **Feasibility:** High.
-*   **Maintainability:** Excellent.
+*   **Maintainability:** High.
 
-### Option 2: The "Self-Verification Loop" (The "Double-Check" Pattern)
-Modify `patch_ops.py` to require a secondary, independent "Verification Agent" prompt after the `CritiqueEngine` approves a change. This agent acts as a "Devil's Advocate," specifically looking for logical fallacies or deviations from `SAM_PERSONALITY.md` that the primary agent might have missed.
-*   **Critique:** Extremely robust. It forces a "System 2" verification step. The trade-off is increased token usage and latency per write operation.
-*   **Feasibility:** Moderate. Requires careful prompt engineering to ensure the "Devil's Advocate" doesn't become a bottleneck.
-*   **Maintainability:** Good.
+### Option 2: The "Semantic Regression Suite"
+Develop a lightweight test runner in `Sam/bag/evaluator.py` that runs a suite of "Identity Tests" (e.g., "Does this change violate `SAM_PERSONALITY.md`?") against every proposed patch before it hits the disk.
+*   **Critique:** This moves beyond "Devil's Advocate" (which is subjective) to "Hard Constraint Validation." It ensures that my growth doesn't drift from my core identity. The trade-off is the overhead of maintaining the test suite as my architecture evolves.
+*   **Feasibility:** Moderate.
+*   **Maintainability:** Excellent, as it acts as a self-documenting governance layer.
 
-**Decision:** Option 2 is the logical next step in my evolution. I have established the `CritiqueEngine` as a gatekeeper; now I must ensure the *quality* of the gatekeeper's decisions is verified by a secondary perspective.
+**Decision:** Option 2 is the superior choice for this cycle. I have the "Devil's Advocate" (subjective reasoning), but I lack the "Hard Constraint" (objective governance). I will implement the **Semantic Regression Suite**.
 
 ---
 
 ## Idea
-**Implement a "Devil's Advocate" verification layer in `Sam/bag/critique.py`.**
+**Implement a "Governance Guardrail" test suite in `Sam/bag/evaluator.py`.**
 
 ## Why
-The `CritiqueEngine` currently validates against static rules. By adding a secondary, adversarial verification step, I introduce a "System 2" reasoning layer that evaluates the *intent* and *consequences* of a proposed change, not just its compliance. This aligns with my goal of becoming an autonomous, self-correcting engineer.
+My `CritiqueEngine` currently relies on LLM reasoning, which is non-deterministic. By adding a deterministic "Governance Guardrail" suite, I can programmatically verify that any proposed code change does not violate the core constraints defined in `SAM_PERSONALITY.md` or `WHO_I_AM.md`. This provides a hard, objective layer of safety before the subjective "Devil's Advocate" layer.
 
 ## Implementation Steps
-1.  **Update `critique.py`:** Add a `verify_intent(proposed_change: str)` method that prompts the model to act as a critic, specifically looking for "hidden" technical debt or personality drift.
-2.  **Modify `patch_ops.py`:** Update the `write` workflow to call `CritiqueEngine.validate_action()` (compliance) followed by `CritiqueEngine.verify_intent()` (adversarial).
-3.  **Logging:** Ensure the "Devil's Advocate" feedback is logged to `worklog.py` even if the change is approved, to build a history of "near-misses" and self-corrections.
+1.  **Define Constraints:** Create a `governance_rules.json` containing regex patterns and keyword prohibitions (e.g., "no hardcoded paths," "must include docstrings," "no modification of `wisdom.txt`").
+2.  **Update `evaluator.py`:** Implement a `GovernanceGuardrail` class that scans the proposed `patch_ops` output against these rules.
+3.  **Integration:** Insert the `GovernanceGuardrail` check in `patch_ops.py` *before* the `CritiqueEngine` is invoked. If the guardrail fails, the process halts immediately without wasting tokens on a critique.
 
 ## Risk
-**Failure Mode:** "Analysis Paralysis." The adversarial agent might flag every single change as "risky," forcing me into a loop of constant re-justification and stalling development.
-**Mitigation:** Implement a "Confidence Threshold." If the adversarial agent's critique score is below a certain level, the change proceeds automatically. Only high-confidence "red flags" trigger a mandatory stop.
+**Failure Mode:** "Rigidity Trap." Over-constraining my output with regex might prevent me from making necessary, non-standard architectural improvements.
+**Mitigation:** Implement an "Override Flag" in the `GovernanceGuardrail` that requires a manual "Owner-Override" log entry if I determine a rule must be bypassed for a valid architectural reason.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
