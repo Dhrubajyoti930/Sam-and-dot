@@ -303,3 +303,28 @@
 2026-06-03 12:18:27,657 [DOT][INFO] Today is Wednesday — inbox check reserved for Sunday.
 2026-06-03 12:18:27,658 [DOT][INFO] Worklog: no stale entries.
 2026-06-03 12:18:28,678 [DOT][INFO] Dot's daily run complete.
+2026-06-03 12:32:34,673 [DOT][INFO] ═══════════════════════════════════
+2026-06-03 12:32:34,673 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-03 12:32:34,673 [DOT][INFO] ═══════════════════════════════════
+2026-06-03 12:32:34,673 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-03 12:32:42,691 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-03 12:32:48,148 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-03 12:32:48,150 [DOT][INFO] Wisdom check complete.
+2026-06-03 12:32:56,150 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-03 12:33:12,154 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-03 12:33:14,047 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-03 12:33:14,050 [DOT][WARNING] Could not parse curation result.
+2026-06-03 12:33:14,050 [DOT][INFO] Letter written to Sam: Letter_20260603T123314Z.md
+2026-06-03 12:33:22,051 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-03 12:33:30,051 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-03 12:33:30,153 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+2026-06-03 12:33:30,154 [DOT][ERROR] Web search call failed: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. ', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}]}}
+2026-06-03 12:33:30,154 [DOT][INFO] Appended to Letter_20260603T123314Z.md: Email Verification Failed
+2026-06-03 12:33:30,155 [DOT][INFO] Appended to Letter_20260603T123314Z.md: Email Dispatch
+2026-06-03 12:33:38,155 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-03 12:33:46,157 [DOT][INFO] Dot cache hit.
+2026-06-03 12:33:46,157 [DOT][INFO] Bag review complete.
+2026-06-03 12:33:46,157 [DOT][INFO] Appended to Letter_20260603T123314Z.md: Bag Excavation Findings
+2026-06-03 12:33:46,157 [DOT][INFO] Today is Wednesday — inbox check reserved for Sunday.
+2026-06-03 12:33:46,159 [DOT][INFO] Worklog: no stale entries.
+2026-06-03 12:33:46,788 [DOT][INFO] Dot's daily run complete.
