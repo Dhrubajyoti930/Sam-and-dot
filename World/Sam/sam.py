@@ -321,6 +321,14 @@ def snapshot_sam() -> Path:
 
 
 def self_check() -> bool:
+
+    def _verify_with_adversary(self, change_log: str):
+        from workshop_bench.core.adversary import DevilAdvocate
+        adv = DevilAdvocate()
+        verification = adv.verify_intent(change_log)
+        if not verification['approved']:
+            print(f"Adversarial Alert: {verification['reasoning']}")
+
     """Rigorous integrity check — uses ruff to catch undefined names and logic errors."""
     log.info("── Running Rigorous Integrity Gate ──")
     try:

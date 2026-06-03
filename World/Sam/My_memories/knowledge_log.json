@@ -57,7 +57,7 @@
     "cycle": 32,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought reasoning, ReAct, and System 2 cognitive architectures) suggests that the scratchpad is the primary interface for managing long-context reasoning and mitigating hallucination.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning Traces (CoT/ToT):** The scratchpad serves a",
-    "review_due_cycle": 36
+    "review_due_cycle": 51
   },
   {
     "cycle": 33,
@@ -82,5 +82,11 @@
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought reasoning, ReAct, and System 2 thinking) indicates that an agent\u2019s performance is directly correlated to the quality of its internal monologue and the structure of its intermediate state.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning Traces as State:** Instead of t",
     "review_due_cycle": 40
+  },
+  {
+    "cycle": 37,
+    "topic": "Scratchpad - with cutting edge research.",
+    "summary": "### Technical Summary: Scratchpad Architectures in LLM Inference\n\nThe \"scratchpad\" pattern has evolved from simple chain-of-thought prompting into a sophisticated architectural primitive for autonomous agents. At its core, the scratchpad serves as a transient, high-bandwidth workspace that decouples an agent\u2019s internal reasoning process from its final output.\n\n**Key Concepts & Patterns:**\n1.  **Hidden Reasoning Traces:** Modern implementations (e.g., OpenAI\u2019s o1, DeepSeek-R1) utilize a \"System 2",
+    "review_due_cycle": 41
   }
 ]
