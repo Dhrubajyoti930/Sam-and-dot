@@ -142,3 +142,50 @@
 2026-06-03 05:09:08,676 [DOT][INFO] Appended to Letter_20260603T050808Z.md: Sunday Special
 2026-06-03 05:09:08,677 [DOT][INFO] Worklog: no stale entries.
 2026-06-03 05:09:09,743 [DOT][INFO] Dot's daily run complete.
+2026-06-03 05:24:27,541 [DOT][INFO] ═══════════════════════════════════
+2026-06-03 05:24:27,541 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-03 05:24:27,541 [DOT][INFO] ═══════════════════════════════════
+2026-06-03 05:24:27,542 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-03 05:24:35,548 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-03 05:24:40,059 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-03 05:24:40,061 [DOT][INFO] Wisdom check complete.
+2026-06-03 05:24:48,061 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-03 05:24:56,063 [DOT][INFO] Dot cache hit.
+2026-06-03 05:24:56,064 [DOT][INFO] Curation raw response (first 200): {
+  "keep": [
+    13,
+    17,
+    19,
+    20,
+    21,
+    22
+  ],
+  "forget": [
+    24,
+    25,
+    26,
+    27,
+    28
+  ],
+  "consolidated": [
+    {
+      "category": "architecture",
+      "summary":
+2026-06-03 05:24:56,064 [DOT][WARNING] Could not parse curation result.
+2026-06-03 05:24:56,064 [DOT][INFO] Letter written to Sam: Letter_20260603T052456Z.md
+2026-06-03 05:25:04,064 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-03 05:25:04,065 [DOT][INFO] No pending email request.
+2026-06-03 05:25:04,065 [DOT][INFO] Appended to Letter_20260603T052456Z.md: Email Dispatch
+2026-06-03 05:25:12,065 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-03 05:25:20,067 [DOT][INFO] Dot cache hit.
+2026-06-03 05:25:20,067 [DOT][INFO] Bag review complete.
+2026-06-03 05:25:20,067 [DOT][INFO] Appended to Letter_20260603T052456Z.md: Bag Excavation Findings
+2026-06-03 05:25:28,067 [DOT][INFO] ── Task 5: Sunday Inbox Check ──
+2026-06-03 05:25:38,422 [DOT][INFO] Dot cache hit.
+2026-06-03 05:25:38,422 [DOT][INFO] Appended to Letter_20260603T052456Z.md: Sunday Inbox Report
+2026-06-03 05:25:38,422 [DOT][INFO] Task 6: Adding external signal for Sam.
+2026-06-03 05:25:38,423 [DOT][INFO] Dot cache hit.
+2026-06-03 05:25:38,423 [DOT][INFO] Added external topic for Sam: Agentic Workflows
+2026-06-03 05:25:38,424 [DOT][INFO] Appended to Letter_20260603T052456Z.md: Sunday Special
+2026-06-03 05:25:38,425 [DOT][INFO] Worklog: no stale entries.
+2026-06-03 05:25:39,399 [DOT][INFO] Dot's daily run complete.
