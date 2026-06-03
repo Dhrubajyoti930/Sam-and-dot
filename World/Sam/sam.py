@@ -112,14 +112,8 @@ def _parse_gemini_json(text: str) -> dict | list | None:
     return None
 
 def load_goals() -> dict:
-    """Safe goal loader with corruption recovery."""
-    if GOALS.exists():
-        try:
-            return json.loads(GOALS.read_text())
-        except Exception as e:
-            log.error(f"goals.json corrupted: {e}. Restoring from backup or defaults.")
-            # Restore logic could go here; for now, return default
-    return {
+    """Safe goal loader with corruption recovery and governance validation."""
+    default_goals = {
         "cycles": 0,
         "growth_log": [],
         "next_objectives": [
@@ -129,6 +123,20 @@ def load_goals() -> dict:
         ],
         "last_1pct_metric": "",
     }
+
+    if not GOALS.exists():
+        return default_goals
+
+    try:
+        data = json.loads(GOALS.read_text())
+        # Governance validation: Ensure schema integrity
+        required_keys = {"cycles", "growth_log", "next_objectives", "last_1pct_metric"}
+        if not all(key in data for key in required_keys):
+            raise ValueError("Schema mismatch in goals.json")
+        return data
+    except (json.JSONDecodeError, ValueError, OSError) as e:
+        log.error(f"goals.json integrity failure: {e}. Reverting to default state.")
+        return default_goals
 
 
 def save_goals(data: dict):
@@ -503,7 +511,6 @@ def apply_self_modification(plan: str) -> bool:
     No full-file rewrites. Each operation touches only the targeted lines.
     If 'old' or 'anchor' is not found exactly, the operation is skipped safely.
     """
-    from bag.patch_ops import apply_patch_operations
 
     log.info("── Self-Modification: Parsing Surgical Patch ──")
     from bag.workshop_imports import load_callable

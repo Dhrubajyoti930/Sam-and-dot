@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear prompt-response chains to iterative, goal-oriented systems. The core objective is to move beyond zero-shot generation toward systems that exhibit reasoning, tool use, and self-correction.\n\n**Key Architectural Patterns:**\n1.  **Reflection & Self-Correction:** Instead of relying on a single inference pass, agents employ a \"generate-critique-refine\" loop. By prompting the model to evaluate its own output again",
-    "review_due_cycle": 39
+    "review_due_cycle": 54
   },
   {
     "cycle": 36,
@@ -100,5 +100,11 @@
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought reasoning, ReAct, and System 2 cognitive architectures) suggests that the scratchpad is the primary interface for managing long-context reasoning and mitigating hallucination.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning Traces (Chain-of-Thought):** The scratchpad",
     "review_due_cycle": 43
+  },
+  {
+    "cycle": 40,
+    "topic": "Scratchpad - with cutting edge research.",
+    "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Key Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must function as a \"worki",
+    "review_due_cycle": 44
   }
 ]
