@@ -105,6 +105,24 @@ def invalidate_phase_vi_cache():
     conn.close()
 
 
+def invalidate_truncated():
+    """Remove any cached responses that appear truncated."""
+    conn = get_db()
+    if conn is None:
+        return
+    rows = conn.execute("SELECT prompt_hash, response FROM cache").fetchall()
+    for prompt_hash, response in rows:
+        if response and (
+            response.endswith("...") or
+            response.count("{") > response.count("}") or
+            response.count("[") > response.count("]")
+        ):
+            conn.execute("DELETE FROM cache WHERE prompt_hash = ?", (prompt_hash,))
+            log.warning(f"Evicted truncated cache entry: {prompt_hash[:12]}...")
+    conn.commit()
+    conn.close()
+
+
 def invalidate_cycle(cycle: int):
     conn = get_db()
     conn.execute("DELETE FROM cache WHERE cycle = ?", (cycle,))
