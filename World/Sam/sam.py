@@ -70,7 +70,7 @@ CLIENT = genai.Client(api_key=GEM_KEY)
 MODEL = "gemini-3.1-flash-lite"
 
 # ── Rate limiting ─────────────────────────────────────────────────────────────
-_CALL_DELAY = 30    # seconds base delay
+_CALL_DELAY = 8   # seconds base delay
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -245,8 +245,8 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
         except Exception as e:
             err = str(e).upper()
             if any(x in err for x in ["429", "RESOURCE_EXHAUSTED", "QUOTA"]):
-                # Exponential backoff
-                _CALL_DELAY = min(_CALL_DELAY * 1.5 + 5, 60)
+                # Proactive deceleration
+                _CALL_DELAY = min(_CALL_DELAY + 5, 30)
                 wait = _CALL_DELAY * (attempt + 1)
                 log.warning(f"Rate limit hit. Slowing to {_CALL_DELAY}s and waiting {wait}s.")
                 time.sleep(wait)
@@ -777,8 +777,24 @@ def phase_v_development(idea: str, goals: dict, motion_content: str) -> str:
     )
 
     personality = load_personality()
-    sam_src     = Path(__file__).read_text()
-    tests_src   = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
+
+    # Build a structural outline of sam.py instead of full source — saves ~15k tokens
+    import ast as _ast
+    def _outline(src: str, label: str) -> str:
+        try:
+            tree = _ast.parse(src)
+            lines = []
+            for node in _ast.walk(tree):
+                if isinstance(node, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef)):
+                    lines.append(f"  L{node.lineno}: {type(node).__name__} {node.name}")
+            return f"{label} structure (line numbers for patch anchors):\n" + "\n".join(lines)
+        except Exception:
+            return src  # fallback to full source if parse fails
+
+    sam_src      = Path(__file__).read_text()
+    sam_outline  = _outline(sam_src, "sam.py")
+    tests_src    = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
+    tests_outline = _outline(tests_src, "bag/tests.py")
 
     bag_sources = ""
     for _f in iter_writable_bag_py(WORKSHOP):
@@ -793,8 +809,9 @@ def phase_v_development(idea: str, goals: dict, motion_content: str) -> str:
         f"{dot_constraint_block}"
         f"{workshop_block}\n"
         f"Today's development idea:\n{idea}\n\n"
-        f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
-        f"Sam's current bag/tests.py (full source):\n```python\n{tests_src}\n```\n\n"
+        f"{sam_outline}\n\n"
+        f"NOTE: Full sam.py source is available to the patcher — you only need line numbers and function names to specify patch anchors.\n\n"
+        f"{tests_outline}\n\n"
         f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"
         f"Produce a surgical patch plan for Sam to apply. Rules:\n"
         f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
