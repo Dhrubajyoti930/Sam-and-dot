@@ -514,39 +514,119 @@ def apply_self_modification(plan: str) -> bool:
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
-    from Gemini_note_pad.prompts import SURGICAL_PATCH_PROMPT
+    # Delegate to focused block-improve: pick one function, read it, improve it.
+    return _improve_one_block(plan)
 
-    # Pre-extract valid anchor lines from sam.py so Gemini can only pick
-    # anchors that are guaranteed to exist verbatim — same pattern as Phase VI.
-    _sam_src = Path(__file__).read_text(encoding="utf-8")
-    _sam_anchors: list = []
-    for _line in _sam_src.splitlines():
-        _s = _line.strip()
-        if (
-            _s.startswith(("import ", "from ", "def ", "class ", "log = ", "SAM_DIR", "BAG =", "WORKSHOP"))
-            and 10 < len(_s) < 100
-            and _s in _sam_src
-        ):
-            _sam_anchors.append(f'  "{_s}"')
-    _anchor_block = (
-        "\n=== PRE-VALIDATED sam.py ANCHOR LINES ===\n"
-        "If you patch sam.py with insert_after, your \'anchor\' MUST be copied\n"
-        "exactly from this list — these are the only lines guaranteed to exist:\n"
-        + "\n".join(_sam_anchors[:40])
-        + "\nDo NOT invent anchors not in this list — the operation will be skipped.\n"
+
+def _extract_function_block(src: str, def_line: str) -> str | None:
+    """Extract the full source block starting at def_line (a 'def ...:' line)
+    up to (but not including) the next top-level or same-indent 'def ' or 'class '.
+    Returns the block string, or None if def_line is not found."""
+    lines = src.splitlines(keepends=True)
+    start_idx = None
+    for i, line in enumerate(lines):
+        if line.rstrip("\n") == def_line or line.strip() == def_line.strip():
+            start_idx = i
+            break
+    if start_idx is None:
+        return None
+
+    # Determine indentation of the anchor def line
+    indent = len(def_line) - len(def_line.lstrip())
+    block = [lines[start_idx]]
+    for line in lines[start_idx + 1:]:
+        stripped = line.lstrip()
+        # Stop at next function/class at the same or lesser indent level
+        if stripped.startswith(("def ", "class ")) and (len(line) - len(stripped)) <= indent:
+            break
+        block.append(line)
+    return "".join(block).rstrip("\n")
+
+
+def _pick_target_function(plan: str, def_lines: list[str]) -> str:
+    """Ask Gemini to choose ONE function name from def_lines most relevant to plan.
+    Falls back to the first entry if parsing fails."""
+    candidates = "\n".join(f"  {i+1}. {d}" for i, d in enumerate(def_lines[:30]))
+    prompt = (
+        f"You are Sam choosing which function to improve based on your plan.\n\n"
+        f"Plan summary:\n{plan[:400]}\n\n"
+        f"Available functions in sam.py:\n{candidates}\n\n"
+        f"Reply with ONLY the exact 'def ...' line of the single best function to improve. "
+        f"No explanation, no JSON, just the def line."
     )
-    prompt = SURGICAL_PATCH_PROMPT.format(plan=plan) + _anchor_block
-
     _sleep()
-    raw = ask_gemini(prompt, bypass_cache=True)
+    raw = ask_gemini(prompt, bypass_cache=True).strip().strip('"').strip("'")
+    # Validate it's actually in our list
+    for d in def_lines:
+        if d.strip() == raw.strip() or raw.strip() in d:
+            return d
+    return def_lines[0]
 
-    operations = _parse_gemini_json(raw)
-    if not operations:
-        log.warning("No patch operations extracted.")
-        log.info(f"Gemini patch response (first 200 chars): {raw[:200]}")
+
+def _improve_one_block(plan: str) -> bool:
+    """Pick one function in sam.py, read its full block, ask Gemini to improve it,
+    then apply as a single replace patch operation."""
+    from bag.patch_ops import apply_patch_operations
+
+    sam_src = Path(__file__).read_text(encoding="utf-8")
+
+    # Collect top-level def lines (no leading indent = module-level functions)
+    def_lines = [
+        line.rstrip()
+        for line in sam_src.splitlines()
+        if line.startswith("def ") and len(line.strip()) > 10
+    ]
+    if not def_lines:
+        log.warning("_improve_one_block: no top-level def lines found in sam.py.")
         return False
 
-    return apply_patch_operations(operations, SAM_DIR, log)
+    # Step 1: Pick the target function
+    target_def = _pick_target_function(plan, def_lines)
+    log.info(f"_improve_one_block: selected → {target_def.strip()}")
+
+    # Step 2: Extract the full block
+    block = _extract_function_block(sam_src, target_def)
+    if not block:
+        log.warning(f"_improve_one_block: could not extract block for: {target_def!r}")
+        return False
+
+    log.info(f"_improve_one_block: block length = {len(block)} chars")
+
+    # Step 3: Ask Gemini to improve the block
+    improve_prompt = (
+        f"You are Sam improving one of your own functions.\n\n"
+        f"Plan / motivation:\n{plan[:500]}\n\n"
+        f"Here is the COMPLETE current function from sam.py:\n"
+        f"```python\n{block}\n```\n\n"
+        f"Rewrite this function to be better — clearer, more robust, or more efficient — "
+        f"while preserving its exact signature and all existing behaviour. "
+        f"Do NOT rename it or change what it returns.\n\n"
+        f"Reply with ONLY the improved Python source for this function, no backticks, no explanation."
+    )
+    _sleep()
+    improved = ask_gemini(improve_prompt, bypass_cache=True).strip()
+    # Strip accidental code fences
+    if improved.startswith("```"):
+        improved = improved.split("\n", 1)[1] if "\n" in improved else improved
+        improved = improved.removesuffix("```").strip()
+
+    if not improved or improved == block:
+        log.info("_improve_one_block: Gemini returned unchanged block — no patch needed.")
+        return False
+
+    # Step 4: Apply as a replace op
+    op = [{
+        "filename": "sam.py",
+        "operation": "replace",
+        "old": block,
+        "new": improved,
+    }]
+    result = apply_patch_operations(op, SAM_DIR, log)
+    if result:
+        log.info(f"_improve_one_block: successfully improved {target_def.strip()!r}")
+    else:
+        log.warning("_improve_one_block: patch apply failed.")
+    return result
 
 
 def apply_prompt_patch() -> bool:
