@@ -9,6 +9,12 @@ def apply_patch_operations(operations: list, root: Path, log) -> bool:
     """Apply replace / insert_after / delete ops. Returns True if any succeeded."""
     applied = []
     created = []  # track newly created files for rollback cleanup
+    # Guard: Gemini sometimes returns strings mixed into the array — skip them
+    operations = [op for op in operations if isinstance(op, dict)]
+    if not operations:
+        log.warning("No valid patch operations found (all entries were non-dict).")
+        apply_patch_operations._last_created = []
+        return False
     for op in operations:
         fname = op.get("filename", "")
         operation = op.get("operation", "")
