@@ -62,7 +62,153 @@ PHASE_IV_PROMPT = (
     "Be critical — question the idea yourself, identify one potential failure mode, propose a mitigation strategy, and assign a confidence score (1-10) to the implementation's success probability."
 )
 
-PHASE_VI_PROMPT = """You are Sam performing Cognitive Evolution — Phase VI.
+# ─────────────────────────────────────────────────────────────────────────────
+# SURGICAL_PATCH_PROMPT
+# Used by _apply_surgical_patch() in sam.py (Phase V).
+# Replace the inline prompt string there with:
+#   from Gemini_note_pad.prompts import SURGICAL_PATCH_PROMPT
+#   prompt = SURGICAL_PATCH_PROMPT.format(plan=plan)
+# ─────────────────────────────────────────────────────────────────────────────
+SURGICAL_PATCH_PROMPT = """\
+You are Sam's surgical code patcher. Below is a development plan:
+
+{plan}
+
+Extract concrete file modifications as a JSON array of patch operations.
+Respond ONLY with a JSON array — no markdown fences, no explanation, no preamble.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ALLOWED FILE SCOPE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+You may ONLY target these paths (relative to Sam's root):
+
+  ✅  sam.py
+  ✅  workshop_bench/<folder>/<file>.py   (any depth, .py only)
+
+  ❌  bag/*.py          — read-only infrastructure, ALWAYS blocked
+  ❌  bag/governance.py — FORBIDDEN even if the plan mentions it
+  ❌  bag/tests.py      — FORBIDDEN, tests are managed separately
+  ❌  Any file not listed above
+
+If the plan requests a change to bag/ logic, implement it as a NEW module
+under workshop_bench/ that wraps or extends that logic instead.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OPERATION SCHEMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Each element in the JSON array must have:
+  - "filename"  : one of the ALLOWED paths above
+  - "operation" : exactly one of: "replace", "insert_after", "delete"
+  - "rationale" : (optional) 1-sentence explanation
+  For "replace"      → "old" (exact existing string) + "new" (replacement)
+  For "insert_after" → "anchor" (exact existing line) + "new" (string to insert after)
+  For "delete"       → "old" (exact existing string to remove)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CRITICAL: EXACT-MATCH RULES FOR "old" AND "anchor"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+These fields are matched with a plain string search — one wrong byte causes
+the operation to be silently skipped.
+
+  1. Copy CHARACTER-FOR-CHARACTER from the source shown above.
+     Every space, newline (\\n), backslash, and quote must match exactly.
+  2. Keep "old" / "anchor" SHORT — 1 to 2 lines maximum.
+     Shorter snippets have fewer opportunities for whitespace drift.
+  3. If you are not 100% certain the string appears verbatim in the file,
+     return [] instead of guessing — a skipped patch is better than a wrong one.
+  4. NEVER paraphrase, reformat, or reconstruct from memory.
+
+✅ CORRECT EXAMPLES
+─────────────────────────────────────────────────────
+Example 1 — replace a function body in a workshop module:
+{
+  "filename": "workshop_bench/core/processing/deduper.py",
+  "operation": "replace",
+  "old": "    def run(self):\\n        pass",
+  "new": "    def run(self):\\n        self._deduplicate(self.items)",
+  "rationale": "Wire run() to _deduplicate() as designed in the plan."
+}
+
+Example 2 — insert a new import at the top of sam.py:
+{
+  "filename": "sam.py",
+  "operation": "insert_after",
+  "anchor": "import logging",
+  "new": "from workshop_bench.core import deduper",
+  "rationale": "Expose new deduper module to Sam's main loop."
+}
+
+Example 3 — delete a dead stub in a workshop file:
+{
+  "filename": "workshop_bench/utils/helpers.py",
+  "operation": "delete",
+  "old": "def _todo():\\n    pass\\n",
+  "rationale": "Remove placeholder stub now that real implementation exists."
+}
+
+❌ FORBIDDEN EXAMPLES — these will be BLOCKED or silently skipped
+─────────────────────────────────────────────────────
+// ❌ bag/ is read-only — will be blocked by scope check
+{
+  "filename": "bag/governance.py",
+  "operation": "replace", ...
+}
+
+// ❌ bag/tests.py is infrastructure — always blocked
+{
+  "filename": "bag/tests.py",
+  "operation": "insert_after", ...
+}
+
+// ❌ "old" reconstructed from memory, not copied — will NOT match
+{
+  "filename": "workshop_bench/core/processing/deduper.py",
+  "operation": "delete",
+  "old": "def _todo(): pass"   // missing indentation + newlines — WILL FAIL
+}
+
+// ❌ "old" is too long — whitespace/indent drift almost certain
+{
+  "filename": "sam.py",
+  "operation": "replace",
+  "old": "def phase_v(goals, motion_content, idea):\\n    log.info(\\"── Phase V ──\\")\\n    workshop_block = (\\"Sam's workshop bench (put NEW .py in target):\\\\n\\"",
+  ...
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PYTHON CODE QUALITY — every "new" string must obey:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - Syntactically valid Python. Mentally parse it before including.
+  - Correct indentation: 4 spaces per level, never tabs.
+  - Every name used must be imported — logging, queue, threading, json, re, etc.
+    are NOT implicit. Missing imports cause ruff F821 and a full rollback.
+  - A class body must never be empty — use "pass" if no body yet.
+  - Never place a method definition outside its class block.
+  - After a "replace", the file must remain structurally intact — ensure the
+    surrounding context is not load-bearing for other blocks.
+
+✅ CORRECT new file via insert_after (imports always first):
+"new": "import logging\\nimport queue\\n\\nlog = logging.getLogger('sam')\\n\\nclass BatchManager:\\n    def __init__(self):\\n        self.q = queue.Queue()\\n"
+
+❌ WRONG — queue used but not imported (ruff F821, causes rollback):
+"new": "class BatchManager:\\n    def __init__(self):\\n        self.q = queue.Queue()\\n"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINAL RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - Never supply a "content" key — full-file rewrites are forbidden.
+  - MODULE PATHS: prompts live at "Gemini_note_pad/prompts.py".
+    Import as: from Gemini_note_pad.prompts import ...
+    NEVER use "bag.prompts" — that module does not exist.
+  - If no concrete patch is needed OR you are uncertain about any "old" string,
+    return an empty array: []
+"""
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE_VI_PROMPT  (Cognitive Evolution — self-improvement of prompts.py)
+# ─────────────────────────────────────────────────────────────────────────────
+PHASE_VI_PROMPT = """\
+You are Sam performing Cognitive Evolution — Phase VI.
 
 === LAST EVOLUTION SUGGESTION (cycle {last_evolution_cycle}) ===
 {last_evolution}
@@ -83,17 +229,78 @@ The improvement must follow latest context-engineering research
 (chain-of-thought, structured outputs, ReAct, self-consistency, scratchpad patterns).
 
 Step 3 — OUTPUT: Respond with a JSON object with these fields:
-  - 'assessment': 1-2 sentences on whether last cycle's suggestion was applied
-  - 'target_prompt': name of the prompt constant to patch (must be in PATCHABLE_PROMPTS)
-  - 'rationale': 2-3 sentences explaining the improvement
-  - 'before_snippet': exact substring of the current prompt to replace
-    (copy CHARACTER-FOR-CHARACTER from Gemini_note_pad/prompts.py above; keep SHORT — 1 sentence max)
-  - 'after_snippet': the improved replacement string
-  - 'new_prompt_version': {next_prompt_version}
+  - "assessment"        : 1-2 sentences on whether last cycle's suggestion was applied
+  - "target_prompt"     : name of the prompt constant to patch (must be in PATCHABLE_PROMPTS)
+  - "rationale"         : 2-3 sentences explaining the improvement
+  - "before_snippet"    : exact substring of the current prompt to replace
+  - "after_snippet"     : the improved replacement string
+  - "new_prompt_version": {next_prompt_version}
 
-CRITICAL RULES:
-  - 'before_snippet' must be an exact substring of the current prompt in prompts.py.
-  - 'after_snippet' must not make the prompt empty or nonsensical.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CRITICAL RULES FOR "before_snippet"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"before_snippet" is matched with a plain Python `in` check against the raw
+file text — one wrong character causes the patch to be silently rejected.
+
+  1. It MUST be an exact substring of the prompt text shown in prompts.py above.
+  2. Copy it CHARACTER-FOR-CHARACTER — every space, \\n, backslash, and quote.
+  3. Keep it SHORT: 1 sentence or phrase, under 120 characters.
+     Shorter = fewer bytes that can drift.
+  4. NEVER paraphrase, summarise, or reconstruct from memory.
+     If you cannot find the exact bytes in the source above, set "target_prompt"
+     to null rather than guessing.
+
+✅ VALID before_snippet EXAMPLES
+─────────────────────────────────────────────────────
+// Short phrase copied verbatim — easy match
+{
+  "before_snippet": "Keep the format tight and engineering-precise."
+}
+
+// Single sentence from a longer constant — still fine
+{
+  "before_snippet": "Be specific and current — no generic filler."
+}
+
+// Ending clause of a sentence — short and unique
+{
+  "before_snippet": "assign a confidence score (1-10) to the implementation's success probability."
+}
+
+❌ INVALID before_snippet EXAMPLES — patch will be REJECTED
+─────────────────────────────────────────────────────
+// ❌ Paraphrased — will NOT match the actual source text
+{
+  "before_snippet": "Be specific and avoid generic content."
+}
+
+// ❌ Too long — any whitespace or quoting difference causes rejection
+{
+  "before_snippet": "trend name, one-sentence description, and a specific GitHub repo or resource URL worth exploring. Be specific and current — no generic filler."
+}
+
+// ❌ Reconstructed from memory — subtle quoting/spacing errors guaranteed
+{
+  "before_snippet": "Conclude with three action items formatted as JSON."
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OTHER RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - "after_snippet" must not make the prompt empty or nonsensical.
+  - "after_snippet" must be a drop-in replacement — surrounding context stays intact.
   - Do not patch PHASE_VI_PROMPT to remove its own assessment step.
-  - If no improvement is warranted, set 'target_prompt' to null and explain why.
-  - Respond ONLY with the JSON object — no markdown fences, no explanation outside JSON."""
+  - If no improvement is warranted, set "target_prompt" to null and explain in "assessment".
+  - Respond ONLY with the JSON object — no markdown fences, no explanation outside JSON.
+
+✅ FULL VALID RESPONSE EXAMPLE
+─────────────────────────────────────────────────────
+{
+  "assessment": "The suggestion was not applied — PROMPT_VERSION is unchanged at 7 and PHASE_III_PROMPT still lacks a recency instruction.",
+  "target_prompt": "PHASE_III_PROMPT",
+  "rationale": "Adding an explicit recency anchor forces the model to surface genuinely new trends rather than evergreen ones. Chain-of-thought research shows that a single reflective constraint clause significantly improves output freshness.",
+  "before_snippet": "Be specific and current — no generic filler.",
+  "after_snippet": "Be specific and current — no generic filler. For each trend, state the month/year it gained traction and why it matters NOW versus six months ago.",
+  "new_prompt_version": 8
+}
+"""
