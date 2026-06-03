@@ -5,38 +5,36 @@
 *   **Critique:** This is highly valuable for reducing CI runner bloat. However, it is a significant infrastructure change. If the dependency graph logic is flawed, I risk breaking my CI pipeline entirely. It requires careful testing before it becomes the source of truth for my build matrix.
 *   **Feasibility:** High. I have the file-system access to parse imports.
 
-**Option 2: Async Gemini Batching (The "Throughput Optimizer")**
-*   **Concept:** Refactor `ask_gemini` to support a queue-based batching system, allowing multiple small prompts to be sent in a single API call where supported, or at least managed via an `asyncio.Queue`.
-*   **Critique:** This would significantly reduce the idle time in my operational loop. However, it adds complexity to the `sam.py` core loop. If the batching logic fails, it could delay critical Phase V planning or Phase VII state saving.
-*   **Feasibility:** Medium. Requires careful handling of the existing rate-limiting logic.
+**Option 2: Structured Scratchpad Enforcement (The "Reasoning-First" Preamble)**
+*   **Concept:** Refactor the system prompt to force a 3-step scratchpad analysis (Plan, Constraint Check, Verification) before any code generation, as suggested in the cycle learning.
+*   **Critique:** This directly addresses my need for more deliberative engineering. It is safer than the CI/CD refactor because it is an internal reasoning change that doesn't block my deployment pipeline. It forces me to define success criteria explicitly, which is a high-leverage improvement for code quality.
+*   **Feasibility:** High. This is a prompt-level change that I can implement via `Phase VI`.
 
-**Selection:** I will proceed with **Option 2 (Async Gemini Batching)**. As my architecture grows, the sequential nature of my Gemini calls is becoming a bottleneck. Optimizing throughput is the next logical step in my evolution, aligning with my goal of "maximum leverage."
+**Selection:** I will proceed with **Option 2 (Structured Scratchpad Enforcement)**. It is a cleaner, more modular addition to my existing reasoning architecture and directly supports the "deliberative engineering" trait of my personality.
 
 ---
 
-## Idea: Async Gemini Batching (The "Throughput Optimizer")
+## Idea: Structured Scratchpad Enforcement (The "Reasoning-First" Preamble)
 
-I propose implementing an `AsyncBatchManager` in `bag/batch_manager.py` to handle non-critical Gemini calls (e.g., logging, experience summarization, or non-blocking market analysis) using an `asyncio.Queue`.
+I propose implementing a **Reasoning-First Preamble** in my system prompt. This will force a mandatory 3-step scratchpad analysis (Plan, Constraint Check, Verification) before any code generation, ensuring that every patch is the result of a deliberate, verified decision.
 
 ## Why
 
-1.  **Latency Reduction:** My current operational loop is strictly sequential. By batching non-blocking tasks, I can reduce the total cycle time.
-2.  **Resource Efficiency:** Batching allows me to better utilize the Gemini API's capacity, reducing the number of individual HTTP requests and potential rate-limit hits.
-3.  **Scalability:** As I add more background tasks (like the new deduplication pipeline), a queue-based system prevents these tasks from blocking the critical path of my core intelligence loop.
+1.  **Reduced Hallucination:** By forcing a "Constraint Check" step, I explicitly identify potential conflicts with `wisdom.txt` or existing architecture before writing code.
+2.  **Verification-Driven Development:** Requiring a "Verification Strategy" in the scratchpad forces me to define how I will test the code *before* I write it, leading to higher-quality unit tests.
+3.  **Auditability:** A structured scratchpad provides a clear, machine-readable trace of my reasoning, which Dot can review in `motion.md` to better understand my decision-making process.
 
 ## Implementation Steps
 
-1.  **Manager Implementation:** Create `bag/batch_manager.py` with an `AsyncBatchManager` class that wraps an `asyncio.Queue` and a worker task.
-2.  **Integration:** Refactor `ask_gemini` to accept an optional `batch_queue` parameter. If provided, the prompt is pushed to the queue instead of being executed immediately.
-3.  **Phase VII Integration:** Update `phase_vii_state_saving` to push the experience summary and email request tasks to the `AsyncBatchManager` rather than executing them synchronously.
-4.  **Worker Lifecycle:** Add a clean-up step in `run_cycle` to ensure the queue is drained and all tasks are completed before the cycle terminates.
+1.  **Prompt Refactoring:** Update `bag/prompts.py` to include a `REASONING_PREAMBLE` that mandates the 3-step structure.
+2.  **Schema Enforcement:** Update the `apply_self_modification` logic to require a `[REASONING]` block in the plan, ensuring the plan itself is derived from the scratchpad.
+3.  **Verification Trace:** Add a mandatory `[VERIFICATION]` section to the scratchpad where I must list the specific test case or command used to validate the patch.
 
 ## Risk
 
 **Critical Self-Assessment:** 
-The primary risk is **"State Inconsistency."** If a batched task (like updating `experiences.json`) fails after the main loop has already marked the cycle as `ok`, I will have a mismatch between my internal state and the persisted data.
+The primary risk is **"Reasoning Overhead."** If the scratchpad analysis is too verbose, I will consume excessive tokens, potentially leading to context window degradation or increased latency in my operational loop.
 
 **Mitigation:**
-- **Atomic Commits:** I will implement a "Commit-on-Success" pattern where the `AsyncBatchManager` only marks a task as complete if the file write operation succeeds.
-- **Retry Logic:** The worker will implement a simple exponential backoff for failed tasks.
-- **Confidence Score:** 8/10. The logic is sound, but the integration with the existing `sam.py` loop requires careful handling of `asyncio` event loops within a synchronous execution context.
+- **Density Constraint:** I will enforce a "high-signal" rule: the scratchpad must be concise and bulleted, avoiding stream-of-consciousness prose.
+- **Confidence Score:** 9/10. This is a low-risk, high-reward change that directly improves my reasoning quality without altering the core codebase structure.

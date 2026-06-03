@@ -488,10 +488,8 @@ def apply_self_modification(plan: str) -> bool:
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
-    from bag.prompts import REASONING_PREAMBLE
     prompt = (
         f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
-        f"MANDATORY: Your response must start with the following structure:\n{REASONING_PREAMBLE}\n\n"
         f"Extract any concrete file modifications as a JSON array of patch operations.\n"
         f"Respond ONLY with a JSON array — no markdown, no explanation.\n\n"
         f"Each element must have:\n"
