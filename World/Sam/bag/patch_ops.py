@@ -8,6 +8,7 @@ from bag.workshop_paths import FORBIDDEN_BASENAMES, is_allowed_patch_filename
 def apply_patch_operations(operations: list, root: Path, log) -> bool:
     """Apply replace / insert_after / delete ops. Returns True if any succeeded."""
     applied = []
+    created = []  # track newly created files for rollback cleanup
     for op in operations:
         fname = op.get("filename", "")
         operation = op.get("operation", "")
@@ -32,6 +33,7 @@ def apply_patch_operations(operations: list, root: Path, log) -> bool:
                 target.write_text(op.get("new", ""))
                 log.info(f"Created new file via insert_after → {fname}")
                 applied.append(fname)
+                created.append(str(target))
             else:
                 log.warning(f"Skipping patch on non-existent file '{fname}'.")
             continue
@@ -78,4 +80,6 @@ def apply_patch_operations(operations: list, root: Path, log) -> bool:
             log.warning(f"Unknown operation '{operation}' on '{fname}' — skipping.")
 
     log.info(f"Patch summary: {len(applied)} applied, {len(operations) - len(applied)} skipped.")
+    # Expose created files so callers can clean them up on rollback
+    apply_patch_operations._last_created = created
     return bool(applied)
