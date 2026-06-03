@@ -359,6 +359,19 @@ def behaviour_check() -> bool:
         return False
 
 
+
+def _cleanup_created_workshop_files():
+    """Delete any workshop_bench files that were created during the last patch attempt.
+    Called before _rollback() so the integrity gate sees a clean state."""
+    from bag.patch_ops import apply_patch_operations
+    created = getattr(apply_patch_operations, "_last_created", [])
+    for fpath in created:
+        p = Path(fpath)
+        if p.exists():
+            p.unlink()
+            log.warning(f"Cleanup: removed created file {p.relative_to(SAM_DIR)}")
+    apply_patch_operations._last_created = []
+
 def _rollback():
     """Restore sam.py and all bag/*.py files from the most recent healthy snapshot."""
     snapshots = sorted(ROLLBACK_REG.glob("sam_*.py"), reverse=True)
@@ -1149,6 +1162,7 @@ def run_cycle():
             log.info("✅ Verdict: ACCEPTED. Changes merged into World state.")
         else:
             log.error("❌ Verdict: REJECTED. Changes caused instability.")
+            _cleanup_created_workshop_files()
             _rollback()
             _alert_dot(
                 "Self-modification failed integrity gates. Rolled back for safety.\n\n"
@@ -1185,6 +1199,7 @@ def run_cycle():
         if self_check() and behaviour_check():
             log.info("Phase VI prompt patch verified.")
         else:
+            _cleanup_created_workshop_files()
             _rollback()
             _alert_dot(
                 "Phase VI prompt patch failed verification. Rolled back to previous snapshot.\n\n"
