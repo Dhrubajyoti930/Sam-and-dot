@@ -65,6 +65,9 @@ CLIENT = genai.Client(api_key=GEM_KEY)
 
 MODEL = "gemini-3.1-flash-lite"
 
+# Set to False to run Sunday tasks every cycle (testing); True for production
+SUNDAY_ONLY = True
+
 # ── Rate limiting ─────────────────────────────────────────────────────────────
 _CALL_DELAY = 8  # seconds
 
@@ -735,7 +738,7 @@ def run():
 
     # Task 5: Sunday inbox check (appended to motion.md, only on Sundays)
     today = datetime.date.today()
-    if today.weekday() == 6:   # 6 = Sunday
+    if not SUNDAY_ONLY or today.weekday() == 6:
         try:
             _sleep()
             inbox_report = sunday_inbox_check()
@@ -748,8 +751,7 @@ def run():
 
 
     # Task 6: Sunday External Signal (Dot adds topics to Sam's goals)
-    today = datetime.date.today()
-    if today.weekday() == 6: # Sunday
+    if not SUNDAY_ONLY or today.weekday() == 6: # Sunday
         try:
             log.info("Task 6: Adding external signal for Sam.")
             prompt = (
