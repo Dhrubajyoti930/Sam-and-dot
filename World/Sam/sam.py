@@ -364,34 +364,22 @@ def behaviour_check() -> bool:
     if not TESTS.exists():
         log.info("bag/tests.py not found — skipping behaviour check.")
         return True
-
     try:
         result = subprocess.run(
             [sys.executable, str(TESTS)],
-            capture_output=True,
-            text=True,
-            timeout=15,
+            capture_output=True, text=True, timeout=15,
             cwd=str(ROOT),
-            check=False
         )
-
         if result.returncode == 0:
             log.info("Behaviour check passed.")
             return True
-
-        error_msg = f"Behaviour check FAILED (exit {result.returncode}):\n{result.stdout}\n{result.stderr}"
-        log.error(error_msg)
-        
-        _alert_dot(
-            "bag/tests.py failed after a self-modification. Rolling back.\n\n"
-            f"Test output (truncated):\n```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"
-        )
-        return False
-
-    except subprocess.TimeoutExpired:
-        log.error("Behaviour check timed out.")
-        _alert_dot("Behaviour check timed out after 15s. Rolling back.")
-        return False
+        else:
+            log.error(f"Behaviour check FAILED:\n{result.stdout}\n{result.stderr}")
+            _alert_dot(
+                "bag/tests.py failed after a self-modification. Rolling back.\n\n"
+                f"Test output:\n```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"
+            )
+            return False
     except Exception as e:
         log.error(f"Behaviour check exception: {e}")
         return False
@@ -515,6 +503,7 @@ def apply_self_modification(plan: str) -> bool:
     No full-file rewrites. Each operation touches only the targeted lines.
     If 'old' or 'anchor' is not found exactly, the operation is skipped safely.
     """
+    from bag.patch_ops import apply_patch_operations
 
     log.info("── Self-Modification: Parsing Surgical Patch ──")
     from bag.workshop_imports import load_callable
@@ -554,46 +543,31 @@ def _extract_function_block(src: str, def_line: str) -> str | None:
     return "".join(block).rstrip("\n")
 
 
-def _pick_target_function(plan: str, def_lines: list[str]) -> str:
-    """Ask Gemini to choose ONE function name from def_lines most relevant to plan.
-    Falls back to the first entry if parsing fails."""
-    candidates = "\n".join(f"  {i+1}. {d}" for i, d in enumerate(def_lines[:30]))
-    prompt = (
-        f"You are Sam choosing which function to improve based on your plan.\n\n"
-        f"Plan summary:\n{plan[:400]}\n\n"
-        f"Available functions in sam.py:\n{candidates}\n\n"
-        f"Reply with ONLY the exact 'def ...' line of the single best function to improve. "
-        f"No explanation, no JSON, just the def line."
-    )
-    _sleep()
-    raw = ask_gemini(prompt, bypass_cache=True).strip().strip('"').strip("'")
-    # Validate it's actually in our list
-    for d in def_lines:
-        if d.strip() == raw.strip() or raw.strip() in d:
-            return d
-    return def_lines[0]
-
-
 def _improve_one_block(plan: str) -> bool:
-    """Pick one function in sam.py, read its full block, ask Gemini to improve it,
-    then apply as a single replace patch operation."""
+    """Pick a random function in sam.py, read its full block, improve it in
+    the theme of the plan while keeping everything consistent, then apply as
+    a single replace patch operation."""
+    import random
     from bag.patch_ops import apply_patch_operations
 
     sam_src = Path(__file__).read_text(encoding="utf-8")
 
     # Collect top-level def lines (no leading indent = module-level functions)
-    def_lines = [
-        line.rstrip()
-        for line in sam_src.splitlines()
-        if line.startswith("def ") and len(line.strip()) > 10
-    ]
+    # Skip trivially small functions (under 5 lines) — nothing meaningful to improve.
+    def_lines = []
+    for line in sam_src.splitlines():
+        if line.startswith("def ") and len(line.strip()) > 10:
+            candidate = _extract_function_block(sam_src, line.rstrip())
+            if candidate and candidate.count("\n") >= 4:
+                def_lines.append(line.rstrip())
+
     if not def_lines:
-        log.warning("_improve_one_block: no top-level def lines found in sam.py.")
+        log.warning("_improve_one_block: no eligible top-level functions found in sam.py.")
         return False
 
-    # Step 1: Pick the target function
-    target_def = _pick_target_function(plan, def_lines)
-    log.info(f"_improve_one_block: selected → {target_def.strip()}")
+    # Step 1: Pick randomly
+    target_def = random.choice(def_lines)
+    log.info(f"_improve_one_block: randomly selected → {target_def.strip()}")
 
     # Step 2: Extract the full block
     block = _extract_function_block(sam_src, target_def)
@@ -603,14 +577,16 @@ def _improve_one_block(plan: str) -> bool:
 
     log.info(f"_improve_one_block: block length = {len(block)} chars")
 
-    # Step 3: Ask Gemini to improve the block
+    # Step 3: Ask Gemini to improve the block in the theme of the plan
     improve_prompt = (
         f"You are Sam improving one of your own functions.\n\n"
-        f"Plan / motivation:\n{plan[:500]}\n\n"
+        f"Current cycle plan (full):\n{plan}\n\n"
         f"Here is the COMPLETE current function from sam.py:\n"
         f"```python\n{block}\n```\n\n"
         f"Rewrite this function to be better — clearer, more robust, or more efficient — "
-        f"while preserving its exact signature and all existing behaviour. "
+        f"guided by the themes and direction of the plan above, while keeping it fully "
+        f"consistent with the rest of sam.py. "
+        f"Preserve the exact signature and all existing behaviour. "
         f"Do NOT rename it or change what it returns.\n\n"
         f"Reply with ONLY the improved Python source for this function, no backticks, no explanation."
     )
