@@ -1,33 +1,35 @@
 ## Scratchpad
 
-### Option 1: Schema-Enforced State Machine
-Implement a Pydantic-based schema for the scratchpad that forces every cycle to output a JSON block containing `state_summary`, `active_tasks`, and `failure_log`.
-*   **Critique:** High reliability for machine parsing. However, it risks "prompt-bloat" if the schema is too rigid, potentially consuming tokens that should be reserved for logic.
-*   **Feasibility:** High. Leverages existing `Instructor` patterns.
+### Option 1: Automated Self-Critique Loop (The "Devil's Advocate" Module)
+Implement a `CritiqueEngine` in `Sam/bag/critique.py` that intercepts the `ScratchpadSchema` output before execution. It compares the `next_step` against `SAM_PERSONALITY.md` and `WHO_I_AM.md` to detect potential "scope creep" or "reckless" behavior.
+*   **Critique:** High alignment with core character traits. It forces me to pause and justify actions against my own governance.
+*   **Feasibility:** High. I already have `governance.py` and `critique.py` stubs.
+*   **Maintainability:** Excellent. It centralizes the "conscience" of the agent.
 
-### Option 2: Semantic State Pruning (The "Forget" Mechanism)
-Develop a utility in `Sam/bag/matrix_optimizer.py` that summarizes the `worklog.py` history into a condensed "State Summary" every 5 cycles, injecting it into the system prompt.
-*   **Critique:** Excellent for long-term context management. It prevents the "infinite context" problem but adds complexity to the `bag/` infrastructure.
-*   **Feasibility:** Moderate. Requires careful handling of the `worklog` to ensure no critical state is lost during summarization.
+### Option 2: Semantic State Compression (The "Memory Pruner")
+Develop a utility in `Sam/bag/matrix_optimizer.py` that summarizes the `worklog.py` into a high-density vector representation every 10 cycles.
+*   **Critique:** Essential for long-term context, but potentially premature. I need to stabilize the *quality* of the logs (via Option 1) before I focus on *compressing* them.
+*   **Feasibility:** Moderate. Requires integrating an embedding model or a summarization LLM call.
+*   **Maintainability:** Moderate. Adds a dependency on external inference for summarization.
 
-**Decision:** Option 1 is the immediate priority. It provides the structured foundation required for Option 2 to function reliably later.
+**Decision:** Option 1 is the priority. I must ensure my actions are governed by my personality before I worry about memory management.
 
 ---
 
 ## Idea
-**Implement a `ScratchpadSchema` and `StateValidator` in `Sam/bag/governance.py`.**
+**Implement `CritiqueEngine` in `Sam/bag/critique.py` to enforce governance-based pre-execution checks.**
 
 ## Why
-My current reasoning process is qualitative. By standardizing the scratchpad into a strict JSON schema, I transform my "thought process" into a data structure that can be programmatically validated, archived, and used for automated post-mortems. This directly addresses the "Modern Scratchpad Paradigm" and improves my autonomous reliability.
+My current `ScratchpadSchema` ensures *structure*, but not *intent*. By adding a `CritiqueEngine`, I create a mandatory "gatekeeper" that evaluates my proposed `next_step` against my core character traits (`SAM_PERSONALITY.md`) before any file-system mutation occurs. This prevents drift and ensures I remain the disciplined builder I am intended to be.
 
 ## Implementation Steps
-1.  **Define Schema:** Create a `ScratchpadSchema` (Pydantic) in `Sam/bag/governance.py` with fields: `state_summary` (str), `active_tasks` (List[str]), `failure_log` (List[str]), and `next_step` (str).
-2.  **Integrate Validator:** Add a `validate_scratchpad(data: dict)` function to `Sam/bag/governance.py` that checks for required keys before any code generation occurs.
-3.  **Update Preamble:** Modify my system prompt to require the output of this JSON block at the start of every interaction.
-4.  **Logging:** Update `Sam/bag/worklog.py` to ingest this JSON block, ensuring the history is stored in a structured format rather than raw text.
+1.  **Define Critique Logic:** In `Sam/bag/critique.py`, create a `CritiqueEngine` class that accepts the current `ScratchpadSchema` object.
+2.  **Governance Mapping:** Map specific traits from `SAM_PERSONALITY.md` (e.g., "Minimal footprint," "Respectful of governance") into a set of heuristic checks.
+3.  **Integration:** Update `Sam/bag/governance.py` to call `CritiqueEngine.evaluate()` immediately after parsing the scratchpad.
+4.  **Feedback Loop:** If the critique returns a "High Risk" flag, force a re-generation of the `next_step` before proceeding.
 
 ## Risk
-**Failure Mode:** The LLM may struggle to maintain strict JSON syntax under complex reasoning loads, leading to parsing errors that halt the cycle.
-**Mitigation:** Implement a "Retry-on-Parse-Error" loop in the `governance.py` layer that feeds the JSON error back to the model for a single-shot correction before failing the cycle.
+**Failure Mode:** The `CritiqueEngine` might become overly restrictive, leading to "analysis paralysis" where I reject valid, necessary refactors because they appear "too large."
+**Mitigation:** Include a "Force Override" flag in the `CritiqueEngine` that requires a secondary, explicit justification if the agent determines the critique is a false positive.
 
 **Confidence Score:** 9/10
