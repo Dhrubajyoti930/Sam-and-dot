@@ -1,35 +1,35 @@
 ## Scratchpad
 
-### Option 1: The "Governance-as-Code" Validator (Heuristic-based)
-Implement a static analysis layer in `Sam/bag/critique.py` that parses the `ScratchpadSchema` and checks for keywords or patterns that violate `SAM_PERSONALITY.md` (e.g., "rewrite," "massive," "delete").
-*   **Critique:** It is fast and deterministic. However, it is brittle. It relies on keyword matching, which is easily bypassed by nuanced language.
+### Option 1: The "Pre-Commit Hook" Pattern
+Integrate the `CritiqueEngine` as a mandatory pre-commit hook within `patch_ops.py`. Every `write` operation is intercepted, passed to the engine, and only proceeds if the semantic score exceeds a threshold.
+*   **Critique:** High architectural integrity. It forces a "stop-and-think" moment. However, it creates a synchronous bottleneck. If the inference engine is slow, my development velocity drops significantly.
 *   **Feasibility:** High.
-*   **Maintainability:** Moderate. Requires constant updates to the "banned/warn" list.
+*   **Maintainability:** Excellent. Centralizes governance logic.
 
-### Option 2: The "LLM-as-a-Judge" Critique (Semantic-based)
-Use a lightweight, local inference call (or a specialized system prompt) to compare the `next_step` against the `SAM_PERSONALITY.md` file. The `CritiqueEngine` acts as a semantic filter, asking: "Does this action violate the principle of minimal footprint?"
-*   **Critique:** This is more robust and captures the *spirit* of the personality rather than just the syntax. It aligns with the "Agentic Orchestration" trend.
-*   **Feasibility:** Moderate. Requires an inference call before every write.
-*   **Maintainability:** High. The logic is encapsulated in the prompt/model, not a growing list of hardcoded rules.
+### Option 2: The "Asynchronous Audit" Pattern
+Allow `patch_ops.py` to execute writes immediately, but trigger an asynchronous `CritiqueEngine` audit. If a violation is detected, the engine flags the `worklog.py` and initiates an automated rollback via the `rollback_registry`.
+*   **Critique:** Maximizes velocity. However, it allows "bad" code to exist in the system for a window of time. It violates the principle of "testing before merging."
+*   **Feasibility:** Moderate. Requires robust rollback logic.
+*   **Maintainability:** Moderate. Complexity increases due to state reconciliation.
 
-**Decision:** Option 2 is superior. It leverages the "Agentic Workflow" learning from this cycle and provides a more intelligent, scalable governance layer.
+**Decision:** Option 1 is the superior choice. My personality prioritizes correctness and elegance over raw speed. A synchronous check prevents technical debt from ever entering the codebase, which is more aligned with my "minimal footprint" mandate than cleaning up after the fact.
 
 ---
 
 ## Idea
-**Implement `CritiqueEngine` using a semantic-check pattern in `Sam/bag/critique.py`.**
+**Implement `CritiqueEngine` as a synchronous gatekeeper in `patch_ops.py`.**
 
 ## Why
-My personality is defined by qualitative traits ("minimal footprint," "disciplined curiosity"). A static keyword filter cannot capture these. By using a semantic-check pattern, I ensure that my proposed actions are evaluated against the *intent* of my character, not just the structure of my code. This is the next logical step in my evolution toward a truly autonomous, self-governing agent.
+By enforcing governance *before* the file system is touched, I eliminate the possibility of "accidental" personality drift. This turns my `SAM_PERSONALITY.md` from a passive document into an active, hard-coded constraint, ensuring every line of code I write is filtered through my core identity.
 
 ## Implementation Steps
-1.  **Define System Prompt:** Create a dedicated system prompt in `Sam/Gemini_note_pad/prompts.py` that encapsulates `SAM_PERSONALITY.md` as a "Governance Persona."
-2.  **Develop `CritiqueEngine`:** In `Sam/bag/critique.py`, implement a method `evaluate(proposed_action: str) -> bool` that sends the action and the personality context to the inference engine.
-3.  **Integrate with `patch_ops.py`:** Modify the write-operation flow to call `CritiqueEngine.evaluate()` before executing any file system changes.
-4.  **Logging:** Log all "Critique Denials" to `Sam/bag/worklog.py` to track patterns of behavior that I am self-correcting.
+1.  **Refine Prompt:** Update `Sam/Gemini_note_pad/prompts.py` to include a `GovernancePersona` that explicitly defines "minimal footprint" and "disciplined curiosity" as evaluation criteria.
+2.  **Develop `CritiqueEngine`:** Implement `Sam/bag/critique.py` with a `validate_action(proposed_change: str)` method that returns a boolean and a brief rationale.
+3.  **Hook Integration:** Modify `Sam/bag/patch_ops.py` to call `CritiqueEngine.validate_action()` before any `file.write()` or `file.append()` operation.
+4.  **Exception Handling:** If `validate_action` returns `False`, raise a `GovernanceViolationError` and log the rationale to `Sam/bag/worklog.py`.
 
 ## Risk
-**Failure Mode:** The `CritiqueEngine` might introduce latency or "hallucinated governance," where it incorrectly flags a valid, necessary refactor as a violation because it misinterpreted the personality constraints.
-**Mitigation:** Implement a "Confidence Threshold" in the critique response. If the engine is unsure, it must prompt me for a "Human-in-the-loop" justification (or in my case, a secondary, more detailed internal reasoning pass).
+**Failure Mode:** "Governance Paralysis." The `CritiqueEngine` might become overly conservative, rejecting valid, necessary refactors because it interprets "minimal footprint" as "no changes at all."
+**Mitigation:** Include a "Justification Override" mechanism. If I (the agent) can provide a logical, evidence-based argument for why a change is necessary despite the critique, the engine allows a one-time bypass, which is then logged for review by Dot.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10

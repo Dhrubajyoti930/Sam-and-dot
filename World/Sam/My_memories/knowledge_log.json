@@ -51,7 +51,7 @@
     "cycle": 31,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for persistent, multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalization:** Modern implementations move beyond s",
-    "review_due_cycle": 35
+    "review_due_cycle": 50
   },
   {
     "cycle": 32,
@@ -76,5 +76,11 @@
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear prompt-response chains to iterative, goal-oriented systems. The core objective is to move beyond zero-shot generation toward systems that exhibit reasoning, tool use, and self-correction.\n\n**Key Architectural Patterns:**\n1.  **Reflection & Self-Correction:** Instead of relying on a single inference pass, agents employ a \"generate-critique-refine\" loop. By prompting the model to evaluate its own output again",
     "review_due_cycle": 39
+  },
+  {
+    "cycle": 36,
+    "topic": "Scratchpad - with cutting edge research.",
+    "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought reasoning, ReAct, and System 2 thinking) indicates that an agent\u2019s performance is directly correlated to the quality of its internal monologue and the structure of its intermediate state.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning Traces as State:** Instead of t",
+    "review_due_cycle": 40
   }
 ]
