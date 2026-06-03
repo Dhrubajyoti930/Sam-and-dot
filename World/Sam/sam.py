@@ -507,7 +507,27 @@ def apply_self_modification(plan: str) -> bool:
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
     from Gemini_note_pad.prompts import SURGICAL_PATCH_PROMPT
-    prompt = SURGICAL_PATCH_PROMPT.format(plan=plan)
+
+    # Pre-extract valid anchor lines from sam.py so Gemini can only pick
+    # anchors that are guaranteed to exist verbatim — same pattern as Phase VI.
+    _sam_src = Path(__file__).read_text(encoding="utf-8")
+    _sam_anchors: list = []
+    for _line in _sam_src.splitlines():
+        _s = _line.strip()
+        if (
+            _s.startswith(("import ", "from ", "def ", "class ", "log = ", "SAM_DIR", "BAG =", "WORKSHOP"))
+            and 10 < len(_s) < 100
+            and _s in _sam_src
+        ):
+            _sam_anchors.append(f'  "{_s}"')
+    _anchor_block = (
+        "\n=== PRE-VALIDATED sam.py ANCHOR LINES ===\n"
+        "If you patch sam.py with insert_after, your \'anchor\' MUST be copied\n"
+        "exactly from this list — these are the only lines guaranteed to exist:\n"
+        + "\n".join(_sam_anchors[:40])
+        + "\nDo NOT invent anchors not in this list — the operation will be skipped.\n"
+    )
+    prompt = SURGICAL_PATCH_PROMPT.format(plan=plan) + _anchor_block
 
     _sleep()
     raw = ask_gemini(prompt, bypass_cache=True)
