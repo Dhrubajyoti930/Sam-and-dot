@@ -506,56 +506,8 @@ def apply_self_modification(plan: str) -> bool:
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
-    prompt = (
-        f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
-        f"Extract any concrete file modifications as a JSON array of patch operations.\n"
-        f"Each operation may include an optional 'rationale' field (1 sentence) explaining the change.\n"
-        f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
-        f"Each element must have:\n"
-        f"  - 'filename'  : relative path from Sam's root. 'sam.py' or 'workshop_bench/**/*.py'. "
-        f"Use 'workshop_bench/<folder>/<file>.py' for ALL new modules.\n"
-        f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
-        f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
-        f"  - For 'insert_after': 'anchor' (exact existing line), 'line_number' (integer), and 'new' (string to insert after it)\n"
-        f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
-        f"CRITICAL RULES:\n"
-        f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
-        f"  - MODULE PATHS: The prompts file is at 'Gemini_note_pad/prompts.py'.\n"
-        f"    Import it as: from Gemini_note_pad.prompts import ...\n"
-        f"    NEVER use 'bag.prompts' — that module does not exist and will crash Sam.\n"
-        f"    Writable Python files are: sam.py and workshop_bench/**/*.py only.\n"
-        f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
-        f"  - Keep each operation as small as possible — one function, one block, one line.\n"
-        f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
-        f"  - If no concrete changes are needed, return an empty array [].\n\n"
-        f"PYTHON CODE QUALITY RULES — every 'new' string must obey these:\n"
-        f"  - Must be syntactically valid Python. Mentally parse it before including it.\n"
-        f"  - Indentation must be correct: class methods indented 4 spaces inside their class,\n"
-        f"    nested blocks indented a further 4 spaces each level. Never mix tabs and spaces.\n"
-        f"  - A class body must never be left empty. If a class has no body yet, add 'pass'.\n"
-        f"  - Never place a method definition outside its class block.\n"
-        f"  - After a 'replace', the resulting file must remain structurally intact —\n"
-        f"    check that the 'old' context around the change is not load-bearing for other blocks."
-        f"  - IMPORTS — MANDATORY: Every name used in a 'new' string must be imported.\\n"
-        f"    New files created via insert_after must declare ALL imports on the very first lines.\\n"
-        f"    There are NO implicit imports in Python — logging, queue, threading, re, json, etc.\\n"
-        f"    must each be imported explicitly. Missing imports cause ruff F821 and a full rollback.\\n"
-        f"\\n"
-        f"    CORRECT new file 'new' string example (imports first, always):\\n"
-        f"      import logging\\n"
-        f"      import queue\\n"
-        f"      import threading\\n"
-        f"      log = logging.getLogger('sam')\\n"
-        f"      class BatchManager:\\n"
-        f"          def __init__(self):\\n"
-        f"              self.queue = queue.Queue()\\n"
-        f"              self.lock = threading.Lock()\\n"
-        f"\\n"
-        f"    WRONG — will be REJECTED by ruff F821:\\n"
-        f"      class BatchManager:\\n"
-        f"          def __init__(self):\\n"
-        f"              self.queue = queue.Queue()  # queue not imported — FAIL"
-    )
+    from Gemini_note_pad.prompts import SURGICAL_PATCH_PROMPT
+    prompt = SURGICAL_PATCH_PROMPT.format(plan=plan)
 
     _sleep()
     raw = ask_gemini(prompt)
