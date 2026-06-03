@@ -78,11 +78,15 @@ def is_allowed_patch_filename(fname: str) -> bool:
     if fname == PROMPT_REGISTRY_REL:
         return True
 
-    # Allow patching anything in workshop_bench that isn't infra
+    # Allow patching only within workshop_bench/ — never bag/ or its subdirs
     if fname.startswith(f"{WORKSHOP_ROOT}/"):
+        # Reject workshop_bench/bag/... — Gemini sometimes nests bag inside workshop_bench
+        parts = p.parts
+        if GOVERNANCE_ROOT in parts:
+            return False
         if p.name in INFRA_FILENAMES:
             return False
-        if any(part in BLOCKED_DIR_NAMES for part in p.parts):
+        if any(part in BLOCKED_DIR_NAMES for part in parts):
             return False
         return p.suffix == ".py"
 
