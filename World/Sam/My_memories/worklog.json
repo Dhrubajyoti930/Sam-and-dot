@@ -103,5 +103,20 @@
       "Cycle complete. Modification applied: False."
     ],
     "outcome": "deferred"
+  },
+  {
+    "id": "cycle-30-[gemini-error:-exhausted-retri",
+    "title": "[Gemini error: exhausted retries]",
+    "status": "closed",
+    "opened_at": "2026-06-03T04:41:59.622434",
+    "opened_cycle": 30,
+    "last_touched_at": "2026-06-03T04:43:33.462697",
+    "last_touched_cycle": 30,
+    "closed_at": "2026-06-03T04:43:33.462691",
+    "updates": [
+      "Plan generated in Phase V.",
+      "Cycle complete. Modification applied: True."
+    ],
+    "outcome": "applied"
   }
 ]

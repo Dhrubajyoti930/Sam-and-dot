@@ -245,8 +245,8 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
         except Exception as e:
             err = str(e).upper()
             if any(x in err for x in ["429", "RESOURCE_EXHAUSTED", "QUOTA"]):
-                # Exponential backoff
-                _CALL_DELAY = min(_CALL_DELAY * 1.5 + 5, 60)
+                # Proactive deceleration
+                _CALL_DELAY = min(_CALL_DELAY + 5, 30)
                 wait = _CALL_DELAY * (attempt + 1)
                 log.warning(f"Rate limit hit. Slowing to {_CALL_DELAY}s and waiting {wait}s.")
                 time.sleep(wait)
