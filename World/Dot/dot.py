@@ -66,7 +66,7 @@ CLIENT = genai.Client(api_key=GEM_KEY)
 MODEL = "gemini-3.1-flash-lite"
 
 # Set to False to run Sunday tasks every cycle (testing); True for production
-SUNDAY_ONLY = False
+SUNDAY_ONLY = True
 
 # ── Rate limiting ─────────────────────────────────────────────────────────────
 _CALL_DELAY = 8  # seconds
@@ -132,16 +132,21 @@ def _parse_gemini_json(text: str) -> dict | list | None:
 
 
 def ask_gemini(prompt: str, retries: int = 3, temperature: float = 0.2) -> str:
-    from Others.semantic_cache import check_cache, update_cache, get_db
+    from Others.semantic_cache import check_cache, update_cache, get_db, invalidate_truncated
     global _CALL_DELAY
 
     get_db()
+    invalidate_truncated()
     cycle = int(datetime.datetime.utcnow().strftime("%Y%m%d"))
 
     cached = check_cache(prompt, cycle)
     if cached:
-        log.info("Dot cache hit.")
-        return cached
+        # Validate cached response is not truncated before serving
+        if not (cached.endswith("...") or (cached.count("{") > cached.count("}")) or (cached.count("[") > cached.count("]"))):
+            log.info("Dot cache hit.")
+            return cached
+        else:
+            log.warning("Cached response appears truncated — bypassing cache.")
 
     for attempt in range(retries):
         try:
@@ -358,7 +363,6 @@ def curate_experiences() -> str:
         "Be conservative — when in doubt, keep. Only forget truly redundant or outdated entries."
     )
     raw = ask_gemini(prompt)
-    log.info(f"Curation raw response (first 200): {raw[:200]}")  # debug
     curation = _parse_gemini_json(raw)
     if not curation or not isinstance(curation, dict):
         log.warning("Could not parse curation result.")
