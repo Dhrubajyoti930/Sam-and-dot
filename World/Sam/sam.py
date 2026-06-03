@@ -510,7 +510,7 @@ def apply_self_modification(plan: str) -> bool:
     prompt = SURGICAL_PATCH_PROMPT.format(plan=plan)
 
     _sleep()
-    raw = ask_gemini(prompt)
+    raw = ask_gemini(prompt, bypass_cache=True)
 
     operations = _parse_gemini_json(raw)
     if not operations:
