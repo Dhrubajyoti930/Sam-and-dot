@@ -488,12 +488,11 @@ def apply_self_modification(plan: str) -> bool:
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
-    from Gemini_note_pad.prompts import REASONING_PREAMBLE
     prompt = (
         f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
-        f"MANDATORY: Your response must start with the following structure:\n{REASONING_PREAMBLE}\n\n"
         f"Extract any concrete file modifications as a JSON array of patch operations.\n"
-        f"Respond ONLY with a JSON array — no markdown, no explanation.\n\n"
+        f"Each operation may include an optional 'rationale' field (1 sentence) explaining the change.\n"
+        f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
         f"Each element must have:\n"
         f"  - 'filename'  : relative path from Sam's root. 'sam.py' or 'workshop_bench/**/*.py'. "
         f"Use 'workshop_bench/<folder>/<file>.py' for ALL new modules.\n"
