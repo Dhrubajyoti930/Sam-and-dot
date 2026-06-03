@@ -29,9 +29,9 @@
     "Sam/bag/evaluator.py",
     "Sam/bag/versioning.py",
     "Sam/chest/rollback_registry/sam_20260603T112438Z.py",
+    "Sam/chest/rollback_registry/sam_20260603T113753Z.py",
     "Sam/chest/rollback_registry/sam_20260603T112403Z.py",
     "Sam/chest/rollback_registry/sam_20260603T104411Z.py",
-    "Sam/chest/rollback_registry/sam_20260602T130912Z.py",
     "Sam/chest/rollback_registry/sam_20260603T035113Z.py",
     "Sam/chest/rollback_registry/sam_20260603T044246Z.py",
     "Sam/chest/rollback_registry/sam_20260603T033010Z.py",
@@ -43,14 +43,14 @@
     "Sam/chest/rollback_registry/sam_20260603T113123Z.py",
     "Sam/chest/rollback_registry/sam_20260603T032935Z.py",
     "Sam/chest/rollback_registry/sam_20260603T042955Z.py",
-    "Sam/chest/rollback_registry/sam_20260602T130947Z.py",
     "Sam/chest/rollback_registry/sam_20260603T111240Z.py",
     "Sam/chest/rollback_registry/sam_20260603T104336Z.py",
     "Sam/chest/rollback_registry/sam_20260603T034359Z.py",
     "Sam/chest/rollback_registry/sam_20260603T042920Z.py",
+    "Sam/chest/rollback_registry/sam_20260603T113827Z.py",
     "Sam/Others/__init__.py",
-    "Sam/workshop_bench/governance/canonicalizer.py",
-    "Sam/workshop_bench/governance/deduper.py"
+    "Sam/workshop_bench/governance/validators/canonicalizer.py",
+    "Sam/workshop_bench/governance/validators/deduper.py"
   ],
   "tests": [
     "Dot/tests/tests.py"

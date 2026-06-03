@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 34
+    "review_due_cycle": 49
   },
   {
     "cycle": 31,
@@ -70,5 +70,11 @@
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning, tool use, and environmental feedback.\n\n**Key Architectural Patterns:**\n1.  **Chain-of-Thought (CoT) & ReAct:** The foundational pattern where the agent decomposes complex tasks into intermediate reasoning steps. By interleaving \"Thought,\" \"",
     "review_due_cycle": 38
+  },
+  {
+    "cycle": 35,
+    "topic": "EXTERNAL: Agentic Workflows",
+    "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear prompt-response chains to iterative, goal-oriented systems. The core objective is to move beyond zero-shot generation toward systems that exhibit reasoning, tool use, and self-correction.\n\n**Key Architectural Patterns:**\n1.  **Reflection & Self-Correction:** Instead of relying on a single inference pass, agents employ a \"generate-critique-refine\" loop. By prompting the model to evaluate its own output again",
+    "review_due_cycle": 39
   }
 ]
