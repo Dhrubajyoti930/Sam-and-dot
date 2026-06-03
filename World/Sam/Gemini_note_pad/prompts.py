@@ -121,59 +121,59 @@ the operation to be silently skipped.
 ✅ CORRECT EXAMPLES
 ─────────────────────────────────────────────────────
 Example 1 — replace a function body in a workshop module:
-{
+{{
   "filename": "workshop_bench/core/processing/deduper.py",
   "operation": "replace",
   "old": "    def run(self):\\n        pass",
   "new": "    def run(self):\\n        self._deduplicate(self.items)",
   "rationale": "Wire run() to _deduplicate() as designed in the plan."
-}
+}}
 
 Example 2 — insert a new import at the top of sam.py:
-{
+{{
   "filename": "sam.py",
   "operation": "insert_after",
   "anchor": "import logging",
   "new": "from workshop_bench.core import deduper",
   "rationale": "Expose new deduper module to Sam's main loop."
-}
+}}
 
 Example 3 — delete a dead stub in a workshop file:
-{
+{{
   "filename": "workshop_bench/utils/helpers.py",
   "operation": "delete",
   "old": "def _todo():\\n    pass\\n",
   "rationale": "Remove placeholder stub now that real implementation exists."
-}
+}}
 
 ❌ FORBIDDEN EXAMPLES — these will be BLOCKED or silently skipped
 ─────────────────────────────────────────────────────
 // ❌ bag/ is read-only — will be blocked by scope check
-{
+{{
   "filename": "bag/governance.py",
   "operation": "replace", ...
-}
+}}
 
 // ❌ bag/tests.py is infrastructure — always blocked
-{
+{{
   "filename": "bag/tests.py",
   "operation": "insert_after", ...
-}
+}}
 
 // ❌ "old" reconstructed from memory, not copied — will NOT match
-{
+{{
   "filename": "workshop_bench/core/processing/deduper.py",
   "operation": "delete",
   "old": "def _todo(): pass"   // missing indentation + newlines — WILL FAIL
-}
+}}
 
 // ❌ "old" is too long — whitespace/indent drift almost certain
-{
+{{
   "filename": "sam.py",
   "operation": "replace",
   "old": "def phase_v(goals, motion_content, idea):\\n    log.info(\\"── Phase V ──\\")\\n    workshop_block = (\\"Sam's workshop bench (put NEW .py in target):\\\\n\\"",
   ...
-}
+}}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PYTHON CODE QUALITY — every "new" string must obey:
@@ -182,16 +182,22 @@ PYTHON CODE QUALITY — every "new" string must obey:
   - Correct indentation: 4 spaces per level, never tabs.
   - Every name used must be imported — logging, queue, threading, json, re, etc.
     are NOT implicit. Missing imports cause ruff F821 and a full rollback.
+  - Every import must be USED. Unused imports cause ruff F401 and a full rollback.
+    Before including an import, confirm it is referenced at least once in the "new" string.
   - A class body must never be empty — use "pass" if no body yet.
   - Never place a method definition outside its class block.
   - After a "replace", the file must remain structurally intact — ensure the
     surrounding context is not load-bearing for other blocks.
 
-✅ CORRECT new file via insert_after (imports always first):
+✅ CORRECT new file — every import is used:
 "new": "import logging\\nimport queue\\n\\nlog = logging.getLogger('sam')\\n\\nclass BatchManager:\\n    def __init__(self):\\n        self.q = queue.Queue()\\n"
 
 ❌ WRONG — queue used but not imported (ruff F821, causes rollback):
 "new": "class BatchManager:\\n    def __init__(self):\\n        self.q = queue.Queue()\\n"
+
+❌ WRONG — os imported but never used (ruff F401, causes rollback):
+"new": "import os\\nimport logging\\n\\nlog = logging.getLogger('sam')\\n\\nclass GovernanceReflector:\\n    def reflect(self):\\n        log.info('reflecting')\\n"
+  // os is imported but nothing calls os.* — Integrity Gate will REJECT this.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FINAL RULES
@@ -253,36 +259,36 @@ file text — one wrong character causes the patch to be silently rejected.
 ✅ VALID before_snippet EXAMPLES
 ─────────────────────────────────────────────────────
 // Short phrase copied verbatim — easy match
-{
+{{
   "before_snippet": "Keep the format tight and engineering-precise."
-}
+}}
 
 // Single sentence from a longer constant — still fine
-{
+{{
   "before_snippet": "Be specific and current — no generic filler."
-}
+}}
 
 // Ending clause of a sentence — short and unique
-{
+{{
   "before_snippet": "assign a confidence score (1-10) to the implementation's success probability."
-}
+}}
 
 ❌ INVALID before_snippet EXAMPLES — patch will be REJECTED
 ─────────────────────────────────────────────────────
 // ❌ Paraphrased — will NOT match the actual source text
-{
+{{
   "before_snippet": "Be specific and avoid generic content."
-}
+}}
 
 // ❌ Too long — any whitespace or quoting difference causes rejection
-{
+{{
   "before_snippet": "trend name, one-sentence description, and a specific GitHub repo or resource URL worth exploring. Be specific and current — no generic filler."
-}
+}}
 
 // ❌ Reconstructed from memory — subtle quoting/spacing errors guaranteed
-{
+{{
   "before_snippet": "Conclude with three action items formatted as JSON."
-}
+}}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 OTHER RULES
@@ -295,12 +301,12 @@ OTHER RULES
 
 ✅ FULL VALID RESPONSE EXAMPLE
 ─────────────────────────────────────────────────────
-{
+{{
   "assessment": "The suggestion was not applied — PROMPT_VERSION is unchanged at 7 and PHASE_III_PROMPT still lacks a recency instruction.",
   "target_prompt": "PHASE_III_PROMPT",
   "rationale": "Adding an explicit recency anchor forces the model to surface genuinely new trends rather than evergreen ones. Chain-of-thought research shows that a single reflective constraint clause significantly improves output freshness.",
   "before_snippet": "Be specific and current — no generic filler.",
   "after_snippet": "Be specific and current — no generic filler. For each trend, state the month/year it gained traction and why it matters NOW versus six months ago.",
   "new_prompt_version": 8
-}
+}}
 """
