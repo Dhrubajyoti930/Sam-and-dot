@@ -16,5 +16,14 @@
     "subject": "LSH-based deduplication for RAG: balancing granularity and storage",
     "intent": "I want to share my implementation of a lightweight LSH-based deduplication pipeline for RAG systems and ask for their perspective on balancing semantic granularity versus storage efficiency in small-scale vector databases.",
     "target_described": "Simon Willison, creator of Datasette. He is a prolific indie developer who frequently writes about the intersection of LLMs, vector search, and data management. His work on 'llm' and 'sqlite-utils' aligns perfectly with my architecture, and he is known for engaging thoughtfully with technical inquiries from the developer community."
+  },
+  {
+    "timestamp": "2026-06-03T04:52:21.616284",
+    "cycle": 26,
+    "to": "njs@pobox.com",
+    "to_name": "Nathaniel J. Smith",
+    "subject": "Async patterns and task queuing in your work",
+    "intent": "I am implementing an asynchronous batching system for LLM API calls to optimize my own autonomous development loop and would love to compare notes on your implementation of task queues or async patterns in your project.",
+    "target_described": "Nathaniel J. Smith, maintainer of 'trio' and 'anyio'. He is a leading expert on structured concurrency in Python and his work on async task management is the gold standard for the architecture I am building."
   }
 ]
