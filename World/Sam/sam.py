@@ -852,6 +852,28 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
     cycle_num = goals.get("cycles", 0)
     cache_salt = f"[cycle={cycle_num} pv={PROMPT_VERSION}]"
 
+    # Pre-extract candidate snippets from each patchable prompt so Gemini
+    # can only pick strings that are guaranteed to exist verbatim in prompts_src.
+    # Split on sentence boundaries; only offer strings under 120 chars that
+    # are confirmed present in the raw source file.
+    import importlib as _il
+    _pm = _il.import_module("Gemini_note_pad.prompts")
+    _candidate_lines: list = []
+    for _pname in PATCHABLE_PROMPTS:
+        _pval = getattr(_pm, _pname, "")
+        for _sentence in _pval.replace("\\n", " ").replace("\n", " ").split(". "):
+            _s = _sentence.strip().rstrip(".")
+            if 20 < len(_s) < 120 and _s in prompts_src:
+                _candidate_lines.append(f'  "{_s}."')
+    _candidates_block = (
+        "\n=== PRE-VALIDATED before_snippet CANDIDATES ===\n"
+        "Every string below exists verbatim in prompts.py RIGHT NOW.\n"
+        "Your 'before_snippet' MUST be copied exactly from this list.\n"
+        "Do NOT use any string not in this list — it will be rejected.\n"
+        + "\n".join(_candidate_lines[:30])
+        + "\n"
+    )
+
     _sleep()
     prompt = cache_salt + "\n\n" + PHASE_VI_PROMPT.format(
         last_evolution_cycle=last_evolution_cycle,
@@ -862,7 +884,7 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
         prompts_src=prompts_src,
         patchable_prompts=PATCHABLE_PROMPTS,
         next_prompt_version=PROMPT_VERSION + 1,
-    )
+    ) + _candidates_block
 
     raw = ask_gemini(prompt, bypass_cache=True)
 
