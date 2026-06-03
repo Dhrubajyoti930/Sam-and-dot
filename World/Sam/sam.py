@@ -364,22 +364,34 @@ def behaviour_check() -> bool:
     if not TESTS.exists():
         log.info("bag/tests.py not found — skipping behaviour check.")
         return True
+
     try:
         result = subprocess.run(
             [sys.executable, str(TESTS)],
-            capture_output=True, text=True, timeout=15,
+            capture_output=True,
+            text=True,
+            timeout=15,
             cwd=str(ROOT),
+            check=False
         )
+
         if result.returncode == 0:
             log.info("Behaviour check passed.")
             return True
-        else:
-            log.error(f"Behaviour check FAILED:\n{result.stdout}\n{result.stderr}")
-            _alert_dot(
-                "bag/tests.py failed after a self-modification. Rolling back.\n\n"
-                f"Test output:\n```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"
-            )
-            return False
+
+        error_msg = f"Behaviour check FAILED (exit {result.returncode}):\n{result.stdout}\n{result.stderr}"
+        log.error(error_msg)
+        
+        _alert_dot(
+            "bag/tests.py failed after a self-modification. Rolling back.\n\n"
+            f"Test output (truncated):\n```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"
+        )
+        return False
+
+    except subprocess.TimeoutExpired:
+        log.error("Behaviour check timed out.")
+        _alert_dot("Behaviour check timed out after 15s. Rolling back.")
+        return False
     except Exception as e:
         log.error(f"Behaviour check exception: {e}")
         return False
@@ -503,7 +515,6 @@ def apply_self_modification(plan: str) -> bool:
     No full-file rewrites. Each operation touches only the targeted lines.
     If 'old' or 'anchor' is not found exactly, the operation is skipped safely.
     """
-    from bag.patch_ops import apply_patch_operations
 
     log.info("── Self-Modification: Parsing Surgical Patch ──")
     from bag.workshop_imports import load_callable

@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning, tool use, and environmental feedback.\n\n**Key Architectural Patterns:**\n1.  **Chain-of-Thought (CoT) & ReAct:** The foundational pattern where the agent decomposes complex tasks into intermediate reasoning steps. By interleaving \"Thought,\" \"",
-    "review_due_cycle": 38
+    "review_due_cycle": 53
   },
   {
     "cycle": 35,
@@ -94,5 +94,11 @@
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought prompting, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its intermediate state.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decompositio",
     "review_due_cycle": 42
+  },
+  {
+    "cycle": 39,
+    "topic": "Scratchpad - with cutting edge research.",
+    "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought reasoning, ReAct, and System 2 cognitive architectures) suggests that the scratchpad is the primary interface for managing long-context reasoning and mitigating hallucination.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning Traces (Chain-of-Thought):** The scratchpad",
+    "review_due_cycle": 43
   }
 ]

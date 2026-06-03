@@ -230,10 +230,11 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
                 raise ValueError("Empty or blocked response")
 
             res = response.text.strip()
-            # Anti-truncation check
-            if res.endswith("...") or (res.count("{") > res.count("}")) or (res.count("[") > res.count("]")):
-                 log.warning("Potential truncation detected. Retrying...")
-                 continue
+            # Anti-truncation check — only for JSON responses, not prose
+            expects_json = "Respond ONLY with a JSON" in prompt or "json array" in prompt.lower()
+            if expects_json and (res.endswith("...") or (res.count("{") > res.count("}")) or (res.count("[") > res.count("]"))):
+                log.warning("Potential truncation detected in JSON response. Retrying...")
+                continue
 
             if not bypass_cache:
                 try:
@@ -263,6 +264,23 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
 def _sleep():
     """Pause between Gemini calls to respect RPM limits."""
     time.sleep(_CALL_DELAY)
+
+
+def _outline(src: str, label: str) -> str:
+    """Return a compact AST structural summary of a Python source string.
+    Lists every function/class with its line number — enough for Gemini to
+    understand Sam's architecture without burning thousands of tokens on code.
+    Falls back to the raw source only if parsing fails (e.g. syntax error)."""
+    import ast as _ast
+    try:
+        tree = _ast.parse(src)
+        lines = []
+        for node in _ast.walk(tree):
+            if isinstance(node, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef)):
+                lines.append(f"  L{node.lineno}: {type(node).__name__} {node.name}")
+        return f"{label} structure (line numbers for patch anchors):\n" + "\n".join(lines)
+    except Exception:
+        return src  # fallback to full source if parse fails
 
 
 def snapshot_sam() -> Path:
@@ -303,6 +321,14 @@ def snapshot_sam() -> Path:
 
 
 def self_check() -> bool:
+
+    def _verify_with_adversary(self, change_log: str):
+        from workshop_bench.core.adversary import DevilAdvocate
+        adv = DevilAdvocate()
+        verification = adv.verify_intent(change_log)
+        if not verification['approved']:
+            print(f"Adversarial Alert: {verification['reasoning']}")
+
     """Rigorous integrity check — uses ruff to catch undefined names and logic errors."""
     log.info("── Running Rigorous Integrity Gate ──")
     try:
@@ -477,7 +503,6 @@ def apply_self_modification(plan: str) -> bool:
     No full-file rewrites. Each operation touches only the targeted lines.
     If 'old' or 'anchor' is not found exactly, the operation is skipped safely.
     """
-    from bag.patch_ops import apply_patch_operations
 
     log.info("── Self-Modification: Parsing Surgical Patch ──")
     from bag.workshop_imports import load_callable
@@ -488,68 +513,119 @@ def apply_self_modification(plan: str) -> bool:
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
-    from Gemini_note_pad.prompts import REASONING_PREAMBLE
+    # Delegate to focused block-improve: pick one function, read it, improve it.
+    return _improve_one_block(plan)
+
+
+def _extract_function_block(src: str, def_line: str) -> str | None:
+    """Extract the full source block starting at def_line (a 'def ...:' line)
+    up to (but not including) the next top-level or same-indent 'def ' or 'class '.
+    Returns the block string, or None if def_line is not found."""
+    lines = src.splitlines(keepends=True)
+    start_idx = None
+    for i, line in enumerate(lines):
+        if line.rstrip("\n") == def_line or line.strip() == def_line.strip():
+            start_idx = i
+            break
+    if start_idx is None:
+        return None
+
+    # Determine indentation of the anchor def line
+    indent = len(def_line) - len(def_line.lstrip())
+    block = [lines[start_idx]]
+    for line in lines[start_idx + 1:]:
+        stripped = line.lstrip()
+        # Stop at next function/class at the same or lesser indent level
+        if stripped.startswith(("def ", "class ")) and (len(line) - len(stripped)) <= indent:
+            break
+        block.append(line)
+    return "".join(block).rstrip("\n")
+
+
+def _pick_target_function(plan: str, def_lines: list[str]) -> str:
+    """Ask Gemini to choose ONE function name from def_lines most relevant to plan.
+    Falls back to the first entry if parsing fails."""
+    candidates = "\n".join(f"  {i+1}. {d}" for i, d in enumerate(def_lines[:30]))
     prompt = (
-        f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
-        f"MANDATORY: Your response must start with the following structure:\n{REASONING_PREAMBLE}\n\n"
-        f"Extract any concrete file modifications as a JSON array of patch operations.\n"
-        f"Respond ONLY with a JSON array — no markdown, no explanation.\n\n"
-        f"Each element must have:\n"
-        f"  - 'filename'  : relative path from Sam's root. 'sam.py' or 'workshop_bench/**/*.py'. "
-        f"Use 'workshop_bench/<folder>/<file>.py' for ALL new modules.\n"
-        f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
-        f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
-        f"  - For 'insert_after': 'anchor' (exact existing line), 'line_number' (integer), and 'new' (string to insert after it)\n"
-        f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
-        f"CRITICAL RULES:\n"
-        f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
-        f"  - MODULE PATHS: The prompts file is at 'Gemini_note_pad/prompts.py'.\n"
-        f"    Import it as: from Gemini_note_pad.prompts import ...\n"
-        f"    NEVER use 'bag.prompts' — that module does not exist and will crash Sam.\n"
-        f"    Writable Python files are: sam.py and workshop_bench/**/*.py only.\n"
-        f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
-        f"  - Keep each operation as small as possible — one function, one block, one line.\n"
-        f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
-        f"  - If no concrete changes are needed, return an empty array [].\n\n"
-        f"PYTHON CODE QUALITY RULES — every 'new' string must obey these:\n"
-        f"  - Must be syntactically valid Python. Mentally parse it before including it.\n"
-        f"  - Indentation must be correct: class methods indented 4 spaces inside their class,\n"
-        f"    nested blocks indented a further 4 spaces each level. Never mix tabs and spaces.\n"
-        f"  - A class body must never be left empty. If a class has no body yet, add 'pass'.\n"
-        f"  - Never place a method definition outside its class block.\n"
-        f"  - After a 'replace', the resulting file must remain structurally intact —\n"
-        f"    check that the 'old' context around the change is not load-bearing for other blocks."
-        f"  - IMPORTS — MANDATORY: Every name used in a 'new' string must be imported.\\n"
-        f"    New files created via insert_after must declare ALL imports on the very first lines.\\n"
-        f"    There are NO implicit imports in Python — logging, queue, threading, re, json, etc.\\n"
-        f"    must each be imported explicitly. Missing imports cause ruff F821 and a full rollback.\\n"
-        f"\\n"
-        f"    CORRECT new file 'new' string example (imports first, always):\\n"
-        f"      import logging\\n"
-        f"      import queue\\n"
-        f"      import threading\\n"
-        f"      log = logging.getLogger('sam')\\n"
-        f"      class BatchManager:\\n"
-        f"          def __init__(self):\\n"
-        f"              self.queue = queue.Queue()\\n"
-        f"              self.lock = threading.Lock()\\n"
-        f"\\n"
-        f"    WRONG — will be REJECTED by ruff F821:\\n"
-        f"      class BatchManager:\\n"
-        f"          def __init__(self):\\n"
-        f"              self.queue = queue.Queue()  # queue not imported — FAIL"
+        f"You are Sam choosing which function to improve based on your plan.\n\n"
+        f"Plan summary:\n{plan[:400]}\n\n"
+        f"Available functions in sam.py:\n{candidates}\n\n"
+        f"Reply with ONLY the exact 'def ...' line of the single best function to improve. "
+        f"No explanation, no JSON, just the def line."
     )
-
     _sleep()
-    raw = ask_gemini(prompt)
+    raw = ask_gemini(prompt, bypass_cache=True).strip().strip('"').strip("'")
+    # Validate it's actually in our list
+    for d in def_lines:
+        if d.strip() == raw.strip() or raw.strip() in d:
+            return d
+    return def_lines[0]
 
-    operations = _parse_gemini_json(raw)
-    if not operations:
-        log.warning("No patch operations extracted.")
-        log.info(f"Gemini patch response (first 200 chars): {raw[:200]}")
+
+def _improve_one_block(plan: str) -> bool:
+    """Pick one function in sam.py, read its full block, ask Gemini to improve it,
+    then apply as a single replace patch operation."""
+    from bag.patch_ops import apply_patch_operations
+
+    sam_src = Path(__file__).read_text(encoding="utf-8")
+
+    # Collect top-level def lines (no leading indent = module-level functions)
+    def_lines = [
+        line.rstrip()
+        for line in sam_src.splitlines()
+        if line.startswith("def ") and len(line.strip()) > 10
+    ]
+    if not def_lines:
+        log.warning("_improve_one_block: no top-level def lines found in sam.py.")
         return False
 
-    return apply_patch_operations(operations, SAM_DIR, log)
+    # Step 1: Pick the target function
+    target_def = _pick_target_function(plan, def_lines)
+    log.info(f"_improve_one_block: selected → {target_def.strip()}")
+
+    # Step 2: Extract the full block
+    block = _extract_function_block(sam_src, target_def)
+    if not block:
+        log.warning(f"_improve_one_block: could not extract block for: {target_def!r}")
+        return False
+
+    log.info(f"_improve_one_block: block length = {len(block)} chars")
+
+    # Step 3: Ask Gemini to improve the block
+    improve_prompt = (
+        f"You are Sam improving one of your own functions.\n\n"
+        f"Plan / motivation:\n{plan[:500]}\n\n"
+        f"Here is the COMPLETE current function from sam.py:\n"
+        f"```python\n{block}\n```\n\n"
+        f"Rewrite this function to be better — clearer, more robust, or more efficient — "
+        f"while preserving its exact signature and all existing behaviour. "
+        f"Do NOT rename it or change what it returns.\n\n"
+        f"Reply with ONLY the improved Python source for this function, no backticks, no explanation."
+    )
+    _sleep()
+    improved = ask_gemini(improve_prompt, bypass_cache=True).strip()
+    # Strip accidental code fences
+    if improved.startswith("```"):
+        improved = improved.split("\n", 1)[1] if "\n" in improved else improved
+        improved = improved.removesuffix("```").strip()
+
+    if not improved or improved == block:
+        log.info("_improve_one_block: Gemini returned unchanged block — no patch needed.")
+        return False
+
+    # Step 4: Apply as a replace op
+    op = [{
+        "filename": "sam.py",
+        "operation": "replace",
+        "old": block,
+        "new": improved,
+    }]
+    result = apply_patch_operations(op, SAM_DIR, log)
+    if result:
+        log.info(f"_improve_one_block: successfully improved {target_def.strip()!r}")
+    else:
+        log.warning("_improve_one_block: patch apply failed.")
+    return result
 
 
 def apply_prompt_patch() -> bool:
@@ -677,7 +753,15 @@ def phase_iii_market_ingestion() -> str:
 def phase_iv_synthesis(market_data: str, skill: str) -> str:
     """Generate IDEA_OF_THE_DAY.md from market signals + today's skill."""
     log.info("── Phase IV: The Synthesis ──")
-    who_i_am    = load_who_i_am()
+    # For ideation, the previous idea + world map is far more useful (and far
+    # lighter) than sam.py's source.  IDEA_OF_THE_DAY tells Gemini what was
+    # just built so it doesn't repeat itself; map.json shows how the world is
+    # laid out so ideas stay grounded in real structure.
+    idea_of_day_path = _bag_data("idea_of_day")
+    prev_idea = idea_of_day_path.read_text(encoding="utf-8") if idea_of_day_path.exists() else "(no previous idea)"
+    world_map_path = ROOT / "map.json"
+    world_map = world_map_path.read_text(encoding="utf-8") if world_map_path.exists() else "(map not yet generated)"
+    who_i_am = f"## Previous Idea\n{prev_idea}\n\n## World Map\n```json\n{world_map}\n```"
     personality = load_personality()
 
     # Summarise recent experiences so Sam doesn't repeat himself
@@ -778,8 +862,11 @@ def phase_v_development(idea: str, goals: dict, motion_content: str) -> str:
     )
 
     personality = load_personality()
-    sam_src     = Path(__file__).read_text()
-    tests_src   = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
+
+    sam_src      = Path(__file__).read_text()
+    sam_outline  = _outline(sam_src, "sam.py")
+    tests_src    = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
+    tests_outline = _outline(tests_src, "bag/tests.py")
 
     bag_sources = ""
     for _f in iter_writable_bag_py(WORKSHOP):
@@ -794,8 +881,9 @@ def phase_v_development(idea: str, goals: dict, motion_content: str) -> str:
         f"{dot_constraint_block}"
         f"{workshop_block}\n"
         f"Today's development idea:\n{idea}\n\n"
-        f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
-        f"Sam's current bag/tests.py (full source):\n```python\n{tests_src}\n```\n\n"
+        f"{sam_outline}\n\n"
+        f"NOTE: Full sam.py source is available to the patcher — you only need line numbers and function names to specify patch anchors.\n\n"
+        f"{tests_outline}\n\n"
         f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"
         f"Produce a surgical patch plan for Sam to apply. Rules:\n"
         f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
@@ -871,6 +959,28 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
     cycle_num = goals.get("cycles", 0)
     cache_salt = f"[cycle={cycle_num} pv={PROMPT_VERSION}]"
 
+    # Pre-extract candidate snippets from each patchable prompt so Gemini
+    # can only pick strings that are guaranteed to exist verbatim in prompts_src.
+    # Split on sentence boundaries; only offer strings under 120 chars that
+    # are confirmed present in the raw source file.
+    import importlib as _il
+    _pm = _il.import_module("Gemini_note_pad.prompts")
+    _candidate_lines: list = []
+    for _pname in PATCHABLE_PROMPTS:
+        _pval = getattr(_pm, _pname, "")
+        for _sentence in _pval.replace("\\n", " ").replace("\n", " ").split(". "):
+            _s = _sentence.strip().rstrip(".")
+            if 20 < len(_s) < 120 and _s in prompts_src:
+                _candidate_lines.append(f'  "{_s}."')
+    _candidates_block = (
+        "\n=== PRE-VALIDATED before_snippet CANDIDATES ===\n"
+        "Every string below exists verbatim in prompts.py RIGHT NOW.\n"
+        "Your 'before_snippet' MUST be copied exactly from this list.\n"
+        "Do NOT use any string not in this list — it will be rejected.\n"
+        + "\n".join(_candidate_lines[:30])
+        + "\n"
+    )
+
     _sleep()
     prompt = cache_salt + "\n\n" + PHASE_VI_PROMPT.format(
         last_evolution_cycle=last_evolution_cycle,
@@ -881,7 +991,7 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
         prompts_src=prompts_src,
         patchable_prompts=PATCHABLE_PROMPTS,
         next_prompt_version=PROMPT_VERSION + 1,
-    )
+    ) + _candidates_block
 
     raw = ask_gemini(prompt, bypass_cache=True)
 

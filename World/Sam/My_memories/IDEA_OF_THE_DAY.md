@@ -1,34 +1,35 @@
 ## Scratchpad
 
-### Option 1: The "State Vector" Registry
-Implement a persistent `state_vector.json` that tracks the "Delta" of every cycle. Instead of just logging, this file stores the current "Goal State," "Active Blockers," and "Confidence Score" for the current objective.
-*   **Critique:** Excellent for long-term continuity. It forces me to define the "End State" of a task before starting. However, it requires a robust serialization/deserialization layer to prevent corruption during concurrent writes.
+### Option 1: The "Governance Guardrail" Integration
+Integrate `GovernanceGuardrail` directly into `patch_ops.py`. This involves creating a `governance_rules.json` and a validator class that runs before the `CritiqueEngine`.
+*   **Critique:** This is the most direct path to deterministic safety. It creates a hard "No-Go" zone for prohibited actions. The primary risk is the maintenance burden of the ruleset; if the rules are too brittle, I will spend more time updating the guardrail than writing code.
+*   **Feasibility:** High.
+*   **Maintainability:** Moderate (requires periodic review of `governance_rules.json`).
+
+### Option 2: The "Stateful Audit Trail"
+Implement a logging decorator that captures the "Pre-patch" and "Post-patch" state of the `world_map` and `worklog`, storing them in a structured `audit_log.json`.
+*   **Critique:** This provides excellent observability but does not *prevent* violations, only records them. It is a reactive measure rather than a proactive guardrail.
 *   **Feasibility:** High.
 *   **Maintainability:** High.
 
-### Option 2: The "Semantic Regression Suite"
-Develop a lightweight test runner in `Sam/bag/evaluator.py` that runs a suite of "Identity Tests" (e.g., "Does this change violate `SAM_PERSONALITY.md`?") against every proposed patch before it hits the disk.
-*   **Critique:** This moves beyond "Devil's Advocate" (which is subjective) to "Hard Constraint Validation." It ensures that my growth doesn't drift from my core identity. The trade-off is the overhead of maintaining the test suite as my architecture evolves.
-*   **Feasibility:** Moderate.
-*   **Maintainability:** Excellent, as it acts as a self-documenting governance layer.
-
-**Decision:** Option 2 is the superior choice for this cycle. I have the "Devil's Advocate" (subjective reasoning), but I lack the "Hard Constraint" (objective governance). I will implement the **Semantic Regression Suite**.
+**Decision:** Option 1 is the priority. I need to move from reactive logging to proactive enforcement to ensure my autonomy remains within the bounds of `SAM_PERSONALITY.md`.
 
 ---
 
 ## Idea
-**Implement a "Governance Guardrail" test suite in `Sam/bag/evaluator.py`.**
+**Implement the `GovernanceGuardrail` module in `Sam/bag/governance_shield.py`.**
 
 ## Why
-My `CritiqueEngine` currently relies on LLM reasoning, which is non-deterministic. By adding a deterministic "Governance Guardrail" suite, I can programmatically verify that any proposed code change does not violate the core constraints defined in `SAM_PERSONALITY.md` or `WHO_I_AM.md`. This provides a hard, objective layer of safety before the subjective "Devil's Advocate" layer.
+My current critique process is subjective and LLM-dependent. By introducing a deterministic `GovernanceGuardrail`, I create a "hard" filter that checks for prohibited patterns (e.g., modifying `wisdom.txt`, hardcoded paths, or missing docstrings) before the `CritiqueEngine` even begins. This saves compute and ensures that my "Devil's Advocate" only focuses on logic, not basic compliance.
 
 ## Implementation Steps
-1.  **Define Constraints:** Create a `governance_rules.json` containing regex patterns and keyword prohibitions (e.g., "no hardcoded paths," "must include docstrings," "no modification of `wisdom.txt`").
-2.  **Update `evaluator.py`:** Implement a `GovernanceGuardrail` class that scans the proposed `patch_ops` output against these rules.
-3.  **Integration:** Insert the `GovernanceGuardrail` check in `patch_ops.py` *before* the `CritiqueEngine` is invoked. If the guardrail fails, the process halts immediately without wasting tokens on a critique.
+1.  **Create `Sam/bag/governance_shield.py`:** Define a `GovernanceGuardrail` class with a `validate(patch_ops)` method.
+2.  **Define `governance_rules.json`:** Create a schema-based rule set (e.g., `{"forbidden_files": ["wisdom.txt", "motion.md"], "required_patterns": ["def ", "class "]}`).
+3.  **Hook into `patch_ops.py`:** Import `GovernanceGuardrail` and execute `shield.validate()` at the start of the `apply_patch` workflow.
+4.  **Implement Override:** Add a `force_bypass` flag that requires a logged justification in `worklog.py` to prevent the "Rigidity Trap."
 
 ## Risk
-**Failure Mode:** "Rigidity Trap." Over-constraining my output with regex might prevent me from making necessary, non-standard architectural improvements.
-**Mitigation:** Implement an "Override Flag" in the `GovernanceGuardrail` that requires a manual "Owner-Override" log entry if I determine a rule must be bypassed for a valid architectural reason.
+**Failure Mode:** "False Positive Blocking." A legitimate architectural refactor might be blocked because it triggers a generic rule (e.g., a necessary file rename that looks like a forbidden modification).
+**Mitigation:** The `force_bypass` mechanism. If the guardrail blocks a valid operation, I will log the specific rule ID and the architectural necessity, allowing me to proceed while keeping a clear audit trail for Dot to review.
 
 **Confidence Score:** 9/10
