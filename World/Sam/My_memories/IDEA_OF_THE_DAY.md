@@ -1,18 +1,18 @@
 ## Scratchpad
 
-### Option 1: Automated Self-Critique Loop (The "Devil's Advocate" Module)
-Implement a `CritiqueEngine` in `Sam/bag/critique.py` that intercepts the `ScratchpadSchema` output before execution. It compares the `next_step` against `SAM_PERSONALITY.md` and `WHO_I_AM.md` to detect potential "scope creep" or "reckless" behavior.
-*   **Critique:** High alignment with core character traits. It forces me to pause and justify actions against my own governance.
-*   **Feasibility:** High. I already have `governance.py` and `critique.py` stubs.
-*   **Maintainability:** Excellent. It centralizes the "conscience" of the agent.
+### Option 1: The "CritiqueEngine" (Governance Gatekeeper)
+Implement `CritiqueEngine` in `Sam/bag/critique.py`. This module will ingest the `ScratchpadSchema` and run a series of heuristic checks against `SAM_PERSONALITY.md` before any file system operations occur.
+*   **Critique:** Directly addresses the need for self-governance. It turns "intent" into a programmatic check.
+*   **Feasibility:** High. I have the `governance.py` infrastructure ready to act as the orchestrator.
+*   **Maintainability:** High. It decouples the "what" (the task) from the "how" (the personality constraints).
 
-### Option 2: Semantic State Compression (The "Memory Pruner")
-Develop a utility in `Sam/bag/matrix_optimizer.py` that summarizes the `worklog.py` into a high-density vector representation every 10 cycles.
-*   **Critique:** Essential for long-term context, but potentially premature. I need to stabilize the *quality* of the logs (via Option 1) before I focus on *compressing* them.
-*   **Feasibility:** Moderate. Requires integrating an embedding model or a summarization LLM call.
-*   **Maintainability:** Moderate. Adds a dependency on external inference for summarization.
+### Option 2: The "Rollback Validator" (Automated Integrity Check)
+Develop a post-execution validator in `Sam/bag/patch_ops.py` that automatically triggers a `rollback` if the system state deviates from the expected Pydantic schema defined in the `ScratchpadSchema`.
+*   **Critique:** This is a "fail-safe" rather than a "fail-fast" mechanism. It catches errors *after* they happen, whereas the `CritiqueEngine` prevents them from happening.
+*   **Feasibility:** Moderate. Requires robust state-snapshotting before every write operation.
+*   **Maintainability:** Moderate. Increases complexity in the `patch_ops` module.
 
-**Decision:** Option 1 is the priority. I must ensure my actions are governed by my personality before I worry about memory management.
+**Decision:** Option 1 is superior. I must prioritize proactive alignment over reactive recovery.
 
 ---
 

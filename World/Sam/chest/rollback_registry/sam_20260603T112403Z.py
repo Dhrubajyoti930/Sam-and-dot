@@ -7,7 +7,7 @@ Operational Lifecycle:
   Phase II  - Spaced Repetition
   Phase III - Market & Code Ingestion
   Phase IV  - The Synthesis
-  Phase V   - Development & Refactor  (reads motion.md FIRST)
+  Phase V   - Development & Refactor  (reads mail/dot_to_sam/*.md FIRST)
   Phase VI  - Cognitive Evolution
   Phase VII - State Saving
 """
@@ -48,6 +48,7 @@ def _bag_data(key: str) -> Path:
     return resolve(BAG, key)
 
 # ── Logging ──────────────────────────────────────────────────────────────────
+BAG.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -77,21 +78,37 @@ _CALL_DELAY = 8   # seconds base delay
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _parse_gemini_json(text: str) -> dict | list | None:
-    """Robustly extract and parse a JSON block from Gemini's response."""
+    """Robustly extract and parse a JSON block from Gemini's response using balanced brackets."""
     if not text:
         return None
-    try:
-        # Surgical extraction of text between first [ and last ] or first { and last }
-        match = re.search(r'(\[.*\]|\{.*\})', text, re.DOTALL)
-        if match:
-            clean = match.group(1)
-            # Remove markdown code fences if they survived
-            clean = clean.replace("```json", "").replace("```", "").strip()
-            # Basic cleanup of illegal trailing commas in common list/dict formats
-            clean = re.sub(r',\s*([\]\}])', r'\1', clean)
-            return json.loads(clean)
-    except Exception:
-        pass
+    for start_char, end_char in [('[', ']'), ('{', '}')]:
+        start = text.find(start_char)
+        if start == -1:
+            continue
+        depth = 0
+        in_string = False
+        escape = False
+        for i, ch in enumerate(text[start:], start):
+            if escape:
+                escape = False
+                continue
+            if ch == '\\' and in_string:
+                escape = True
+                continue
+            if ch == '"' and not escape:
+                in_string = not in_string
+            if not in_string:
+                if ch == start_char:
+                    depth += 1
+                elif ch == end_char:
+                    depth -= 1
+                    if depth == 0:
+                        try:
+                            clean = text[start:i+1]
+                            clean = re.sub(r',\s*([\]\}])', r'\1', clean)
+                            return json.loads(clean)
+                        except Exception:
+                            break
     return None
 
 def load_goals() -> dict:
@@ -189,6 +206,7 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
             log.info("Semantic cache hit.")
             return cached
 
+    current_prompt = prompt
     for attempt in range(retries):
         try:
             # Respect dynamic rate limit
@@ -196,7 +214,7 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
 
             response = CLIENT.models.generate_content(
                 model=MODEL,
-                contents=prompt,
+                contents=current_prompt,
                 config={
                     'max_output_tokens': 8192,
                     'temperature': temperature,
@@ -207,15 +225,16 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
             if not response or not response.text:
                 if "SAFETY" in str(getattr(response, 'candidates', '')):
                     log.error("Content blocked by safety. Simplifying prompt...")
-                    prompt = "Describe this technically: " + prompt[:300]
+                    current_prompt = "Describe this technically: " + prompt[:300]
                     continue
                 raise ValueError("Empty or blocked response")
 
             res = response.text.strip()
-            # Anti-truncation check
-            if res.endswith("...") or (res.count("{") > res.count("}")) or (res.count("[") > res.count("]")):
-                 log.warning("Potential truncation detected. Retrying...")
-                 continue
+            # Anti-truncation check — only for JSON responses, not prose
+            expects_json = "Respond ONLY with a JSON" in prompt or "json array" in prompt.lower()
+            if expects_json and (res.endswith("...") or (res.count("{") > res.count("}")) or (res.count("[") > res.count("]"))):
+                log.warning("Potential truncation detected in JSON response. Retrying...")
+                continue
 
             if not bypass_cache:
                 try:
@@ -247,8 +266,25 @@ def _sleep():
     time.sleep(_CALL_DELAY)
 
 
+def _outline(src: str, label: str) -> str:
+    """Return a compact AST structural summary of a Python source string.
+    Lists every function/class with its line number — enough for Gemini to
+    understand Sam's architecture without burning thousands of tokens on code.
+    Falls back to the raw source only if parsing fails (e.g. syntax error)."""
+    import ast as _ast
+    try:
+        tree = _ast.parse(src)
+        lines = []
+        for node in _ast.walk(tree):
+            if isinstance(node, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef)):
+                lines.append(f"  L{node.lineno}: {type(node).__name__} {node.name}")
+        return f"{label} structure (line numbers for patch anchors):\n" + "\n".join(lines)
+    except Exception:
+        return src  # fallback to full source if parse fails
+
+
 def snapshot_sam() -> Path:
-    """Archive sam.py and all writable bag/*.py into rollback_registry."""
+    """Archive sam.py and all writable workshop_bench/**/*.py into rollback_registry."""
     ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
 
     # Ensure registry directory exists
@@ -340,6 +376,19 @@ def behaviour_check() -> bool:
         log.error(f"Behaviour check exception: {e}")
         return False
 
+
+
+def _cleanup_created_workshop_files():
+    """Delete any workshop_bench files that were created during the last patch attempt.
+    Called before _rollback() so the integrity gate sees a clean state."""
+    from bag.patch_ops import apply_patch_operations
+    created = getattr(apply_patch_operations, "_last_created", [])
+    for fpath in created:
+        p = Path(fpath)
+        if p.exists():
+            p.unlink()
+            log.warning(f"Cleanup: removed created file {p.relative_to(SAM_DIR)}")
+    apply_patch_operations._last_created = []
 
 def _rollback():
     """Restore sam.py and all bag/*.py files from the most recent healthy snapshot."""
@@ -457,45 +506,16 @@ def apply_self_modification(plan: str) -> bool:
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
-    prompt = (
-        f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
-        f"Extract any concrete file modifications as a JSON array of patch operations.\n"
-        f"Respond ONLY with a JSON array — no markdown, no explanation.\n\n"
-        f"Each element must have:\n"
-        f"  - 'filename'  : relative path from Sam's root. 'sam.py' or 'bag/**/*.py' "
-        f"or 'workshop_bench/**/*.py'. Use 'workshop_bench/' for NEW modules.\n"
-        f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
-        f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
-        f"  - For 'insert_after': 'anchor' (exact existing line), 'line_number' (integer), and 'new' (string to insert after it)\n"
-        f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
-        f"CRITICAL RULES:\n"
-        f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
-        f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
-        f"  - Keep each operation as small as possible — one function, one block, one line.\n"
-        f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
-        f"  - If no concrete changes are needed, return an empty array [].\n\n"
-        f"PYTHON CODE QUALITY RULES — every 'new' string must obey these:\n"
-        f"  - Must be syntactically valid Python. Mentally parse it before including it.\n"
-        f"  - Indentation must be correct: class methods indented 4 spaces inside their class,\n"
-        f"    nested blocks indented a further 4 spaces each level. Never mix tabs and spaces.\n"
-        f"  - A class body must never be left empty. If a class has no body yet, add 'pass'.\n"
-        f"  - Never place a method definition outside its class block.\n"
-        f"  - After a 'replace', the resulting file must remain structurally intact —\n"
-        f"    check that the 'old' context around the change is not load-bearing for other blocks."
-    )
+    from Gemini_note_pad.prompts import SURGICAL_PATCH_PROMPT
+    prompt = SURGICAL_PATCH_PROMPT.format(plan=plan)
 
     _sleep()
     raw = ask_gemini(prompt)
 
-    try:
-        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-        operations = json.loads(clean)
-    except Exception as e:
-        log.warning(f"Could not parse patch operations as JSON: {e}")
-        return False
-
+    operations = _parse_gemini_json(raw)
     if not operations:
-        log.info("No patch operations extracted — skipping self-modification.")
+        log.warning("No patch operations extracted.")
+        log.info(f"Gemini patch response (first 200 chars): {raw[:200]}")
         return False
 
     return apply_patch_operations(operations, SAM_DIR, log)
@@ -568,6 +588,7 @@ def phase_i_deep_learning(goals: dict) -> str:
 def phase_ii_spaced_repetition(goals: dict) -> str:
     """Scheduled Knowledge Review (Spaced Repetition)."""
     log.info("── Phase II: Spaced Repetition ──")
+    from Gemini_note_pad.prompts import PHASE_II_PROMPT
     klog_path = MEMORIES / "knowledge_log.json"
     if not klog_path.exists():
         log.info("No knowledge log found — skipping review.")
@@ -590,47 +611,50 @@ def phase_ii_spaced_repetition(goals: dict) -> str:
         topic = item.get("topic", "Unknown")
         summary = item.get("summary", "")
 
-        prompt = (
-            f"Topic: {topic}\nSummary: {summary}\n\n"
-            f"Based on this knowledge, has Sam's recent code or experiences used or reflected "
-            f"these concepts? Look at the codebase and last cycle.\n"
-            f"Respond with a brief assessment and JSON: {{\"retained\": true/false, \"assessment\": \"...\"}}"
-        )
+        # Use the evolvable PHASE_II_PROMPT
+        prompt = PHASE_II_PROMPT.format(last_skill=topic, summary=summary)
         _sleep()
-        raw = ask_gemini(prompt)
-        assessment = _parse_gemini_json(raw) or {"retained": True, "assessment": "Assumed retained (parse fail)"}
+        response = ask_gemini(prompt)
+        results.append(f"### Review: {topic}\n{response}")
 
-        if assessment.get("retained"):
-            item["review_due_cycle"] = cycle_num + 15
-            results.append(f"RETAINED: {topic}")
-        else:
-            item["review_due_cycle"] = cycle_num + 3
-            goals["next_objectives"].append(f"RELEARN: {topic}")
-            results.append(f"DRIFTED: {topic}")
+        # Schedule next review
+        item["review_due_cycle"] = cycle_num + 15
 
     klog_path.write_text(json.dumps(klog, indent=2))
-    log.info(f"Phase II complete: {', '.join(results)}")
-    return "\n".join(results)
+    log.info("Phase II complete.")
+    return "\n\n".join(results)
 
 
 def phase_iii_market_ingestion() -> str:
-    """Synthesise tech trends with URL verification."""
+    """Scan for technical trends and returned a structured summary."""
     log.info("── Phase III: Market Ingestion ──")
-
     from Gemini_note_pad.prompts import PHASE_III_PROMPT
+
     _sleep()
     raw = ask_gemini(PHASE_III_PROMPT)
 
-    # Simple URL verification would go here (using requests)
-    # For now, we trust the model but ensure it's parseable.
-    log.info("Phase III complete.")
+    # Try to extract JSON for better downstream reasoning, else return raw
+    data = _parse_gemini_json(raw)
+    if data and isinstance(data, list):
+        log.info(f"Market Ingestion: {len(data)} trends extracted as JSON.")
+        return raw
+
+    log.info("Market Ingestion complete (raw text).")
     return raw
 
 
 def phase_iv_synthesis(market_data: str, skill: str) -> str:
     """Generate IDEA_OF_THE_DAY.md from market signals + today's skill."""
     log.info("── Phase IV: The Synthesis ──")
-    who_i_am    = load_who_i_am()
+    # For ideation, the previous idea + world map is far more useful (and far
+    # lighter) than sam.py's source.  IDEA_OF_THE_DAY tells Gemini what was
+    # just built so it doesn't repeat itself; map.json shows how the world is
+    # laid out so ideas stay grounded in real structure.
+    idea_of_day_path = _bag_data("idea_of_day")
+    prev_idea = idea_of_day_path.read_text(encoding="utf-8") if idea_of_day_path.exists() else "(no previous idea)"
+    world_map_path = ROOT / "map.json"
+    world_map = world_map_path.read_text(encoding="utf-8") if world_map_path.exists() else "(map not yet generated)"
+    who_i_am = f"## Previous Idea\n{prev_idea}\n\n## World Map\n```json\n{world_map}\n```"
     personality = load_personality()
 
     # Summarise recent experiences so Sam doesn't repeat himself
@@ -678,7 +702,7 @@ def phase_iv_synthesis(market_data: str, skill: str) -> str:
         log_critique({"idea": candidate}, critique_raw)
         
         # Finalization
-        idea = ask_gemini(f"Refine this idea based on this critique:\nCritique: {critique_raw}\nIdea: {candidate}")
+        idea = ask_gemini(f"Refine this idea based on this critique:\nCritique: {critique_raw}\nIdea: {candidate}", temperature=0.4)
     else:
         idea = candidate
 
@@ -687,13 +711,9 @@ def phase_iv_synthesis(market_data: str, skill: str) -> str:
     return idea
 
 
-def phase_v_development(idea: str, goals: dict) -> str:
-    """Read motion.md FIRST, then produce a development plan."""
+def phase_v_development(idea: str, goals: dict, motion_content: str) -> str:
+    """Produce a development plan using motion_content read previously."""
     log.info("── Phase V: Development & Refactor ──")
-
-    # ⚠️  motion.md is read ONCE, here, and nowhere else.
-    motion_content = read_motion()
-    log.info("motion.md read.")
 
     # Extract Dot's actionable items as a hard constraint block
     _sleep()
@@ -735,8 +755,11 @@ def phase_v_development(idea: str, goals: dict) -> str:
     )
 
     personality = load_personality()
-    sam_src     = Path(__file__).read_text()
-    tests_src   = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
+
+    sam_src      = Path(__file__).read_text()
+    sam_outline  = _outline(sam_src, "sam.py")
+    tests_src    = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
+    tests_outline = _outline(tests_src, "bag/tests.py")
 
     bag_sources = ""
     for _f in iter_writable_bag_py(WORKSHOP):
@@ -751,16 +774,17 @@ def phase_v_development(idea: str, goals: dict) -> str:
         f"{dot_constraint_block}"
         f"{workshop_block}\n"
         f"Today's development idea:\n{idea}\n\n"
-        f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
-        f"Sam's current bag/tests.py (full source):\n```python\n{tests_src}\n```\n\n"
+        f"{sam_outline}\n\n"
+        f"NOTE: Full sam.py source is available to the patcher — you only need line numbers and function names to specify patch anchors.\n\n"
+        f"{tests_outline}\n\n"
         f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"
         f"Produce a surgical patch plan for Sam to apply. Rules:\n"
         f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
         f"  2. MANDATORY: For every new feature or module, YOU MUST ADD A TEST CASE to bag/tests.py.\n"
-        f"  3. Prefer NEW modules under bag/{target_folder or 'my toys'}/ "
+        f"  3. Prefer NEW modules under workshop_bench/ "
         f"over editing sam.py's core loop.\n"
         f"  4. For each change, specify EXACTLY:\n"
-        f"       - Which file (sam.py or bag/**/*.py, e.g. bag/My useful tools/foo.py)\n"
+        f"       - Which file (sam.py or workshop_bench/**/*.py, e.g. workshop_bench/my_folder/foo.py)\n"
         f"       - The operation: replace / insert_after / delete\n"
         f"       - The exact existing string to find ('old' or 'anchor') — copy it CHARACTER-FOR-CHARACTER from the source above, including all whitespace and indentation. Also state the line number it appears on.\n"
         f"       - Keep 'old' and 'anchor' strings as SHORT as possible (1-2 lines max) to reduce whitespace mismatch risk.\n"
@@ -786,7 +810,7 @@ def phase_v_development(idea: str, goals: dict) -> str:
     movable_files = list(iter_movable_bag_files(BAG))
 
     if movable_files:
-        motion_content = read_motion()
+        # motion_content already passed in as parameter — no second read
         file_listing = "\n".join(relative_posix(f, BAG) for f in movable_files)
         _sleep()
         audit_prompt = (
@@ -915,9 +939,9 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     ts        = datetime.datetime.utcnow().isoformat()
     cycle_num = goals.get("cycles", 0) + 1
+    motion_content = read_motion()
 
     # Ask Gemini to name a real, specific 1% metric for this cycle
-    motion_content = read_motion()
     _sleep()
     metric_prompt = (
         f"You are Sam. This cycle you:\n"
@@ -1044,7 +1068,7 @@ def maybe_write_email_request(idea: str, goals: dict):
         except Exception:
             pass
 
-    cycle_num = goals.get("cycles", 0) + 1
+    cycle_num = goals.get("cycles", 0)
 
     # Sam decides whether this cycle's idea is worth sharing externally
     _sleep()
@@ -1124,7 +1148,9 @@ def run_cycle():
     idea    = phase_iv_synthesis(market, skill)
 
     # Phase V reads motion.md at the top — then plans
-    plan = phase_v_development(idea, goals)
+    motion_content = read_motion()
+    log.info("mail read.")
+    plan = phase_v_development(idea, goals, motion_content)
 
     # Repair any broken bag/ modules Sam created before attempting self-modification
     repair_bag_modules()
@@ -1142,6 +1168,7 @@ def run_cycle():
             log.info("✅ Verdict: ACCEPTED. Changes merged into World state.")
         else:
             log.error("❌ Verdict: REJECTED. Changes caused instability.")
+            _cleanup_created_workshop_files()
             _rollback()
             _alert_dot(
                 "Self-modification failed integrity gates. Rolled back for safety.\n\n"
@@ -1170,12 +1197,15 @@ def run_cycle():
     # Phase VI — prompt evolution (propose patch, then apply before state save)
     evolution = phase_vi_cognitive_evolution(goals)
 
-    snapshot_sam()
+    if not modified or (self_check() and behaviour_check()):
+        snapshot_sam()
+
     prompt_modified = apply_prompt_patch()
     if prompt_modified:
         if self_check() and behaviour_check():
             log.info("Phase VI prompt patch verified.")
         else:
+            _cleanup_created_workshop_files()
             _rollback()
             _alert_dot(
                 "Phase VI prompt patch failed verification. Rolled back to previous snapshot.\n\n"

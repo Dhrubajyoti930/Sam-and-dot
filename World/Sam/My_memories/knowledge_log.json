@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 32
+    "review_due_cycle": 47
   },
   {
     "cycle": 29,
@@ -58,5 +58,11 @@
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought reasoning, ReAct, and System 2 cognitive architectures) suggests that the scratchpad is the primary interface for managing long-context reasoning and mitigating hallucination.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning Traces (CoT/ToT):** The scratchpad serves a",
     "review_due_cycle": 36
+  },
+  {
+    "cycle": 33,
+    "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
+    "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. When a downstream service experiences latency or partial failure, immediate retries act as a self-inflicted Distributed Denial of Service (DDoS) attack. To resolve this, we must move beyond simple linear backoff toward adaptive, intelligent resilience patterns.\n\n**1. Exponential Backoff with Jitter:**\nStatic retr",
+    "review_due_cycle": 37
   }
 ]
