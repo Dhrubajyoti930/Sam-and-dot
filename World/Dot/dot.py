@@ -342,12 +342,15 @@ def curate_experiences() -> str:
         "1. Identify which entries should be KEPT as-is (still relevant, formative).\n"
         "2. Identify which entries should be CONSOLIDATED (similar themes that can be merged).\n"
         "3. Identify which entries should be FORGOTTEN (outdated, low-value, redundant).\n"
-        "4. If consolidating: write the merged entry as a single JSON object with the same fields, "
-        "a 'consolidated_from' list of cycle numbers, and updated content.\n\n"
-        "Respond ONLY with a JSON object (no markdown):\n"
-        "  - 'keep': list of cycle numbers to keep unchanged\n"
-        "  - 'forget': list of cycle numbers to drop\n"
-        "  - 'consolidated': list of new merged entry objects (each must include 'consolidated_from')\n"
+        "4. If consolidating: write the merged entry as a single JSON object with the same fields,\n"
+        "   'consolidated_from' must be a list of INTEGER cycle numbers, and updated content.\n\n"
+        "Respond ONLY with a raw JSON object — no markdown fences, no preamble, no explanation.\n"
+        "The first character of your response must be '{'.\n\n"
+        "  - 'keep': list of integer cycle numbers to keep unchanged\n"
+        "  - 'forget': list of integer cycle numbers to drop\n"
+        "  - 'consolidated': list of new merged entry objects; each must have:\n"
+        "      'consolidated_from': list of INTEGER cycle numbers (e.g. [3, 4])\n"
+        "      plus all standard experience fields (cycle, timestamp, summary, etc.)\n"
         "  - 'summary': 2-3 sentence narrative for Sam explaining what you curated and why\n\n"
         "Be conservative — when in doubt, keep. Only forget truly redundant or outdated entries."
     )
@@ -363,7 +366,8 @@ def curate_experiences() -> str:
     summary      = curation.get("summary", "")
 
     # Priority 2.4: Protect unmentioned entries
-    mentioned = keep | forget | {c_id for entry in consolidated for c in entry.get("consolidated_from", []) if isinstance(c, dict) and (c_id := c.get("cycle"))}
+    # consolidated_from is a list of integer cycle numbers
+    mentioned = keep | forget | {c for entry in consolidated for c in entry.get("consolidated_from", []) if isinstance(c, int)}
     unmentioned = {e.get("cycle") for e in experiences if e.get("cycle")} - mentioned
     if unmentioned:
         log.warning(f"Curation: {len(unmentioned)} entries not mentioned by Gemini — keeping them: {sorted(unmentioned)}")
