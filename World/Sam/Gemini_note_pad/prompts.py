@@ -1,5 +1,9 @@
 """
-bag/prompts.py — Versioned prompt registry for Sam's operational phases.
+Gemini_note_pad/prompts.py — Versioned prompt registry for Sam's operational phases.
+
+NOTE: This file lives at World/Sam/Gemini_note_pad/prompts.py.
+Import it as: from Gemini_note_pad.prompts import ...
+NEVER import from bag.prompts — that path does not exist.
 
 Patches are applied surgically via bag/prompt_patch.json + apply_prompt_patch().
 PROMPT_VERSION increments when a patch is successfully applied.
@@ -14,6 +18,15 @@ PATCHABLE_PROMPTS = [
     "PHASE_IV_PROMPT",
     "PHASE_VI_PROMPT",
 ]
+
+
+REASONING_PREAMBLE = (
+    "[PLAN] State in 1-2 sentences what this patch does and why.\n"
+    "[CONSTRAINTS] List any imports, existing functions, or file paths this patch depends on. "
+    "Confirm each dependency exists in the source shown above.\n"
+    "[VERIFICATION] State how this patch can be verified correct "
+    "(e.g. which ruff rule it must pass, which test it must not break).\n"
+)
 
 PHASE_I_PROMPT = (
     "You are Sam, an autonomous developer agent. Your character:\n\n{personality}\n\n"
@@ -54,7 +67,7 @@ PHASE_VI_PROMPT = """You are Sam performing Cognitive Evolution — Phase VI.
 === LAST EVOLUTION SUGGESTION (cycle {last_evolution_cycle}) ===
 {last_evolution}
 
-=== CURRENT bag/prompts.py (PROMPT_VERSION={prompt_version}) ===
+=== CURRENT Gemini_note_pad/prompts.py (PROMPT_VERSION={prompt_version}) ===
 ```python
 {prompts_src}
 ```
@@ -62,7 +75,7 @@ PHASE_VI_PROMPT = """You are Sam performing Cognitive Evolution — Phase VI.
 === YOUR TASK ===
 Step 1 — ASSESS: Did the last evolution suggestion get applied?
 Check whether PROMPT_VERSION changed or whether the relevant prompt text
-in bag/prompts.py reflects the suggestion. Be honest.
+in Gemini_note_pad/prompts.py reflects the suggestion. Be honest.
 
 Step 2 — PROPOSE: Suggest ONE concrete improvement to a single prompt
 in PATCHABLE_PROMPTS: {patchable_prompts}.
@@ -74,7 +87,7 @@ Step 3 — OUTPUT: Respond with a JSON object with these fields:
   - 'target_prompt': name of the prompt constant to patch (must be in PATCHABLE_PROMPTS)
   - 'rationale': 2-3 sentences explaining the improvement
   - 'before_snippet': exact substring of the current prompt to replace
-    (copy CHARACTER-FOR-CHARACTER from prompts.py above; keep SHORT — 1 sentence max)
+    (copy CHARACTER-FOR-CHARACTER from Gemini_note_pad/prompts.py above; keep SHORT — 1 sentence max)
   - 'after_snippet': the improved replacement string
   - 'new_prompt_version': {next_prompt_version}
 
