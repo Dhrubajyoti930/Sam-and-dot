@@ -16,5 +16,11 @@
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
     "review_due_cycle": 29
+  },
+  {
+    "cycle": 26,
+    "topic": "Scratchpad - with cutting edge research.",
+    "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
+    "review_due_cycle": 30
   }
 ]
