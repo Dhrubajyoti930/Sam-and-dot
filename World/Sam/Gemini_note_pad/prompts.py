@@ -80,18 +80,43 @@ Respond ONLY with a JSON array — no markdown fences, no explanation, no preamb
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ALLOWED FILE SCOPE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-You may ONLY target these paths (relative to Sam's root):
+You may ONLY target these two path patterns (relative to Sam's root):
 
   ✅  sam.py
-  ✅  workshop_bench/<folder>/<file>.py   (any depth, .py only)
+  ✅  workshop_bench/<folder>/<file>.py
+        — <folder> must be a simple name like "core", "utils", "analytics"
+        — <folder> must NOT be "bag", "Sam", "Dot", or any name from the
+          infrastructure. When in doubt, use "workshop_bench/core/<file>.py".
 
-  ❌  bag/*.py          — read-only infrastructure, ALWAYS blocked
-  ❌  bag/governance.py — FORBIDDEN even if the plan mentions it
-  ❌  bag/tests.py      — FORBIDDEN, tests are managed separately
-  ❌  Any file not listed above
+FORBIDDEN — these will be silently blocked, wasting the entire cycle:
+  ❌  bag/<anything>                 — read-only infrastructure
+  ❌  bag/governance.py              — hardcoded block
+  ❌  bag/tests.py                   — hardcoded block
+  ❌  workshop_bench/bag/<anything>  — "bag" must never appear inside workshop_bench/
+  ❌  workshop_bench/Sam/<anything>  — agent names are not valid folder names
+  ❌  workshop_bench/Dot/<anything>  — agent names are not valid folder names
+  ❌  Anything not starting with "sam.py" or "workshop_bench/"
+
+PATH SELF-CHECK before adding any operation to the array:
+  Ask: "Does this filename start with 'sam.py' or 'workshop_bench/'?"
+  Ask: "Does the workshop_bench/ sub-folder contain 'bag', 'Sam', or 'Dot'?"
+  If either check fails → remove the operation entirely and return [].
 
 If the plan requests a change to bag/ logic, implement it as a NEW module
-under workshop_bench/ that wraps or extends that logic instead.
+under workshop_bench/core/ that wraps or extends that logic instead.
+
+✅ VALID filenames:
+  "sam.py"
+  "workshop_bench/core/deduper.py"
+  "workshop_bench/utils/rate_limiter.py"
+  "workshop_bench/analytics/trend_scorer.py"
+
+❌ INVALID filenames — all will be blocked:
+  "bag/governance.py"              ← bag/ is infrastructure
+  "bag/tests.py"                   ← bag/ is infrastructure
+  "workshop_bench/bag/critique.py" ← "bag" inside workshop_bench is FORBIDDEN
+  "workshop_bench/Sam/bag/critique.py" ← agent path nesting is FORBIDDEN
+  "workshop_bench/Dot/helpers.py"  ← agent names are not valid sub-folders
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 OPERATION SCHEMA
@@ -117,6 +142,9 @@ the operation to be silently skipped.
   3. If you are not 100% certain the string appears verbatim in the file,
      return [] instead of guessing — a skipped patch is better than a wrong one.
   4. NEVER paraphrase, reformat, or reconstruct from memory.
+  5. For sam.py specifically: only use anchors that appear VERBATIM in the
+     plan text above. If the plan does not quote a line from sam.py exactly,
+     do NOT attempt to patch sam.py — return [] instead.
 
 ✅ CORRECT EXAMPLES
 ─────────────────────────────────────────────────────
@@ -173,6 +201,26 @@ Example 3 — delete a dead stub in a workshop file:
   "operation": "replace",
   "old": "def phase_v(goals, motion_content, idea):\\n    log.info(\\"── Phase V ──\\")\\n    workshop_block = (\\"Sam's workshop bench (put NEW .py in target):\\\\n\\"",
   ...
+}}
+
+// ❌ workshop_bench/bag/ — "bag" inside workshop_bench is FORBIDDEN
+{{
+  "filename": "workshop_bench/bag/critique.py",
+  "operation": "insert_after", ...
+}}
+
+// ❌ agent name as folder — workshop_bench/Sam/ is FORBIDDEN
+{{
+  "filename": "workshop_bench/Sam/bag/critique.py",
+  "operation": "replace", ...
+}}
+
+// ❌ sam.py anchor invented, not quoted from the plan — will NOT match
+{{
+  "filename": "sam.py",
+  "operation": "insert_after",
+  "anchor": "def run_cycle():",   // this line was not shown in the plan above — WILL FAIL
+  "new": "from workshop_bench.core import my_module"
 }}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -255,6 +303,9 @@ file text — one wrong character causes the patch to be silently rejected.
   4. NEVER paraphrase, summarise, or reconstruct from memory.
      If you cannot find the exact bytes in the source above, set "target_prompt"
      to null rather than guessing.
+  5. VERIFY before outputting: find "before_snippet" inside the prompts_src block
+     above using Ctrl+F logic. If it does not appear character-for-character,
+     the patch will be rejected and the entire evolution cycle is wasted.
 
 ✅ VALID before_snippet EXAMPLES
 ─────────────────────────────────────────────────────
