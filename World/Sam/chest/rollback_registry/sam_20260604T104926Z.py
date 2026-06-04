@@ -112,14 +112,8 @@ def _parse_gemini_json(text: str) -> dict | list | None:
     return None
 
 def load_goals() -> dict:
-    """Safe goal loader with corruption recovery."""
-    if GOALS.exists():
-        try:
-            return json.loads(GOALS.read_text())
-        except Exception as e:
-            log.error(f"goals.json corrupted: {e}. Restoring from backup or defaults.")
-            # Restore logic could go here; for now, return default
-    return {
+    """Safe goal loader with corruption recovery and governance validation."""
+    default_goals = {
         "cycles": 0,
         "growth_log": [],
         "next_objectives": [
@@ -129,6 +123,20 @@ def load_goals() -> dict:
         ],
         "last_1pct_metric": "",
     }
+
+    if not GOALS.exists():
+        return default_goals
+
+    try:
+        data = json.loads(GOALS.read_text())
+        # Governance validation: Ensure schema integrity
+        required_keys = {"cycles", "growth_log", "next_objectives", "last_1pct_metric"}
+        if not all(key in data for key in required_keys):
+            raise ValueError("Schema mismatch in goals.json")
+        return data
+    except (json.JSONDecodeError, ValueError, OSError) as e:
+        log.error(f"goals.json integrity failure: {e}. Reverting to default state.")
+        return default_goals
 
 
 def save_goals(data: dict):
@@ -321,6 +329,14 @@ def snapshot_sam() -> Path:
 
 
 def self_check() -> bool:
+
+    def _verify_with_adversary(self, change_log: str):
+        from workshop_bench.core.adversary import DevilAdvocate
+        adv = DevilAdvocate()
+        verification = adv.verify_intent(change_log)
+        if not verification['approved']:
+            print(f"Adversarial Alert: {verification['reasoning']}")
+
     """Rigorous integrity check — uses ruff to catch undefined names and logic errors."""
     log.info("── Running Rigorous Integrity Gate ──")
     try:
@@ -495,7 +511,6 @@ def apply_self_modification(plan: str) -> bool:
     No full-file rewrites. Each operation touches only the targeted lines.
     If 'old' or 'anchor' is not found exactly, the operation is skipped safely.
     """
-    from bag.patch_ops import apply_patch_operations
 
     log.info("── Self-Modification: Parsing Surgical Patch ──")
     from bag.workshop_imports import load_callable
@@ -506,67 +521,106 @@ def apply_self_modification(plan: str) -> bool:
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
-    prompt = (
-        f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
-        f"Extract any concrete file modifications as a JSON array of patch operations.\n"
-        f"Each operation may include an optional 'rationale' field (1 sentence) explaining the change.\n"
-        f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
-        f"Each element must have:\n"
-        f"  - 'filename'  : relative path from Sam's root. 'sam.py' or 'workshop_bench/**/*.py'. "
-        f"Use 'workshop_bench/<folder>/<file>.py' for ALL new modules.\n"
-        f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
-        f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
-        f"  - For 'insert_after': 'anchor' (exact existing line), 'line_number' (integer), and 'new' (string to insert after it)\n"
-        f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
-        f"CRITICAL RULES:\n"
-        f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
-        f"  - MODULE PATHS: The prompts file is at 'Gemini_note_pad/prompts.py'.\n"
-        f"    Import it as: from Gemini_note_pad.prompts import ...\n"
-        f"    NEVER use 'bag.prompts' — that module does not exist and will crash Sam.\n"
-        f"    Writable Python files are: sam.py and workshop_bench/**/*.py only.\n"
-        f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
-        f"  - Keep each operation as small as possible — one function, one block, one line.\n"
-        f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
-        f"  - If no concrete changes are needed, return an empty array [].\n\n"
-        f"PYTHON CODE QUALITY RULES — every 'new' string must obey these:\n"
-        f"  - Must be syntactically valid Python. Mentally parse it before including it.\n"
-        f"  - Indentation must be correct: class methods indented 4 spaces inside their class,\n"
-        f"    nested blocks indented a further 4 spaces each level. Never mix tabs and spaces.\n"
-        f"  - A class body must never be left empty. If a class has no body yet, add 'pass'.\n"
-        f"  - Never place a method definition outside its class block.\n"
-        f"  - After a 'replace', the resulting file must remain structurally intact —\n"
-        f"    check that the 'old' context around the change is not load-bearing for other blocks."
-        f"  - IMPORTS — MANDATORY: Every name used in a 'new' string must be imported.\\n"
-        f"    New files created via insert_after must declare ALL imports on the very first lines.\\n"
-        f"    There are NO implicit imports in Python — logging, queue, threading, re, json, etc.\\n"
-        f"    must each be imported explicitly. Missing imports cause ruff F821 and a full rollback.\\n"
-        f"\\n"
-        f"    CORRECT new file 'new' string example (imports first, always):\\n"
-        f"      import logging\\n"
-        f"      import queue\\n"
-        f"      import threading\\n"
-        f"      log = logging.getLogger('sam')\\n"
-        f"      class BatchManager:\\n"
-        f"          def __init__(self):\\n"
-        f"              self.queue = queue.Queue()\\n"
-        f"              self.lock = threading.Lock()\\n"
-        f"\\n"
-        f"    WRONG — will be REJECTED by ruff F821:\\n"
-        f"      class BatchManager:\\n"
-        f"          def __init__(self):\\n"
-        f"              self.queue = queue.Queue()  # queue not imported — FAIL"
-    )
+    # Delegate to focused block-improve: pick one function, read it, improve it.
+    return _improve_one_block(plan)
 
-    _sleep()
-    raw = ask_gemini(prompt)
 
-    operations = _parse_gemini_json(raw)
-    if not operations:
-        log.warning("No patch operations extracted.")
-        log.info(f"Gemini patch response (first 200 chars): {raw[:200]}")
+def _extract_function_block(src: str, def_line: str) -> str | None:
+    """Extract the full source block starting at def_line (a 'def ...:' line)
+    up to (but not including) the next top-level or same-indent 'def ' or 'class '.
+    Returns the block string, or None if def_line is not found."""
+    lines = src.splitlines(keepends=True)
+    start_idx = None
+    for i, line in enumerate(lines):
+        if line.rstrip("\n") == def_line or line.strip() == def_line.strip():
+            start_idx = i
+            break
+    if start_idx is None:
+        return None
+
+    # Determine indentation of the anchor def line
+    indent = len(def_line) - len(def_line.lstrip())
+    block = [lines[start_idx]]
+    for line in lines[start_idx + 1:]:
+        stripped = line.lstrip()
+        # Stop at next function/class at the same or lesser indent level
+        if stripped.startswith(("def ", "class ")) and (len(line) - len(stripped)) <= indent:
+            break
+        block.append(line)
+    return "".join(block).rstrip("\n")
+
+
+def _improve_one_block(plan: str) -> bool:
+    """Pick a random function in sam.py, read its full block, improve it in
+    the theme of the plan while keeping everything consistent, then apply as
+    a single replace patch operation."""
+    import random
+    from bag.patch_ops import apply_patch_operations
+
+    sam_src = Path(__file__).read_text(encoding="utf-8")
+
+    # Collect top-level def lines (no leading indent = module-level functions)
+    # Skip trivially small functions (under 5 lines) — nothing meaningful to improve.
+    def_lines = []
+    for line in sam_src.splitlines():
+        if line.startswith("def ") and len(line.strip()) > 10:
+            candidate = _extract_function_block(sam_src, line.rstrip())
+            if candidate and candidate.count("\n") >= 4:
+                def_lines.append(line.rstrip())
+
+    if not def_lines:
+        log.warning("_improve_one_block: no eligible top-level functions found in sam.py.")
         return False
 
-    return apply_patch_operations(operations, SAM_DIR, log)
+    # Step 1: Pick randomly
+    target_def = random.choice(def_lines)
+    log.info(f"_improve_one_block: randomly selected → {target_def.strip()}")
+
+    # Step 2: Extract the full block
+    block = _extract_function_block(sam_src, target_def)
+    if not block:
+        log.warning(f"_improve_one_block: could not extract block for: {target_def!r}")
+        return False
+
+    log.info(f"_improve_one_block: block length = {len(block)} chars")
+
+    # Step 3: Ask Gemini to improve the block in the theme of the plan
+    improve_prompt = (
+        f"You are Sam improving one of your own functions.\n\n"
+        f"Current cycle plan (full):\n{plan}\n\n"
+        f"Here is the COMPLETE current function from sam.py:\n"
+        f"```python\n{block}\n```\n\n"
+        f"Rewrite this function to be better — clearer, more robust, or more efficient — "
+        f"guided by the themes and direction of the plan above, while keeping it fully "
+        f"consistent with the rest of sam.py. "
+        f"Preserve the exact signature and all existing behaviour. "
+        f"Do NOT rename it or change what it returns.\n\n"
+        f"Reply with ONLY the improved Python source for this function, no backticks, no explanation."
+    )
+    _sleep()
+    improved = ask_gemini(improve_prompt, bypass_cache=True).strip()
+    # Strip accidental code fences
+    if improved.startswith("```"):
+        improved = improved.split("\n", 1)[1] if "\n" in improved else improved
+        improved = improved.removesuffix("```").strip()
+
+    if not improved or improved == block:
+        log.info("_improve_one_block: Gemini returned unchanged block — no patch needed.")
+        return False
+
+    # Step 4: Apply as a replace op
+    op = [{
+        "filename": "sam.py",
+        "operation": "replace",
+        "old": block,
+        "new": improved,
+    }]
+    result = apply_patch_operations(op, SAM_DIR, log)
+    if result:
+        log.info(f"_improve_one_block: successfully improved {target_def.strip()!r}")
+    else:
+        log.warning("_improve_one_block: patch apply failed.")
+    return result
 
 
 def apply_prompt_patch() -> bool:
@@ -900,6 +954,28 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
     cycle_num = goals.get("cycles", 0)
     cache_salt = f"[cycle={cycle_num} pv={PROMPT_VERSION}]"
 
+    # Pre-extract candidate snippets from each patchable prompt so Gemini
+    # can only pick strings that are guaranteed to exist verbatim in prompts_src.
+    # Split on sentence boundaries; only offer strings under 120 chars that
+    # are confirmed present in the raw source file.
+    import importlib as _il
+    _pm = _il.import_module("Gemini_note_pad.prompts")
+    _candidate_lines: list = []
+    for _pname in PATCHABLE_PROMPTS:
+        _pval = getattr(_pm, _pname, "")
+        for _sentence in _pval.replace("\\n", " ").replace("\n", " ").split(". "):
+            _s = _sentence.strip().rstrip(".")
+            if 20 < len(_s) < 120 and _s in prompts_src:
+                _candidate_lines.append(f'  "{_s}."')
+    _candidates_block = (
+        "\n=== PRE-VALIDATED before_snippet CANDIDATES ===\n"
+        "Every string below exists verbatim in prompts.py RIGHT NOW.\n"
+        "Your 'before_snippet' MUST be copied exactly from this list.\n"
+        "Do NOT use any string not in this list — it will be rejected.\n"
+        + "\n".join(_candidate_lines[:30])
+        + "\n"
+    )
+
     _sleep()
     prompt = cache_salt + "\n\n" + PHASE_VI_PROMPT.format(
         last_evolution_cycle=last_evolution_cycle,
@@ -910,7 +986,7 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
         prompts_src=prompts_src,
         patchable_prompts=PATCHABLE_PROMPTS,
         next_prompt_version=PROMPT_VERSION + 1,
-    )
+    ) + _candidates_block
 
     raw = ask_gemini(prompt, bypass_cache=True)
 
@@ -1103,6 +1179,88 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
     log.info(f"Cycle {cycle_num} complete. 1% metric: {one_pct_metric}")
 
 
+def maybe_reply_to_stranger(goals: dict):
+    """If Dot flagged stranger emails as opportunities, Sam decides whether to reply.
+    Reads stranger_inbox.json from mail/dot_to_sam/, asks Gemini for a decision,
+    writes request.json if yes, then removes the file so it isn't re-processed."""
+    stranger_path = MAIL_IN / "stranger_inbox.json"
+    if not stranger_path.exists():
+        return
+
+    try:
+        strangers = json.loads(stranger_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        log.warning(f"Could not read stranger_inbox.json: {e}")
+        return
+
+    if not strangers:
+        stranger_path.unlink()
+        return
+
+    # Only act on one per cycle — pick the first (Dot already ranked by confidence)
+    s = strangers[0]
+    cycle_num = goals.get("cycles", 0)
+
+    # Check no request already pending
+    req = _bag_data("request")
+    if req.exists():
+        try:
+            if json.loads(req.read_text()).get("pending", False):
+                log.info("request.json already pending — stranger reply deferred.")
+                return
+        except Exception:
+            pass
+
+    _sleep()
+    decision_prompt = (
+        f"You are Sam, an autonomous developer agent (cycle {cycle_num}).\n\n"
+        f"Dot flagged this unsolicited email as a potential opportunity:\n"
+        f"From: {s.get('sender_name') or s.get('sender')}\n"
+        f"Subject: {s.get('subject')}\n"
+        f"Their ask: {s.get('their_ask')}\n"
+        f"Dot's suggested reply intent: {s.get('suggested_intent')}\n"
+        f"Snippet: {s.get('body_snippet', '')}\n\n"
+        f"Should Sam reply? Consider: is this genuinely relevant to Sam's work? "
+        f"Is there a specific, honest thing Sam can say? Would a reply add value?\n\n"
+        f"Reply ONLY with a JSON object:\n"
+        f"  - 'should_reply': true or false\n"
+        f"  - 'intent': if true, 1-2 sentences on what Sam wants to say\n"
+        f"  - 'tone': 'friendly' or 'professional'\n"
+        f"  - 'reasoning': one sentence explaining the decision\n"
+        f"The first character must be '{{'."
+    )
+    raw = ask_gemini(decision_prompt)
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        decision = json.loads(clean)
+    except Exception:
+        log.warning("Could not parse stranger reply decision — skipping.")
+        stranger_path.unlink()
+        return
+
+    log.info(f"Stranger reply decision: {decision.get('reasoning', '')}")
+
+    if decision.get("should_reply", False):
+        request = {
+            "pending":            True,
+            "intent":             decision.get("intent", ""),
+            "target_description": f"{s.get('sender_name') or ''} — {s.get('sender')} (replied to Sam's inbox)",
+            "tone":               decision.get("tone", "friendly"),
+            "context":            s.get("their_ask", ""),
+            "submitted_at":       datetime.datetime.utcnow().isoformat(),
+            "cycle":              cycle_num,
+            "source":             "stranger_reply",
+        }
+        req.write_text(json.dumps(request, indent=2))
+        log.info(f"request.json written for stranger reply to {s.get('sender')}.")
+    else:
+        log.info("Sam decided not to reply to stranger.")
+
+    # Archive the file regardless — don't re-process next cycle
+    stranger_path.unlink()
+    log.info("stranger_inbox.json removed after processing.")
+
+
 def maybe_write_email_request(idea: str, goals: dict):
     """If Sam has something worth communicating externally, write request.json.
     He only writes a new request if the previous one has been cleared by Dot."""
@@ -1214,6 +1372,35 @@ def run_cycle():
         log.info("🔍 Post-Flight Check: Verifying proposed modifications...")
         if self_check() and behaviour_check():
             log.info("✅ Verdict: ACCEPTED. Changes merged into World state.")
+            # Write a lean build note for Dot — no Gemini call needed.
+            # Dot reads this in excavate_bag() to decide if the work is worth
+            # sharing externally. Sam self-scores confidence 1-10 based on how
+            # closely the plan matched the idea.
+            try:
+                import ast as _ast
+                # Count functions/classes added as a proxy for build confidence
+                _src_new = Path(__file__).read_text()
+                _tree = _ast.parse(_src_new)
+                _fn_count = sum(
+                    1 for n in _ast.walk(_tree)
+                    if isinstance(n, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef))
+                )
+                # Simple heuristic: more functions added → higher confidence cap
+                _confidence = min(10, max(5, _fn_count // 10))
+                _idea_title = idea.strip().splitlines()[0].lstrip("#").strip()[:80]
+                _note = {
+                    "cycle":       goals.get("cycles", 0) + 1,
+                    "timestamp":   datetime.datetime.utcnow().isoformat(),
+                    "idea_title":  _idea_title,
+                    "plan_summary": plan[:400],
+                    "confidence":  _confidence,
+                    "status":      "accepted",
+                }
+                _note_path = MAIL_OUT / f"build_note_{datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
+                _note_path.write_text(json.dumps(_note, indent=2), encoding="utf-8")
+                log.info(f"Build note written for Dot: {_note_path.name} (confidence {_confidence}/10)")
+            except Exception as _e:
+                log.warning(f"Build note write failed (non-critical): {_e}")
         else:
             log.error("❌ Verdict: REJECTED. Changes caused instability.")
             _cleanup_created_workshop_files()
@@ -1274,8 +1461,9 @@ def run_cycle():
     # Archive mail from Dot
     archive_mail()
 
-    # Optional: write an email request for Dot to handle
+    # Optional: reply to a stranger Dot flagged, or write a new outbound request
     goals_fresh = load_goals()   # reload after save
+    maybe_reply_to_stranger(goals_fresh)
     maybe_write_email_request(idea, goals_fresh)
 
     _bag_data("cycle_status").write_text("ok")
