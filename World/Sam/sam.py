@@ -578,18 +578,18 @@ def _improve_one_block(plan: str) -> bool:
         f"Preserve the exact signature and all existing behaviour. "
         f"Do NOT rename it or change what it returns.\n\n"
         f"STRICT IMPORT RULES (violations cause rollback):\n"
-        f"  • THE FOLLOWING ARE ALREADY in code. NEVER import double times:
-              import os\n
-              import random\n
-              import re\n
-              import sys\n
-              import json\n
-              import time\n
-              import datetime\n
-              import logging\n
-              import logging.handlers\n
-              import subprocess\n
-              from pathlib import Path.\n"
+        f"  • THE FOLLOWING ARE ALREADY in top of code. NEVER import double times:\n"
+        f"      import os\n"
+        f"      import random\n"
+        f"     import re\n"
+        f"     import sys\n"
+        f"    import json\n"
+        f"     import time\n"
+        f"     import datetime\n"
+        f"     import logging\n"
+        f"     import logging.handlers\n"
+        f"     import subprocess\n"
+        f"     from pathlib import Path.\n"
         f"  • Every `import` or `from ... import` you write MUST be referenced at least once in the function body.\n"
         f"  • Do NOT add imports speculatively or for future use — only import what you actually call.\n"
         f"  • The code is linted with `ruff --select F`; F401 (unused import) will cause automatic rejection.\n\n"
