@@ -592,6 +592,37 @@ def dispatch_email() -> str:
 # TASK 4 — BAG EXCAVATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def _outline(src: str, label: str) -> str:
+    """Compact AST summary — lists every function/class with line number.
+    Keeps Dot's prompt lean regardless of how many files Sam accumulates.
+    Falls back to raw source only if parsing fails."""
+    import ast as _ast
+    try:
+        tree = _ast.parse(src)
+        lines = []
+        for node in _ast.walk(tree):
+            if isinstance(node, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef)):
+                lines.append(f"  L{node.lineno}: {type(node).__name__} {node.name}")
+        return f"{label}:\n" + "\n".join(lines)
+    except Exception:
+        return src[:2000]  # fallback: first 2KB only, not full source
+
+
+def _read_latest_build_note() -> dict | None:
+    """Read the most recent unprocessed build_note_*.json from mail/sam_to_dot/.
+    Returns the parsed note dict, or None if no new note exists."""
+    notes = sorted(MAIL_IN.glob("build_note_*.json"), reverse=True)
+    if not notes:
+        return None
+    try:
+        note = json.loads(notes[0].read_text(encoding="utf-8"))
+        log.info(f"Build note found: cycle {note.get('cycle')}, confidence {note.get('confidence')}/10")
+        return note
+    except Exception as e:
+        log.warning(f"Could not read build note {notes[0].name}: {e}")
+        return None
+
+
 def excavate_bag() -> str:
     log.info("── Task 4: Bag Review ──")
 
@@ -613,32 +644,98 @@ def excavate_bag() -> str:
         log.info("No Sam experiments to review in workshop_bench/.")
         return "(No Sam experiments found for review this cycle.)"
 
-    # Read all Sam-created files in full for Dot's big-context review
+    # Use _outline() instead of full source — keeps prompt lean regardless of
+    # how many files Sam accumulates. Full source would grow linearly and hit
+    # the same context-window problem as WHO_I_AM.md.
     file_blocks = []
     for fp in py_files:
         try:
             src = fp.read_text(errors="replace")
-            file_blocks.append(f"### {fp.name}\n```python\n{src}\n```")
+            file_blocks.append(_outline(src, fp.name))
         except Exception:
-            file_blocks.append(f"### {fp.name}\n(could not read)")
+            file_blocks.append(f"{fp.name}: (could not read)")
 
     joined = "\n\n".join(file_blocks)
+
+    # Check if Sam shipped something new this cycle — read build note if present.
+    # The sharing decision piggybacks onto this existing Gemini call: zero extra cost.
+    build_note = _read_latest_build_note()
+    sharing_block = ""
+    if build_note and build_note.get("confidence", 0) >= 7:
+        sharing_block = (
+            f"\n\n=== SAM'S LATEST BUILD (confidence {build_note['confidence']}/10) ===\n"
+            f"Idea: {build_note.get('idea_title', '')}\n"
+            f"Plan summary: {build_note.get('plan_summary', '')}\n\n"
+            "ADDITIONAL TASK — should this be shared externally?\n"
+            "At the END of your response, add a section:\n"
+            "## Share Decision\n"
+            "- 'should_share': true or false\n"
+            "- 'pitch': if true, 1-2 sentences on what makes this interesting to an outside developer\n"
+            "- 'target_description': if true, describe a specific indie developer or small-project\n"
+            "  maintainer who would genuinely care (name, project, reason). Avoid big names.\n"
+            "  Format this section as a JSON object on a single line after the markdown review.\n"
+            "Only say true if the build is genuinely novel and specific enough to spark a real conversation."
+        )
+
     _sleep()
     prompt = (
         "You are Dot, reviewing Sam's bag/ workshop directory.\n"
         "Sam creates files here as experiments and prototypes. Your job is to evaluate each one\n"
         "and give Sam a clear, honest recommendation: keep or delete — and why.\n\n"
+        "Files are shown as AST outlines (function/class names + line numbers) to keep the\n"
+        "prompt lean. That is enough to judge quality and purpose.\n\n"
         "For each file below:\n"
         "1. Describe what it does in one sentence.\n"
         "2. Assess whether it is useful, broken, redundant, or abandoned.\n"
         "3. Recommend: KEEP or DELETE, with a specific reason.\n\n"
         "Be direct. Sam will read your suggestions and make his own final decision.\n\n"
-        f"{joined}\n\n"
-        "Format your response as a markdown list, one entry per file:\n"
+        f"{joined}"
+        f"{sharing_block}\n\n"
+        "Format your review as a markdown list, one entry per file:\n"
         "- **filename.py** — [one-sentence description] → **KEEP** / **DELETE**: [reason]"
     )
     result = ask_gemini(prompt)
     log.info("Bag review complete.")
+
+    # If a build note was present, try to extract the Share Decision JSON and act on it.
+    # Dot writes request.json directly if confidence is high — no extra Gemini call.
+    if build_note and sharing_block:
+        try:
+            share_data = _parse_gemini_json(result.split("## Share Decision")[-1]) if "## Share Decision" in result else None
+            if share_data and share_data.get("should_share") and share_data.get("target_description"):
+                req_path = SAM_DIR / "My_memories" / "request.json"
+                # Only write if no request is already pending
+                existing_pending = False
+                if req_path.exists():
+                    try:
+                        existing_pending = json.loads(req_path.read_text()).get("pending", False)
+                    except Exception:
+                        pass
+                if not existing_pending:
+                    request = {
+                        "pending":            True,
+                        "intent":             share_data.get("pitch", ""),
+                        "target_description": share_data.get("target_description", ""),
+                        "tone":               "friendly",
+                        "context":            build_note.get("idea_title", ""),
+                        "submitted_at":       datetime.datetime.utcnow().isoformat(),
+                        "cycle":              build_note.get("cycle", "?"),
+                        "source":             "dot_excavation",
+                    }
+                    req_path.write_text(json.dumps(request, indent=2))
+                    log.info(f"Dot wrote request.json for sharing Sam's build: {share_data.get('target_description', '')[:80]}")
+                    result += f"\n\n> 📤 Dot queued an outreach request based on Sam's build (confidence {build_note['confidence']}/10)."
+                else:
+                    log.info("Sharing skipped — request.json already pending.")
+            # Archive the build note regardless so it isn't re-processed
+            for note_file in sorted(MAIL_IN.glob("build_note_*.json"), reverse=True):
+                _archived = DOT_DIR / "Memory" / note_file.name
+                note_file.rename(_archived)
+                log.info(f"Build note archived: {note_file.name}")
+                break  # only archive the one we processed
+        except Exception as e:
+            log.warning(f"Share decision extraction failed (non-critical): {e}")
+
     return result
 
 
