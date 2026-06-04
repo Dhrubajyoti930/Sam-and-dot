@@ -451,7 +451,6 @@ def _alert_dot(message: str):
 
 def repair_bag_modules() -> list:
     """Scan bag/ for syntax-broken files and send each to Gemini for self-repair."""
-    import time
     from bag.workshop_paths import iter_writable_bag_py, relative_posix
 
     log.info("── Bag Module Health Check ──")
@@ -708,6 +707,8 @@ def phase_ii_spaced_repetition(goals: dict) -> str:
 def phase_iii_market_ingestion() -> str:
     """Scan for technical trends and return a structured summary."""
     from Gemini_note_pad.prompts import PHASE_III_PROMPT
+    from workshop_bench.governance.core.schema import PatchOperation
+
     log.info("── Phase III: Market Ingestion ──")
 
     _sleep()
@@ -715,6 +716,13 @@ def phase_iii_market_ingestion() -> str:
 
     data = _parse_gemini_json(raw)
     if data and isinstance(data, list):
+        # Validate structure using the new governance schema
+        try:
+            [PatchOperation(**item) for item in data if isinstance(item, dict)]
+            log.info(f"Market Ingestion: {len(data)} trends validated against schema.")
+        except Exception as e:
+            log.warning(f"Market Ingestion: Schema validation skipped or failed: {e}")
+        
         log.info(f"Market Ingestion: {len(data)} trends extracted as JSON.")
         return raw
 
@@ -724,7 +732,6 @@ def phase_iii_market_ingestion() -> str:
 
 def phase_iv_synthesis(market_data: str, skill: str) -> str:
     """Generate IDEA_OF_THE_DAY.md from market signals + today's skill."""
-    import json
     from Gemini_note_pad.prompts import PHASE_IV_PROMPT
     from bag.critique import log_critique
     log.info("── Phase IV: The Synthesis ──")
@@ -907,7 +914,6 @@ def phase_v_development(idea: str, goals: dict, motion_content: str) -> str:
 def phase_v_build(idea: str, goals: dict):
     """For fun — Sam builds a small standalone game or tool inspired by the idea."""
     import re as _re
-    import json
     log.info("── Phase V-B: Fun Build ──")
 
     cycle_num   = goals.get("cycles", 0) + 1
