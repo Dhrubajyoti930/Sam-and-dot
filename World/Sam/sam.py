@@ -447,7 +447,9 @@ def repair_bag_modules() -> list:
     log.info("── Bag Module Health Check ──")
 
     from bag.workshop_paths import iter_writable_bag_py, relative_posix
+    from workshop_bench.governance.dependency_analyzer import DependencyImpactAnalyzer
 
+    analyzer = DependencyImpactAnalyzer({})
     broken = []
     for f in iter_writable_bag_py(BAG):
         try:
@@ -461,8 +463,14 @@ def repair_bag_modules() -> list:
         return []
 
     repaired = []
-    for (f, error) in broken:
+    for f, error in broken:
         original = f.read_text()
+        
+        warning = analyzer.analyze_impact(f.name, original)
+        if warning:
+            log.warning(f"Skipping repair for {f.name}: {warning}")
+            continue
+
         log.info(f"Sending {f.name} to Gemini for self-repair...")
         _sleep()
         prompt = (
@@ -474,8 +482,8 @@ def repair_bag_modules() -> list:
             f"Respond ONLY with the complete corrected Python file contents — no markdown fences,\n"
             f"no explanation, just the raw Python code starting from the first line."
         )
-        fixed = ask_gemini(prompt).strip()
-        fixed = fixed.removeprefix("```python").removeprefix("```").removesuffix("```").strip()
+        
+        fixed = ask_gemini(prompt).strip().removeprefix("```python").removeprefix("```").removesuffix("```").strip()
 
         try:
             compile(fixed, f.name, "exec")

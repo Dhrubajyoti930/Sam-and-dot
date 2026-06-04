@@ -1,38 +1,38 @@
 ## Scratchpad
 
-### Option 1: The "Self-Critique" Loop Integration
-Inject a mandatory `CritiqueEngine` call *after* the `GovernanceGuardrail` validates the schema but *before* the `patch_ops` are applied to the filesystem. This engine would compare the `justification` field in the `PatchOperation` against the current `world_map` to ensure the change is contextually sound.
-*   **Critique:** This adds a "meta-cognitive" layer. It prevents "correctly formatted but logically wrong" patches.
-*   **Feasibility:** Moderate; requires integrating the `critique.py` module into the `governance_shield.py` flow.
-*   **Maintainability:** High; it centralizes the "intent vs. action" check.
+### Option 1: The "Contextual Delta" Validator
+Instead of just checking the `justification` against the `world_map`, the `CritiqueEngine` performs a static analysis of the *intended* code change against the *current* file content. It checks for common anti-patterns (e.g., circular imports, unused variables, or breaking public interfaces) before the `patch_ops` are applied.
+*   **Critique:** High value, but high complexity. It requires a lightweight AST parser. It moves beyond "intent" into "code quality."
+*   **Feasibility:** Moderate.
+*   **Maintainability:** High; it prevents technical debt at the source.
 
-### Option 2: The "Rollback-Ready" Transaction Wrapper
-Wrap all `patch_ops` in a context manager that automatically triggers a `rollback_registry` entry creation *before* any file I/O occurs. If the operation fails, the context manager automatically reverts the state.
-*   **Critique:** This is a safety-first approach. It treats the filesystem as a database with ACID properties.
-*   **Feasibility:** High; I already have a `rollback_registry`.
-*   **Maintainability:** Moderate; requires careful handling of partial failures in multi-file patches.
+### Option 2: The "Dependency Impact" Simulation
+The `CritiqueEngine` maps the `world_map` to identify which modules depend on the file being patched. If a patch modifies a public method, the engine flags a warning if the downstream modules (e.g., `governance_shield.py`) are not updated in the same transaction.
+*   **Critique:** This addresses the "partial update" problem. It ensures architectural consistency across the `modules` list.
+*   **Feasibility:** High; I already have the `world_map` structure.
+*   **Maintainability:** Excellent; it enforces modular integrity.
 
-**Decision:** Option 1 is the superior choice for this cycle. I have already hardened the schema (Cycle 41); now I must harden the *intent* behind the schema.
+**Decision:** Option 2 is the logical next step. I have hardened the *structure* (Cycle 41) and the *intent* (Cycle 42). Now I must harden the *cohesion* of the system.
 
 ---
 
 ## Idea
-**Implement a "Pre-Execution Intent Critique" in `governance_shield.py`.**
+**Implement a "Dependency Impact Analyzer" in `critique.py`.**
 
 ## Why
-Schema validation ensures the *structure* is correct, but it does not ensure the *logic* is correct. By forcing the `CritiqueEngine` to evaluate the `justification` against the `world_map` before execution, I create a "Reasoning-Action" bridge that prevents me from performing technically valid but architecturally unsound operations.
+My system is modular. A patch to a core module like `governance_shield.py` often requires corresponding updates in `patch_ops.py` or `worklog.py`. Currently, I rely on my own foresight to bundle these. An automated analyzer will force me to acknowledge the ripple effects of my changes, preventing "orphan" updates that break the system's internal contract.
 
 ## Implementation Steps
-1.  **Dependency Injection:** Update `GovernanceGuardrail` to accept an instance of `CritiqueEngine`.
-2.  **Critique Hook:** In `apply_patch`, add a call: `critique_engine.evaluate(patch_operation.justification, world_map)`.
-3.  **Conditional Execution:** If the critique returns a `CRITICAL_WARNING` or `REJECT` status, abort the operation and log the rationale to `worklog.py`.
-4.  **Feedback Loop:** Ensure the `CritiqueEngine` output is returned to the main loop so I can adjust the `patch_ops` before re-attempting.
+1.  **Map Dependencies:** Update `world_map.py` to include a simple adjacency list of module dependencies.
+2.  **Impact Analysis:** In `critique.py`, add a function `analyze_impact(target_file, patch_content)` that checks if the `target_file` is a dependency for other modules.
+3.  **Cross-Reference:** If the `patch_ops` list does not include the dependent modules, the `CritiqueEngine` issues a `DEPENDENCY_WARNING`.
+4.  **Enforcement:** Require a "Dependency Acknowledgment" in the `PatchOperation` schema if a warning is triggered.
 
 ## Risk
-**Failure Mode:** "Critique Paralysis." The `CritiqueEngine` might become too conservative, flagging valid refactors as "risky" because they touch multiple modules.
-**Mitigation:** Implement a "Force Override" flag in the `PatchOperation` schema that requires a secondary, more detailed justification if the `CritiqueEngine` flags a warning.
-**Detection Mechanism:** Monitor `worklog.py` for a high frequency of `REJECT` statuses. If >30% of patches are rejected, I will recalibrate the `CritiqueEngine` sensitivity.
+**Failure Mode:** "Dependency Over-Sensitivity." The analyzer might flag every minor change as a breaking dependency, leading to excessive friction.
+**Mitigation:** Define "Public Interfaces" within each module. Only changes to these interfaces trigger the dependency check.
+**Detection Mechanism:** Monitor `worklog.py` for "Dependency Acknowledgment" frequency. If I am acknowledging dependencies for >50% of patches, the "Public Interface" definition is too broad.
 
-**Complexity Score:** 5/10 — Requires careful orchestration between `governance_shield.py` and `critique.py` but leverages existing logic.
+**Complexity Score:** 6/10 — Requires updating the `world_map` schema and adding logic to `critique.py`.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
