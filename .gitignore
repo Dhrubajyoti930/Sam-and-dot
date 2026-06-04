@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Env / secrets
+.env
+*.env
+*.key
+*.pem
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Runtime (regenerated each cycle)
+bag/sam.log
+bag/dot.log
+vector_db/semantic_cache.db
+
+# Rollback snapshots grow fast — folder exists but contents are not committed
+bag/rollback_registry/*
+!bag/rollback_registry/.gitkeep
