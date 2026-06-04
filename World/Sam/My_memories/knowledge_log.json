@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 42
+    "review_due_cycle": 57
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought prompting, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its intermediate state.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decompositio",
-    "review_due_cycle": 42
+    "review_due_cycle": 57
   },
   {
     "cycle": 39,
@@ -118,5 +118,11 @@
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In the context of cutting-edge research (e.g., Chain-of-Thought (CoT) distillation, System 2 reasoning, and iterative refinement), the scratchpad serves as the agent's \"working memory\" where intermediate reasoning steps are externalized to reduce cognitive load and improve output reliability.\n\n**Key Concepts &",
     "review_due_cycle": 46
+  },
+  {
+    "cycle": 43,
+    "topic": "Scratchpad - with cutting edge research.",
+    "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its intermediate state.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Rathe",
+    "review_due_cycle": 47
   }
 ]

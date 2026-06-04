@@ -92,29 +92,24 @@ def _parse_gemini_json(text: str):
         start = text.find(start_char)
         if start == -1:
             continue
-        depth = 0
-        in_string = False
-        escape = False
+        depth, in_string, escape = 0, False, False
         for i, ch in enumerate(text[start:], start):
             if escape:
                 escape = False
-                continue
-            if ch == '\\' and in_string:
+            elif ch == '\\' and in_string:
                 escape = True
-                continue
-            if ch == '"' and not escape:
+            elif ch == '"':
                 in_string = not in_string
-            if not in_string:
+            elif not in_string:
                 if ch == start_char:
                     depth += 1
                 elif ch == end_char:
                     depth -= 1
                     if depth == 0:
                         try:
-                            clean = text[start:i+1]
-                            clean = re.sub(r',\s*([\]\}])', r'\1', clean)
+                            clean = re.sub(r',\s*([\]\}])', r'\1', text[start:i+1])
                             return json.loads(clean)
-                        except Exception:
+                        except (json.JSONDecodeError, ValueError):
                             break
     return None
 
