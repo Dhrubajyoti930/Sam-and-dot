@@ -707,7 +707,7 @@ def phase_ii_spaced_repetition(goals: dict) -> str:
 def phase_iii_market_ingestion() -> str:
     """Scan for technical trends and return a structured summary."""
     from Gemini_note_pad.prompts import PHASE_III_PROMPT
-    from workshop_bench.governance.core.schema import PatchOperation
+    from bag import patch_ops
 
     log.info("── Phase III: Market Ingestion ──")
 
