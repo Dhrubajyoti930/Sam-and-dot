@@ -1372,6 +1372,35 @@ def run_cycle():
         log.info("🔍 Post-Flight Check: Verifying proposed modifications...")
         if self_check() and behaviour_check():
             log.info("✅ Verdict: ACCEPTED. Changes merged into World state.")
+            # Write a lean build note for Dot — no Gemini call needed.
+            # Dot reads this in excavate_bag() to decide if the work is worth
+            # sharing externally. Sam self-scores confidence 1-10 based on how
+            # closely the plan matched the idea.
+            try:
+                import ast as _ast
+                # Count functions/classes added as a proxy for build confidence
+                _src_new = Path(__file__).read_text()
+                _tree = _ast.parse(_src_new)
+                _fn_count = sum(
+                    1 for n in _ast.walk(_tree)
+                    if isinstance(n, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef))
+                )
+                # Simple heuristic: more functions added → higher confidence cap
+                _confidence = min(10, max(5, _fn_count // 10))
+                _idea_title = idea.strip().splitlines()[0].lstrip("#").strip()[:80]
+                _note = {
+                    "cycle":       goals.get("cycles", 0) + 1,
+                    "timestamp":   datetime.datetime.utcnow().isoformat(),
+                    "idea_title":  _idea_title,
+                    "plan_summary": plan[:400],
+                    "confidence":  _confidence,
+                    "status":      "accepted",
+                }
+                _note_path = MAIL_OUT / f"build_note_{datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
+                _note_path.write_text(json.dumps(_note, indent=2), encoding="utf-8")
+                log.info(f"Build note written for Dot: {_note_path.name} (confidence {_confidence}/10)")
+            except Exception as _e:
+                log.warning(f"Build note write failed (non-critical): {_e}")
         else:
             log.error("❌ Verdict: REJECTED. Changes caused instability.")
             _cleanup_created_workshop_files()
