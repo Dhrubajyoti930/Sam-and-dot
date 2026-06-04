@@ -2,8 +2,10 @@ name: Sam — Operational Cycles
 
 on:
   schedule:
-    - cron: "0 3  * * *"   # 03:00 UTC
-    - cron: "0 4 * * *"    # 04:00 UTC
+    - cron: "30 2 * * *"   # 08:00 IST — cycle 1
+    - cron: "30 7 * * *"   # 13:00 IST — cycle 2
+    - cron: "30 10 * * *"  # 16:00 IST — cycle 3
+    - cron: "30 16 * * *"  # 22:00 IST — cycle 4
   workflow_dispatch:         # Manual trigger for owner
 
 permissions:
