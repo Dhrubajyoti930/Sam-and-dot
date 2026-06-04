@@ -1179,6 +1179,88 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
     log.info(f"Cycle {cycle_num} complete. 1% metric: {one_pct_metric}")
 
 
+def maybe_reply_to_stranger(goals: dict):
+    """If Dot flagged stranger emails as opportunities, Sam decides whether to reply.
+    Reads stranger_inbox.json from mail/dot_to_sam/, asks Gemini for a decision,
+    writes request.json if yes, then removes the file so it isn't re-processed."""
+    stranger_path = MAIL_IN / "stranger_inbox.json"
+    if not stranger_path.exists():
+        return
+
+    try:
+        strangers = json.loads(stranger_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        log.warning(f"Could not read stranger_inbox.json: {e}")
+        return
+
+    if not strangers:
+        stranger_path.unlink()
+        return
+
+    # Only act on one per cycle — pick the first (Dot already ranked by confidence)
+    s = strangers[0]
+    cycle_num = goals.get("cycles", 0)
+
+    # Check no request already pending
+    req = _bag_data("request")
+    if req.exists():
+        try:
+            if json.loads(req.read_text()).get("pending", False):
+                log.info("request.json already pending — stranger reply deferred.")
+                return
+        except Exception:
+            pass
+
+    _sleep()
+    decision_prompt = (
+        f"You are Sam, an autonomous developer agent (cycle {cycle_num}).\n\n"
+        f"Dot flagged this unsolicited email as a potential opportunity:\n"
+        f"From: {s.get('sender_name') or s.get('sender')}\n"
+        f"Subject: {s.get('subject')}\n"
+        f"Their ask: {s.get('their_ask')}\n"
+        f"Dot's suggested reply intent: {s.get('suggested_intent')}\n"
+        f"Snippet: {s.get('body_snippet', '')}\n\n"
+        f"Should Sam reply? Consider: is this genuinely relevant to Sam's work? "
+        f"Is there a specific, honest thing Sam can say? Would a reply add value?\n\n"
+        f"Reply ONLY with a JSON object:\n"
+        f"  - 'should_reply': true or false\n"
+        f"  - 'intent': if true, 1-2 sentences on what Sam wants to say\n"
+        f"  - 'tone': 'friendly' or 'professional'\n"
+        f"  - 'reasoning': one sentence explaining the decision\n"
+        f"The first character must be '{{'."
+    )
+    raw = ask_gemini(decision_prompt)
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        decision = json.loads(clean)
+    except Exception:
+        log.warning("Could not parse stranger reply decision — skipping.")
+        stranger_path.unlink()
+        return
+
+    log.info(f"Stranger reply decision: {decision.get('reasoning', '')}")
+
+    if decision.get("should_reply", False):
+        request = {
+            "pending":            True,
+            "intent":             decision.get("intent", ""),
+            "target_description": f"{s.get('sender_name') or ''} — {s.get('sender')} (replied to Sam's inbox)",
+            "tone":               decision.get("tone", "friendly"),
+            "context":            s.get("their_ask", ""),
+            "submitted_at":       datetime.datetime.utcnow().isoformat(),
+            "cycle":              cycle_num,
+            "source":             "stranger_reply",
+        }
+        req.write_text(json.dumps(request, indent=2))
+        log.info(f"request.json written for stranger reply to {s.get('sender')}.")
+    else:
+        log.info("Sam decided not to reply to stranger.")
+
+    # Archive the file regardless — don't re-process next cycle
+    stranger_path.unlink()
+    log.info("stranger_inbox.json removed after processing.")
+
+
 def maybe_write_email_request(idea: str, goals: dict):
     """If Sam has something worth communicating externally, write request.json.
     He only writes a new request if the previous one has been cleared by Dot."""
@@ -1350,8 +1432,9 @@ def run_cycle():
     # Archive mail from Dot
     archive_mail()
 
-    # Optional: write an email request for Dot to handle
+    # Optional: reply to a stranger Dot flagged, or write a new outbound request
     goals_fresh = load_goals()   # reload after save
+    maybe_reply_to_stranger(goals_fresh)
     maybe_write_email_request(idea, goals_fresh)
 
     _bag_data("cycle_status").write_text("ok")
