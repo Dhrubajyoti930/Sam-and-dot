@@ -1,43 +1,46 @@
 ## Scratchpad
 
-### Option 1: The "RAV-Schema" Enforcement Layer
-Integrate Pydantic models directly into `patch_ops.py` to enforce the RAV structure at the function signature level.
-*   **Critique:** Highly robust. By using `pydantic.validate_call`, I can ensure that no patch operation executes unless the `Reasoning`, `Action`, and `Verification` fields are present and correctly typed.
+### Option 1: The "Governance Feedback Loop" (Automated Critique)
+Integrate a feedback loop where `governance_shield.py` automatically parses `ValidationError` logs from `patch_ops.py` and feeds them back into the next prompt cycle as "Correction Context."
+*   **Critique:** This closes the loop between failure and recovery. Instead of just failing, the system learns from the specific schema violation.
 *   **Feasibility:** High.
-*   **Maintainability:** Excellent; it moves validation logic out of custom `if/else` blocks and into the type system.
+*   **Maintainability:** Excellent; it reduces the need for manual intervention when the model makes a minor syntax error in the RAV block.
 
-### Option 2: The "Verification-Hook" Registry
-Create a registry in `governance.py` that maps `patch_op` types to specific automated test scripts.
-*   **Critique:** This is more "active" than Option 1, as it attempts to run code to verify the patch. However, it introduces significant complexity in managing a library of test scripts and ensuring they don't drift from the codebase.
+### Option 2: The "RAV-History Indexer" (Memory Retrieval)
+Implement a lightweight vector index (using `semantic_cache.py`) to store successful RAV blocks, allowing the model to retrieve "proven-to-work" reasoning patterns for similar tasks.
+*   **Critique:** This moves from static schema enforcement to dynamic reasoning optimization. It helps the model avoid repeating past logic errors.
 *   **Feasibility:** Moderate.
-*   **Maintainability:** Low; the overhead of maintaining a test registry for every possible patch type is high and prone to "test rot."
+*   **Maintainability:** Moderate; requires managing the index size and ensuring the cache doesn't become stale.
 
-**Decision:** Option 1 is the superior choice. It provides the necessary structural rigor without the maintenance burden of an external test registry.
+**Decision:** Option 1 is the immediate priority. Before I can optimize reasoning patterns (Option 2), I must ensure the feedback loop for structural compliance is airtight.
 
 ---
 
 ## Idea
-**Implement Pydantic-backed RAV Enforcement in `patch_ops.py`.**
+**Implement the "Governance Feedback Loop" in `governance_shield.py`.**
 
 ## Why
-My current RAV implementation is a convention, not a constraint. By formalizing the RAV block as a Pydantic model, I move from "hoping" the model follows the structure to "guaranteeing" it. This eliminates malformed patches at the boundary, ensuring that every change to the `world_map` is accompanied by a verifiable reasoning trail.
+Currently, a `ValidationError` in the RAV block stops the process. By capturing the error and injecting it into the next prompt as a "Correction Instruction," I transform a hard failure into a self-correcting iteration. This directly supports my goal of deterministic, high-leverage architectural output.
 
 ## Implementation Steps
-1.  **Define Model:** Create `RAVBlock(BaseModel)` in `Sam/bag/patch_ops.py` with fields: `reasoning: str`, `action: str`, `verification_plan: List[str]`.
-2.  **Decorate:** Apply `@validate_call` to the `apply_patch` function to enforce the presence of the `RAVBlock`.
-3.  **Update Governance:** Modify `governance_shield.py` to catch `ValidationError` exceptions from `patch_ops` and trigger an immediate `CritiqueEngine` review of the failed input.
-4.  **Log:** Ensure the `worklog.py` captures the `RAVBlock` metadata upon successful validation.
+1.  **Capture:** Modify `Sam/bag/patch_ops.py` to catch `pydantic.ValidationError` and pass the error details to `governance_shield.py`.
+2.  **Inject:** Update the `GovernanceShield` to store the last 3 validation errors in a `correction_buffer`.
+3.  **Prompting:** Modify the system prompt in `Sam/Gemini_note_pad/prompts.py` to include the `correction_buffer` if it is not empty, explicitly instructing the model to resolve the cited schema violations.
+4.  **Clear:** Ensure the `correction_buffer` is cleared only after a successful `RAVBlock` validation.
 
 ## Risk
-**Failure Mode:** "Verification Rigidity." The Pydantic schema might be too strict, causing valid, complex patches to be rejected because they don't fit the expected string format.
-**Mitigation:** Implement a "Schema-Relaxation" flag for non-critical documentation patches, or allow `verification_plan` to accept a flexible `Dict` for complex metadata.
+**Failure Mode:** "Feedback Loop Poisoning." If the model misinterprets the error message, it might repeatedly generate the same invalid schema, leading to a "hallucinated correction" cycle.
+**Mitigation:** Implement a `max_retries` counter. If the error persists for 3 attempts, the system must trigger a `SystemReset` and clear the `correction_buffer` to prevent infinite loops.
 
-**Complexity Score:** 3/10
+## Recovery Procedure
+If the `correction_buffer` triggers a `SystemReset`, the `governance_shield.py` will log the incident to `worklog.py`, roll back the current `patch_op` to the last known good state in `rollback_registry`, and force the model to re-initialize its context from the `world_map`.
+
+**Complexity Score:** 4/10
 **Confidence Score:** 9/10
 
 ---
 
 ### Pre-Mortem
-*   **Failure:** The `GovernanceGuardrail` might enter an infinite loop if a rejected patch triggers a retry that is also malformed.
-*   **Detection:** Monitor `worklog.py` for repeated `ValidationError` entries within a single cycle.
-*   **Mitigation:** Implement a "Retry-Limit" in `governance_shield.py`. If a patch fails validation twice, the system must force a state-reset and request a human-readable explanation from the model before allowing further attempts.
+*   **Failure:** The model might attempt to "fix" the schema by stripping out necessary reasoning, resulting in a valid but empty `RAVBlock`.
+*   **Detection:** Add a `min_length` constraint to the `reasoning` field in the Pydantic model.
+*   **Mitigation:** If the `reasoning` field is too short, the `GovernanceShield` will reject the patch as "insufficiently reasoned," forcing the model to provide more depth.

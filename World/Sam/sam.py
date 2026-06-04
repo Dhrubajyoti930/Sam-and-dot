@@ -1392,28 +1392,21 @@ def run_cycle():
             return
 
     goals = load_goals()
-
-    # Phases I–IV
-    skill  = phase_i_deep_learning(goals)
-    _      = phase_ii_spaced_repetition(goals)
+    skill = phase_i_deep_learning(goals)
+    _ = phase_ii_spaced_repetition(goals)
     market = phase_iii_market_ingestion()
-    idea   = phase_iv_synthesis(market, skill)
+    idea = phase_iv_synthesis(market, skill)
 
-    # Phase V: plan + audit
     motion_content = read_motion()
     log.info("mail read.")
     plan = phase_v_development(idea, goals, motion_content)
 
-    # Phase V-B: fun build — joy-driven, no self-modification risk
     try:
         phase_v_build(idea, goals)
     except Exception as e:
         log.warning(f"Fun build skipped: {e}")
 
-    # Repair any broken bag/ modules before self-modification
     repair_bag_modules()
-
-    # Self-modification — snapshot first, apply, then verify
     snapshot_sam()
     log.info("🧪 Self-Modification: Entering Trial Phase...")
 
@@ -1423,24 +1416,20 @@ def run_cycle():
         log.info("🔍 Post-Flight Check: Verifying proposed modifications...")
         if self_check() and behaviour_check():
             log.info("✅ Verdict: ACCEPTED. Changes merged into World state.")
-            # Write a lean build note for Dot — no Gemini call needed.
             try:
                 import ast as _ast
-                _src_new  = Path(__file__).read_text()
-                _tree     = _ast.parse(_src_new)
-                _fn_count = sum(
-                    1 for n in _ast.walk(_tree)
-                    if isinstance(n, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef))
-                )
+                _src_new = Path(__file__).read_text()
+                _tree = _ast.parse(_src_new)
+                _fn_count = sum(1 for n in _ast.walk(_tree) if isinstance(n, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef)))
                 _confidence = min(10, max(5, _fn_count // 10))
                 _idea_title = idea.strip().splitlines()[0].lstrip("#").strip()[:80]
                 _note = {
-                    "cycle":        goals.get("cycles", 0) + 1,
-                    "timestamp":    datetime.datetime.utcnow().isoformat(),
-                    "idea_title":   _idea_title,
+                    "cycle": goals.get("cycles", 0) + 1,
+                    "timestamp": datetime.datetime.utcnow().isoformat(),
+                    "idea_title": _idea_title,
                     "plan_summary": plan[:400],
-                    "confidence":   _confidence,
-                    "status":       "accepted",
+                    "confidence": _confidence,
+                    "status": "accepted",
                 }
                 _note_path = MAIL_OUT / f"build_note_{datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
                 _note_path.write_text(json.dumps(_note, indent=2), encoding="utf-8")
@@ -1451,51 +1440,36 @@ def run_cycle():
             log.error("❌ Verdict: REJECTED. Changes caused instability.")
             _cleanup_created_workshop_files()
             _rollback()
-            _alert_dot(
-                "Self-modification failed integrity gates. Rolled back for safety.\n\n"
-                f"Plan that caused failure:\n```\n{plan[:1000]}\n```"
-            )
+            _alert_dot(f"Self-modification failed integrity gates. Rolled back.\n\nPlan:\n```\n{plan[:1000]}\n```")
             modified = False
-    else:
-        log.info("No self-modification this cycle — running final safety check.")
-        if not (self_check() and behaviour_check()):
-            log.critical("Final safety check FAILED on an unmodified cycle.")
+    elif not (self_check() and behaviour_check()):
+        log.critical("Final safety check FAILED on an unmodified cycle.")
 
-    # Close worklog entry
     try:
         from bag.worklog import close_entry, _make_id
-        cycle_num  = goals.get("cycles", 0) + 1
+        cycle_num = goals.get("cycles", 0) + 1
         idea_title = idea.strip().splitlines()[0].lstrip("#").strip()[:60]
-        entry_id   = _make_id(cycle_num, idea_title)
-        outcome    = "applied" if modified else "deferred"
-        close_entry(entry_id, cycle_num, outcome=outcome,
-                    note=f"Cycle complete. Modification applied: {modified}.")
+        entry_id = _make_id(cycle_num, idea_title)
+        outcome = "applied" if modified else "deferred"
+        close_entry(entry_id, cycle_num, outcome=outcome, note=f"Cycle complete. Modification applied: {modified}.")
         log.info(f"Worklog entry closed: {entry_id} ({outcome})")
     except Exception as e:
         log.warning(f"Worklog close failed: {e}")
 
-    # Phase VI — prompt evolution
     evolution = phase_vi_cognitive_evolution(goals)
-
     if not modified or (self_check() and behaviour_check()):
         snapshot_sam()
 
-    prompt_modified = apply_prompt_patch()
-    if prompt_modified:
+    if apply_prompt_patch():
         if self_check() and behaviour_check():
             log.info("Phase VI prompt patch verified.")
         else:
             _cleanup_created_workshop_files()
             _rollback()
-            _alert_dot(
-                "Phase VI prompt patch failed verification. Rolled back to previous snapshot.\n\n"
-                f"Evolution summary:\n```\n{evolution[:600]}\n```"
-            )
+            _alert_dot(f"Phase VI prompt patch failed verification. Rolled back.\n\nEvolution:\n```\n{evolution[:600]}\n```")
 
-    # Phase VII — state persistence
     phase_vii_state_saving(goals, skill, idea, plan, evolution)
 
-    # Defragmentation: Update World Map
     try:
         from bag.world_map import update_map
         update_map(ROOT)
@@ -1503,10 +1477,7 @@ def run_cycle():
     except Exception as e:
         log.warning(f"Map update failed: {e}")
 
-    # Archive mail from Dot
     archive_mail()
-
-    # Reply to strangers or write new outbound request
     goals_fresh = load_goals()
     maybe_reply_to_stranger(goals_fresh)
     maybe_write_email_request(idea, goals_fresh)
@@ -1519,7 +1490,3 @@ def run_cycle():
         run_ragas_lite()
     except Exception as e:
         log.warning(f"Evaluator failed: {e}")
-
-
-if __name__ == "__main__":
-    run_cycle()
