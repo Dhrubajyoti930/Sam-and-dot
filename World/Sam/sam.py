@@ -957,7 +957,7 @@ def phase_v_build(idea: str, goals: dict):
         f"  - 'filename': a short snake_case name for the .py file (no path)\n"
         f"  - 'description': one sentence — what it is and why it's fun\n"
         f"  - 'code': the complete Python source as a string\n"
-        r"The first character must be '{'."
+        f"The first character must be a brace."
     )
     raw = ask_gemini(prompt, bypass_cache=True, temperature=0.7)
     built = _parse_gemini_json(raw)
