@@ -340,6 +340,12 @@ def self_check() -> bool:
     """Rigorous integrity check — uses ruff to catch undefined names and logic errors."""
     log.info("── Running Rigorous Integrity Gate ──")
     try:
+        # Pre-pass: auto-fix F401 (unused imports) — safe, reversible, avoids needless rollbacks
+        subprocess.run(
+            ["ruff", "check", str(ROOT), "--select", "F401", "--fix",
+             "--exclude", "rollback_registry"],
+            capture_output=True, text=True, timeout=20,
+        )
         # Check all Python files in Sam's and Dot's directory
         # We only check for critical errors (F-prefix in ruff)
         result = subprocess.run(
@@ -595,6 +601,10 @@ def _improve_one_block(plan: str) -> bool:
         f"consistent with the rest of sam.py. "
         f"Preserve the exact signature and all existing behaviour. "
         f"Do NOT rename it or change what it returns.\n\n"
+        f"STRICT IMPORT RULES (violations cause rollback):\n"
+        f"  • Every `import` or `from ... import` you write MUST be referenced at least once in the function body.\n"
+        f"  • Do NOT add imports speculatively or for future use — only import what you actually call.\n"
+        f"  • The code is linted with `ruff --select F`; F401 (unused import) will cause automatic rejection.\n\n"
         f"Reply with ONLY the improved Python source for this function, no backticks, no explanation."
     )
     _sleep()
