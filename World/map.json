@@ -38,19 +38,20 @@
     "Sam/chest/rollback_registry/sam_20260603T113753Z.py",
     "Sam/chest/rollback_registry/sam_20260603T112403Z.py",
     "Sam/chest/rollback_registry/sam_20260603T122732Z.py",
+    "Sam/chest/rollback_registry/sam_20260604T131852Z.py",
     "Sam/chest/rollback_registry/sam_20260603T115815Z.py",
     "Sam/chest/rollback_registry/sam_20260603T113158Z.py",
-    "Sam/chest/rollback_registry/sam_20260603T111205Z.py",
     "Sam/chest/rollback_registry/sam_20260603T113123Z.py",
     "Sam/chest/rollback_registry/sam_20260603T114536Z.py",
     "Sam/chest/rollback_registry/sam_20260604T104852Z.py",
+    "Sam/chest/rollback_registry/sam_20260604T131755Z.py",
     "Sam/chest/rollback_registry/sam_20260603T115139Z.py",
-    "Sam/chest/rollback_registry/sam_20260603T111240Z.py",
     "Sam/chest/rollback_registry/sam_20260603T122955Z.py",
     "Sam/chest/rollback_registry/sam_20260603T113827Z.py",
     "Sam/Others/__init__.py",
-    "Sam/workshop_bench/governance/core/canonicalizer.py",
-    "Sam/workshop_bench/governance/core/deduper.py"
+    "Sam/workshop_bench/toys/quantum_dice.py",
+    "Sam/workshop_bench/governance/logic/canonicalizer.py",
+    "Sam/workshop_bench/governance/logic/deduper.py"
   ],
   "tests": [
     "Dot/tests/tests.py"

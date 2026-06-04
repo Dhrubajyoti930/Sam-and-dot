@@ -9,7 +9,7 @@ Patches are applied surgically via bag/prompt_patch.json + apply_prompt_patch().
 PROMPT_VERSION increments when a patch is successfully applied.
 """
 
-PROMPT_VERSION = 11
+PROMPT_VERSION = 12
 
 PATCHABLE_PROMPTS = [
     "PHASE_I_PROMPT",
@@ -33,7 +33,7 @@ PHASE_I_PROMPT = (
     "Your learning focus for this cycle is: '{focus}'.\n"
     "Produce a concise but dense technical summary (300-400 words) of the most important "
     "concepts, patterns, or techniques a developer should know about this topic today. "
-    "Conclude with three concrete action items Sam should implement this cycle, formatted as a JSON list of objects with 'task' and 'priority' keys. Finally, provide a brief 'Self-Check' confirming the summary is dense, technical, and actionable."
+    "Conclude with three concrete action items Sam should implement this cycle, formatted as a JSON list of objects with 'task' and 'priority' keys. Finally, provide a 'Self-Correction' section: identify one potential gap in your summary and explain how a developer should bridge it to achieve mastery."
 )
 
 PHASE_II_PROMPT = (
