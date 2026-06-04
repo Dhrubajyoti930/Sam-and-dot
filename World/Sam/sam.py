@@ -160,16 +160,16 @@ def load_personality() -> str:
 
 def read_motion() -> str:
     """Sam reads all letters in mail/dot_to_sam/ at the top of Phase V."""
-    letters = sorted(MAIL_IN.glob("*.md"))
+    from pathlib import Path
+    
+    letters = sorted(Path("mail/dot_to_sam/").glob("*.md"))
     if not letters:
         return "(No mail from Dot — your inbox is empty.)"
 
-    content = ""
-    for letter in letters:
-        content += f"--- Letter: {letter.name} ---\n"
-        content += letter.read_text(encoding="utf-8")
-        content += "\n\n"
-    return content
+    return "\n\n".join(
+        f"--- Letter: {letter.name} ---\n{letter.read_text(encoding='utf-8')}"
+        for letter in letters
+    )
 
 
 def archive_mail():
