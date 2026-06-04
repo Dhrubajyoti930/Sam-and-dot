@@ -12,7 +12,7 @@ Operational Lifecycle:
   Phase VI  - Cognitive Evolution
   Phase VII - State Saving
 """
-
+import random
 import os
 import re
 import sys
@@ -541,7 +541,7 @@ def _improve_one_block(plan: str) -> bool:
     """Pick a random function in sam.py, read its full block, improve it in
     the theme of the plan while keeping everything consistent, then apply as
     a single replace patch operation."""
-    import random
+    
     from bag.patch_ops import apply_patch_operations
 
     sam_src = Path(__file__).read_text(encoding="utf-8")
@@ -578,6 +578,18 @@ def _improve_one_block(plan: str) -> bool:
         f"Preserve the exact signature and all existing behaviour. "
         f"Do NOT rename it or change what it returns.\n\n"
         f"STRICT IMPORT RULES (violations cause rollback):\n"
+        f"  • THE FOLLOWING ARE ALREADY in code. NEVER import double times:
+              import os\n
+              import random\n
+              import re\n
+              import sys\n
+              import json\n
+              import time\n
+              import datetime\n
+              import logging\n
+              import logging.handlers\n
+              import subprocess\n
+              from pathlib import Path.\n"
         f"  • Every `import` or `from ... import` you write MUST be referenced at least once in the function body.\n"
         f"  • Do NOT add imports speculatively or for future use — only import what you actually call.\n"
         f"  • The code is linted with `ruff --select F`; F401 (unused import) will cause automatic rejection.\n\n"
