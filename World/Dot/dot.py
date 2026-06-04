@@ -437,8 +437,8 @@ def dispatch_email() -> str:
     # Call 1 — web search to find the real email address
     _sleep()
     search_prompt = (
-        f"Search the web for the personal email address of: {target_description}\n"
-        f"Intent: {intent}\n\n"
+        f"Search the web for the personal email address of: {target_description[:150]}\n"
+        f"Intent: {intent[:150]}\n\n"
         f"Look at their personal website, GitHub profile README, PyPI/npm maintainer page, "
         f"or Twitter/X bio. Report EXACTLY what you find — quote the source URL and the "
         f"email address as it appears. If you cannot find a personal email on an official "
