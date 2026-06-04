@@ -349,3 +349,26 @@
 2026-06-03 14:13:36,347 [DOT][INFO] Today is Wednesday — inbox check reserved for Sunday.
 2026-06-03 14:13:36,349 [DOT][INFO] Worklog: no stale entries.
 2026-06-03 14:13:37,723 [DOT][INFO] Dot's daily run complete.
+2026-06-04 06:14:23,344 [DOT][INFO] ═══════════════════════════════════
+2026-06-04 06:14:23,344 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-04 06:14:23,345 [DOT][INFO] ═══════════════════════════════════
+2026-06-04 06:14:23,345 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-04 06:14:31,352 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-04 06:14:35,916 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-04 06:14:35,918 [DOT][INFO] Wisdom check complete.
+2026-06-04 06:14:43,918 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-04 06:14:59,922 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-04 06:15:01,721 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-04 06:15:01,724 [DOT][WARNING] Could not parse curation result.
+2026-06-04 06:15:01,725 [DOT][INFO] Letter written to Sam: Letter_20260604T061501Z.md
+2026-06-04 06:15:09,725 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-04 06:15:09,725 [DOT][INFO] No pending email request.
+2026-06-04 06:15:09,726 [DOT][INFO] Appended to Letter_20260604T061501Z.md: Email Dispatch
+2026-06-04 06:15:17,726 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-04 06:15:33,728 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-04 06:15:34,872 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-04 06:15:34,877 [DOT][INFO] Bag review complete.
+2026-06-04 06:15:34,877 [DOT][INFO] Appended to Letter_20260604T061501Z.md: Bag Excavation Findings
+2026-06-04 06:15:34,877 [DOT][INFO] Today is Thursday — inbox check reserved for Sunday.
+2026-06-04 06:15:34,879 [DOT][INFO] Worklog: no stale entries.
+2026-06-04 06:15:37,487 [DOT][INFO] Dot's daily run complete.
