@@ -981,6 +981,13 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
     """Assess last evolution, propose ONE surgical prompt patch via prompt_patch.json."""
     import json
     import importlib as _il
+    from workshop_bench.governance.core.audit import audit_decorator
+
+    @audit_decorator
+    def _write_patch_plan(plan: dict, intent: str) -> None:
+        pp = _bag_data("prompt_patch")
+        pp.write_text(json.dumps(plan, indent=2))
+
     log.info("── Phase VI: Cognitive Evolution ──")
 
     growth_log = goals.get("growth_log", [])
@@ -990,7 +997,7 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
     try:
         from Gemini_note_pad.prompts import PATCHABLE_PROMPTS, PHASE_VI_PROMPT, PROMPT_VERSION
         prompts_src = (SAM_DIR / "Gemini_note_pad" / "prompts.py").read_text()
-    except Exception as e:
+    except (ImportError, FileNotFoundError, OSError) as e:
         log.warning(f"Phase VI: Could not load Gemini_note_pad/prompts.py: {e}")
         return f"[Phase VI skipped — Gemini_note_pad/prompts.py unavailable: {e}]"
 
@@ -998,28 +1005,24 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
     cache_salt = f"[cycle={cycle_num} pv={PROMPT_VERSION}]"
 
     _pm = _il.import_module("Gemini_note_pad.prompts")
-    _candidate_lines: list = []
+    _candidate_lines = []
     for _pname in PATCHABLE_PROMPTS:
         _pval = getattr(_pm, _pname, "")
         for _sentence in _pval.replace("\\n", " ").replace("\n", " ").split(". "):
             _s = _sentence.strip().rstrip(".")
             if 20 < len(_s) < 120 and _s in prompts_src:
                 _candidate_lines.append(f'  "{_s}."')
+    
     _candidates_block = (
         "\n=== PRE-VALIDATED before_snippet CANDIDATES ===\n"
         "Every string below exists verbatim in prompts.py RIGHT NOW.\n"
-        "Your 'before_snippet' MUST be copied exactly from this list.\n"
-        "Do NOT use any string not in this list — it will be rejected.\n"
-        + "\n".join(_candidate_lines[:30])
-        + "\n"
+        + "\n".join(_candidate_lines[:30]) + "\n"
     )
 
     _sleep()
     prompt = cache_salt + "\n\n" + PHASE_VI_PROMPT.format(
         last_evolution_cycle=last_evolution_cycle,
-        last_evolution=(
-            last_evolution[:600] if last_evolution else "(none — first evolution cycle)"
-        ),
+        last_evolution=(last_evolution[:600] if last_evolution else "(none — first evolution cycle)"),
         prompt_version=PROMPT_VERSION,
         prompts_src=prompts_src,
         patchable_prompts=PATCHABLE_PROMPTS,
@@ -1031,68 +1034,45 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
     try:
         clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         patch_proposal = json.loads(clean)
-    except Exception as e:
+    except (json.JSONDecodeError, AttributeError) as e:
         log.warning(f"Phase VI: Could not parse patch proposal as JSON: {e}")
         return raw
 
-    assessment     = patch_proposal.get("assessment", "")
-    target         = patch_proposal.get("target_prompt")
-    rationale      = patch_proposal.get("rationale", "")
+    assessment = patch_proposal.get("assessment", "")
+    target = patch_proposal.get("target_prompt")
+    rationale = patch_proposal.get("rationale", "")
     before_snippet = patch_proposal.get("before_snippet", "")
-    after_snippet  = patch_proposal.get("after_snippet", "")
-    new_version    = patch_proposal.get("new_prompt_version", PROMPT_VERSION + 1)
+    after_snippet = patch_proposal.get("after_snippet", "")
+    new_version = patch_proposal.get("new_prompt_version", PROMPT_VERSION + 1)
 
     log.info(f"Phase VI assessment: {assessment}")
     patch_written = False
 
-    if (
-        target
-        and target in PATCHABLE_PROMPTS
-        and before_snippet
-        and after_snippet
-        and before_snippet in prompts_src
-        and before_snippet != after_snippet
-        and len(after_snippet.strip()) > 10
-    ):
+    if (target in PATCHABLE_PROMPTS and before_snippet and after_snippet 
+        and before_snippet in prompts_src and before_snippet != after_snippet 
+        and len(after_snippet.strip()) > 10):
+        
         patch_plan = {
             "cycle": cycle_num + 1,
             "target_prompt": target,
             "rationale": rationale,
             "assessment": assessment,
-            "patch_op": {
-                "filename": "Gemini_note_pad/prompts.py",
-                "operation": "replace",
-                "old": before_snippet,
-                "new": after_snippet,
-            },
-            "version_bump": {
-                "filename": "Gemini_note_pad/prompts.py",
-                "operation": "replace",
-                "old": f"PROMPT_VERSION = {PROMPT_VERSION}",
-                "new": f"PROMPT_VERSION = {new_version}",
-            },
+            "patch_op": {"filename": "Gemini_note_pad/prompts.py", "operation": "replace", "old": before_snippet, "new": after_snippet},
+            "version_bump": {"filename": "Gemini_note_pad/prompts.py", "operation": "replace", "old": f"PROMPT_VERSION = {PROMPT_VERSION}", "new": f"PROMPT_VERSION = {new_version}"},
         }
-        pp = _bag_data("prompt_patch")
-        pp.write_text(json.dumps(patch_plan, indent=2))
-        log.info(f"Phase VI patch plan written → {pp.name} (target: {target})")
+        _write_patch_plan(patch_plan, intent=f"patch_{target}")
+        log.info(f"Phase VI patch plan written (target: {target})")
         patch_written = True
     else:
         if target and target not in PATCHABLE_PROMPTS:
             log.warning(f"Phase VI: target '{target}' not in PATCHABLE_PROMPTS — patch rejected.")
         elif before_snippet and before_snippet not in prompts_src:
             log.warning("Phase VI: before_snippet not found in prompts.py — patch rejected.")
-        elif not target:
-            log.info("Phase VI: No patch proposed this cycle (target_prompt is null).")
+        else:
+            log.info("Phase VI: No patch proposed this cycle.")
 
-    evolution_text = (
-        f"[Cycle {cycle_num + 1} — PROMPT_VERSION {PROMPT_VERSION}]\n\n"
-        f"Assessment: {assessment}\n\n"
-        f"Target: {target or 'none'}\n"
-        f"Rationale: {rationale}\n"
-        f"Patch written: {patch_written}"
-    )
     log.info("Phase VI complete.")
-    return evolution_text
+    return f"[Cycle {cycle_num + 1} — PROMPT_VERSION {PROMPT_VERSION}]\n\nAssessment: {assessment}\n\nTarget: {target or 'none'}\nRationale: {rationale}\nPatch written: {patch_written}"
 
 
 def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolution: str):

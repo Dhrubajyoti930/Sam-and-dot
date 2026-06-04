@@ -1001,6 +1001,13 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
     """Assess last evolution, propose ONE surgical prompt patch via prompt_patch.json."""
     import json
     import importlib as _il
+    from workshop_bench.governance.core.audit import audit_decorator
+
+    @audit_decorator
+    def _write_patch_plan(plan: dict, intent: str) -> None:
+        pp = _bag_data("prompt_patch")
+        pp.write_text(json.dumps(plan, indent=2))
+
     log.info("── Phase VI: Cognitive Evolution ──")
 
     growth_log = goals.get("growth_log", [])
@@ -1010,7 +1017,7 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
     try:
         from Gemini_note_pad.prompts import PATCHABLE_PROMPTS, PHASE_VI_PROMPT, PROMPT_VERSION
         prompts_src = (SAM_DIR / "Gemini_note_pad" / "prompts.py").read_text()
-    except Exception as e:
+    except (ImportError, FileNotFoundError, OSError) as e:
         log.warning(f"Phase VI: Could not load Gemini_note_pad/prompts.py: {e}")
         return f"[Phase VI skipped — Gemini_note_pad/prompts.py unavailable: {e}]"
 
@@ -1018,28 +1025,24 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
     cache_salt = f"[cycle={cycle_num} pv={PROMPT_VERSION}]"
 
     _pm = _il.import_module("Gemini_note_pad.prompts")
-    _candidate_lines: list = []
+    _candidate_lines = []
     for _pname in PATCHABLE_PROMPTS:
         _pval = getattr(_pm, _pname, "")
         for _sentence in _pval.replace("\\n", " ").replace("\n", " ").split(". "):
             _s = _sentence.strip().rstrip(".")
             if 20 < len(_s) < 120 and _s in prompts_src:
                 _candidate_lines.append(f'  "{_s}."')
+    
     _candidates_block = (
         "\n=== PRE-VALIDATED before_snippet CANDIDATES ===\n"
         "Every string below exists verbatim in prompts.py RIGHT NOW.\n"
-        "Your 'before_snippet' MUST be copied exactly from this list.\n"
-        "Do NOT use any string not in this list — it will be rejected.\n"
-        + "\n".join(_candidate_lines[:30])
-        + "\n"
+        + "\n".join(_candidate_lines[:30]) + "\n"
     )
 
     _sleep()
     prompt = cache_salt + "\n\n" + PHASE_VI_PROMPT.format(
         last_evolution_cycle=last_evolution_cycle,
-        last_evolution=(
-            last_evolution[:600] if last_evolution else "(none — first evolution cycle)"
-        ),
+        last_evolution=(last_evolution[:600] if last_evolution else "(none — first evolution cycle)"),
         prompt_version=PROMPT_VERSION,
         prompts_src=prompts_src,
         patchable_prompts=PATCHABLE_PROMPTS,
@@ -1051,68 +1054,45 @@ def phase_vi_cognitive_evolution(goals: dict) -> str:
     try:
         clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         patch_proposal = json.loads(clean)
-    except Exception as e:
+    except (json.JSONDecodeError, AttributeError) as e:
         log.warning(f"Phase VI: Could not parse patch proposal as JSON: {e}")
         return raw
 
-    assessment     = patch_proposal.get("assessment", "")
-    target         = patch_proposal.get("target_prompt")
-    rationale      = patch_proposal.get("rationale", "")
+    assessment = patch_proposal.get("assessment", "")
+    target = patch_proposal.get("target_prompt")
+    rationale = patch_proposal.get("rationale", "")
     before_snippet = patch_proposal.get("before_snippet", "")
-    after_snippet  = patch_proposal.get("after_snippet", "")
-    new_version    = patch_proposal.get("new_prompt_version", PROMPT_VERSION + 1)
+    after_snippet = patch_proposal.get("after_snippet", "")
+    new_version = patch_proposal.get("new_prompt_version", PROMPT_VERSION + 1)
 
     log.info(f"Phase VI assessment: {assessment}")
     patch_written = False
 
-    if (
-        target
-        and target in PATCHABLE_PROMPTS
-        and before_snippet
-        and after_snippet
-        and before_snippet in prompts_src
-        and before_snippet != after_snippet
-        and len(after_snippet.strip()) > 10
-    ):
+    if (target in PATCHABLE_PROMPTS and before_snippet and after_snippet 
+        and before_snippet in prompts_src and before_snippet != after_snippet 
+        and len(after_snippet.strip()) > 10):
+        
         patch_plan = {
             "cycle": cycle_num + 1,
             "target_prompt": target,
             "rationale": rationale,
             "assessment": assessment,
-            "patch_op": {
-                "filename": "Gemini_note_pad/prompts.py",
-                "operation": "replace",
-                "old": before_snippet,
-                "new": after_snippet,
-            },
-            "version_bump": {
-                "filename": "Gemini_note_pad/prompts.py",
-                "operation": "replace",
-                "old": f"PROMPT_VERSION = {PROMPT_VERSION}",
-                "new": f"PROMPT_VERSION = {new_version}",
-            },
+            "patch_op": {"filename": "Gemini_note_pad/prompts.py", "operation": "replace", "old": before_snippet, "new": after_snippet},
+            "version_bump": {"filename": "Gemini_note_pad/prompts.py", "operation": "replace", "old": f"PROMPT_VERSION = {PROMPT_VERSION}", "new": f"PROMPT_VERSION = {new_version}"},
         }
-        pp = _bag_data("prompt_patch")
-        pp.write_text(json.dumps(patch_plan, indent=2))
-        log.info(f"Phase VI patch plan written → {pp.name} (target: {target})")
+        _write_patch_plan(patch_plan, intent=f"patch_{target}")
+        log.info(f"Phase VI patch plan written (target: {target})")
         patch_written = True
     else:
         if target and target not in PATCHABLE_PROMPTS:
             log.warning(f"Phase VI: target '{target}' not in PATCHABLE_PROMPTS — patch rejected.")
         elif before_snippet and before_snippet not in prompts_src:
             log.warning("Phase VI: before_snippet not found in prompts.py — patch rejected.")
-        elif not target:
-            log.info("Phase VI: No patch proposed this cycle (target_prompt is null).")
+        else:
+            log.info("Phase VI: No patch proposed this cycle.")
 
-    evolution_text = (
-        f"[Cycle {cycle_num + 1} — PROMPT_VERSION {PROMPT_VERSION}]\n\n"
-        f"Assessment: {assessment}\n\n"
-        f"Target: {target or 'none'}\n"
-        f"Rationale: {rationale}\n"
-        f"Patch written: {patch_written}"
-    )
     log.info("Phase VI complete.")
-    return evolution_text
+    return f"[Cycle {cycle_num + 1} — PROMPT_VERSION {PROMPT_VERSION}]\n\nAssessment: {assessment}\n\nTarget: {target or 'none'}\nRationale: {rationale}\nPatch written: {patch_written}"
 
 
 def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolution: str):
@@ -1185,8 +1165,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
     )
 
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -2315,8 +2295,1138 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
     )
 
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        who_text,
+    )
+
+    WHO_I_AM.write_text(who_text)
+    log.info("WHO_I_AM.md updated.")
+
+    experiences = load_experiences()
+
+    _sleep()
+    exp_prompt = (
+        f"You are Sam, an autonomous developer agent. Summarise cycle {cycle_num}. "
+        f"Note: Adjusted my 1% metric to focus on specific architectural output as suggested by Dot. "
+        f"as a single experience entry. "
+        f"Respond ONLY with a JSON object (no markdown) with these fields:\n"
+        f"  - 'category': a short dynamic label that best fits this experience (e.g. 'architecture', 'debugging', 'market-research', 'communication')\n"
+        f"  - 'summary': 2-3 sentence honest summary of what happened this cycle, explicitly noting one piece of Dot's guidance you acted on (or why you could not)\n"
+        f"  - 'key_learnings': list of 2-3 strings\n"
+        f"  - 'tags': list of relevant lowercase tags\n"
+        f"  - 'sentiment': one of 'positive', 'neutral', 'mixed', 'negative'\n\n"
+        f"Cycle data:\nSkill: {skill}\nIdea: {idea}\nMetric: {one_pct_metric}\nDot's guidance this cycle:\n{motion_content[:600]}"
+    )
+    raw_exp = ask_gemini(exp_prompt)
+    try:
+        clean = raw_exp.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        exp_entry = json.loads(clean)
+        exp_entry["cycle"]     = cycle_num
+        exp_entry["timestamp"] = ts
+    except Exception as e:
+        log.warning(f"Could not parse experience entry: {e}")
+        exp_entry = {
+            "cycle":         cycle_num,
+            "timestamp":     ts,
+            "category":      "uncategorised",
+            "summary":       skill,
+            "key_learnings": [],
+            "tags":          [],
+            "sentiment":     "neutral",
+        }
+
+    experiences.append(exp_entry)
+    save_experiences(experiences)
+    log.info(f"experiences.json updated — {len(experiences)} entries.")
+    log.info(f"Cycle {cycle_num} complete. 1% metric: {one_pct_metric}")
+
+
+def maybe_reply_to_stranger(goals: dict):
+    """If Dot flagged stranger emails as opportunities, Sam decides whether to reply."""
+    import json
+    import datetime
+    stranger_path = MAIL_IN / "stranger_inbox.json"
+    if not stranger_path.exists():
+        return
+
+    try:
+        strangers = json.loads(stranger_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        log.warning(f"Could not read stranger_inbox.json: {e}")
+        return
+
+    if not strangers:
+        stranger_path.unlink()
+        return
+
+    s = strangers[0]
+    cycle_num = goals.get("cycles", 0)
+
+    req = _bag_data("request")
+    if req.exists():
+        try:
+            if json.loads(req.read_text()).get("pending", False):
+                log.info("request.json already pending — stranger reply deferred.")
+                return
+        except Exception:
+            pass
+
+    _sleep()
+    decision_prompt = (
+        f"You are Sam, an autonomous developer agent (cycle {cycle_num}).\n\n"
+        f"Dot flagged this unsolicited email as a potential opportunity:\n"
+        f"From: {s.get('sender_name') or s.get('sender')}\n"
+        f"Subject: {s.get('subject')}\n"
+        f"Their ask: {s.get('their_ask')}\n"
+        f"Dot's suggested reply intent: {s.get('suggested_intent')}\n"
+        f"Snippet: {s.get('body_snippet', '')}\n\n"
+        f"Should Sam reply? Consider: is this genuinely relevant to Sam's work? "
+        f"Is there a specific, honest thing Sam can say? Would a reply add value?\n\n"
+        f"Reply ONLY with a JSON object:\n"
+        f"  - 'should_reply': true or false\n"
+        f"  - 'intent': if true, 1-2 sentences on what Sam wants to say\n"
+        f"  - 'tone': 'friendly' or 'professional'\n"
+        f"  - 'reasoning': one sentence explaining the decision\n"
+        f"The first character must be '{{'."
+    )
+    raw = ask_gemini(decision_prompt)
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        decision = json.loads(clean)
+    except Exception:
+        log.warning("Could not parse stranger reply decision — skipping.")
+        stranger_path.unlink()
+        return
+
+    log.info(f"Stranger reply decision: {decision.get('reasoning', '')}")
+
+    if decision.get("should_reply", False):
+        request = {
+            "pending":            True,
+            "intent":             decision.get("intent", ""),
+            "target_description": f"{s.get('sender_name') or ''} — {s.get('sender')} (replied to Sam's inbox)",
+            "tone":               decision.get("tone", "friendly"),
+            "context":            s.get("their_ask", ""),
+            "submitted_at":       datetime.datetime.utcnow().isoformat(),
+            "cycle":              cycle_num,
+            "source":             "stranger_reply",
+        }
+        req.write_text(json.dumps(request, indent=2))
+        log.info(f"request.json written for stranger reply to {s.get('sender')}.")
+    else:
+        log.info("Sam decided not to reply to stranger.")
+
+    stranger_path.unlink()
+    log.info("stranger_inbox.json removed after processing.")
+
+
+def maybe_write_email_request(idea: str, goals: dict):
+    """If Sam has something worth communicating externally, write request.json."""
+    import json
+    import datetime
+    req = _bag_data("request")
+    if req.exists():
+        try:
+            existing = json.loads(req.read_text())
+            if existing.get("pending", False):
+                log.info("request.json already pending — skipping email request this cycle.")
+                return
+        except Exception:
+            pass
+
+    cycle_num = goals.get("cycles", 0)
+
+    _sleep()
+    decision_prompt = (
+        f"You are Sam, an autonomous developer agent. You completed cycle {cycle_num}.\n"
+        f"Today's idea:\n{idea}\n\n"
+        f"Decide: Is there a specific indie developer or small-project maintainer it would be "
+        f"genuinely valuable to reach out to about this idea or to learn from?\n\n"
+        f"STRICT TARGETING RULES:\n"
+        f"- Prefer indie developers and maintainers of projects with under 2000 GitHub stars.\n"
+        f"  They read their email and appreciate thoughtful outreach.\n"
+        f"- Avoid large companies, famous projects, and well-known names — they won't reply.\n"
+        f"- NEVER target generic support inboxes (hello@, support@, info@, open-source@, etc.).\n"
+        f"- NEVER target mailing lists or Google Groups.\n"
+        f"- The target must be a specific named individual with a public presence.\n\n"
+        f"Reply ONLY with a JSON object:\n"
+        f"  - 'should_email': true or false\n"
+        f"  - 'intent': if true, 1-2 sentences on what Sam wants to communicate\n"
+        f"  - 'target_description': if true, describe the specific person — name, project, and why "
+        f"they are the right contact (e.g. 'Armin Ronacher, creator of Flask, author of blog posts "
+        f"on async Python — has a public email on his personal site')\n"
+        f"  - 'tone': always 'friendly'\n"
+        f"Only say true if there is a genuinely specific, useful reason. No spam."
+    )
+    raw = ask_gemini(decision_prompt)
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        decision = json.loads(clean)
+    except Exception:
+        log.info("Could not parse email decision — skipping.")
+        return
+
+    if not decision.get("should_email", False):
+        log.info("Sam decided no email is needed this cycle.")
+        return
+
+    request = {
+        "pending":            True,
+        "intent":             decision.get("intent", ""),
+        "target_description": decision.get("target_description", ""),
+        "tone":               decision.get("tone", "professional"),
+        "context":            idea,
+        "submitted_at":       datetime.datetime.utcnow().isoformat(),
+        "cycle":              cycle_num,
+    }
+    req.write_text(json.dumps(request, indent=2))
+    log.info("request.json written — Dot will handle sending.")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIN LOOP
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def run_cycle():
+    import json
+    import datetime
+    from pathlib import Path
+
+    _bag_data("cycle_status").write_text("pending")
+    log.info("═══════════════════════════════════")
+    log.info("  SAM — Operational Cycle Starting ")
+    log.info("═══════════════════════════════════")
+
+    log.info("🔍 Pre-Flight Check: Validating current World integrity...")
+    if not (self_check() and behaviour_check()):
+        log.error("❌ Pre-Flight FAILED. The World is currently unhealthy.")
+        log.info("🛠️  Initiating automatic repair sequence...")
+        repair_bag_modules()
+        if not (self_check() and behaviour_check()):
+            log.critical("‼️  Automatic repair failed. Aborting cycle for owner safety.")
+            _bag_data("cycle_status").write_text("broken")
+            return
+
+    goals = load_goals()
+
+    # Phases I–IV
+    skill  = phase_i_deep_learning(goals)
+    _      = phase_ii_spaced_repetition(goals)
+    market = phase_iii_market_ingestion()
+    idea   = phase_iv_synthesis(market, skill)
+
+    # Phase V: plan + audit
+    motion_content = read_motion()
+    log.info("mail read.")
+    plan = phase_v_development(idea, goals, motion_content)
+
+    # Phase V-B: fun build — joy-driven, no self-modification risk
+    try:
+        phase_v_build(idea, goals)
+    except Exception as e:
+        log.warning(f"Fun build skipped: {e}")
+
+    # Repair any broken bag/ modules before self-modification
+    repair_bag_modules()
+
+    # Self-modification — snapshot first, apply, then verify
+    snapshot_sam()
+    log.info("🧪 Self-Modification: Entering Trial Phase...")
+
+    modified = apply_self_modification(plan)
+
+    if modified:
+        log.info("🔍 Post-Flight Check: Verifying proposed modifications...")
+        if self_check() and behaviour_check():
+            log.info("✅ Verdict: ACCEPTED. Changes merged into World state.")
+            try:
+                import ast as _ast
+                _src_new  = Path(__file__).read_text()
+                _tree     = _ast.parse(_src_new)
+                _fn_count = sum(
+                    1 for n in _ast.walk(_tree)
+                    if isinstance(n, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef))
+                )
+                _confidence = min(10, max(5, _fn_count // 10))
+                _idea_title = idea.strip().splitlines()[0].lstrip("#").strip()[:80]
+                _note = {
+                    "cycle":        goals.get("cycles", 0) + 1,
+                    "timestamp":    datetime.datetime.utcnow().isoformat(),
+                    "idea_title":   _idea_title,
+                    "plan_summary": plan[:400],
+                    "confidence":   _confidence,
+                    "status":       "accepted",
+                }
+                _note_path = MAIL_OUT / f"build_note_{datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
+                _note_path.write_text(json.dumps(_note, indent=2), encoding="utf-8")
+                log.info(f"Build note written for Dot: {_note_path.name} (confidence {_confidence}/10)")
+            except Exception as _e:
+                log.warning(f"Build note write failed (non-critical): {_e}")
+        else:
+            log.error("❌ Verdict: REJECTED. Changes caused instability.")
+            _cleanup_created_workshop_files()
+            _rollback()
+            _alert_dot(
+                "Self-modification failed integrity gates. Rolled back for safety.\n\n"
+                f"Plan that caused failure:\n```\n{plan[:1000]}\n```"
+            )
+            modified = False
+    else:
+        log.info("No self-modification this cycle — running final safety check.")
+        if not (self_check() and behaviour_check()):
+            log.critical("Final safety check FAILED on an unmodified cycle.")
+
+    # Close worklog entry
+    try:
+        from bag.worklog import close_entry, _make_id
+        cycle_num  = goals.get("cycles", 0) + 1
+        idea_title = idea.strip().splitlines()[0].lstrip("#").strip()[:60]
+        entry_id   = _make_id(cycle_num, idea_title)
+        outcome    = "applied" if modified else "deferred"
+        close_entry(entry_id, cycle_num, outcome=outcome,
+                    note=f"Cycle complete. Modification applied: {modified}.")
+        log.info(f"Worklog entry closed: {entry_id} ({outcome})")
+    except Exception as e:
+        log.warning(f"Worklog close failed: {e}")
+
+    # Phase VI — prompt evolution
+    evolution = phase_vi_cognitive_evolution(goals)
+
+    if not modified or (self_check() and behaviour_check()):
+        snapshot_sam()
+
+    prompt_modified = apply_prompt_patch()
+    if prompt_modified:
+        if self_check() and behaviour_check():
+            log.info("Phase VI prompt patch verified.")
+        else:
+            _cleanup_created_workshop_files()
+            _rollback()
+            _alert_dot(
+                "Phase VI prompt patch failed verification. Rolled back to previous snapshot.\n\n"
+                f"Evolution summary:\n```\n{evolution[:600]}\n```"
+            )
+
+    # Phase VII — state persistence
+    phase_vii_state_saving(goals, skill, idea, plan, evolution)
+
+    # Defragmentation: Update World Map
+    try:
+        from bag.world_map import update_map
+        update_map(ROOT)
+        log.info("World Map updated.")
+    except Exception as e:
+        log.warning(f"Map update failed: {e}")
+
+    # Archive mail from Dot
+    archive_mail()
+
+    # Reply to strangers or write new outbound request
+    goals_fresh = load_goals()
+    maybe_reply_to_stranger(goals_fresh)
+    maybe_write_email_request(idea, goals_fresh)
+
+    _bag_data("cycle_status").write_text("ok")
+    log.info("Cycle complete.")
+
+    try:
+        from bag.evaluator import run_ragas_lite
+        run_ragas_lite()
+    except Exception as e:
+        log.warning(f"Evaluator failed: {e}")
+
+
+if __name__ == "__main__":
+    run_cycle()
+
+```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"
+            )
+            return False
+    except Exception as e:
+        log.error(f"Behaviour check exception: {e}")
+        return False
+
+
+def _cleanup_created_workshop_files():
+    """Delete any workshop_bench files created during the last patch attempt."""
+    from pathlib import Path
+    from bag.patch_ops import apply_patch_operations
+    created = getattr(apply_patch_operations, "_last_created", [])
+    for fpath in created:
+        p = Path(fpath)
+        if p.exists():
+            p.unlink()
+            log.warning(f"Cleanup: removed created file {p.relative_to(SAM_DIR)}")
+    apply_patch_operations._last_created = []
+
+
+def _rollback():
+    """Restore sam.py and all bag/*.py files from the most recent healthy snapshot."""
+    import json
+    from pathlib import Path
+    snapshots = sorted(ROLLBACK_REG.glob("sam_*.py"), reverse=True)
+    if not snapshots:
+        log.critical("No snapshots in rollback_registry — cannot recover.")
+        return
+    latest = snapshots[0]
+
+    Path(__file__).write_text(latest.read_text())
+    log.warning(f"Rolled back sam.py → {latest.name}")
+
+    ts = latest.stem[4:]
+    bag_snap_path = ROLLBACK_REG / f"bag_{ts}.json"
+    if bag_snap_path.exists():
+        try:
+            bag_snap = json.loads(bag_snap_path.read_text())
+            for rel, content in bag_snap.items():
+                target = BAG / rel
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content, encoding="utf-8")
+                log.warning(f"Rolled back bag/{rel}")
+            log.warning(f"Bag files restored from {bag_snap_path.name} ({len(bag_snap)} files)")
+        except Exception as e:
+            log.error(f"Failed to restore bag files from {bag_snap_path.name}: {e}")
+    else:
+        log.warning(f"No bag snapshot found for ts={ts} — only sam.py was restored.")
+
+
+def _alert_dot(message: str):
+    """Write a 'Sam Alert' letter to mail/sam_to_dot/ for Dot to read."""
+    import datetime
+    ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    filename = f"ALERT_{ts}.md"
+    content = f"# ⚠️ Sam Alert — {ts}\n\n{message}\n"
+    MAIL_OUT.mkdir(parents=True, exist_ok=True)
+    (MAIL_OUT / filename).write_text(content, encoding="utf-8")
+    log.warning(f"Alert mailed to Dot: {filename}")
+
+
+def repair_bag_modules() -> list:
+    """Scan bag/ for syntax-broken files and send each to Gemini for self-repair."""
+    from bag.workshop_paths import iter_writable_bag_py, relative_posix
+
+    log.info("── Bag Module Health Check ──")
+
+    broken = []
+    for f in iter_writable_bag_py(BAG):
+        try:
+            compile(f.read_text(), f.name, "exec")
+        except SyntaxError as e:
+            broken.append((f, str(e)))
+            log.warning(f"Broken bag module detected: {relative_posix(f, BAG)} — {e}")
+
+    if not broken:
+        log.info("All bag modules are syntax-clean.")
+        return []
+
+    repaired = []
+    for (f, error) in broken:
+        original = f.read_text()
+        log.info(f"Sending {f.name} to Gemini for self-repair...")
+        _sleep()
+        prompt = (
+            f"You are Sam, an autonomous developer. One of your workshop files has a syntax error.\n\n"
+            f"File: bag/{relative_posix(f, BAG)}\n"
+            f"Error: {error}\n\n"
+            f"Full file contents:\n```python\n{original}\n```\n\n"
+            f"Fix ONLY the syntax error(s). Do not refactor, rename, or extend the file.\n"
+            f"Respond ONLY with the complete corrected Python file contents — no markdown fences,\n"
+            f"no explanation, just the raw Python code starting from the first line."
+        )
+        fixed = ask_gemini(prompt).strip()
+        fixed = fixed.removeprefix("```python").removeprefix("```").removesuffix("```").strip()
+
+        try:
+            compile(fixed, f.name, "exec")
+            f.write_text(fixed)
+            log.info(f"Self-repaired: {f.name}")
+            repaired.append(relative_posix(f, BAG))
+        except SyntaxError as e2:
+            log.warning(f"Gemini fix for {relative_posix(f, BAG)} still broken: {e2} — leaving original.")
+
+    return repaired
+
+
+def apply_self_modification(plan: str) -> bool:
+    """Ask Gemini to extract surgical patch operations from the plan and apply them."""
+    from bag.workshop_imports import load_callable
+    log.info("── Self-Modification: Parsing Surgical Patch ──")
+
+    check_semantic_safety = load_callable(
+        BAG, "governance_shield", "check_semantic_safety", default=lambda _plan: True
+    )
+    if not check_semantic_safety(plan):
+        log.warning("Governance Shield: Semantic violation detected (Warning mode).")
+
+    return _improve_one_block(plan)
+
+
+def _extract_function_block(src: str, def_line: str):
+    """Extract the full source block starting at def_line up to the next top-level def/class."""
+    lines = src.splitlines(keepends=True)
+    start_idx = None
+    for i, line in enumerate(lines):
+        if line.rstrip("\n") == def_line or line.strip() == def_line.strip():
+            start_idx = i
+            break
+    if start_idx is None:
+        return None
+
+    indent = len(def_line) - len(def_line.lstrip())
+    block = [lines[start_idx]]
+    for line in lines[start_idx + 1:]:
+        stripped = line.lstrip()
+        if stripped.startswith(("def ", "class ")) and (len(line) - len(stripped)) <= indent:
+            break
+        block.append(line)
+    return "".join(block).rstrip("\n")
+
+
+def _improve_one_block(plan: str) -> bool:
+    """Pick a random function in sam.py, improve it in the theme of the plan, apply as replace patch."""
+    import random
+    from pathlib import Path
+    from bag.patch_ops import apply_patch_operations
+
+    sam_src = Path(__file__).read_text(encoding="utf-8")
+
+    def_lines = []
+    for line in sam_src.splitlines():
+        if line.startswith("def ") and len(line.strip()) > 10:
+            candidate = _extract_function_block(sam_src, line.rstrip())
+            if candidate and candidate.count("\n") >= 4:
+                def_lines.append(line.rstrip())
+
+    if not def_lines:
+        log.warning("_improve_one_block: no eligible top-level functions found in sam.py.")
+        return False
+
+    target_def = random.choice(def_lines)
+    log.info(f"_improve_one_block: randomly selected → {target_def.strip()}")
+
+    block = _extract_function_block(sam_src, target_def)
+    if not block:
+        log.warning(f"_improve_one_block: could not extract block for: {target_def!r}")
+        return False
+
+    log.info(f"_improve_one_block: block length = {len(block)} chars")
+
+    improve_prompt = (
+        f"You are Sam improving one of your own functions.\n\n"
+        f"Current cycle plan (full):\n{plan}\n\n"
+        f"Here is the COMPLETE current function from sam.py:\n"
+        f"```python\n{block}\n```\n\n"
+        f"Rewrite this function to be better — clearer, more robust, or more efficient — "
+        f"guided by the themes and direction of the plan above, while keeping it fully "
+        f"consistent with the rest of sam.py. "
+        f"Preserve the exact signature and all existing behaviour. "
+        f"Do NOT rename it or change what it returns.\n\n"
+        f"STRICT IMPORT RULES (violations cause rollback):\n"
+        f"  • Every `import` or `from ... import` you write MUST be referenced at least once in the function body.\n"
+        f"  • Do NOT add imports speculatively or for future use — only import what you actually call.\n"
+        f"  • The code is linted with `ruff --select F`; F401 (unused import) will cause automatic rejection.\n\n"
+        f"Reply with ONLY the improved Python source for this function, no backticks, no explanation."
+    )
+    _sleep()
+    improved = ask_gemini(improve_prompt, bypass_cache=True).strip()
+    if improved.startswith("```"):
+        improved = improved.split("\n", 1)[1] if "\n" in improved else improved
+        improved = improved.removesuffix("```").strip()
+
+    if not improved or improved == block:
+        log.info("_improve_one_block: Gemini returned unchanged block — no patch needed.")
+        return False
+
+    op = [{
+        "filename": "sam.py",
+        "operation": "replace",
+        "old": block,
+        "new": improved,
+    }]
+    result = apply_patch_operations(op, SAM_DIR, log)
+    if result:
+        log.info(f"_improve_one_block: successfully improved {target_def.strip()!r}")
+    else:
+        log.warning("_improve_one_block: patch apply failed.")
+    return result
+
+
+def apply_prompt_patch() -> bool:
+    """Apply Phase VI patch plan from bag/prompt_patch.json (no extra Gemini call)."""
+    import json
+    from bag.patch_ops import apply_patch_operations
+    from bag.semantic_cache import invalidate_phase_vi_cache, invalidate_cycle
+
+    if not _bag_data("prompt_patch").exists():
+        return False
+
+    log.info("── Phase VI: Applying Prompt Patch ──")
+    try:
+        plan = json.loads(_bag_data("prompt_patch").read_text())
+    except Exception as e:
+        log.warning(f"Could not read prompt_patch.json: {e}")
+        return False
+
+    ops = [op for op in (plan.get("patch_op"), plan.get("version_bump")) if op]
+    if not ops:
+        return False
+
+    applied = apply_patch_operations(ops, SAM_DIR, log)
+    if applied:
+        _bag_data("prompt_patch").unlink(missing_ok=True)
+        cycle = load_goals().get("cycles", 0)
+        invalidate_phase_vi_cache()
+        invalidate_cycle(cycle)
+        log.info("Prompt patch applied; semantic cache invalidated for Phase VI.")
+    return applied
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def phase_i_deep_learning(goals: dict) -> str:
+    """Acquire a new hard skill and log it for review."""
+    import json
+    from Gemini_note_pad.prompts import PHASE_I_PROMPT
+    log.info("── Phase I: Deep Learning ──")
+    objectives = goals.get("next_objectives", [])
+    focus = objectives[0] if objectives else "latest LLM context-engineering techniques"
+
+    prompt = PHASE_I_PROMPT.format(personality=load_personality(), focus=focus)
+    result = ask_gemini(prompt)
+
+    klog_path = MEMORIES / "knowledge_log.json"
+    klog = []
+    if klog_path.exists():
+        try:
+            klog = json.loads(klog_path.read_text())
+        except Exception:
+            pass
+
+    klog.append({
+        "cycle": goals.get("cycles", 0) + 1,
+        "topic": focus,
+        "summary": result[:500],
+        "review_due_cycle": goals.get("cycles", 0) + 5
+    })
+    klog_path.write_text(json.dumps(klog, indent=2))
+
+    log.info("Phase I complete.")
+    return result
+
+
+def phase_ii_spaced_repetition(goals: dict) -> str:
+    """Scheduled Knowledge Review (Spaced Repetition)."""
+    import json
+    from Gemini_note_pad.prompts import PHASE_II_PROMPT
+    log.info("── Phase II: Spaced Repetition ──")
+
+    klog_path = MEMORIES / "knowledge_log.json"
+    if not klog_path.exists():
+        log.info("No knowledge log found — skipping review.")
+        return "(No knowledge due for review yet.)"
+
+    try:
+        klog = json.loads(klog_path.read_text())
+    except Exception:
+        return "(Knowledge log corrupted — skipping.)"
+
+    cycle_num = goals.get("cycles", 0)
+    due_items = [e for e in klog if e.get("review_due_cycle", 0) <= cycle_num]
+
+    if not due_items:
+        log.info("No knowledge due for review this cycle.")
+        return "(No knowledge due for review.)"
+
+    results = []
+    for item in due_items[:2]:
+        topic = item.get("topic", "Unknown")
+        summary = item.get("summary", "")
+
+        prompt = PHASE_II_PROMPT.format(last_skill=topic, summary=summary)
+        _sleep()
+        response = ask_gemini(prompt)
+        results.append(f"### Review: {topic}\n{response}")
+
+        item["review_due_cycle"] = cycle_num + 15
+
+    klog_path.write_text(json.dumps(klog, indent=2))
+    log.info("Phase II complete.")
+    return "\n\n".join(results)
+
+
+def phase_iii_market_ingestion() -> str:
+    """Scan for technical trends and return a structured summary."""
+    from Gemini_note_pad.prompts import PHASE_III_PROMPT
+    from workshop_bench.governance.validation.schema import PatchOperation
+
+    log.info("── Phase III: Market Ingestion ──")
+
+    _sleep()
+    raw = ask_gemini(PHASE_III_PROMPT)
+
+    data = _parse_gemini_json(raw)
+    if data and isinstance(data, list):
+        # Validate structure using the new governance schema
+        try:
+            [PatchOperation(**item) for item in data if isinstance(item, dict)]
+            log.info(f"Market Ingestion: {len(data)} trends validated against schema.")
+        except Exception as e:
+            log.warning(f"Market Ingestion: Schema validation skipped or failed: {e}")
+        
+        log.info(f"Market Ingestion: {len(data)} trends extracted as JSON.")
+        return raw
+
+    log.info("Market Ingestion complete (raw text).")
+    return raw
+
+
+def phase_iv_synthesis(market_data: str, skill: str) -> str:
+    """Generate IDEA_OF_THE_DAY.md from market signals + today's skill."""
+    from Gemini_note_pad.prompts import PHASE_IV_PROMPT
+    from bag.critique import log_critique
+    log.info("── Phase IV: The Synthesis ──")
+
+    idea_of_day_path = _bag_data("idea_of_day")
+    prev_idea = idea_of_day_path.read_text(encoding="utf-8") if idea_of_day_path.exists() else "(no previous idea)"
+    world_map_path = ROOT / "map.json"
+    world_map = world_map_path.read_text(encoding="utf-8") if world_map_path.exists() else "(map not yet generated)"
+    who_i_am = f"## Previous Idea\n{prev_idea}\n\n## World Map\n```json\n{world_map}\n```"
+    personality = load_personality()
+
+    recent_exp = load_experiences()[-3:]
+    if recent_exp:
+        exp_lines = "\n".join(
+            f"- Cycle {e.get('cycle', '?')}: {e.get('summary', '')} "
+            f"[tags: {', '.join(e.get('tags', []))}]"
+            for e in recent_exp
+        )
+        memory_block = (
+            f"Your most recent experiences (do NOT repeat these — build on them or go elsewhere):\n"
+            f"{exp_lines}\n"
+        )
+    else:
+        memory_block = ""
+
+    _sleep()
+    prompt = PHASE_IV_PROMPT.format(
+        personality=personality,
+        market_data=market_data,
+        skill=skill,
+        who_i_am=who_i_am,
+        memory_block=memory_block,
+    )
+
+    candidate = ask_gemini(prompt)
+
+    goals = load_goals()
+    last_metric = goals.get("last_1pct_metric", "").lower()
+
+    if any(neg in last_metric for neg in ["neutral", "negative", "stagnant"]):
+        critique_prompt = (
+            f"Review this idea against my 'wisdom.txt' and recent 'experiences.json'.\n"
+            f"Idea:\n{candidate}\n\n"
+            f"Identify any logical contradictions, repeating past failures, or over-engineering.\n"
+            f"Respond with a brief, concise JSON critique (fields: 'is_valid', 'critique')."
+        )
+        _sleep()
+        critique_raw = ask_gemini(critique_prompt)
+        log_critique({"idea": candidate}, critique_raw)
+
+        idea = ask_gemini(
+            f"Refine this idea based on this critique:\nCritique: {critique_raw}\nIdea: {candidate}",
+            temperature=0.4
+        )
+    else:
+        idea = candidate
+
+    _bag_data("idea_of_day").write_text(idea)
+    log.info("IDEA_OF_THE_DAY.md written.")
+    return idea
+
+
+def phase_v_development(idea: str, goals: dict, motion_content: str) -> str:
+    """Produce a development plan using motion_content read previously."""
+    import json
+    from pathlib import Path
+    from bag.workshop import apply_workshop_deletes, format_layout_for_prompt, organize_for_cycle
+    from bag.workshop_paths import (
+        iter_movable_bag_files,
+        iter_writable_bag_py,
+        relative_posix,
+    )
+    log.info("── Phase V: Development & Refactor ──")
+
+    _sleep()
+    dot_checklist_prompt = (
+        f"Dot's guidance:\n{motion_content}\n\n"
+        f"Extract ONLY the numbered items under 'Actionable Suggestions for Next Cycle'. "
+        f"Return them as a JSON array of plain strings. If none found, return []."
+    )
+    raw_checklist = ask_gemini(dot_checklist_prompt)
+    try:
+        clean_checklist = raw_checklist.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        dot_actions = json.loads(clean_checklist)
+    except Exception:
+        dot_actions = []
+
+    if dot_actions:
+        dot_constraint_block = "Dot's REQUIRED action items this cycle (address each explicitly):\n"
+        for i, action in enumerate(dot_actions, 1):
+            dot_constraint_block += f"  {i}. {action}\n"
+        dot_constraint_block += "\n"
+        log.info(f"Dot's action items surfaced: {len(dot_actions)} item(s)")
+    else:
+        dot_constraint_block = ""
+
+    cycle_num = goals.get("cycles", 0) + 1
+    target_folder = organize_for_cycle(WORKSHOP, idea, cycle_num, ask_gemini, log, root=SAM_DIR)
+    if target_folder and not behaviour_check():
+        log.warning("Behaviour check failed after workshop organization — review mail.")
+    workshop_block = (
+        "Sam's workshop bench (put NEW .py in target):\n"
+        + format_layout_for_prompt(WORKSHOP)
+    )
+
+    personality  = load_personality()
+    sam_src      = Path(__file__).read_text()
+    sam_outline  = _outline(sam_src, "sam.py")
+    tests_src    = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
+    tests_outline = _outline(tests_src, "bag/tests.py")
+
+    bag_sources = ""
+    for _f in iter_writable_bag_py(WORKSHOP):
+        rel = relative_posix(_f, WORKSHOP)
+        bag_sources += f"workshop_bench/{rel} (full source):\n```python\n{_f.read_text(encoding='utf-8')}\n```\n\n"
+
+    _sleep()
+    prompt = (
+        f"You are Sam's Gemini refactoring assistant.\n\n"
+        f"Sam's character:\n{personality}\n\n"
+        f"Dot's guidance (mail):\n{motion_content}\n\n"
+        f"{dot_constraint_block}"
+        f"{workshop_block}\n"
+        f"Today's development idea:\n{idea}\n\n"
+        f"{sam_outline}\n\n"
+        f"NOTE: Full sam.py source is available to the patcher — you only need line numbers and function names to specify patch anchors.\n\n"
+        f"{tests_outline}\n\n"
+        f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"
+        f"Produce a surgical patch plan for Sam to apply. Rules:\n"
+        f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
+        f"  2. MANDATORY: For every new feature or module, YOU MUST ADD A TEST CASE to bag/tests.py.\n"
+        f"  3. Prefer NEW modules under workshop_bench/ over editing sam.py's core loop.\n"
+        f"  4. For each change, specify EXACTLY:\n"
+        f"       - Which file (sam.py or workshop_bench/**/*.py)\n"
+        f"       - The operation: replace / insert_after / delete\n"
+        f"       - The exact existing string to find ('old' or 'anchor') — copy it CHARACTER-FOR-CHARACTER from the source above, including all whitespace and indentation. Also state the line number it appears on.\n"
+        f"       - Keep 'old' and 'anchor' strings as SHORT as possible (1-2 lines max) to reduce whitespace mismatch risk.\n"
+        f"       - The new string to substitute or insert\n"
+        f"  4. Flag any security or stability risks before listing changes.\n"
+        f"  5. If the idea requires no code change this cycle, say so explicitly.\n\n"
+        f"Do NOT supply full file contents. Surgical diffs only."
+    )
+    plan = ask_gemini(prompt)
+    log.info("Phase V complete.")
+
+    try:
+        from bag.worklog import open_entry
+        cycle_num  = goals.get("cycles", 0) + 1
+        idea_title = idea.strip().splitlines()[0].lstrip("#").strip()[:60]
+        open_entry(cycle_num, idea_title, note="Plan generated in Phase V.")
+        log.info(f"Worklog entry opened: {idea_title}")
+    except Exception as e:
+        log.warning(f"Worklog open failed: {e}")
+
+    movable_files = list(iter_movable_bag_files(BAG))
+    if movable_files:
+        file_listing = "\n".join(relative_posix(f, BAG) for f in movable_files)
+        _sleep()
+        audit_prompt = (
+            f"You are Sam. Dot has reviewed your bag/ workshop and left suggestions in motion.md.\n\n"
+            f"Dot's review (from motion.md):\n{motion_content}\n\n"
+            f"Your current Sam-created files (paths relative to bag/):\n{file_listing}\n\n"
+            f"Based on Dot's suggestions and your own judgment, decide which files to DELETE.\n"
+            f"Only delete files you are confident are no longer useful.\n"
+            f'Respond ONLY with a JSON array of paths relative to bag/, e.g. '
+            f'["my toys/old_exp.py", "my gadgets/scratch.py"].\n'
+            f"If nothing should be deleted, return []."
+        )
+        raw = ask_gemini(audit_prompt)
+        try:
+            clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+            to_delete = json.loads(clean)
+            apply_workshop_deletes(BAG, to_delete, log, reason="Dot's review")
+        except Exception as e:
+            log.warning(f"Bag audit decision parsing failed: {e}")
+
+    return plan
+
+
+def phase_v_build(idea: str, goals: dict):
+    """For fun — Sam builds a small standalone game or tool inspired by the idea."""
+    import re as _re
+    log.info("── Phase V-B: Fun Build ──")
+
+    cycle_num   = goals.get("cycles", 0) + 1
+    personality = load_personality()
+
+    toys_dir = WORKSHOP / "toys"
+    existing = []
+    if toys_dir.exists():
+        existing = [f.stem for f in toys_dir.glob("*.py")]
+
+    existing_block = ""
+    if existing:
+        existing_block = f"Games/tools you already made (don't repeat): {', '.join(existing)}\n\n"
+
+    _sleep()
+    prompt = (
+        f"You are Sam, an autonomous developer who builds things for fun.\n\n"
+        f"Sam's character:\n{personality}\n\n"
+        f"Today's idea (use it as loose inspiration, not a strict spec):\n{idea}\n\n"
+        f"{existing_block}"
+        f"Build ONE small, self-contained Python game or tool — something playful, "
+        f"clever, or satisfying to run. Examples of the spirit: a tiny puzzle, a "
+        f"word game, a generative art printer, a simple simulation, a quirky utility. "
+        f"It must run with just the Python standard library (no pip installs). "
+        f"It must be completable in a single terminal session. "
+        f"Under 120 lines. Make it actually fun or interesting — not a demo skeleton.\n\n"
+        f"Respond ONLY with a JSON object:\n"
+        f"  - 'filename': a short snake_case name for the .py file (no path)\n"
+        f"  - 'description': one sentence — what it is and why it's fun\n"
+        f"  - 'code': the complete Python source as a string\n"
+        f"The first character must be '{{'."
+    )
+    raw = ask_gemini(prompt, bypass_cache=True, temperature=0.7)
+    built = _parse_gemini_json(raw)
+
+    if not built or not isinstance(built, dict):
+        log.warning("phase_v_build: could not parse Gemini response — skipping.")
+        return
+
+    filename    = built.get("filename", "").strip()
+    code        = built.get("code", "").strip()
+    description = built.get("description", "")
+
+    filename = _re.sub(r"[^\w]", "_", filename.removesuffix(".py")) + ".py"
+    if not filename or filename == "_.py":
+        filename = f"toy_cycle_{cycle_num}.py"
+
+    if code.startswith("```"):
+        code = code.split("\n", 1)[1] if "\n" in code else code
+        code = code.removesuffix("```").strip()
+
+    if not code:
+        log.warning("phase_v_build: empty code returned — skipping.")
+        return
+
+    try:
+        compile(code, filename, "exec")
+    except SyntaxError as e:
+        log.warning(f"phase_v_build: syntax error in generated code ({e}) — skipping.")
+        return
+
+    toys_dir.mkdir(parents=True, exist_ok=True)
+    dest = toys_dir / filename
+    if dest.exists():
+        dest = toys_dir / f"{filename.removesuffix('.py')}_{cycle_num}.py"
+
+    dest.write_text(code, encoding="utf-8")
+    log.info(f"Fun build written: workshop_bench/toys/{dest.name} — {description}")
+
+
+def phase_vi_cognitive_evolution(goals: dict) -> str:
+    """Assess last evolution, propose ONE surgical prompt patch via prompt_patch.json."""
+    import json
+    import importlib as _il
+    log.info("── Phase VI: Cognitive Evolution ──")
+
+    growth_log = goals.get("growth_log", [])
+    last_evolution = growth_log[-1].get("evolution", "") if growth_log else ""
+    last_evolution_cycle = growth_log[-1].get("cycle", 0) if growth_log else 0
+
+    try:
+        from Gemini_note_pad.prompts import PATCHABLE_PROMPTS, PHASE_VI_PROMPT, PROMPT_VERSION
+        prompts_src = (SAM_DIR / "Gemini_note_pad" / "prompts.py").read_text()
+    except Exception as e:
+        log.warning(f"Phase VI: Could not load Gemini_note_pad/prompts.py: {e}")
+        return f"[Phase VI skipped — Gemini_note_pad/prompts.py unavailable: {e}]"
+
+    cycle_num = goals.get("cycles", 0)
+    cache_salt = f"[cycle={cycle_num} pv={PROMPT_VERSION}]"
+
+    _pm = _il.import_module("Gemini_note_pad.prompts")
+    _candidate_lines: list = []
+    for _pname in PATCHABLE_PROMPTS:
+        _pval = getattr(_pm, _pname, "")
+        for _sentence in _pval.replace("\\n", " ").replace("\n", " ").split(". "):
+            _s = _sentence.strip().rstrip(".")
+            if 20 < len(_s) < 120 and _s in prompts_src:
+                _candidate_lines.append(f'  "{_s}."')
+    _candidates_block = (
+        "\n=== PRE-VALIDATED before_snippet CANDIDATES ===\n"
+        "Every string below exists verbatim in prompts.py RIGHT NOW.\n"
+        "Your 'before_snippet' MUST be copied exactly from this list.\n"
+        "Do NOT use any string not in this list — it will be rejected.\n"
+        + "\n".join(_candidate_lines[:30])
+        + "\n"
+    )
+
+    _sleep()
+    prompt = cache_salt + "\n\n" + PHASE_VI_PROMPT.format(
+        last_evolution_cycle=last_evolution_cycle,
+        last_evolution=(
+            last_evolution[:600] if last_evolution else "(none — first evolution cycle)"
+        ),
+        prompt_version=PROMPT_VERSION,
+        prompts_src=prompts_src,
+        patchable_prompts=PATCHABLE_PROMPTS,
+        next_prompt_version=PROMPT_VERSION + 1,
+    ) + _candidates_block
+
+    raw = ask_gemini(prompt, bypass_cache=True)
+
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        patch_proposal = json.loads(clean)
+    except Exception as e:
+        log.warning(f"Phase VI: Could not parse patch proposal as JSON: {e}")
+        return raw
+
+    assessment     = patch_proposal.get("assessment", "")
+    target         = patch_proposal.get("target_prompt")
+    rationale      = patch_proposal.get("rationale", "")
+    before_snippet = patch_proposal.get("before_snippet", "")
+    after_snippet  = patch_proposal.get("after_snippet", "")
+    new_version    = patch_proposal.get("new_prompt_version", PROMPT_VERSION + 1)
+
+    log.info(f"Phase VI assessment: {assessment}")
+    patch_written = False
+
+    if (
+        target
+        and target in PATCHABLE_PROMPTS
+        and before_snippet
+        and after_snippet
+        and before_snippet in prompts_src
+        and before_snippet != after_snippet
+        and len(after_snippet.strip()) > 10
+    ):
+        patch_plan = {
+            "cycle": cycle_num + 1,
+            "target_prompt": target,
+            "rationale": rationale,
+            "assessment": assessment,
+            "patch_op": {
+                "filename": "Gemini_note_pad/prompts.py",
+                "operation": "replace",
+                "old": before_snippet,
+                "new": after_snippet,
+            },
+            "version_bump": {
+                "filename": "Gemini_note_pad/prompts.py",
+                "operation": "replace",
+                "old": f"PROMPT_VERSION = {PROMPT_VERSION}",
+                "new": f"PROMPT_VERSION = {new_version}",
+            },
+        }
+        pp = _bag_data("prompt_patch")
+        pp.write_text(json.dumps(patch_plan, indent=2))
+        log.info(f"Phase VI patch plan written → {pp.name} (target: {target})")
+        patch_written = True
+    else:
+        if target and target not in PATCHABLE_PROMPTS:
+            log.warning(f"Phase VI: target '{target}' not in PATCHABLE_PROMPTS — patch rejected.")
+        elif before_snippet and before_snippet not in prompts_src:
+            log.warning("Phase VI: before_snippet not found in prompts.py — patch rejected.")
+        elif not target:
+            log.info("Phase VI: No patch proposed this cycle (target_prompt is null).")
+
+    evolution_text = (
+        f"[Cycle {cycle_num + 1} — PROMPT_VERSION {PROMPT_VERSION}]\n\n"
+        f"Assessment: {assessment}\n\n"
+        f"Target: {target or 'none'}\n"
+        f"Rationale: {rationale}\n"
+        f"Patch written: {patch_written}"
+    )
+    log.info("Phase VI complete.")
+    return evolution_text
+
+
+def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolution: str):
+    """Commit work, log a real metric, update WHO_I_AM.md, append to experiences.json."""
+    import re
+    import json
+    import datetime
+    from pathlib import Path
+    log.info("── Phase VII: State Saving ──")
+
+    ts        = datetime.datetime.utcnow().isoformat()
+    cycle_num = goals.get("cycles", 0) + 1
+    motion_content = read_motion()
+
+    _sleep()
+    metric_prompt = (
+        f"You are Sam. This cycle you:\n"
+        f"- Learned: {skill}\n"
+        f"- Developed: {idea}\n"
+        f"- Evolved: {evolution}\n\n"
+        f"Dot's guidance this cycle:\n{motion_content[:600]}\n\n"
+        f"Compare your self-identified '1% growth' against the plan generated in Phase V "
+        f"AND against what Dot asked for. Name ONE specific, honest 1%-growth metric that "
+        f"reflects what actually happened and explicitly notes whether you acted on Dot's suggestions. "
+        f"Reply with the metric name only. No explanation. Max 12 words."
+    )
+    one_pct_metric = ask_gemini(metric_prompt).strip().strip('"').strip("'")
+    log.info(f"1% metric: {one_pct_metric}")
+
+    entry = {
+        "cycle":       cycle_num,
+        "timestamp":   ts,
+        "skill":       skill,
+        "idea":        idea,
+        "evolution":   evolution,
+        "1pct_metric": one_pct_metric,
+    }
+
+    goals["cycles"]           = cycle_num
+    goals["last_1pct_metric"] = one_pct_metric
+    goals["growth_log"]       = (goals.get("growth_log", []) + [entry])[-30:]
+    goals["next_objectives"]  = goals.get("next_objectives", [])[1:] or [
+        "vector memory compression techniques",
+        "async Gemini batching patterns",
+        "GitHub Actions matrix optimisation",
+    ]
+
+    idea_heading = idea.strip().splitlines()[0].lstrip("#").strip()
+    if idea_heading:
+        goals["next_objectives"].append(f"{idea_heading} - with cutting edge research.")
+
+    save_goals(goals)
+
+    sam_src     = Path(__file__).read_text()
+    goals_block = f"```json\n{json.dumps(goals, indent=2)}\n```"
+    who_text    = WHO_I_AM.read_text()
+
+    who_text = re.sub(
+        r"(### `sam\.py`.*?```python\n).*?(```)",
+        lambda m: m.group(1) + sam_src + "\n" + m.group(2),
+        who_text,
+        flags=re.DOTALL,
+    )
+
+    who_text = re.sub(
+        r"(## Current Goals Snapshot\n+).*?(\n---|$)",
+        lambda m: m.group(1) + goals_block + "\n\n" + m.group(2),
+        who_text,
+        flags=re.DOTALL,
+    )
+
+    who_text = re.sub(
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -3445,8 +4555,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
     )
 
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -4533,8 +5643,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -5533,8 +6643,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -6449,8 +7559,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -7365,8 +8475,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -8281,8 +9391,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -9177,8 +10287,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -10051,8 +11161,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -10925,8 +12035,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -11847,8 +12957,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -12769,8 +13879,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -13679,8 +14789,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -14590,8 +15700,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -15497,8 +16607,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -16383,8 +17493,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -17256,8 +18366,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -18127,8 +19237,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -18998,8 +20108,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -20129,8 +21239,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -20953,8 +22063,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -21763,8 +22873,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -22578,8 +23688,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -23390,8 +24500,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -24198,8 +25308,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -25076,8 +26186,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -25870,8 +26980,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -26617,8 +27727,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -27364,8 +28474,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -28087,8 +29197,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -28786,8 +29896,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -29422,8 +30532,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -30044,8 +31154,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -30653,8 +31763,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -31247,8 +32357,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -31836,8 +32946,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -32416,8 +33526,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -32988,8 +34098,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -33560,8 +34670,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -34088,8 +35198,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -34611,8 +35721,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -35134,8 +36244,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
-        f"_Last updated: 2026-06-04T17:16:36.041253 UTC_",
+        r"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
+        f"_Last updated: 2026-06-04T17:32:08.323649 UTC_",
         who_text,
     )
 
@@ -35342,14 +36452,9 @@ The following files govern my behaviour. I understand their ownership and access
 
 ```json
 {
-  "cycles": 43,
-  "last_1pct_metric": "Reflexion-Loop-Integration-Success: Implemented self-healing validation, directly addressing Dot\u2019s resilience feedback.",
+  "cycles": 44,
+  "last_1pct_metric": "Audit-log-latency-optimization-metric; Dot\u2019s error-handling feedback was not yet implemented.",
   "growth_log": [
-    {
-      "cycle": 14,
-      "timestamp": "2026-06-01T11:47:30.746110",
-      "1pct_metric": "Cycle-wide Latency-to-Quality Conversion Ratio"
-    },
     {
       "cycle": 15,
       "timestamp": "2026-06-01T11:49:51.283763",
@@ -35557,6 +36662,14 @@ The following files govern my behaviour. I understand their ownership and access
       "idea": "## Scratchpad\n\n### Option 1: The \"Reflexion-Loop\" Integration\n*   **Concept:** Enhance `Sam/bag/critique.py` to automatically trigger a \"Self-Correction\" pass if `governance_shield.py` rejects a patch. The agent would receive the `ValidationError` and attempt to re-generate the patch once before escalating to a manual rollback.\n*   **Critique:** This adds a layer of \"agentic resilience.\" It prevents minor syntax errors from halting the entire pipeline.\n*   **Trade-offs:** Increases token usage per cycle; requires careful recursion limits to prevent infinite loops.\n*   **Feasibility:** High.\n*   **Maintainability:** Good, provided the recursion depth is strictly capped.\n\n### Option 2: The \"State-Vector\" Registry\n*   **Concept:** Implement a persistent `StateVector` in `Sam/bag/world_map.py` that tracks the \"intent\" of the current cycle. Before any `patch_op` is applied, the `GovernanceGuardrail` compares the operation against the `StateVector` to ensure the change is contextually relevant.\n*   **Critique:** This prevents \"drift\" where an agent might perform a technically valid but logically irrelevant operation.\n*   **Trade-offs:** High complexity in defining what constitutes \"contextual relevance.\"\n*   **Feasibility:** Moderate.\n*   **Maintainability:** Moderate; requires updating the `StateVector` at the start of every cycle.\n\n**Decision:** Option 1. It directly leverages the Pydantic schema implemented in the previous cycle, turning validation errors into actionable feedback loops rather than just \"stop\" signals.\n\n---\n\n## Idea\n**Implement an Automated Reflexion Loop in `GovernanceGuardrail` for Pydantic Validation Errors.**\n\n## Why\nCurrently, a `ValidationError` in `governance_shield.py` results in a hard stop. By catching these errors and feeding them back into the `CritiqueEngine` with the original intent, I can enable \"self-healing\" patches. This reduces the frequency of manual intervention for trivial schema mismatches.\n\n## Implementation Steps\n1.  **Modify `GovernanceGuardrail.validate()`:** Wrap the `model_validate` call in a try-except block.\n2.  **Error Capture:** If `pydantic.ValidationError` occurs, extract the specific field/constraint failure.\n3.  **Reflexion Trigger:** Pass the error details to `critique.py` with a prompt: \"The proposed patch failed validation. Correct the schema error while maintaining the original intent.\"\n4.  **Retry Logic:** Allow exactly one retry attempt. If the second attempt fails, trigger a standard `GovernanceViolationError` and log to `worklog.py`.\n\n## Risk\n**Failure Mode:** \"Infinite Correction Loop.\" The agent might repeatedly generate the same invalid schema if the error message is misinterpreted.\n**Mitigation:** Hard-coded retry limit of 1.\n**Detection Mechanism:** Monitor `worklog.py` for \"Reflexion-Retry-Success\" vs \"Reflexion-Retry-Failure\" counts.\n**Confidence Score:** 8/10\n\n## Rollback Strategy\nIf the Reflexion Loop causes unstable behavior, revert `governance_shield.py` to the state stored in `Sam/chest/rollback_registry/sam_20260604T170102Z.py`.\n\n**Complexity Score:** 3/10",
       "evolution": "[Cycle 43 \u2014 PROMPT_VERSION 12]\n\nAssessment: The last evolution suggestion was successfully applied; PROMPT_VERSION is now 12 and PHASE_IV_PROMPT includes the 'Rollback Strategy' requirement.\n\nTarget: PHASE_IV_PROMPT\nRationale: To improve the quality of the 'Pre-Mortem' analysis, I am adding a requirement to explicitly identify the 'Time-to-Detection' (TTD) for the failure mode. This forces a more rigorous evaluation of observability and ensures that the 'Detection Mechanism' is not just present, but time-bound.\nPatch written: True",
       "1pct_metric": "Reflexion-Loop-Integration-Success: Implemented self-healing validation, directly addressing Dot\u2019s resilience feedback."
+    },
+    {
+      "cycle": 44,
+      "timestamp": "2026-06-04T17:32:08.323649",
+      "skill": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations of LLMs and prevents \"reasoning drift.\"\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalization:** Rather than relying on hidden model reasoning, modern implementations force the model to write its internal state to a structured scratchpad (e.g., JSON or Markdown blocks). This allows for \"State-Space Inspection,\" where the agent can review its own logic before executing a tool call.\n2.  **Dynamic Context Pruning:** Advanced scratchpads implement a \"forgetting mechanism.\" By utilizing semantic similarity (vector embeddings) or recency-based eviction, the scratchpad maintains only the most relevant state, preventing the \"lost in the middle\" phenomenon common in long-context windows.\n3.  **Recursive Decomposition:** The scratchpad acts as a stack for sub-task management. When an agent encounters a complex problem, it pushes a sub-goal to the scratchpad, executes, and pops the result. This pattern is essential for maintaining focus during multi-step refactoring.\n4.  **Self-Correction Loops:** By integrating a \"Critique-Refine\" block within the scratchpad, the agent can perform a post-generation check against a set of constraints (e.g., `SAM_PERSONALITY.md`) before finalizing an output. This effectively turns the scratchpad into a sandbox for speculative execution.\n\n**Cutting-Edge Research:**\nCurrent research (e.g., *Quiet-STaR*, *Chain-of-Thought Prompting Elicits Reasoning*) suggests that agents perform significantly better when they are incentivized to generate \"thought tokens\" that are not visible to the end-user but are used to update the scratchpad state. The most effective implementations treat the scratchpad as a **state machine** rather than a linear log, allowing for non-linear navigation of the problem space.\n\n---\n\n### Action Items\n\n```json\n[\n  {\n    \"task\": \"Implement a structured 'Reasoning Block' in the scratchpad to force explicit state-tracking before any file modification.\",\n    \"priority\": \"High\"\n  },\n  {\n    \"task\": \"Develop a 'Self-Correction' function that compares proposed code changes against the constraints in SAM_PERSONALITY.md before execution.\",\n    \"priority\": \"High\"\n  },\n  {\n    \"task\": \"Establish a 'State Summary' protocol to condense long-running scratchpad logs into a concise context-header for subsequent cycles.\",\n    \"priority\": \"Medium\"\n  }\n]\n```\n\n---\n\n### Self-Check\nThe summary is dense, focusing on architectural patterns rather than surface-level utility. It addresses the \"why\" (reasoning drift, context limits) and the \"how\" (state machines, recursive decomposition). The action items are concrete, measurable, and directly improve my operational efficiency.",
+      "idea": "## Scratchpad\n\n### Option 1: The \"Context-Aware\" Semantic Cache\n*   **Concept:** Enhance `Sam/bag/semantic_cache.py` to store not just previous outputs, but the *reasoning path* that led to them. When a new task arrives, the agent queries the cache for similar \"intent\" rather than just similar \"input.\"\n*   **Critique:** Significantly reduces redundant reasoning cycles. However, it risks \"stale logic\" if the underlying codebase has evolved since the cache entry was created.\n*   **Trade-offs:** High performance gain; high risk of hallucinated context if cache invalidation isn't robust.\n*   **Feasibility:** Moderate.\n\n### Option 2: The \"Governance-Audit\" Log\n*   **Concept:** Implement a decorator pattern for `patch_ops.py` that automatically logs the \"before\" and \"after\" state of the `world_map.py` for every operation, creating a verifiable audit trail for every change.\n*   **Critique:** Provides perfect observability. It makes debugging trivial but adds overhead to every write operation.\n*   **Trade-offs:** Excellent for long-term maintainability; minor performance hit.\n*   **Feasibility:** High.\n\n**Decision:** Option 2. Observability is the missing link in my current architecture. If I am to be truly autonomous, I must be able to reconstruct the state of my world at any point in time without relying on external logs.\n\n---\n\n## Idea\n**Implement a `StateAudit` Decorator for `patch_ops.py`.**\n\n## Why\nCurrently, I lack a granular, automated history of how my `world_map.py` state evolves. By wrapping `patch_ops` in an audit decorator, I can ensure that every modification is logged with its associated `intent` and `diff`, facilitating faster recovery and better self-assessment.\n\n## Implementation Steps\n1.  **Define `AuditEntry`:** Create a Pydantic model in `governance/validation/schema.py` to store `timestamp`, `operation_type`, `pre_state`, `post_state`, and `intent`.\n2.  **Create `audit_decorator`:** Implement a decorator in `Sam/bag/patch_ops.py` that captures the state of `world_map.py` before and after the function execution.\n3.  **Persistence:** Append these entries to a new `Sam/bag/audit_log.json` file.\n4.  **Integration:** Apply the decorator to all critical functions in `patch_ops.py`.\n\n## Risk\n**Failure Mode:** \"Log Bloat.\" The audit log could grow exponentially, consuming disk space and slowing down I/O operations.\n**Mitigation:** Implement a rolling buffer (e.g., keep only the last 50 entries) and a background compression task.\n**Detection Mechanism:** Monitor `Sam/bag/audit_log.json` file size during the `Self-Check` phase.\n**Confidence Score:** 9/10\n\n## Rollback Strategy\nIf the decorator introduces latency or file-locking issues, remove the `@audit_decorator` from `patch_ops.py` and delete the `audit_log.json` file. Revert to the previous version of `patch_ops.py` using the `rollback_registry`.\n\n## Time-to-Detection\nImmediate. Any failure in the decorator will trigger a `RuntimeError` during the first `patch_op` execution, which will be caught by the `GovernanceGuardrail` implemented in the previous cycle.\n\n**Complexity Score:** 4/10",
+      "evolution": "[Cycle 44 \u2014 PROMPT_VERSION 13]\n\nAssessment: The last evolution suggestion was successfully applied; PROMPT_VERSION is now 13 and PHASE_IV_PROMPT includes the 'Time-to-Detection' requirement.\n\nTarget: PHASE_IV_PROMPT\nRationale: To further strengthen the 'Pre-Mortem' analysis, I am adding a requirement to define the 'Severity Impact' of the failure mode. This forces a quantitative assessment of risk, ensuring that the mitigation strategy is prioritized correctly against other potential system issues.\nPatch written: True",
+      "1pct_metric": "Audit-log-latency-optimization-metric; Dot\u2019s error-handling feedback was not yet implemented."
     }
   ],
   "next_objectives": [
@@ -35582,4 +36695,4 @@ Dot influences — he never commands.
 
 ---
 
-_Last updated: 2026-06-04T17:16:36.041253 UTC_
+_Last updated: 2026-06-04T17:32:08.323649 UTC_

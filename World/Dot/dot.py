@@ -346,7 +346,7 @@ def curate_experiences() -> str:
         "You are Dot, Sam's memory curator. Below is Sam's experiences.json — "
         "a log of everything Sam has lived through across his cycles.\n\n"
        # f"=== EXPERIENCES ===\n{json.dumps(experiences, indent=2)}\n\n"
-        f"I woke up, did some coding, walked around and slept."                # Bad FiX by D
+        "I woke up, did some coding, walked around and slept."                # Bad FiX by D
         "Your job:\n"
         "1. Identify which entries should be KEPT as-is (still relevant, formative).\n"
         "2. Identify which entries should be CONSOLIDATED (similar themes that can be merged).\n"
