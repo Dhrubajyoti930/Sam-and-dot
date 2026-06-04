@@ -878,6 +878,67 @@ def sunday_inbox_check() -> str:
                     "target_described": e["sender"],
                 })
                 reply_reports.append(f"- ✅ Replied to **{e['sender']}** (Re: {e['subject']})")
+
+                # ── Extract technical insight for Sam's memory ────────────────
+                # Ask Gemini whether this reply contains a real technical lesson.
+                # If yes, write it to experiences.json and optionally goals.json.
+                _sleep()
+                insight_prompt = (
+                    "You are Dot, extracting learning value from an email reply Sam received.\n\n"
+                    f"=== WHAT SAM ASKED (summary) ===\n{sam_summary}\n\n"
+                    f"=== THEIR REPLY ===\n{e['body']}\n\n"
+                    "Does this reply contain a specific, actionable technical insight Sam should remember?\n"
+                    "Examples of YES: a concrete recommendation, a better approach, a warning about a pitfall, "
+                    "a correction to Sam's assumption.\n"
+                    "Examples of NO: jokes, vague encouragement, off-topic content, 'sounds cool'.\n\n"
+                    "Respond ONLY with a JSON object:\n"
+                    "  - 'has_insight': true or false\n"
+                    "  - 'insight': if true, 1-2 sentences capturing the lesson precisely — "
+                    "what Sam should do or avoid, and why. Empty string if false.\n"
+                    "  - 'actionable': if true, should this become a concrete next objective for Sam? "
+                    "true only if the insight implies a specific thing to build or change.\n"
+                    "  - 'objective': if actionable, 1 sentence phrased as a task. Empty string otherwise.\n"
+                    "  - 'source': the sender's name or email\n"
+                    "The first character must be '{'."
+                )
+                raw_insight = ask_gemini(insight_prompt)
+                parsed_insight = _parse_gemini_json(raw_insight)
+
+                if parsed_insight and parsed_insight.get("has_insight"):
+                    insight_text = parsed_insight.get("insight", "")
+                    source       = parsed_insight.get("source", e["sender"])
+                    log.info(f"Insight extracted from {source}: {insight_text[:80]}...")
+
+                    # Append to experiences.json
+                    experiences = load_experiences()
+                    experiences.append({
+                        "timestamp":  datetime.datetime.utcnow().isoformat(),
+                        "category":   "external_feedback",
+                        "source":     source,
+                        "subject":    e["subject"],
+                        "insight":    insight_text,
+                        "cycle":      "dot-inbox",
+                    })
+                    save_experiences(experiences)
+                    log.info("Insight written to experiences.json.")
+
+                    # If actionable, append to Sam's next_objectives
+                    if parsed_insight.get("actionable") and parsed_insight.get("objective"):
+                        objective = parsed_insight["objective"]
+                        goals = load_goals()
+                        if "next_objectives" not in goals:
+                            goals["next_objectives"] = []
+                        goals["next_objectives"].append(f"EXTERNAL_INSIGHT: {objective}")
+                        with open(GOALS, "w") as f:
+                            json.dump(goals, f, indent=2)
+                        log.info(f"Objective added to goals.json: {objective}")
+                        reply_reports.append(
+                            f"  💡 Insight from {source} → experiences.json + goals.json"
+                        )
+                    else:
+                        reply_reports.append(f"  💡 Insight from {source} → experiences.json")
+                else:
+                    log.info(f"No technical insight extracted from {e['sender']}'s reply.")
             else:
                 reply_reports.append(f"- ❌ Reply to {e['sender']} failed (SMTP error).")
 
