@@ -445,3 +445,24 @@
 2026-06-04 17:04:42,989 [DOT][INFO] Today is Thursday — inbox check reserved for Sunday.
 2026-06-04 17:04:42,989 [DOT][INFO] Worklog stale check already ran today — skipping.
 2026-06-04 17:04:44,022 [DOT][INFO] Dot's daily run complete.
+2026-06-04 17:10:02,223 [DOT][INFO] ═══════════════════════════════════
+2026-06-04 17:10:02,224 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-04 17:10:02,224 [DOT][INFO] ═══════════════════════════════════
+2026-06-04 17:10:02,224 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-04 17:10:10,244 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-04 17:10:12,975 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-04 17:10:12,979 [DOT][INFO] Wisdom check complete.
+2026-06-04 17:10:20,980 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-04 17:10:28,983 [DOT][INFO] Dot cache hit.
+2026-06-04 17:10:28,984 [DOT][WARNING] Could not parse curation result.
+2026-06-04 17:10:28,984 [DOT][INFO] Letter written to Sam: Letter_20260604T171028Z.md
+2026-06-04 17:10:36,984 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-04 17:10:36,985 [DOT][INFO] No pending email request.
+2026-06-04 17:10:36,985 [DOT][INFO] Appended to Letter_20260604T171028Z.md: Email Dispatch
+2026-06-04 17:10:44,985 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-04 17:10:52,988 [DOT][INFO] Dot cache hit.
+2026-06-04 17:10:52,988 [DOT][INFO] Bag review complete.
+2026-06-04 17:10:52,988 [DOT][INFO] Appended to Letter_20260604T171028Z.md: Bag Excavation Findings
+2026-06-04 17:10:52,988 [DOT][INFO] Today is Thursday — inbox check reserved for Sunday.
+2026-06-04 17:10:52,988 [DOT][INFO] Worklog stale check already ran today — skipping.
+2026-06-04 17:10:53,954 [DOT][INFO] Dot's daily run complete.
