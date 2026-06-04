@@ -335,18 +335,17 @@ def snapshot_sam():
 
 def self_check() -> bool:
     """Rigorous integrity check — uses ruff to catch undefined names and logic errors."""
-    import sys
     import subprocess
+    import sys
     log.info("── Running Rigorous Integrity Gate ──")
     try:
         subprocess.run(
-            ["ruff", "check", str(ROOT), "--select", "F401", "--fix",
-             "--exclude", "rollback_registry"],
-            capture_output=True, text=True, timeout=20,
+            ["ruff", "check", str(ROOT), "--select", "F401", "--fix", "--exclude", "rollback_registry"],
+            capture_output=True, text=True, timeout=20, check=False
         )
         result = subprocess.run(
             ["ruff", "check", str(ROOT), "--select", "F", "--exclude", "rollback_registry"],
-            capture_output=True, text=True, timeout=20,
+            capture_output=True, text=True, timeout=20, check=False
         )
         if result.returncode != 0:
             log.error(f"Integrity Gate FAILED:\n{result.stdout}")
@@ -355,13 +354,12 @@ def self_check() -> bool:
         log.info("Integrity Gate passed — All files syntax and logic clean.")
         return True
     except Exception as e:
-        import subprocess as _sp
         log.warning(f"Integrity Gate unavailable ({e}) — falling back to basic syntax check.")
         files_to_check = [SAM_DIR / "sam.py"] + list(BAG.glob("*.py"))
         for f in files_to_check:
             try:
-                _sp.run([sys.executable, "-m", "py_compile", str(f)], check=True)
-            except Exception:
+                subprocess.run([sys.executable, "-m", "py_compile", str(f)], check=True, capture_output=True)
+            except subprocess.CalledProcessError:
                 _rollback()
                 return False
         return True
@@ -707,7 +705,7 @@ def phase_ii_spaced_repetition(goals: dict) -> str:
 def phase_iii_market_ingestion() -> str:
     """Scan for technical trends and return a structured summary."""
     from Gemini_note_pad.prompts import PHASE_III_PROMPT
-    from workshop_bench.governance.core.schema import PatchOperation
+    from workshop_bench.governance.validation.schema import PatchOperation
 
     log.info("── Phase III: Market Ingestion ──")
 
