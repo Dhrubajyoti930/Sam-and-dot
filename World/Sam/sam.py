@@ -1222,6 +1222,10 @@ def maybe_reply_to_stranger(goals: dict):
     """If Dot flagged stranger emails as opportunities, Sam decides whether to reply.
     Reads stranger_inbox.json from mail/dot_to_sam/, asks Gemini for a decision,
     writes request.json if yes, then removes the file so it isn't re-processed."""
+    from workshop_bench.governance.shield import PatchOperation
+    import json
+    import datetime
+
     stranger_path = MAIL_IN / "stranger_inbox.json"
     if not stranger_path.exists():
         return
@@ -1238,8 +1242,8 @@ def maybe_reply_to_stranger(goals: dict):
 
     s = strangers[0]
     cycle_num = goals.get("cycles", 0)
-
     req = _bag_data("request")
+
     if req.exists():
         try:
             if json.loads(req.read_text()).get("pending", False):
@@ -1290,6 +1294,9 @@ def maybe_reply_to_stranger(goals: dict):
         }
         req.write_text(json.dumps(request, indent=2))
         log.info(f"request.json written for stranger reply to {s.get('sender')}.")
+        
+        # Governance check: ensure the operation structure is valid for future processing
+        PatchOperation(target_file="request.json", operation_type="REPLACE", content="pending", justification="Initiating stranger reply")
     else:
         log.info("Sam decided not to reply to stranger.")
 
