@@ -40,18 +40,18 @@
     "Sam/chest/rollback_registry/sam_20260604T141500Z.py",
     "Sam/chest/rollback_registry/sam_20260603T115815Z.py",
     "Sam/chest/rollback_registry/sam_20260603T113158Z.py",
-    "Sam/chest/rollback_registry/sam_20260603T111205Z.py",
     "Sam/chest/rollback_registry/sam_20260603T113123Z.py",
     "Sam/chest/rollback_registry/sam_20260603T114536Z.py",
+    "Sam/chest/rollback_registry/sam_20260604T142110Z.py",
     "Sam/chest/rollback_registry/sam_20260603T115139Z.py",
-    "Sam/chest/rollback_registry/sam_20260603T111240Z.py",
+    "Sam/chest/rollback_registry/sam_20260604T142034Z.py",
     "Sam/chest/rollback_registry/sam_20260603T122955Z.py",
     "Sam/chest/rollback_registry/sam_20260604T141425Z.py",
     "Sam/chest/rollback_registry/sam_20260603T113827Z.py",
     "Sam/Others/__init__.py",
-    "Sam/workshop_bench/toys/orbit_sim.py",
     "Sam/workshop_bench/governance/processing/canonicalizer.py",
-    "Sam/workshop_bench/governance/processing/deduper.py"
+    "Sam/workshop_bench/governance/processing/deduper.py",
+    "Sam/workshop_bench/experiments/orbit_sim.py"
   ],
   "tests": [
     "Dot/tests/tests.py"
