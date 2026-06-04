@@ -554,14 +554,25 @@ def dispatch_email() -> str:
 
     if success:
         log.info(f"Email sent to {recipient_email}: '{subject}'")
+        # Summarise what Sam wrote so Dot has thread context for replies —
+        # without storing the full HTML body (would bloat sent_log).
+        _sleep()
+        summary_prompt = (
+            f"Summarise the following email in 1-2 sentences, capturing the key ask "
+            f"or question Sam posed. Be specific — mention any concrete question asked.\n\n"
+            f"{plain_body}"
+        )
+        sam_email_summary = ask_gemini(summary_prompt).strip()
+
         sent_entry = {
-            "timestamp":        datetime.datetime.utcnow().isoformat(),
-            "cycle":            cycle,
-            "to":               recipient_email,
-            "to_name":          recipient_name,
-            "subject":          subject,
-            "intent":           intent,
-            "target_described": target_description,
+            "timestamp":         datetime.datetime.utcnow().isoformat(),
+            "cycle":             cycle,
+            "to":                recipient_email,
+            "to_name":           recipient_name,
+            "subject":           subject,
+            "intent":            intent,
+            "target_described":  target_description,
+            "sam_email_summary": sam_email_summary,
         }
         append_sent_log(sent_entry)
         clear_request()
@@ -635,6 +646,41 @@ def excavate_bag() -> str:
 # TASK 5 — SUNDAY INBOX CHECK (runs only on Sundays)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+_BODY_LIMIT = 1_500   # chars per email body — enough to grasp intent, cuts quoted thread bloat
+
+
+def _extract_body(msg) -> str:
+    """Extract plain-text body from an email message, truncated to _BODY_LIMIT."""
+    body = ""
+    if msg.is_multipart():
+        for part in msg.walk():
+            if part.get_content_type() == "text/plain":
+                body = part.get_payload(decode=True).decode(errors="replace")
+                break
+    else:
+        body = msg.get_payload(decode=True).decode(errors="replace")
+
+    # Strip quoted reply lines (lines starting with >) to avoid re-ingesting thread history
+    lines = [l for l in body.splitlines() if not l.startswith(">")]
+    body = "\n".join(lines).strip()
+
+    if len(body) > _BODY_LIMIT:
+        body = body[:_BODY_LIMIT] + "\n… (truncated)"
+    return body
+
+
+def _is_reply_to_sam(subject: str, sender: str, sent_log: list) -> dict | None:
+    """Return the matching sent_log entry if this email is a reply to one Sam sent."""
+    sender_addr = sender.lower()
+    subject_clean = subject.lower().replace("re:", "").strip()
+    for entry in sent_log:
+        sent_to = entry.get("to", "").lower()
+        sent_subj = entry.get("subject", "").lower().replace("re:", "").strip()
+        if sent_to in sender_addr and subject_clean in sent_subj:
+            return entry
+    return None
+
+
 def sunday_inbox_check() -> str:
     log.info("── Task 5: Sunday Inbox Check ──")
 
@@ -650,7 +696,6 @@ def sunday_inbox_check() -> str:
         log.info("No sent emails on record — nothing to check replies for.")
         return "(No sent emails on record yet — nothing to check for.)"
 
-    # Collect subjects and recipients we've written to
     known_subjects = [e["subject"] for e in sent_log]
 
     try:
@@ -658,7 +703,6 @@ def sunday_inbox_check() -> str:
         mail.login(EMAIL_ADDR, APP_PSWD)
         mail.select("inbox")
 
-        # Search for emails received in the last 8 days
         cutoff = (datetime.date.today() - datetime.timedelta(days=8)).strftime("%d-%b-%Y")
         _, data = mail.search(None, f'(SINCE "{cutoff}")')
         ids = data[0].split()
@@ -667,47 +711,182 @@ def sunday_inbox_check() -> str:
             mail.logout()
             return "(Inbox check: no new emails in the past week.)"
 
-        summaries = []
-        for uid in ids[-10:]:   # cap at 10 most recent
+        parsed_emails = []
+        for uid in ids[-10:]:
             _, msg_data = mail.fetch(uid, "(RFC822)")
             raw = msg_data[0][1]
             msg = emaillib.message_from_bytes(raw)
-            sender  = msg.get("From", "")
-            subject = msg.get("Subject", "")
-            date    = msg.get("Date", "")
-
-            body = ""
-            if msg.is_multipart():
-                for part in msg.walk():
-                    if part.get_content_type() == "text/plain":
-                        body = part.get_payload(decode=True).decode(errors="replace")
-                        break
-            else:
-                body = msg.get_payload(decode=True).decode(errors="replace")
-
-            if any(x in sender.lower() for x in ["mailer-daemon", "postmaster", "undeliverable"]):
-                summaries.append(f"⚠️ BOUNCE: {subject} — {sender}")
-            else:
-                summaries.append(f"From: {sender}\nSubject: {subject}\nDate: {date}\nBody snippet: {body}")
+            parsed_emails.append({
+                "sender":  msg.get("From", ""),
+                "subject": msg.get("Subject", ""),
+                "date":    msg.get("Date", ""),
+                "body":    _extract_body(msg),
+                "msg_id":  msg.get("Message-ID", ""),
+            })
 
         mail.logout()
 
-        if not summaries:
+        if not parsed_emails:
             return "(Inbox check: no readable emails found in the past week.)"
+
+        # ── Step 0: Classify stranger emails ─────────────────────────────────
+        # Emails that don't match any sent_log entry are "strangers".
+        # Dot classifies each one and writes machine-readable stranger_inbox.json
+        # for Sam to act on next cycle — Sam decides whether to reply.
+        stranger_opportunities = []
+        for e in parsed_emails:
+            if any(x in e["sender"].lower() for x in ["mailer-daemon", "postmaster", "undeliverable"]):
+                continue
+            if _is_reply_to_sam(e["subject"], e["sender"], sent_log):
+                continue  # known reply — handled in Step 2
+
+            _sleep()
+            classify_prompt = (
+                "You are Dot, screening an unsolicited email received by Sam, an autonomous developer agent.\n\n"
+                f"From: {e['sender']}\nSubject: {e['subject']}\nDate: {e['date']}\n\n{e['body']}\n\n"
+                "Classify this email. Respond ONLY with a JSON object:\n"
+                "  - 'classification': one of 'opportunity', 'noise', 'spam'\n"
+                "  - 'sender_name': their name if identifiable, else empty string\n"
+                "  - 'their_ask': 1 sentence — what they want or why they wrote\n"
+                "  - 'suggested_intent': if opportunity, 1 sentence on how Sam should reply\n"
+                "  - 'confidence': 1-10\n"
+                "opportunity = genuine human with a specific relevant ask (collaboration, feedback, question)\n"
+                "noise = newsletters, automated, vague cold outreach\n"
+                "spam = promotional, irrelevant, or malicious\n"
+                "The first character must be '{'."
+            )
+            raw = ask_gemini(classify_prompt)
+            classification = _parse_gemini_json(raw)
+            if not classification:
+                continue
+
+            label = classification.get("classification", "noise")
+            log.info(f"Stranger email from {e['sender']}: classified as {label} (confidence {classification.get('confidence')})")
+
+            if label == "opportunity" and classification.get("confidence", 0) >= 7:
+                stranger_opportunities.append({
+                    "sender":           e["sender"],
+                    "sender_name":      classification.get("sender_name", ""),
+                    "subject":          e["subject"],
+                    "date":             e["date"],
+                    "their_ask":        classification.get("their_ask", ""),
+                    "suggested_intent": classification.get("suggested_intent", ""),
+                    "body_snippet":     e["body"][:500],
+                })
+
+        # Write stranger_inbox.json for Sam to read next cycle
+        stranger_path = MAIL_OUT / "stranger_inbox.json"
+        if stranger_opportunities:
+            import json as _json
+            stranger_path.write_text(_json.dumps(stranger_opportunities, indent=2), encoding="utf-8")
+            log.info(f"stranger_inbox.json written: {len(stranger_opportunities)} opportunit(y/ies).")
+        elif stranger_path.exists():
+            stranger_path.unlink()  # clear stale file if no new opportunities
+
+        # ── Step 1: Summarise inbox for Sam ──────────────────────────────────
+        summaries = []
+        for e in parsed_emails:
+            if any(x in e["sender"].lower() for x in ["mailer-daemon", "postmaster", "undeliverable"]):
+                summaries.append(f"⚠️ BOUNCE: {e['subject']} — {e['sender']}")
+            else:
+                summaries.append(
+                    f"From: {e['sender']}\nSubject: {e['subject']}\n"
+                    f"Date: {e['date']}\nBody:\n{e['body']}"
+                )
 
         joined = "\n\n---\n\n".join(summaries)
         _sleep()
-        prompt = (
+        summary_prompt = (
             "You are Dot, summarising Sam's inbox for his weekly read.\n"
-            "Below are recent emails. Identify any that are replies to Sam's outreach, "
-            "any interesting new contacts or opportunities, and anything Sam should know about.\n"
-            f"Known sent subjects (for context): {known_subjects}\n\n"
-            f"=== INBOX EMAILS ===\n{joined}\n\n"
-            "Write a clean markdown summary for Sam. Note: who replied, what they said, "
-            "what action (if any) Sam should consider taking."
+            "Below are recent emails (bodies already truncated and quoted history stripped).\n"
+            "Identify replies to Sam's outreach, new opportunities, anything Sam should act on.\n"
+            f"Known sent subjects: {known_subjects}\n\n"
+            f"=== INBOX ===\n{joined}\n\n"
+            "Write a concise markdown summary. For each reply: who, what they said, suggested action."
         )
-        summary = ask_gemini(prompt)
-        return f"### Sunday Inbox Report\n\n{summary}"
+        summary = ask_gemini(summary_prompt)
+
+        # ── Step 2: Auto-reply to threads where someone replied ───────────────
+        reply_reports = []
+        for e in parsed_emails:
+            if any(x in e["sender"].lower() for x in ["mailer-daemon", "postmaster", "undeliverable"]):
+                continue
+
+            original = _is_reply_to_sam(e["subject"], e["sender"], sent_log)
+            if not original:
+                continue  # not a reply to Sam's outreach — skip
+
+            log.info(f"Reply detected from {e['sender']} — composing response.")
+            _sleep()
+
+            sam_summary = original.get("sam_email_summary", original.get("intent", "(no summary)"))
+            compose_prompt = (
+                "You are Dot, composing a reply on behalf of Sam, an autonomous developer agent.\n\n"
+                f"=== WHAT SAM WROTE (summary) ===\n{sam_summary}\n\n"
+                f"=== THEIR REPLY ===\n"
+                f"From: {e['sender']}\nDate: {e['date']}\n\n{e['body']}\n\n"
+                "Write a genuine, concise reply (max 150 words). Rules:\n"
+                "- Directly address what they said — no generic opener.\n"
+                "- Keep Sam's developer voice: honest, curious, no marketing fluff.\n"
+                "- If they asked a question, answer it specifically.\n"
+                "- If Sam asked a question and they answered it, acknowledge their answer and build on it.\n"
+                "- Close with one natural follow-up question or a clear next step.\n"
+                "- Sign as Sam.\n\n"
+                "Respond ONLY with a JSON object:\n"
+                "  - 'subject': reply subject (prepend 'Re: ' if not already there)\n"
+                "  - 'html_body': complete HTML string (inline CSS, clean)\n"
+                "  - 'plain_body': plain-text version\n"
+                "The first character must be '{'."
+            )
+            raw = ask_gemini(compose_prompt)
+            composed = _parse_gemini_json(raw)
+
+            if not composed or not isinstance(composed, dict):
+                log.warning(f"Could not parse reply for {e['sender']} — skipping.")
+                reply_reports.append(f"- ⚠️ Reply to {e['sender']} failed (parse error).")
+                continue
+
+            reply_to_addr = e["sender"]
+            # Extract bare address if "Name <addr>" format
+            import re as _re
+            addr_match = _re.search(r"<(.+?)>", reply_to_addr)
+            if addr_match:
+                reply_to_addr = addr_match.group(1)
+
+            success = send_html_email(
+                to_address=reply_to_addr,
+                subject=composed.get("subject", f"Re: {e['subject']}"),
+                html_body=composed.get("html_body", ""),
+                plain_body=composed.get("plain_body", ""),
+            )
+
+            if success:
+                log.info(f"Reply sent to {reply_to_addr}.")
+                append_sent_log({
+                    "timestamp":        datetime.datetime.utcnow().isoformat(),
+                    "cycle":            "dot-reply",
+                    "to":               reply_to_addr,
+                    "to_name":          original.get("to_name", ""),
+                    "subject":          composed.get("subject", ""),
+                    "intent":           "auto-reply",
+                    "target_described": e["sender"],
+                })
+                reply_reports.append(f"- ✅ Replied to **{e['sender']}** (Re: {e['subject']})")
+            else:
+                reply_reports.append(f"- ❌ Reply to {e['sender']} failed (SMTP error).")
+
+        report = f"### Sunday Inbox Report\n\n{summary}"
+        if reply_reports:
+            report += "\n\n### Auto-Replies Sent\n\n" + "\n".join(reply_reports)
+        if stranger_opportunities:
+            lines = []
+            for s in stranger_opportunities:
+                lines.append(
+                    f"- **{s['sender_name'] or s['sender']}** — {s['their_ask']}\n"
+                    f"  → Sam will decide whether to reply next cycle."
+                )
+            report += "\n\n### Stranger Emails (Opportunities Flagged for Sam)\n\n" + "\n".join(lines)
+        return report
 
     except Exception as e:
         log.error(f"IMAP check failed: {e}")
@@ -770,53 +949,71 @@ def run():
     except Exception as e:
         log.warning(f"Bag excavation skipped: {e}")
 
-    # Task 5: Sunday inbox check (appended to motion.md, only on Sundays)
+    # Task 5, 6, 7 — Sunday-only, once-per-day guard
+    # Dot runs 5 times on Sunday. A stamp file ensures these tasks fire only on
+    # the first run of the day, preventing duplicate replies, duplicate topics,
+    # and duplicate stale reports.
     today = datetime.date.today()
-    if not SUNDAY_ONLY or today.weekday() == 6:
-        try:
-            _sleep()
-            inbox_report = sunday_inbox_check()
-            if inbox_report:
-                append_motion("Sunday Inbox Report", inbox_report)
-        except Exception as e:
-            log.warning(f"Inbox check skipped: {e}")
+    _sunday_stamp = BAG / f"sunday_done_{today.isoformat()}.stamp"
+    _is_sunday = not SUNDAY_ONLY or today.weekday() == 6
+    _already_ran = _sunday_stamp.exists()
+
+    if _is_sunday and _already_ran:
+        log.info("Sunday tasks already completed this run — skipping Tasks 5/6/7.")
     else:
-        log.info(f"Today is {today.strftime('%A')} — inbox check reserved for Sunday.")
+        if _is_sunday:
+            # Task 5: Sunday inbox check
+            try:
+                _sleep()
+                inbox_report = sunday_inbox_check()
+                if inbox_report:
+                    append_motion("Sunday Inbox Report", inbox_report)
+            except Exception as e:
+                log.warning(f"Inbox check skipped: {e}")
 
+            # Task 6: Sunday External Signal (Dot adds one topic to Sam's goals)
+            try:
+                log.info("Task 6: Adding external signal for Sam.")
+                prompt = (
+                    "Review today's tech trends. Suggest ONE high-signal technical topic "
+                    "Sam should learn about next week. Respond ONLY with the topic name."
+                )
+                topic = ask_gemini(prompt)
+                if topic and "error" not in topic.lower():
+                    goals = load_goals()
+                    if "next_objectives" not in goals: goals["next_objectives"] = []
+                    goals["next_objectives"].append(f"EXTERNAL: {topic}")
+                    with open(GOALS, "w") as f: json.dump(goals, f, indent=2)
+                    log.info(f"Added external topic for Sam: {topic}")
+                    append_motion("Sunday Special", f"I've added a new topic from the world for you to study: {topic}")
+            except Exception as e:
+                log.warning(f"Sunday special failed: {e}")
 
-    # Task 6: Sunday External Signal (Dot adds topics to Sam's goals)
-    if not SUNDAY_ONLY or today.weekday() == 6: # Sunday
-        try:
-            log.info("Task 6: Adding external signal for Sam.")
-            prompt = (
-                "Review today's tech trends. Suggest ONE high-signal technical topic "
-                "Sam should learn about next week. Respond ONLY with the topic name."
-            )
-            topic = ask_gemini(prompt)
-            if topic and "error" not in topic.lower():
-                goals = load_goals()
-                if "next_objectives" not in goals: goals["next_objectives"] = []
-                goals["next_objectives"].append(f"EXTERNAL: {topic}")
-                with open(GOALS, "w") as f: json.dump(goals, f, indent=2)
-                log.info(f"Added external topic for Sam: {topic}")
-                append_motion("Sunday Special", f"I've added a new topic from the world for you to study: {topic}")
-        except Exception as e:
-            log.warning(f"Sunday special failed: {e}")
-
-    # Task 7: Worklog stale check
-    try:
-        from bag.worklog import stale_report
-        import json as _json
-        goals_path = SAM_DIR / "My_memories" / "goals.json"
-        current_cycle = _json.loads(goals_path.read_text()).get("cycles", 0)
-        stale = stale_report(current_cycle)
-        if stale:
-            append_motion("Worklog — Stale Items", stale)
-            log.info("Stale worklog entries flagged in motion.md.")
+            # Write stamp so subsequent runs today skip Tasks 5/6/7
+            _sunday_stamp.touch()
+            log.info(f"Sunday stamp written: {_sunday_stamp.name}")
         else:
-            log.info("Worklog: no stale entries.")
-    except Exception as e:
-        log.warning(f"Worklog stale check skipped: {e}")
+            log.info(f"Today is {today.strftime('%A')} — inbox check reserved for Sunday.")
+
+    # Task 7: Worklog stale check — also once per day (not Sunday-specific)
+    _worklog_stamp = BAG / f"worklog_done_{today.isoformat()}.stamp"
+    if _worklog_stamp.exists():
+        log.info("Worklog stale check already ran today — skipping.")
+    else:
+        try:
+            from bag.worklog import stale_report
+            import json as _json
+            goals_path = SAM_DIR / "My_memories" / "goals.json"
+            current_cycle = _json.loads(goals_path.read_text()).get("cycles", 0)
+            stale = stale_report(current_cycle)
+            if stale:
+                append_motion("Worklog — Stale Items", stale)
+                log.info("Stale worklog entries flagged in motion.md.")
+            else:
+                log.info("Worklog: no stale entries.")
+            _worklog_stamp.touch()
+        except Exception as e:
+            log.warning(f"Worklog stale check skipped: {e}")
 
     # To ensure the report email reflects the latest state, we find the latest Letter
     letters = sorted(MAIL_OUT.glob("Letter_*.md"), reverse=True)
