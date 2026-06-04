@@ -260,10 +260,10 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
                 time.sleep(10)
             else:
                 log.error(f"Gemini error: {e}")
-                return f"[Gemini error: {e}]"
+                return ""
 
     log.error("Exhausted all retries.")
-    return "[Gemini error: exhausted retries]"
+    return ""
 
 
 def _sleep():
@@ -591,6 +591,14 @@ def _improve_one_block(plan: str) -> bool:
 
     if not improved or improved == block:
         log.info("_improve_one_block: Gemini returned unchanged block — no patch needed.")
+        return False
+
+    # Guard: reject if Gemini returned garbage (error text, truncated code, etc.)
+    import ast as _ast
+    try:
+        _ast.parse(improved)
+    except SyntaxError as _e:
+        log.error(f"_improve_one_block: Gemini response failed syntax check ({_e}) — aborting, nothing written.")
         return False
 
     op = [{
