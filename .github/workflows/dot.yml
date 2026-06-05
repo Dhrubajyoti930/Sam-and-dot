@@ -1,0 +1,41 @@
+name: Dot
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  dot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install google-generativeai
+
+      - name: Run Dot
+        env:
+          GEM_KEY_DOT: ${{ secrets.GEM_KEY_DOT }}
+          OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
+          EMAIL: ${{ secrets.EMAIL }}
+          APP_PSWD: ${{ secrets.APP_PSWD }}
+          SPARE_KEY: ${{ secrets.SPARE_KEY }}
+        run: python dot.py
+
+      - name: Commit idea queue updates
+        run: |
+          git config user.name "Dot"
+          git config user.email "dot-agent@users.noreply.github.com"
+          git add idea_queue.json tag_registry.json dot_memory.json || true
+          git diff --cached --quiet || git commit -m "[Dot] updated idea queue"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
