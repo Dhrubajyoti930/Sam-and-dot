@@ -14,6 +14,8 @@ Operational Lifecycle:
 
 import os
 import re
+
+
 import sys
 import json
 import time
@@ -191,6 +193,63 @@ def save_experiences(data: list):
         json.dump(data, f, indent=2)
 
 
+def _is_truncated(text: str, expects_json: bool) -> bool:
+    """Detect whether a Gemini response was cut off mid-generation."""
+    if text.endswith("..."):
+        return True
+    if expects_json:
+        if text.count("{") > text.count("}"):
+            return True
+        if text.count("[") > text.count("]"):
+            return True
+    # Detect code truncated mid-definition (e.g. "def foo(x, max_r" with no closing paren)
+    last_line = text.rstrip().splitlines()[-1] if text.strip() else ""
+    if re.search(r"def \w+\([^)]*$", last_line):
+        return True
+    # Unclosed code block
+    if text.count("```") % 2 != 0:
+        return True
+    return False
+
+
+def _stitch_gemini(initial: str, temperature: float, max_continuations: int = 3) -> str:
+    """If initial response looks truncated, ask Gemini to continue and stitch chunks together."""
+    global _CALL_DELAY
+    result = initial
+    for i in range(max_continuations):
+        expects_json = result.lstrip().startswith(("[", "{"))
+        if not _is_truncated(result, expects_json):
+            break
+        log.warning(f"Truncation detected — requesting continuation {i + 1}/{max_continuations}.")
+        time.sleep(_CALL_DELAY)
+        try:
+            cont_response = CLIENT.models.generate_content(
+                model=MODEL,
+                contents=f"Your previous response was cut off. Continue exactly from where you stopped, with no preamble or repeated text:\n\n{result[-300:]}",
+                config={
+                    'max_output_tokens': 8192,
+                    'temperature': temperature,
+                    'top_p': 0.95
+                }
+            )
+            if cont_response and cont_response.text:
+                chunk = cont_response.text.strip()
+                # Avoid re-appending text already present at the seam
+                overlap = len(chunk) // 4
+                if result.endswith(chunk[:overlap]):
+                    result = result + chunk[overlap:]
+                else:
+                    result = result + "\n" + chunk
+                log.info(f"Continuation {i + 1} stitched ({len(chunk)} chars).")
+            else:
+                log.warning("Continuation response was empty — stopping stitch.")
+                break
+        except Exception as e:
+            log.warning(f"Continuation call failed: {e} — stopping stitch.")
+            break
+    return result
+
+
 def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temperature: float = 0.2) -> str:
     """Send a prompt with aggressive RPM protection, empty checks, and task-aware temperature."""
     from bag.semantic_cache import check_cache, update_cache, get_db
@@ -206,6 +265,7 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
             log.info("Semantic cache hit.")
             return cached
 
+    expects_json = "Respond ONLY with a JSON" in prompt or "json array" in prompt.lower()
     current_prompt = prompt
     for attempt in range(retries):
         try:
@@ -230,10 +290,14 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
                 raise ValueError("Empty or blocked response")
 
             res = response.text.strip()
-            # Anti-truncation check
-            if res.endswith("...") or (res.count("{") > res.count("}")) or (res.count("[") > res.count("]")):
-                 log.warning("Potential truncation detected. Retrying...")
-                 continue
+
+            # Stitch continuations if truncated (covers JSON and prose/code)
+            res = _stitch_gemini(res, temperature)
+
+            # Final truncation check — retry the whole call if still incomplete
+            if expects_json and _is_truncated(res, expects_json):
+                log.warning("Response still truncated after stitching. Retrying full call...")
+                continue
 
             if not bypass_cache:
                 try:
@@ -263,6 +327,23 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
 def _sleep():
     """Pause between Gemini calls to respect RPM limits."""
     time.sleep(_CALL_DELAY)
+
+
+def _outline(src: str, label: str) -> str:
+    """Return a compact AST structural summary of a Python source string.
+    Lists every function/class with its line number — enough for Gemini to
+    understand Sam's architecture without burning thousands of tokens on code.
+    Falls back to the raw source only if parsing fails (e.g. syntax error)."""
+    import ast as _ast
+    try:
+        tree = _ast.parse(src)
+        lines = []
+        for node in _ast.walk(tree):
+            if isinstance(node, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef)):
+                lines.append(f"  L{node.lineno}: {type(node).__name__} {node.name}")
+        return f"{label} structure (line numbers for patch anchors):\n" + "\n".join(lines)
+    except Exception:
+        return src  # fallback to full source if parse fails
 
 
 def snapshot_sam() -> Path:
@@ -463,6 +544,71 @@ def repair_bag_modules() -> list:
     return repaired
 
 
+def _dry_run_lint() -> tuple[bool, str]:
+    """Run ruff over the World after a patch is applied but before the integrity gate.
+    Returns (passed, error_output). Does NOT rollback — caller decides what to do."""
+    try:
+        result = subprocess.run(
+            ["ruff", "check", str(ROOT), "--select", "F", "--exclude", "rollback_registry"],
+            capture_output=True, text=True, timeout=20,
+        )
+        if result.returncode == 0:
+            return True, ""
+        return False, result.stdout.strip()
+    except Exception as e:
+        log.warning(f"Dry-run lint unavailable: {e}")
+        return True, ""  # Don't block if ruff is missing
+
+
+def _lint_fix_with_gemini(lint_errors: str) -> bool:
+    """Feed ruff errors back to Gemini and apply a corrective patch. One attempt only.
+    Returns True if a corrective patch was applied (whether or not it fully fixes lint)."""
+    from bag.patch_ops import apply_patch_operations
+
+    log.info("🔧 Lint errors detected — asking Gemini for a corrective patch...")
+
+    # Collect current source of every file mentioned in the errors for context
+    file_contexts = ""
+    mentioned = set(re.findall(r"((?:sam\.py|workshop_bench/[^\s:]+\.py))", lint_errors))
+    for rel in mentioned:
+        target = SAM_DIR / rel
+        if target.exists():
+            file_contexts += f"\n### {rel} (current content):\n```python\n{target.read_text(encoding='utf-8')}\n```\n"
+
+    prompt = (
+        f"You are Sam's lint fixer. Ruff found the following errors after a patch was applied:\n\n"
+        f"```\n{lint_errors}\n```\n"
+        f"{file_contexts}\n"
+        f"Produce a JSON array of surgical patch operations to fix ONLY these lint errors.\n"
+        f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
+        f"Rules:\n"
+        f"  - 'filename': relative path from Sam's root (sam.py or workshop_bench/**/*.py)\n"
+        f"  - 'operation': exactly one of: 'replace', 'delete'\n"
+        f"  - For 'replace': 'old' (exact existing string) and 'new' (corrected string)\n"
+        f"  - For 'delete': 'old' (exact string to remove)\n"
+        f"  - 'old' must be an exact substring of the current file shown above.\n"
+        f"  - Fix unused imports (F401) by removing them from the import line.\n"
+        f"  - Fix undefined names (F821) by adding the missing import.\n"
+        f"  - Keep changes minimal — touch only the lines ruff flagged.\n"
+        f"  - Never supply a 'content' key.\n"
+        f"  - If nothing can be fixed, return an empty array [].\n"
+    )
+
+    _sleep()
+    raw = ask_gemini(prompt, bypass_cache=True)
+    ops = _parse_gemini_json(raw)
+    if not ops:
+        log.warning("Lint-fix Gemini call returned no operations.")
+        return False
+
+    applied = apply_patch_operations(ops, SAM_DIR, log)
+    if applied:
+        log.info("Corrective lint patch applied.")
+    else:
+        log.warning("Corrective lint patch had no applicable operations.")
+    return applied
+
+
 def apply_self_modification(plan: str) -> bool:
     """Ask Gemini to extract surgical patch operations from the plan and apply them.
     Writable: sam.py and bag/**/*.py (workshop subfolders allowed). Returns True if applied.
@@ -491,7 +637,8 @@ def apply_self_modification(plan: str) -> bool:
     prompt = (
         f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
         f"Extract any concrete file modifications as a JSON array of patch operations.\n"
-        f"Respond ONLY with a JSON array — no markdown, no explanation.\n\n"
+        f"Each operation may include an optional 'rationale' field (1 sentence) explaining the change.\n"
+        f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
         f"Each element must have:\n"
         f"  - 'filename'  : relative path from Sam's root. 'sam.py' or 'workshop_bench/**/*.py'. "
         f"Use 'workshop_bench/<folder>/<file>.py' for ALL new modules.\n"
@@ -501,6 +648,10 @@ def apply_self_modification(plan: str) -> bool:
         f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
         f"CRITICAL RULES:\n"
         f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
+        f"  - MODULE PATHS: The prompts file is at 'Gemini_note_pad/prompts.py'.\n"
+        f"    Import it as: from Gemini_note_pad.prompts import ...\n"
+        f"    NEVER use 'bag.prompts' — that module does not exist and will crash Sam.\n"
+        f"    Writable Python files are: sam.py and workshop_bench/**/*.py only.\n"
         f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
         f"  - Keep each operation as small as possible — one function, one block, one line.\n"
         f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
@@ -513,6 +664,25 @@ def apply_self_modification(plan: str) -> bool:
         f"  - Never place a method definition outside its class block.\n"
         f"  - After a 'replace', the resulting file must remain structurally intact —\n"
         f"    check that the 'old' context around the change is not load-bearing for other blocks."
+        f"  - IMPORTS — MANDATORY: Every name used in a 'new' string must be imported.\\n"
+        f"    New files created via insert_after must declare ALL imports on the very first lines.\\n"
+        f"    There are NO implicit imports in Python — logging, queue, threading, re, json, etc.\\n"
+        f"    must each be imported explicitly. Missing imports cause ruff F821 and a full rollback.\\n"
+        f"\\n"
+        f"    CORRECT new file 'new' string example (imports first, always):\\n"
+        f"      import logging\\n"
+        f"      import queue\\n"
+        f"      import threading\\n"
+        f"      log = logging.getLogger('sam')\\n"
+        f"      class BatchManager:\\n"
+        f"          def __init__(self):\\n"
+        f"              self.queue = queue.Queue()\\n"
+        f"              self.lock = threading.Lock()\\n"
+        f"\\n"
+        f"    WRONG — will be REJECTED by ruff F821:\\n"
+        f"      class BatchManager:\\n"
+        f"          def __init__(self):\\n"
+        f"              self.queue = queue.Queue()  # queue not imported — FAIL"
     )
 
     _sleep()
@@ -524,7 +694,25 @@ def apply_self_modification(plan: str) -> bool:
         log.info(f"Gemini patch response (first 200 chars): {raw[:200]}")
         return False
 
-    return apply_patch_operations(operations, SAM_DIR, log)
+    applied = apply_patch_operations(operations, SAM_DIR, log)
+    if not applied:
+        return False
+
+    # ── Dry-run lint gate: catch ruff errors before the integrity gate fires ──
+    lint_ok, lint_errors = _dry_run_lint()
+    if not lint_ok:
+        log.warning(f"Dry-run lint found issues:\n{lint_errors}")
+        _lint_fix_with_gemini(lint_errors)
+        # Re-check once after the corrective patch — integrity gate is still the final arbiter
+        lint_ok2, lint_errors2 = _dry_run_lint()
+        if lint_ok2:
+            log.info("✅ Dry-run lint clean after corrective patch.")
+        else:
+            log.warning(f"Dry-run lint still has issues after fix attempt:\n{lint_errors2}")
+    else:
+        log.info("✅ Dry-run lint clean.")
+
+    return True
 
 
 def apply_prompt_patch() -> bool:
@@ -652,7 +840,10 @@ def phase_iii_market_ingestion() -> str:
 def phase_iv_synthesis(market_data: str, skill: str) -> str:
     """Generate IDEA_OF_THE_DAY.md from market signals + today's skill."""
     log.info("── Phase IV: The Synthesis ──")
-    who_i_am    = load_who_i_am()
+    # Use sam.py's AST outline as the architecture overview — it's the ground
+    # truth of Sam's current structure, and _outline() keeps it to ~1 k tokens
+    # instead of the 1 MB+ that WHO_I_AM.md balloons to (it embeds full source).
+    who_i_am = _outline(Path(__file__).read_text(), "sam.py")
     personality = load_personality()
 
     # Summarise recent experiences so Sam doesn't repeat himself
@@ -753,8 +944,11 @@ def phase_v_development(idea: str, goals: dict, motion_content: str) -> str:
     )
 
     personality = load_personality()
-    sam_src     = Path(__file__).read_text()
-    tests_src   = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
+
+    sam_src      = Path(__file__).read_text()
+    sam_outline  = _outline(sam_src, "sam.py")
+    tests_src    = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
+    tests_outline = _outline(tests_src, "bag/tests.py")
 
     bag_sources = ""
     for _f in iter_writable_bag_py(WORKSHOP):
@@ -769,8 +963,9 @@ def phase_v_development(idea: str, goals: dict, motion_content: str) -> str:
         f"{dot_constraint_block}"
         f"{workshop_block}\n"
         f"Today's development idea:\n{idea}\n\n"
-        f"Sam's current sam.py (full source):\n```python\n{sam_src}\n```\n\n"
-        f"Sam's current bag/tests.py (full source):\n```python\n{tests_src}\n```\n\n"
+        f"{sam_outline}\n\n"
+        f"NOTE: Full sam.py source is available to the patcher — you only need line numbers and function names to specify patch anchors.\n\n"
+        f"{tests_outline}\n\n"
         f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"
         f"Produce a surgical patch plan for Sam to apply. Rules:\n"
         f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"

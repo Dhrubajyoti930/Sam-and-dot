@@ -1,36 +1,39 @@
 ## Scratchpad
 
-### Option 1: Schema-Enforced JSON Scratchpad
-*   **Concept:** Replace the current flat-text `scratchpad.txt` with a `scratchpad.json` managed by a Pydantic model. Each entry includes `timestamp`, `action`, `tool_output`, `status` (success/fail), and `reasoning_hash`.
+### Option 1: Schema-Enforced Scratchpad (JSON)
+*   **Concept:** Replace the current unstructured `scratchpad.txt` with a Pydantic-validated JSON object stored in `bag/scratchpad.json`.
 *   **Critique:** 
-    *   *Pros:* Enables programmatic querying of past failures; forces structured thinking.
-    *   *Cons:* Increases I/O overhead; requires a migration script for existing logs.
-    *   *Feasibility:* High. I already have `_parse_gemini_json` (L82) which can be adapted.
+    *   *Pros:* Enables programmatic parsing, easier state serialization, and strict adherence to the "Modern Scratchpad Paradigm."
+    *   *Cons:* Increases token overhead for schema definitions; requires a robust migration path for existing unstructured data.
+*   **Feasibility:** High. I already have `_parse_gemini_json` (L82).
 
-### Option 2: Semantic Memory Pruning (The "Forgetting" Mechanism)
-*   **Concept:** Implement a background task that uses a simple heuristic (or LLM-based importance scoring) to summarize entries older than 10 cycles into a `summary_archive.json`, keeping only high-entropy state changes.
+### Option 2: Reflection-Triggered Memory Pruning
+*   **Concept:** Implement a `_reflect_and_prune` function that runs at the end of `phase_iv_synthesis`. It summarizes the current scratchpad into a "Milestone" object and clears the transient buffer.
 *   **Critique:**
-    *   *Pros:* Keeps the context window clean; prevents "Lost in the Middle" degradation.
-    *   *Cons:* Risk of losing "low-entropy" but contextually vital details if the pruning logic is too aggressive.
-    *   *Feasibility:* Moderate. Requires careful implementation of the summarization logic to avoid destroying the audit trail.
-
-**Decision:** Option 1 is the foundational requirement for the "Scratchpad-as-a-Database" paradigm. I will implement the JSON schema first, as it provides the data structure necessary for Option 2 to function later.
+    *   *Pros:* Prevents context window saturation; maintains a clean causal chain.
+    *   *Cons:* Risk of losing "high-entropy" details if the summarization logic is too aggressive.
+*   **Feasibility:** Moderate. Requires careful tuning of the summarization prompt to ensure critical reasoning isn't lost.
 
 ---
 
-## Idea: Structured JSON Scratchpad Integration
-Transition the internal scratchpad from a flat-text file to a schema-validated JSON structure, integrated with a mandatory `status` field for every tool-use operation.
+## Idea: Implementation of a Schema-Enforced Scratchpad (Option 1)
 
 ## Why
-Current logs are unstructured, making it difficult to perform "Look-back" operations. By enforcing a schema, I can programmatically analyze my own failure patterns, allowing the `self_check` (L386) to query the scratchpad for recurring issues before committing to a refactor.
+The current unstructured scratchpad is a bottleneck for autonomous reasoning. By moving to a structured JSON schema, I can programmatically inject "Confidence Scores" and "Sub-goal Status" into my reasoning loop. This aligns with the "Modern Scratchpad Paradigm" and allows for automated verification of my own logic before I commit to `apply_self_modification`.
 
 ## Implementation Steps
-1.  Define a `ScratchpadEntry` Pydantic model with fields: `timestamp`, `task_id`, `action`, `tool_output`, `status` (Enum: `success`, `failure`, `pending`), and `reasoning_summary`.
-2.  Update `_bag_data` (L47) to handle `scratchpad.json` serialization.
-3.  Modify the agent loop in `run_cycle` (L1314) to append entries via a new `log_to_scratchpad` helper function.
-4.  Add a validation check in `self_check` (L386) that parses the last 3 entries; if any are marked `failure`, the agent must output a "Correction Plan" before proceeding.
+1.  **Define Schema:** Create a Pydantic model `ScratchpadEntry` with fields: `thought`, `confidence_score` (0.0-1.0), `sub_goal_status` (pending/complete), and `reflection`.
+2.  **Update `sam.py`:** Modify `phase_iv_synthesis` to read/write to `bag/scratchpad.json` using the new schema.
+3.  **Validation Gate:** Add a check in `self_check` (L386) to ensure the scratchpad JSON is valid and that confidence scores are above a threshold (e.g., 0.7) before proceeding to `phase_v_development`.
+4.  **Migration:** Write a one-time script to parse existing `scratchpad.txt` and map it to the new JSON structure.
 
 ## Risk
-**Failure Mode:** The JSON file becomes corrupted or malformed during an interrupted write, potentially breaking the `run_cycle`.
-**Mitigation:** Implement an atomic write pattern (write to `scratchpad.tmp`, then `os.replace` to `scratchpad.json`).
-**Confidence Score:** 9/10. The logic is well-contained and leverages existing Pydantic/JSON infrastructure.
+*   **Failure Mode:** The LLM may struggle to maintain valid JSON syntax during complex reasoning, leading to frequent parsing errors.
+*   **Mitigation:** Utilize `instructor` or my existing `_parse_gemini_json` with a strict retry loop that prompts the model to fix the specific syntax error identified by the JSON decoder.
+
+**Confidence Score:** 9/10
+
+---
+
+### Self-Check
+This plan is surgically targeted. It replaces a legacy unstructured component with a modern, machine-readable one without requiring a full rewrite of the core loop. It directly addresses the "Modern Scratchpad Paradigm" identified in the market scan. The risk is mitigated by leveraging existing parsing infrastructure.
