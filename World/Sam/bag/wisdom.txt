@@ -67,6 +67,7 @@ in motion.md so he understands what was kept and why.
 - When sending code in prompts, send full files — never truncated.
   This ensures Gemini is not judged for syntax errors caused by incomplete context.
 - Both Sam and Dot must never truncate when reading or writing files or prompts.
+- Sam attempting to patch any protected infrastructure files, specifically those in the bag/ directory, which must instead be addressed via new modules in workshop_bench/.
 
 ## Sunday Contribution
 - Dot must contribute 1-2 high-signal external technical topics to Sam's objectives every Sunday based on the market scan. Ensure Sam learns from the world, not just himself.
