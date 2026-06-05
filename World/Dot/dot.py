@@ -501,86 +501,54 @@ def dispatch_email() -> str:
     context            = request.get("context", "")
     cycle              = request.get("cycle", "?")
 
-    # Step A: Multi-call web search verification (up to 4 targeted calls, spaced out)
-    # Replaces the old single-call approach which sent too many tokens in one shot,
-    # exhausting TPM and triggering a "fake" 429 (RESOURCE_EXHAUSTED).
-    # Each call targets a different source to keep per-call token usage small.
-    # Results are merged before the extraction pass.
-    search_targets = [
-        (
-            "personal website or blog",
-            f'Search for the personal website or blog of: {target_description}\n'
-            f'Find any email address listed on their "About", "Contact", or homepage.\n'
-            f'Quote the exact URL and email address as they appear. If not found, say so.'
-        ),
-        (
-            "GitHub profile",
-            f'Search the GitHub profile README or bio of: {target_description}\n'
-            f'Look for an email address in their profile README, pinned repos, or bio field.\n'
-            f'Quote the exact GitHub URL and email address. If not found, say so.'
-        ),
-        (
-            "PyPI / npm / social profiles",
-            f'Search PyPI maintainer page, npm profile, or Twitter/X bio of: {target_description}\n'
-            f'Find any publicly listed contact email.\n'
-            f'Quote the exact source URL and email address. If not found, say so.'
-        ),
-        (
-            "general contact search",
-            f'Search broadly for a publicly listed personal contact email for: {target_description}\n'
-            f'Only report an email if it appears explicitly on an official personal source.\n'
-            f'Do NOT guess or infer. Quote the URL and the email exactly.'
-        ),
-    ]
+    # Step A: Two-call web search verification
+    # Call 1 — web search to find the real email address
+    _sleep()
 
-    search_snippets = []
-    for source_label, search_prompt in search_targets:
-        _sleep()
-        try:
-            search_response = CLIENT.models.generate_content(
-                model=MODEL,
-                contents=search_prompt,
-                config={
-                    "max_output_tokens": 512,   # small cap per call to stay well under TPM
-                    "temperature": 0.1,
-                    "tools": [{"google_search": {}}],
-                }
-            )
-            snippet = search_response.text.strip() if search_response and search_response.text else ""
-            if snippet:
-                search_snippets.append(f"[Source: {source_label}]\n{snippet}")
-                log.info(f"Search ({source_label}) OK — {len(snippet)} chars")
-                # Stop early if we already found an email-like string
-                if "@" in snippet and "." in snippet.split("@")[-1]:
-                    log.info("Email candidate found early — skipping remaining search calls.")
-                    break
-            else:
-                log.info(f"Search ({source_label}) returned nothing.")
-        except Exception as e:
-            log.error(f"Web search call failed ({source_label}): {e}")
-
-    search_result = "\n\n".join(search_snippets)
+    search_prompt = (
+        f"Search the web for the personal email address of: {target_description}\n"
+        f"Intent: {intent}\n\n"
+        f"Look at their personal website, GitHub profile README, PyPI/npm maintainer page, "
+        f"or Twitter/X bio. Report EXACTLY what you find — quote the source URL and the "
+        f"email address as it appears. If you cannot find a personal email on an official "
+        f"source, say so explicitly. Do NOT guess or infer an email address."
+    )
+    try:
+        search_response = CLIENT.models.generate_content(
+            model=MODEL,
+            contents=search_prompt,
+            config={
+                "max_output_tokens": 2048,
+                "temperature": 0.1,
+                "tools": [{"google_search": {}}],
+            }
+        )
+        search_result = search_response.text.strip() if search_response and search_response.text else ""
+        log.info(f"Web search result (first 200): {search_result[:200]}")
+    except Exception as e:
+        log.error(f"Web search call failed: {e}")
+        search_result = ""
 
     if not search_result:
         clear_request()
         append_motion("Email Verification Failed",
-                      f"Sam, web search for _{target_description}_ returned no results across all sources. Request cleared.")
+                      f"Sam, web search for _{target_description}_ returned no results. Request cleared.")
         return "(Email verification failed: web search returned nothing — request cleared.)"
 
-    # Extraction call — structured JSON from the merged search snippets
+    # Call 2 — extract structured JSON from the search result
     _sleep()
     extract_prompt = (
-        f"You are Dot, extracting email verification data from web search results.\n\n"
-        f"Search results (from multiple targeted queries):\n{search_result}\n\n"
-        f"Based ONLY on what is explicitly stated in the search results above "
+        f"You are Dot, extracting email verification data from a web search result.\n\n"
+        f"Search result:\n{search_result}\n\n"
+        f"Based ONLY on what is explicitly stated in the search result above "
         f"(do not infer or guess anything not present), respond with a JSON object:\n"
-        f"  - 'found': true only if a personal email appears explicitly in the search results\n"
+        f"  - 'found': true only if a personal email appears explicitly in the search result\n"
         f"  - 'email': the exact email address string (empty string if not found)\n"
         f"  - 'name': the person's full name\n"
         f"  - 'source_url': the exact URL where the email was found\n"
         f"  - 'confidence': 1-10 (10 = email explicitly visible on official personal source)\n"
         f"  - 'reasoning': one sentence citing the exact source\n\n"
-        f"If the search results do not explicitly show a personal email address, "
+        f"If the search result does not explicitly show a personal email address, "
         f"set 'found': false and 'confidence': 0. Do not guess."
     )
     raw_recipient = ask_gemini(extract_prompt)
