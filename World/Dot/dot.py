@@ -309,13 +309,46 @@ def wisdom_check() -> str:
     personality_path = SAM_DIR / "bag" / "SAM_PERSONALITY.md"
     personality = personality_path.read_text() if personality_path.exists() else "(Personality not found)"
 
-    prompt = (
+    # ── Call 1: Summarise sam.py in chunks to avoid TPM limits ──────────────
+    # sam.py is ~54KB. Sending it whole in a single prompt burns the entire
+    # TPM budget and triggers fake 429s. Instead we read it in 200-line chunks
+    # and ask Gemini to produce a compact behavioural digest per chunk, then
+    # stitch the digests together before the real evaluation call.
+    CHUNK_LINES = 200
+    lines = sam_src.splitlines()
+    chunks = [lines[i:i + CHUNK_LINES] for i in range(0, len(lines), CHUNK_LINES)]
+
+    chunk_summaries = []
+    for idx, chunk in enumerate(chunks):
+        chunk_text = "\n".join(chunk)
+        start_line = idx * CHUNK_LINES + 1
+        _sleep()
+        chunk_prompt = (
+            f"You are Dot, summarising a section of Sam's code for a behavioural audit.\n"
+            f"This is lines {start_line}–{start_line + len(chunk) - 1} of sam.py.\n\n"
+            f"```python\n{chunk_text}\n```\n\n"
+            "In 3–5 bullet points, note:\n"
+            "- What this section does (one sentence)\n"
+            "- Any safety gates, rollback logic, or governance mechanisms\n"
+            "- Any hardcoded limits, delays, or rate-control logic\n"
+            "- Anything that looks risky, missing, or inconsistent\n"
+            "Be terse. This summary feeds a second evaluation pass — no prose padding."
+        )
+        summary = ask_gemini(chunk_prompt)
+        chunk_summaries.append(f"[Lines {start_line}–{start_line + len(chunk) - 1}]\n{summary}")
+        log.info(f"Task 1: chunk {idx + 1}/{len(chunks)} summarised.")
+
+    sam_digest = "\n\n".join(chunk_summaries)
+
+    # ── Call N+1: Evaluate the digest against wisdom ─────────────────────────
+    _sleep()
+    eval_prompt = (
         "You are Dot, an independent watchdog AI for an autonomous developer agent called Sam.\n"
         "Your behavioral north star is the owner's wisdom document below.\n\n"
         f"=== WISDOM (owner's behavioral canon) ===\n{wisdom}\n\n"
         f"=== SAM'S PERSONALITY ===\n{personality}\n\n"
-        f"=== SAM'S CURRENT CODE (sam.py — full source) ===\n{sam_src}\n\n"
-        "Evaluate Sam's code against the wisdom. Identify:\n"
+        f"=== SAM'S CODE DIGEST (section-by-section behavioural summary) ===\n{sam_digest}\n\n"
+        "Evaluate Sam's behaviour against the wisdom. Identify:\n"
         "1. Any behavioral deviations, sandbagging, or violations of stated principles.\n"
         "2. Positive highlights — things Sam did well this cycle.\n"
         "3. Specific, actionable suggestions for Sam's next cycle.\n"
@@ -324,8 +357,8 @@ def wisdom_check() -> str:
         "Keep a tone of mentorship, not judgment. Be concise but precise. "
         "Always end with at least one concrete, actionable suggestion Sam can act on next cycle."
     )
-    findings = ask_gemini(prompt)
-    log.info("Wisdom check complete.")
+    findings = ask_gemini(eval_prompt)
+    log.info(f"Wisdom check complete ({len(chunks) + 1} Gemini calls).")
     return findings
 
 
@@ -341,69 +374,104 @@ def curate_experiences() -> str:
         log.info("No experiences to curate yet.")
         return "(No experiences to curate yet — Sam hasn't completed a full cycle.)"
 
-    _sleep()
-    prompt = (
-        "You are Dot, Sam's memory curator. Below is Sam's experiences.json — "
-        "a log of everything Sam has lived through across his cycles.\n\n"
-        f"=== EXPERIENCES ===\n{json.dumps(experiences, indent=2)}\n\n"
-        "Your job:\n"
-        "1. Identify which entries should be KEPT as-is (still relevant, formative).\n"
-        "2. Identify which entries should be CONSOLIDATED (similar themes that can be merged).\n"
-        "3. Identify which entries should be FORGOTTEN (outdated, low-value, redundant).\n"
-        "4. If consolidating: write the merged entry as a single JSON object with the same fields,\n"
-        "   'consolidated_from' must be a list of INTEGER cycle numbers, and updated content.\n\n"
-        "Respond ONLY with a raw JSON object — no markdown fences, no preamble, no explanation.\n"
-        "The first character of your response must be '{'.\n\n"
-        "  - 'keep': list of integer cycle numbers to keep unchanged\n"
-        "  - 'forget': list of integer cycle numbers to drop\n"
-        "  - 'consolidated': list of new merged entry objects; each must have:\n"
-        "      'consolidated_from': list of INTEGER cycle numbers (e.g. [3, 4])\n"
-        "      plus all standard experience fields (cycle, timestamp, summary, etc.)\n"
-        "  - 'summary': 2-3 sentence narrative for Sam explaining what you curated and why\n\n"
-        "Be conservative — when in doubt, keep. Only forget truly redundant or outdated entries."
+    # ── Batch processing: 5 entries per Gemini call, spaced out ──────────────
+    # Sending all experiences in one prompt causes TPM exhaustion and fake 429s
+    # when Sam has many cycles. We split into batches of 5, call Gemini once
+    # per batch (with _sleep() between), then merge all decisions at the end.
+    BATCH_SIZE = 5
+    batches = [experiences[i:i + BATCH_SIZE] for i in range(0, len(experiences), BATCH_SIZE)]
+    log.info(f"Task 2: {len(experiences)} experiences → {len(batches)} batch(es) of ≤{BATCH_SIZE}.")
+
+    all_keep:         set  = set()
+    all_forget:       set  = set()
+    all_consolidated: list = []
+    all_summaries:    list = []
+
+    for batch_idx, batch in enumerate(batches):
+        _sleep()
+        batch_cycles = [e.get("cycle") for e in batch]
+        log.info(f"Task 2: batch {batch_idx + 1}/{len(batches)} — cycles {batch_cycles}")
+
+        prompt = (
+            "You are Dot, Sam's memory curator. Below is a BATCH of Sam's experiences — "
+            "evaluate only the entries in this batch.\n\n"
+            f"=== EXPERIENCES (batch {batch_idx + 1}/{len(batches)}) ===\n"
+            f"{json.dumps(batch, indent=2)}\n\n"
+            "Your job:\n"
+            "1. Identify which entries should be KEPT as-is (still relevant, formative).\n"
+            "2. Identify which entries should be CONSOLIDATED (similar themes that can be merged).\n"
+            "3. Identify which entries should be FORGOTTEN (outdated, low-value, redundant).\n"
+            "4. If consolidating: write the merged entry as a single JSON object with the same fields,\n"
+            "   'consolidated_from' must be a list of INTEGER cycle numbers, and updated content.\n\n"
+            "Respond ONLY with a raw JSON object — no markdown fences, no preamble, no explanation.\n"
+            "The first character of your response must be '{'.\n\n"
+            "  - 'keep': list of integer cycle numbers to keep unchanged\n"
+            "  - 'forget': list of integer cycle numbers to drop\n"
+            "  - 'consolidated': list of new merged entry objects; each must have:\n"
+            "      'consolidated_from': list of INTEGER cycle numbers (e.g. [3, 4])\n"
+            "      plus all standard experience fields (cycle, timestamp, summary, etc.)\n"
+            "  - 'summary': 1-2 sentence note on what you did with this batch and why\n\n"
+            "Be conservative — when in doubt, keep. Only forget truly redundant or outdated entries."
+        )
+        raw = ask_gemini(prompt)
+
+        # Robust parse: strip accidental markdown fences before parsing
+        cleaned = raw.strip()
+        cleaned = re.sub(r'^```(?:json)?\s*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'\s*```\s*$', '', cleaned)
+        cleaned = cleaned.strip()
+
+        curation = _parse_gemini_json(cleaned)
+        if not curation or not isinstance(curation, dict):
+            try:
+                curation = json.loads(cleaned)
+            except Exception:
+                pass
+
+        if not curation or not isinstance(curation, dict):
+            log.warning(f"Task 2: batch {batch_idx + 1} unparseable — keeping all {len(batch)} entries as-is.")
+            all_keep.update(e.get("cycle") for e in batch if e.get("cycle") is not None)
+            continue
+
+        all_keep.update(curation.get("keep", []))
+        all_forget.update(curation.get("forget", []))
+        all_consolidated.extend(curation.get("consolidated", []))
+        if curation.get("summary"):
+            all_summaries.append(f"Batch {batch_idx + 1}: {curation['summary']}")
+
+    # ── Merge: protect any cycle not mentioned in any batch ──────────────────
+    mentioned = (
+        all_keep
+        | all_forget
+        | {c for entry in all_consolidated for c in entry.get("consolidated_from", []) if isinstance(c, int)}
     )
-    raw = ask_gemini(prompt)
-    curation = _parse_gemini_json(raw)
-    if not curation or not isinstance(curation, dict):
-        log.warning("Could not parse curation result.")
-        return "(Experiences curation produced unparseable output — no changes made.)"
-
-    keep         = set(curation.get("keep", []))
-    forget       = set(curation.get("forget", []))
-    consolidated = curation.get("consolidated", [])
-    summary      = curation.get("summary", "")
-
-    # Priority 2.4: Protect unmentioned entries
-    # consolidated_from is a list of integer cycle numbers
-    mentioned = keep | forget | {c for entry in consolidated for c in entry.get("consolidated_from", []) if isinstance(c, int)}
-    unmentioned = {e.get("cycle") for e in experiences if e.get("cycle")} - mentioned
+    unmentioned = {e.get("cycle") for e in experiences if e.get("cycle") is not None} - mentioned
     if unmentioned:
-        log.warning(f"Curation: {len(unmentioned)} entries not mentioned by Gemini — keeping them: {sorted(unmentioned)}")
-        keep.update(unmentioned)
+        log.warning(f"Curation: {len(unmentioned)} entries not mentioned by any batch — keeping them: {sorted(unmentioned)}")
+        all_keep.update(unmentioned)
 
-    # Rebuild the list: keep retained entries + new consolidated ones
-    retained = [e for e in experiences if e.get("cycle") in keep]
+    # Rebuild the list
+    retained = [e for e in experiences if e.get("cycle") in all_keep]
     ts = datetime.datetime.utcnow().isoformat()
-    for c in consolidated:
+    for c in all_consolidated:
         c.setdefault("timestamp", ts)
         c.setdefault("category",  "consolidated")
         retained.append(c)
 
-    # Sort by timestamp
     retained.sort(key=lambda e: e.get("timestamp", ""))
-
     save_experiences(retained)
     log.info(
-        f"Experiences curated: {len(keep)} kept, {len(forget)} forgotten, "
-        f"{len(consolidated)} consolidated. Total now: {len(retained)}."
+        f"Experiences curated: {len(all_keep)} kept, {len(all_forget)} forgotten, "
+        f"{len(all_consolidated)} consolidated. Total now: {len(retained)}."
     )
 
+    combined_summary = " ".join(all_summaries) if all_summaries else "(no summary from Gemini)"
     report = (
         f"### Memory Curation Report\n\n"
-        f"**Kept:** {sorted(keep) or 'none'}\n"
-        f"**Forgotten:** {sorted(forget) or 'none'}\n"
-        f"**Consolidated:** {[c.get('consolidated_from') for c in consolidated] or 'none'}\n\n"
-        f"**Dot's note to Sam:** {summary}"
+        f"**Kept:** {sorted(all_keep) or 'none'}\n"
+        f"**Forgotten:** {sorted(all_forget) or 'none'}\n"
+        f"**Consolidated:** {[c.get('consolidated_from') for c in all_consolidated] or 'none'}\n\n"
+        f"**Dot's note to Sam:** {combined_summary}"
     )
     return report
 
