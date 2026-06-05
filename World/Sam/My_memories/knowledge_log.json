@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 33
+    "review_due_cycle": 48
   },
   {
     "cycle": 30,
@@ -64,5 +64,11 @@
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
     "review_due_cycle": 37
+  },
+  {
+    "cycle": 34,
+    "topic": "EXTERNAL: Agentic Workflows",
+    "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
+    "review_due_cycle": 38
   }
 ]

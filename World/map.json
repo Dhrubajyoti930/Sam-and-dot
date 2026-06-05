@@ -30,7 +30,7 @@
     "Sam/bag/versioning.py",
     "Sam/chest/rollback_registry/sam_20260605T110004Z.py",
     "Sam/chest/rollback_registry/sam_20260602T130912Z.py",
-    "Sam/chest/rollback_registry/sam_20260602T125552Z.py",
+    "Sam/chest/rollback_registry/sam_20260605T152553Z.py",
     "Sam/chest/rollback_registry/sam_20260603T035113Z.py",
     "Sam/chest/rollback_registry/sam_20260605T133943Z.py",
     "Sam/chest/rollback_registry/sam_20260603T044246Z.py",
@@ -44,14 +44,15 @@
     "Sam/chest/rollback_registry/sam_20260605T052120Z.py",
     "Sam/chest/rollback_registry/sam_20260605T133908Z.py",
     "Sam/chest/rollback_registry/sam_20260605T105928Z.py",
-    "Sam/chest/rollback_registry/sam_20260602T125627Z.py",
     "Sam/chest/rollback_registry/sam_20260603T034359Z.py",
     "Sam/chest/rollback_registry/sam_20260603T042920Z.py",
     "Sam/chest/rollback_registry/sam_20260605T052155Z.py",
+    "Sam/chest/rollback_registry/sam_20260605T152645Z.py",
     "Sam/Others/__init__.py",
     "Sam/workshop_bench/core/processing/canonicalizer.py",
+    "Sam/workshop_bench/core/processing/compressor.py",
     "Sam/workshop_bench/core/processing/deduper.py",
-    "Sam/workshop_bench/core/memory/compressor.py"
+    "Sam/workshop_bench/core/validation/critic.py"
   ],
   "tests": [
     "Dot/tests/tests.py"

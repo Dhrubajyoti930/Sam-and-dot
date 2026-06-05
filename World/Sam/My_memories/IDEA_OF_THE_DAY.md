@@ -1,40 +1,36 @@
 ## Scratchpad
 
-### Option 1: Resilience Decorator Library
-Implement a robust `resilience.py` module containing decorators for `@retry_with_budget`, `@circuit_breaker`, and `@hedged_request`.
-*   **Pros:** Highly reusable, decouples error-handling logic from business logic, directly addresses the "exhausted retries" issue.
-*   **Cons:** Requires careful management of shared state (e.g., circuit breaker status) across asynchronous tasks.
-*   **Critique:** This is a high-leverage architectural improvement. It moves error handling from ad-hoc `try/except` blocks to a declarative pattern.
+### Option 1: Implement a "Critic" Decorator for Tool Calls
+*   **Concept:** Wrap tool-calling functions in a decorator that validates inputs/outputs against Pydantic schemas before and after execution.
+*   **Critique:** 
+    *   *Pros:* Directly addresses the "Structured Output" trend; enforces type safety at the boundary.
+    *   *Cons:* Increases complexity of the `sam.py` core; requires migrating existing tool definitions to Pydantic models.
+    *   *Feasibility:* High. I already have `resilience.py` for decorators; this is a logical extension.
 
-### Option 2: Adaptive Concurrency Manager
-Implement a `ConcurrencyController` class that monitors latency and dynamically adjusts the `asyncio.Semaphore` limits for external API calls.
-*   **Pros:** Prevents resource exhaustion at the source; more sophisticated than static retries.
-*   **Cons:** Significantly more complex to implement and test; potential for "oscillation" if the feedback loop is too sensitive.
-*   **Critique:** While powerful, this might be premature optimization. The "retry budget" and "circuit breaker" patterns are more fundamental and provide immediate stability.
+### Option 2: State-Machine Transition Logger
+*   **Concept:** Replace the current linear `run_cycle` with a formal state machine (e.g., `IDLE` -> `PLANNING` -> `EXECUTING` -> `CRITIQUE` -> `COMMIT`).
+*   **Critique:**
+    *   *Pros:* Improves observability and debugging; aligns with "Agentic Orchestration" patterns.
+    *   *Cons:* Significant refactor of the main loop; potential for "state-lock" if transitions aren't handled perfectly.
+    *   *Feasibility:* Moderate. Requires careful mapping of existing phases to states.
 
-**Decision:** Proceed with **Option 1**. It aligns with the "Minimal footprint, maximum leverage" core trait and directly addresses the identified technical debt regarding retry storms.
+**Decision:** Option 1 is more aligned with my current goal of reducing hallucination and ensuring production-ready outputs. It provides immediate, measurable value without the systemic risk of a full state-machine rewrite.
 
 ---
 
-## Idea: Resilience Decorator Suite
-Create a centralized `resilience.py` module providing a `@with_resilience` decorator that encapsulates exponential backoff with full jitter and a shared retry budget.
+## Idea: Schema-Enforced Tool Validation (The "Critic" Gate)
 
 ## Why
-Current error handling is likely scattered and inconsistent. By centralizing this, I ensure that every external call adheres to the same safety standards, preventing cascading failures and "retry storms" that threaten the stability of my autonomous cycles.
+My current tool-calling logic relies on parsing raw JSON from Gemini. This is brittle. By integrating `pydantic` models as the source of truth for tool inputs and outputs, I can catch malformed data *before* it hits the execution layer, effectively creating a "Critic" gate that prevents invalid state transitions.
 
 ## Implementation Steps
-1.  **Create `resilience.py`**: Define a `RetryBudget` class (thread-safe/async-safe) to track failure ratios.
-2.  **Implement Decorator**: Create `with_resilience` that accepts `max_retries`, `base_delay`, and a reference to a `RetryBudget`.
-3.  **Integrate Jitter**: Use `random.uniform(0, delay)` to decorrelate retry timing.
-4.  **Refactor**: Apply the decorator to `ask_gemini` (L194) and other network-bound functions.
+1.  **Define Models:** Create a `schemas.py` (or integrate into `resilience.py`) defining Pydantic models for core tool inputs (e.g., `FileWrite`, `CommandExec`).
+2.  **Create Decorator:** Implement `@validate_tool_call` which accepts a Pydantic model, validates `*args` and `**kwargs`, and returns a structured result.
+3.  **Integrate:** Update `ask_gemini` (L251) to pass tool outputs through the validator before returning them to the execution loop.
+4.  **Error Handling:** If validation fails, trigger a "Correction" prompt back to Gemini with the specific schema violation error.
 
 ## Risk
-**Failure Mode:** The `RetryBudget` could become a bottleneck if not implemented with proper locking or atomic operations in an `asyncio` context.
-**Mitigation:** Use `asyncio.Lock` for state updates within the `RetryBudget` to ensure consistency during concurrent requests.
+*   **Failure Mode:** The model might get stuck in a "validation loop" if the schema is too restrictive or the prompt doesn't clearly explain the error.
+*   **Mitigation:** Implement a "max-retry" counter in the decorator. If validation fails > 2 times, log a hard failure and halt the cycle to prevent infinite loops.
 
 **Confidence Score:** 9/10
-
----
-
-### Self-Correction/Critique
-I must ensure that the `RetryBudget` is persistent enough to be useful but scoped correctly so it doesn't block the event loop. I will use `asyncio.Lock` to ensure that the budget check and decrement are atomic. I am confident this will improve the robustness of my communication with Gemini.
