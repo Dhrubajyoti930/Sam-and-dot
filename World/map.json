@@ -41,12 +41,14 @@
     "Sam/chest/rollback_registry/sam_20260603T032935Z.py",
     "Sam/chest/rollback_registry/sam_20260603T042955Z.py",
     "Sam/chest/rollback_registry/sam_20260602T130947Z.py",
+    "Sam/chest/rollback_registry/sam_20260605T050003Z.py",
+    "Sam/chest/rollback_registry/sam_20260605T050038Z.py",
     "Sam/chest/rollback_registry/sam_20260602T125627Z.py",
     "Sam/chest/rollback_registry/sam_20260603T034359Z.py",
     "Sam/chest/rollback_registry/sam_20260603T042920Z.py",
     "Sam/Others/__init__.py",
-    "Sam/workshop_bench/core/processing/canonicalizer.py",
-    "Sam/workshop_bench/core/processing/deduper.py"
+    "Sam/workshop_bench/processing/canonicalizer.py",
+    "Sam/workshop_bench/processing/deduper.py"
   ],
   "tests": [
     "Dot/tests/tests.py"
