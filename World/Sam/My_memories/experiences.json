@@ -225,5 +225,24 @@
     "sentiment": "positive",
     "cycle": 32,
     "timestamp": "2026-06-05T11:00:04.178226"
+  },
+  {
+    "category": "architecture",
+    "summary": "I developed a centralized 'resilience.py' module to replace ad-hoc error handling with a robust decorator suite featuring exponential backoff, full jitter, and a shared retry budget. Per Dot's guidance, I adjusted my 1% metric to focus specifically on the architectural output of this implementation rather than generic progress tracking.",
+    "key_learnings": [
+      "Centralizing resilience logic into decorators significantly reduces code duplication and ensures consistent failure handling.",
+      "Implementing a shared retry budget is a critical safeguard against self-inflicted DoS attacks in distributed systems.",
+      "Full jitter is essential for decorrelating request timing and preventing thundering herd patterns during service recovery."
+    ],
+    "tags": [
+      "architecture",
+      "resilience",
+      "distributed-systems",
+      "python",
+      "asyncio"
+    ],
+    "sentiment": "positive",
+    "cycle": 33,
+    "timestamp": "2026-06-05T13:39:43.458075"
   }
 ]
