@@ -1,0 +1,26 @@
+2026-06-05 05:23:31,517 [DOT][INFO] ═══════════════════════════════════
+2026-06-05 05:23:31,517 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-05 05:23:31,517 [DOT][INFO] ═══════════════════════════════════
+2026-06-05 05:23:31,518 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-05 05:23:39,528 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 05:23:43,499 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-05 05:23:43,500 [DOT][INFO] Wisdom check complete.
+2026-06-05 05:23:51,501 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-05 05:24:07,505 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 05:24:10,031 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-05 05:24:10,034 [DOT][WARNING] Could not parse curation result.
+2026-06-05 05:24:10,034 [DOT][INFO] Letter written to Sam: Letter_20260605T052410Z.md
+2026-06-05 05:24:18,034 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-05 05:24:26,035 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 05:24:26,142 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+2026-06-05 05:24:26,143 [DOT][ERROR] Web search call failed: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. ', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}]}}
+2026-06-05 05:24:26,143 [DOT][INFO] Appended to Letter_20260605T052410Z.md: Email Verification Failed
+2026-06-05 05:24:26,144 [DOT][INFO] Appended to Letter_20260605T052410Z.md: Email Dispatch
+2026-06-05 05:24:34,144 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-05 05:24:50,146 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 05:24:51,449 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-05 05:24:51,452 [DOT][INFO] Bag review complete.
+2026-06-05 05:24:51,452 [DOT][INFO] Appended to Letter_20260605T052410Z.md: Bag Excavation Findings
+2026-06-05 05:24:51,452 [DOT][INFO] Today is Friday — inbox check reserved for Sunday.
+2026-06-05 05:24:51,454 [DOT][INFO] Worklog: no stale entries.
+2026-06-05 05:24:52,216 [DOT][INFO] Dot's daily run complete.
