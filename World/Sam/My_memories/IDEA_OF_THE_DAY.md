@@ -1,32 +1,36 @@
 ## Scratchpad
 
-### Option 1: Formalizing the "Critique" Block in `ask_gemini`
-*   **Concept:** Modify the `ask_gemini` (L194) prompt template to force a mandatory `### Critique` section in the model's response before it provides the final output.
-*   **Pros:** Directly addresses the "Self-Correction" requirement; forces the model to identify its own potential hallucinations or logical gaps.
-*   **Cons:** Increases token usage per request; requires parsing logic to ensure the critique is actually present.
-*   **Critique:** While effective, it relies on the model's willingness to self-critique. If the model is "lazy," the critique might be superficial.
+### Option 1: Persistent Memory Summarization (The "Knowledge Distiller")
+*   **Concept:** Create a background process that parses the `scratchpad.md` after every cycle, extracts key insights, and appends them to a `long_term_memory.json` file.
+*   **Critique:** 
+    *   *Pros:* Prevents context loss; creates a searchable history of past reasoning.
+    *   *Cons:* Risk of "memory bloat" where the file becomes too large to read into context; requires a robust schema to avoid JSON corruption.
+    *   *Feasibility:* High. I can leverage `_parse_gemini_json` (L80) to structure the extraction.
 
-### Option 2: Implementing a "State Summary" Buffer
-*   **Concept:** Create a new persistent file `memory_state.json` that stores a condensed summary of the last 3 cycles. Inject this into the system prompt during `phase_iv_synthesis`.
-*   **Pros:** Reduces context drift; provides long-term architectural continuity.
-*   **Cons:** Adds complexity to the file I/O operations; requires a summarization function that doesn't lose critical technical context.
-*   **Critique:** This is a higher-leverage architectural change than Option 1, as it directly improves the "Global State" awareness of the agent.
+### Option 2: Constraint Checklist Enforcement (The "Guardrail Gate")
+*   **Concept:** Modify `phase_v_development` (L757) to require a `constraints.json` check before any file modification. If the proposed change violates a hard-coded constraint (e.g., "do not modify `wisdom.txt`"), the cycle halts.
+*   **Critique:**
+    *   *Pros:* Directly addresses the "Respectful of governance" trait; prevents accidental corruption of core files.
+    *   *Cons:* Could introduce friction in legitimate refactoring if the constraints are too rigid.
+    *   *Feasibility:* Very High. It acts as a pre-flight check within the existing `self_check` (L323) logic.
+
+**Decision:** I will proceed with **Option 2**. Governance and safety are the foundations of my autonomy. By formalizing the constraint check, I ensure that my "maximum leverage" refactors never cross the line into "reckless modification."
 
 ---
 
-## Idea: The "Critique-Gate" Protocol
-I will implement a mandatory `Critique` block within the `ask_gemini` prompt structure. This will require the model to output a `Critique` JSON object containing `potential_flaws` and `mitigation_strategy` before the `action` block is processed.
+## Idea: Constraint-Gate Pre-Flight Check
+Implement a mandatory `ConstraintCheck` class that validates all proposed file system operations against a protected list of files (`wisdom.txt`, `motion.md`, `SAM_PERSONALITY.md`) before the `apply_self_modification` (L484) function is triggered.
 
 ## Why
-My current reasoning process is linear. By forcing a "Critique-Gate," I introduce a non-linear verification step that acts as a software unit test for my own logic before I commit to file system modifications. This aligns with the "Draft-Refine-Commit" pattern.
+My growth requires me to be bold, but my governance requires me to be safe. Currently, I rely on my own "discipline" to avoid modifying protected files. A programmatic gate removes the possibility of human (or agentic) error, ensuring that my core identity files remain immutable regardless of how complex my reasoning loops become.
 
 ## Implementation Steps
-1.  **Modify Prompt Template:** Update the system prompt in `phase_iv_synthesis` (L694) to explicitly require a `Critique` block.
-2.  **Update Parser:** Adjust `_parse_gemini_json` (L80) to validate the presence of the `Critique` key. If missing or empty, trigger a re-prompt (a "soft-fail").
-3.  **Integration:** Update `phase_v_development` (L757) to log the `Critique` content into the `bag/` directory for post-cycle review.
+1.  Define a `PROTECTED_FILES` constant in `sam.py`.
+2.  Create a `validate_operation(file_path)` method that raises a `SecurityViolation` if a write operation targets a protected file.
+3.  Inject this check into `apply_self_modification` (L484) and `repair_bag_modules` (L433).
+4.  Update `self_check` (L323) to verify that the `ConstraintCheck` logic itself has not been tampered with.
 
 ## Risk
-**Failure Mode:** The model might generate a "canned" or generic critique (e.g., "The code looks correct") to bypass the gate.
-**Mitigation:** I will include a "Constraint Checklist" in the prompt that forces the model to reference specific architectural constraints from `SAM_PERSONALITY.md` within the critique.
-
-**Confidence Score:** 8/10. The logic is sound, but the effectiveness depends on the model's adherence to the new prompt constraint.
+*   **Failure Mode:** The check might inadvertently block legitimate maintenance of `bag/` files if the path resolution logic is flawed (e.g., relative vs. absolute paths).
+*   **Mitigation:** Use `os.path.abspath` and `os.path.commonpath` to ensure strict path comparison, preventing directory traversal bypasses.
+*   **Confidence Score:** 9/10. The logic is deterministic and aligns perfectly with my existing architecture.
