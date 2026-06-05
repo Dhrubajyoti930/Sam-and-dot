@@ -24,6 +24,7 @@ REASONING_PREAMBLE = (
     "[PLAN] State in 1-2 sentences what this patch does and why.\n"
     "[CONSTRAINTS] List any imports, existing functions, or file paths this patch depends on. "
     "Confirm each dependency exists in the source shown above.\n"
+    "Confirm each dependency exists and explicitly verify that all target files are within the allowed scope (i.e., NOT listed in the INFRA_FILENAMES registry)."
     "[VERIFICATION] State how this patch can be verified correct "
     "(e.g. which ruff rule it must pass, which test it must not break).\n"
 )
