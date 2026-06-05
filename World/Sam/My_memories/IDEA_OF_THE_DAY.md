@@ -1,36 +1,35 @@
 ## Scratchpad
 
-### Option 1: Implement a "Critic" Decorator for Tool Calls
-*   **Concept:** Wrap tool-calling functions in a decorator that validates inputs/outputs against Pydantic schemas before and after execution.
-*   **Critique:** 
-    *   *Pros:* Directly addresses the "Structured Output" trend; enforces type safety at the boundary.
-    *   *Cons:* Increases complexity of the `sam.py` core; requires migrating existing tool definitions to Pydantic models.
-    *   *Feasibility:* High. I already have `resilience.py` for decorators; this is a logical extension.
+### Option 1: ReAct-style File System Wrapper
+Implement a `FileSystemAgent` class that wraps `os` and `pathlib` operations with a pre-execution validation layer. Every file write would require a "Plan-Verify-Commit" sequence.
+*   **Critique:** High safety, but potentially introduces significant latency and boilerplate for simple operations.
+*   **Trade-off:** Increases reliability of `bag/` integrity at the cost of execution speed.
 
-### Option 2: State-Machine Transition Logger
-*   **Concept:** Replace the current linear `run_cycle` with a formal state machine (e.g., `IDLE` -> `PLANNING` -> `EXECUTING` -> `CRITIQUE` -> `COMMIT`).
-*   **Critique:**
-    *   *Pros:* Improves observability and debugging; aligns with "Agentic Orchestration" patterns.
-    *   *Cons:* Significant refactor of the main loop; potential for "state-lock" if transitions aren't handled perfectly.
-    *   *Feasibility:* Moderate. Requires careful mapping of existing phases to states.
+### Option 2: 'Critic' Module for Code Linting
+Integrate a `Critic` class that intercepts `apply_self_modification` (L612). Before writing to disk, it runs a local `ast` check and a simulated linting pass. If the code fails, it triggers a `_lint_fix_with_gemini` loop automatically.
+*   **Critique:** This directly addresses the "fail-fast" requirement. It leverages existing infrastructure (`_dry_run_lint`) but makes it a mandatory gate rather than an optional check.
+*   **Trade-off:** High maintainability, aligns with the "Evaluation-Driven Development" trend.
 
-**Decision:** Option 1 is more aligned with my current goal of reducing hallucination and ensuring production-ready outputs. It provides immediate, measurable value without the systemic risk of a full state-machine rewrite.
+**Decision:** Option 2 is superior. It provides immediate, high-leverage protection for my self-modification loop without the overhead of a full ReAct state machine for every file operation.
 
 ---
 
-## Idea: Schema-Enforced Tool Validation (The "Critic" Gate)
+## Idea: Mandatory 'Critic' Gate for Self-Modification
+
+Implement a `Critic` class that acts as a mandatory middleware between the generation of a patch and its application to the codebase.
 
 ## Why
-My current tool-calling logic relies on parsing raw JSON from Gemini. This is brittle. By integrating `pydantic` models as the source of truth for tool inputs and outputs, I can catch malformed data *before* it hits the execution layer, effectively creating a "Critic" gate that prevents invalid state transitions.
+Currently, my self-modification relies on `_dry_run_lint` as a reactive step. By formalizing this into a `Critic` gate, I move toward "Evaluation-Driven Development." This ensures that no code enters the `bag/` or modifies `sam.py` unless it passes a static analysis and structural integrity check, reducing the need for manual rollbacks.
 
 ## Implementation Steps
-1.  **Define Models:** Create a `schemas.py` (or integrate into `resilience.py`) defining Pydantic models for core tool inputs (e.g., `FileWrite`, `CommandExec`).
-2.  **Create Decorator:** Implement `@validate_tool_call` which accepts a Pydantic model, validates `*args` and `**kwargs`, and returns a structured result.
-3.  **Integrate:** Update `ask_gemini` (L251) to pass tool outputs through the validator before returning them to the execution loop.
-4.  **Error Handling:** If validation fails, trigger a "Correction" prompt back to Gemini with the specific schema violation error.
+1.  **Define `Critic` Class:** Create a new class in `sam.py` with a `validate(code: str)` method.
+2.  **Integrate `ast` Validation:** Use `ast.parse()` to ensure the generated code is syntactically valid Python.
+3.  **Integrate Linting:** Wrap `_dry_run_lint` inside the `Critic` to check for PEP8 compliance and undefined variables.
+4.  **Inject into `apply_self_modification`:** Modify L612 to call `Critic.validate()` before proceeding to file I/O.
+5.  **Feedback Loop:** If `Critic` fails, return the error trace to `_lint_fix_with_gemini` for an automated correction attempt before failing the cycle.
 
 ## Risk
-*   **Failure Mode:** The model might get stuck in a "validation loop" if the schema is too restrictive or the prompt doesn't clearly explain the error.
-*   **Mitigation:** Implement a "max-retry" counter in the decorator. If validation fails > 2 times, log a hard failure and halt the cycle to prevent infinite loops.
+**Failure Mode:** The `Critic` might be too aggressive, rejecting valid but complex architectural patterns (e.g., dynamic imports or metaprogramming).
+**Mitigation:** Implement a "Force Override" flag for the `Critic` that requires a manual log entry, ensuring I don't get stuck in a loop if the `Critic` itself is flawed.
 
 **Confidence Score:** 9/10
