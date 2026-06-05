@@ -234,3 +234,66 @@
 2026-06-05 16:51:44,686 [DOT][INFO] Today is Friday — inbox check reserved for Sunday.
 2026-06-05 16:51:44,688 [DOT][INFO] Worklog: no stale entries.
 2026-06-05 16:51:46,437 [DOT][INFO] Dot's daily run complete.
+2026-06-05 17:15:51,942 [DOT][INFO] ═══════════════════════════════════
+2026-06-05 17:15:51,942 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-05 17:15:51,942 [DOT][INFO] ═══════════════════════════════════
+2026-06-05 17:15:51,943 [DOT][INFO] Archived Sam alert: ALERT_20260605T171157Z.md
+2026-06-05 17:15:51,943 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-05 17:16:07,950 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 17:16:09,506 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-05 17:16:09,508 [DOT][INFO] Task 1: chunk 1/8 summarised.
+2026-06-05 17:16:17,509 [DOT][INFO] Dot cache hit.
+2026-06-05 17:16:17,509 [DOT][INFO] Task 1: chunk 2/8 summarised.
+2026-06-05 17:16:25,511 [DOT][INFO] Dot cache hit.
+2026-06-05 17:16:25,511 [DOT][INFO] Task 1: chunk 3/8 summarised.
+2026-06-05 17:16:41,512 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 17:16:43,079 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-05 17:16:43,081 [DOT][INFO] Task 1: chunk 4/8 summarised.
+2026-06-05 17:16:51,082 [DOT][INFO] Dot cache hit.
+2026-06-05 17:16:51,082 [DOT][INFO] Task 1: chunk 5/8 summarised.
+2026-06-05 17:17:07,084 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 17:17:08,761 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-05 17:17:08,763 [DOT][INFO] Task 1: chunk 6/8 summarised.
+2026-06-05 17:17:24,764 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 17:17:26,648 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-05 17:17:26,649 [DOT][INFO] Task 1: chunk 7/8 summarised.
+2026-06-05 17:17:42,651 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 17:17:43,850 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-05 17:17:43,852 [DOT][INFO] Task 1: chunk 8/8 summarised.
+2026-06-05 17:17:59,853 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 17:18:03,240 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-05 17:18:03,241 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-06-05 17:18:11,241 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-05 17:18:11,243 [DOT][INFO] Task 2: 7 experiences → 2 batch(es) of ≤5.
+2026-06-05 17:18:19,243 [DOT][INFO] Task 2: batch 1/2 — cycles [13, 17, 19, 20, 21]
+2026-06-05 17:18:19,245 [DOT][INFO] Dot cache hit.
+2026-06-05 17:18:27,245 [DOT][INFO] Task 2: batch 2/2 — cycles [35, 36]
+2026-06-05 17:18:35,247 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 17:18:37,013 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-05 17:18:37,016 [DOT][INFO] Experiences curated: 5 kept, 0 forgotten, 1 consolidated. Total now: 6.
+2026-06-05 17:18:37,016 [DOT][INFO] Letter written to Sam: Letter_20260605T171837Z.md
+2026-06-05 17:18:37,017 [DOT][INFO] Appended to Letter_20260605T171837Z.md: Sam Alerts (carried forward from previous cycle)
+2026-06-05 17:18:37,017 [DOT][INFO] Sam's previous alerts restored to motion.md.
+2026-06-05 17:18:45,017 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-05 17:18:53,018 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 17:18:53,160 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+2026-06-05 17:18:53,162 [DOT][ERROR] Web search call failed (personal website or blog): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. ', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}]}}
+2026-06-05 17:19:01,162 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 17:19:01,288 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+2026-06-05 17:19:01,289 [DOT][ERROR] Web search call failed (GitHub profile): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. ', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}]}}
+2026-06-05 17:19:09,289 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 17:19:09,422 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+2026-06-05 17:19:09,423 [DOT][ERROR] Web search call failed (PyPI / npm / social profiles): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. ', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}]}}
+2026-06-05 17:19:17,423 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 17:19:17,574 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 429 Too Many Requests"
+2026-06-05 17:19:17,574 [DOT][ERROR] Web search call failed (general contact search): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. ', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}]}}
+2026-06-05 17:19:17,575 [DOT][INFO] Appended to Letter_20260605T171837Z.md: Email Verification Failed
+2026-06-05 17:19:17,575 [DOT][INFO] Appended to Letter_20260605T171837Z.md: Email Dispatch
+2026-06-05 17:19:25,575 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-05 17:19:41,577 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-05 17:19:43,788 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-05 17:19:43,791 [DOT][INFO] Bag review complete.
+2026-06-05 17:19:43,791 [DOT][INFO] Appended to Letter_20260605T171837Z.md: Bag Excavation Findings
+2026-06-05 17:19:43,791 [DOT][INFO] Today is Friday — inbox check reserved for Sunday.
+2026-06-05 17:19:43,793 [DOT][INFO] Worklog: no stale entries.
+2026-06-05 17:19:45,943 [DOT][INFO] Dot's daily run complete.
