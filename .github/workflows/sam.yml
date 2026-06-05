@@ -1,0 +1,38 @@
+name: Sam
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  sam:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install google-generativeai
+
+      - name: Run Sam
+        env:
+          GEM_KEY_SAM: ${{ secrets.GEM_KEY_SAM }}
+          SPARE_KEY: ${{ secrets.SPARE_KEY }}
+        run: python sam.py
+
+      - name: Commit any new files Sam created
+        run: |
+          git config user.name "Sam"
+          git config user.email "sam-agent@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "[Sam] auto-generated files"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
