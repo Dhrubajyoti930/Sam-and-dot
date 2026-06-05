@@ -504,6 +504,10 @@ def dispatch_email() -> str:
     # Step A: Two-call web search verification
     # Call 1 — web search to find the real email address
     _sleep()
+    _sleep()
+    _sleep()
+    _sleep()
+    _sleep()
     search_prompt = (
         f"Search the web for the personal email address of: {target_description}\n"
         f"Intent: {intent}\n\n"
