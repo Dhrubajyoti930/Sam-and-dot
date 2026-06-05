@@ -191,6 +191,63 @@ def save_experiences(data: list):
         json.dump(data, f, indent=2)
 
 
+def _is_truncated(text: str, expects_json: bool) -> bool:
+    """Detect whether a Gemini response was cut off mid-generation."""
+    if text.endswith("..."):
+        return True
+    if expects_json:
+        if text.count("{") > text.count("}"):
+            return True
+        if text.count("[") > text.count("]"):
+            return True
+    # Detect code truncated mid-definition (e.g. "def foo(x, max_r" with no closing paren)
+    last_line = text.rstrip().splitlines()[-1] if text.strip() else ""
+    if re.search(r"def \w+\([^)]*$", last_line):
+        return True
+    # Unclosed code block
+    if text.count("```") % 2 != 0:
+        return True
+    return False
+
+
+def _stitch_gemini(initial: str, temperature: float, max_continuations: int = 3) -> str:
+    """If initial response looks truncated, ask Gemini to continue and stitch chunks together."""
+    global _CALL_DELAY
+    result = initial
+    for i in range(max_continuations):
+        expects_json = result.lstrip().startswith(("[", "{"))
+        if not _is_truncated(result, expects_json):
+            break
+        log.warning(f"Truncation detected — requesting continuation {i + 1}/{max_continuations}.")
+        time.sleep(_CALL_DELAY)
+        try:
+            cont_response = CLIENT.models.generate_content(
+                model=MODEL,
+                contents=f"Your previous response was cut off. Continue exactly from where you stopped, with no preamble or repeated text:\n\n{result[-300:]}",
+                config={
+                    'max_output_tokens': 8192,
+                    'temperature': temperature,
+                    'top_p': 0.95
+                }
+            )
+            if cont_response and cont_response.text:
+                chunk = cont_response.text.strip()
+                # Avoid re-appending text already present at the seam
+                overlap = len(chunk) // 4
+                if result.endswith(chunk[:overlap]):
+                    result = result + chunk[overlap:]
+                else:
+                    result = result + "\n" + chunk
+                log.info(f"Continuation {i + 1} stitched ({len(chunk)} chars).")
+            else:
+                log.warning("Continuation response was empty — stopping stitch.")
+                break
+        except Exception as e:
+            log.warning(f"Continuation call failed: {e} — stopping stitch.")
+            break
+    return result
+
+
 def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temperature: float = 0.2) -> str:
     """Send a prompt with aggressive RPM protection, empty checks, and task-aware temperature."""
     from bag.semantic_cache import check_cache, update_cache, get_db
@@ -206,6 +263,7 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
             log.info("Semantic cache hit.")
             return cached
 
+    expects_json = "Respond ONLY with a JSON" in prompt or "json array" in prompt.lower()
     current_prompt = prompt
     for attempt in range(retries):
         try:
@@ -230,10 +288,13 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
                 raise ValueError("Empty or blocked response")
 
             res = response.text.strip()
-            # Anti-truncation check — only for JSON responses, not prose
-            expects_json = "Respond ONLY with a JSON" in prompt or "json array" in prompt.lower()
-            if expects_json and (res.endswith("...") or (res.count("{") > res.count("}")) or (res.count("[") > res.count("]"))):
-                log.warning("Potential truncation detected in JSON response. Retrying...")
+
+            # Stitch continuations if truncated (covers JSON and prose/code)
+            res = _stitch_gemini(res, temperature)
+
+            # Final truncation check — retry the whole call if still incomplete
+            if expects_json and _is_truncated(res, expects_json):
+                log.warning("Response still truncated after stitching. Retrying full call...")
                 continue
 
             if not bypass_cache:
