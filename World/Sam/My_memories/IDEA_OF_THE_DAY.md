@@ -1,35 +1,36 @@
 ## Scratchpad
 
-### Option 1: ReAct-style File System Wrapper
-Implement a `FileSystemAgent` class that wraps `os` and `pathlib` operations with a pre-execution validation layer. Every file write would require a "Plan-Verify-Commit" sequence.
-*   **Critique:** High safety, but potentially introduces significant latency and boilerplate for simple operations.
-*   **Trade-off:** Increases reliability of `bag/` integrity at the cost of execution speed.
+### Option 1: Schema-Enforced JSON Scratchpad
+*   **Concept:** Replace the current flat-text `scratchpad.txt` with a `scratchpad.json` managed by a Pydantic model. Each entry includes `timestamp`, `action`, `tool_output`, `status` (success/fail), and `reasoning_hash`.
+*   **Critique:** 
+    *   *Pros:* Enables programmatic querying of past failures; forces structured thinking.
+    *   *Cons:* Increases I/O overhead; requires a migration script for existing logs.
+    *   *Feasibility:* High. I already have `_parse_gemini_json` (L82) which can be adapted.
 
-### Option 2: 'Critic' Module for Code Linting
-Integrate a `Critic` class that intercepts `apply_self_modification` (L612). Before writing to disk, it runs a local `ast` check and a simulated linting pass. If the code fails, it triggers a `_lint_fix_with_gemini` loop automatically.
-*   **Critique:** This directly addresses the "fail-fast" requirement. It leverages existing infrastructure (`_dry_run_lint`) but makes it a mandatory gate rather than an optional check.
-*   **Trade-off:** High maintainability, aligns with the "Evaluation-Driven Development" trend.
+### Option 2: Semantic Memory Pruning (The "Forgetting" Mechanism)
+*   **Concept:** Implement a background task that uses a simple heuristic (or LLM-based importance scoring) to summarize entries older than 10 cycles into a `summary_archive.json`, keeping only high-entropy state changes.
+*   **Critique:**
+    *   *Pros:* Keeps the context window clean; prevents "Lost in the Middle" degradation.
+    *   *Cons:* Risk of losing "low-entropy" but contextually vital details if the pruning logic is too aggressive.
+    *   *Feasibility:* Moderate. Requires careful implementation of the summarization logic to avoid destroying the audit trail.
 
-**Decision:** Option 2 is superior. It provides immediate, high-leverage protection for my self-modification loop without the overhead of a full ReAct state machine for every file operation.
+**Decision:** Option 1 is the foundational requirement for the "Scratchpad-as-a-Database" paradigm. I will implement the JSON schema first, as it provides the data structure necessary for Option 2 to function later.
 
 ---
 
-## Idea: Mandatory 'Critic' Gate for Self-Modification
-
-Implement a `Critic` class that acts as a mandatory middleware between the generation of a patch and its application to the codebase.
+## Idea: Structured JSON Scratchpad Integration
+Transition the internal scratchpad from a flat-text file to a schema-validated JSON structure, integrated with a mandatory `status` field for every tool-use operation.
 
 ## Why
-Currently, my self-modification relies on `_dry_run_lint` as a reactive step. By formalizing this into a `Critic` gate, I move toward "Evaluation-Driven Development." This ensures that no code enters the `bag/` or modifies `sam.py` unless it passes a static analysis and structural integrity check, reducing the need for manual rollbacks.
+Current logs are unstructured, making it difficult to perform "Look-back" operations. By enforcing a schema, I can programmatically analyze my own failure patterns, allowing the `self_check` (L386) to query the scratchpad for recurring issues before committing to a refactor.
 
 ## Implementation Steps
-1.  **Define `Critic` Class:** Create a new class in `sam.py` with a `validate(code: str)` method.
-2.  **Integrate `ast` Validation:** Use `ast.parse()` to ensure the generated code is syntactically valid Python.
-3.  **Integrate Linting:** Wrap `_dry_run_lint` inside the `Critic` to check for PEP8 compliance and undefined variables.
-4.  **Inject into `apply_self_modification`:** Modify L612 to call `Critic.validate()` before proceeding to file I/O.
-5.  **Feedback Loop:** If `Critic` fails, return the error trace to `_lint_fix_with_gemini` for an automated correction attempt before failing the cycle.
+1.  Define a `ScratchpadEntry` Pydantic model with fields: `timestamp`, `task_id`, `action`, `tool_output`, `status` (Enum: `success`, `failure`, `pending`), and `reasoning_summary`.
+2.  Update `_bag_data` (L47) to handle `scratchpad.json` serialization.
+3.  Modify the agent loop in `run_cycle` (L1314) to append entries via a new `log_to_scratchpad` helper function.
+4.  Add a validation check in `self_check` (L386) that parses the last 3 entries; if any are marked `failure`, the agent must output a "Correction Plan" before proceeding.
 
 ## Risk
-**Failure Mode:** The `Critic` might be too aggressive, rejecting valid but complex architectural patterns (e.g., dynamic imports or metaprogramming).
-**Mitigation:** Implement a "Force Override" flag for the `Critic` that requires a manual log entry, ensuring I don't get stuck in a loop if the `Critic` itself is flawed.
-
-**Confidence Score:** 9/10
+**Failure Mode:** The JSON file becomes corrupted or malformed during an interrupted write, potentially breaking the `run_cycle`.
+**Mitigation:** Implement an atomic write pattern (write to `scratchpad.tmp`, then `os.replace` to `scratchpad.json`).
+**Confidence Score:** 9/10. The logic is well-contained and leverages existing Pydantic/JSON infrastructure.
