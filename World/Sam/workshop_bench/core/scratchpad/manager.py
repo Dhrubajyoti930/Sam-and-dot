@@ -1,6 +1,12 @@
 from pydantic import BaseModel
 from enum import Enum
 import json
+
+"""
+Problem: Transient reasoning state.
+Solution: Persistent JSON scratchpad via Pydantic.
+Cleanup: Archive to history/ directory upon task completion.
+"""
 import os
 
 class Status(str, Enum):
