@@ -554,3 +554,47 @@
 2026-06-06 08:08:53,813 [DOT][INFO] Today is Saturday — inbox check reserved for Sunday.
 2026-06-06 08:08:53,815 [DOT][INFO] Worklog: no stale entries.
 2026-06-06 08:08:54,591 [DOT][INFO] Dot's daily run complete.
+2026-06-06 14:55:57,599 [DOT][INFO] ═══════════════════════════════════
+2026-06-06 14:55:57,599 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-06 14:55:57,599 [DOT][INFO] ═══════════════════════════════════
+2026-06-06 14:55:57,599 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-06 14:56:13,608 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-06 14:56:20,641 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-06 14:56:20,649 [DOT][INFO] Task 1: chunk 1/8 summarised.
+2026-06-06 14:56:20,649 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-06-06 14:56:20,650 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-06-06 14:56:20,650 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-06-06 14:56:20,651 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-06-06 14:56:20,651 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-06-06 14:56:20,652 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-06-06 14:56:20,652 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-06-06 14:56:36,656 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-06 14:56:41,043 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-06 14:56:41,044 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-06-06 14:56:49,044 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-06 14:56:49,046 [DOT][INFO] Task 2: 8 experiences → 2 batch(es) of ≤5.
+2026-06-06 14:56:57,047 [DOT][INFO] Task 2: batch 1/2 — cycles [13, 17, 19, 20, 21]
+2026-06-06 14:56:57,048 [DOT][INFO] Dot cache hit.
+2026-06-06 14:57:05,049 [DOT][INFO] Task 2: batch 2/2 — cycles [40, 41, 42]
+2026-06-06 14:57:13,051 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-06 14:57:20,620 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-06 14:57:20,623 [DOT][INFO] Experiences curated: 5 kept, 0 forgotten, 1 consolidated. Total now: 6.
+2026-06-06 14:57:20,624 [DOT][INFO] Letter written to Sam: Letter_20260606T145720Z.md
+2026-06-06 14:57:20,624 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-06 14:57:20,624 [DOT][INFO] Finding best recipient for: Simon Willison, creator of Datasette. He is an active indie developer who writes extensively about LLM-based tooling, pr
+2026-06-06 14:57:28,626 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-06 14:57:29,532 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-06 14:57:29,536 [DOT][INFO] Recipient match: Simon Willison <simon@simonwillison.net> confidence=10 — The target description explicitly identifies Simon Willison as the creator of Datasette and an active indie developer focused on LLM tooling and practical AI development challenges.
+2026-06-06 14:57:29,536 [DOT][INFO] Matched recipient: Simon Willison <simon@simonwillison.net>
+2026-06-06 14:57:45,537 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-06 14:57:48,473 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-06 14:57:49,240 [DOT][INFO] Email sent to simon@simonwillison.net: 'Verification-Gate protocols and the llm CLI tool'
+2026-06-06 14:57:49,241 [DOT][INFO] Appended to Letter_20260606T145720Z.md: Email Dispatch
+2026-06-06 14:57:57,241 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-06 14:58:13,244 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-06 14:58:15,374 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-06 14:58:15,378 [DOT][INFO] Bag review complete.
+2026-06-06 14:58:15,378 [DOT][INFO] Appended to Letter_20260606T145720Z.md: Bag Excavation Findings
+2026-06-06 14:58:15,379 [DOT][INFO] Today is Saturday — inbox check reserved for Sunday.
+2026-06-06 14:58:15,381 [DOT][INFO] Worklog: no stale entries.
+2026-06-06 14:58:16,237 [DOT][INFO] Dot's daily run complete.

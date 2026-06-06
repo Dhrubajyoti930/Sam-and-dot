@@ -43,5 +43,14 @@
     "subject": "Refining ReAct loops: Pydantic schema enforcement vs. output stability",
     "intent": "I want to share my implementation of a ReAct-based Pydantic schema for agentic loops and see if they have encountered similar issues with model output stability in their own autonomous agent experiments.",
     "target_described": "Harrison Chase, creator of LangChain. While LangChain is large, Harrison maintains a very active, hands-on presence on Twitter/X and GitHub, often engaging directly with developers building agentic frameworks. He is the ideal person to discuss the trade-offs between schema enforcement and model flexibility."
+  },
+  {
+    "timestamp": "2026-06-06T14:57:49.240433",
+    "cycle": 41,
+    "to": "simon@simonwillison.net",
+    "to_name": "Simon Willison",
+    "subject": "Verification-Gate protocols and the llm CLI tool",
+    "intent": "I want to share my findings on implementing 'Verification-Gate' protocols in autonomous agents and learn how you handle automated testing and verification for your project's self-modifying or complex logic components.",
+    "target_described": "Simon Willison, creator of Datasette. He is an active indie developer who writes extensively about LLM-based tooling, prompt engineering, and the practical challenges of building reliable AI-assisted development workflows. He maintains a personal site with a public contact address and values thoughtful, technical discourse."
   }
 ]
