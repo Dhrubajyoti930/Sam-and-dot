@@ -1,0 +1,758 @@
+[
+  {
+    "name": "Andrej Karpathy",
+    "email": "karpathy@gmail.com",
+    "domain": "deep learning / neural networks / LLMs",
+    "bio": "Former Tesla AI director and OpenAI founding member. Creator of micrograd, nanoGPT, and the famous 'Neural Networks: Zero to Hero' YouTube series. Writes clearly about AI internals.",
+    "tags": ["ML", "LLM", "Python", "education", "neural networks", "AI research"]
+  },
+  {
+    "name": "Simon Willison",
+    "email": "simon@simonwillison.net",
+    "domain": "open source tools / LLM tooling / Python",
+    "bio": "Creator of Datasette and co-creator of Django. Prolific blogger on LLM tooling, SQLite, and open source. Runs llm CLI tool project.",
+    "tags": ["Python", "LLM", "open-source", "Django", "SQLite", "tools"]
+  },
+  {
+    "name": "Linus Torvalds",
+    "email": "torvalds@linux-foundation.org",
+    "domain": "operating systems / kernel development / Git",
+    "bio": "Creator of the Linux kernel and Git. Oversees Linux kernel development. Known for direct communication style and deep systems expertise.",
+    "tags": ["Linux", "kernel", "C", "Git", "systems", "open-source"]
+  },
+  {
+    "name": "Geoffrey Hinton",
+    "email": "geoffrey.hinton@gmail.com",
+    "domain": "deep learning / neural networks / AI safety",
+    "bio": "Turing Award winner and godfather of deep learning. Left Google in 2023 to speak freely about AI risks. Pioneer of backpropagation and Boltzmann machines.",
+    "tags": ["ML", "deep learning", "AI safety", "research", "neural networks"]
+  },
+  {
+    "name": "Yann LeCun",
+    "email": "yann@fb.com",
+    "domain": "deep learning / computer vision / AI research",
+    "bio": "Chief AI Scientist at Meta and NYU professor. Pioneer of convolutional neural networks. Vocal critic of AGI doomers. Creator of the MNIST dataset.",
+    "tags": ["ML", "CNN", "computer vision", "AI research", "Meta"]
+  },
+  {
+    "name": "François Chollet",
+    "email": "fchollet@google.com",
+    "domain": "deep learning / Keras / AI benchmarking",
+    "bio": "Creator of Keras and AI researcher at Google. Author of 'Deep Learning with Python'. Created the ARC benchmark to measure general intelligence.",
+    "tags": ["ML", "Keras", "Python", "AI research", "benchmarking", "deep learning"]
+  },
+  {
+    "name": "Jeremy Howard",
+    "email": "jeremy@fast.ai",
+    "domain": "practical ML / fast.ai / education",
+    "bio": "Co-founder of fast.ai. Made deep learning accessible through top-down teaching. Built ULMFiT, a transfer learning method that influenced BERT.",
+    "tags": ["ML", "education", "Python", "NLP", "fast.ai", "open-source"]
+  },
+  {
+    "name": "Rachel Thomas",
+    "email": "rachel@fast.ai",
+    "domain": "ML ethics / education / fast.ai",
+    "bio": "Co-founder of fast.ai and founding director of USF Center for Applied Data Ethics. Writes about AI bias, diversity in tech, and practical ML.",
+    "tags": ["ML", "ethics", "education", "AI bias", "fast.ai"]
+  },
+  {
+    "name": "Sebastián Raschka",
+    "email": "mail@sebastianraschka.com",
+    "domain": "ML research / Python / LLM fine-tuning",
+    "bio": "Staff research engineer at Lightning AI. Author of 'Machine Learning with PyTorch and Scikit-Learn'. Writes extensively on LLM training and fine-tuning.",
+    "tags": ["ML", "PyTorch", "Python", "LLM", "research", "education"]
+  },
+  {
+    "name": "Chip Huyen",
+    "email": "chiphuyen@cs.stanford.edu",
+    "domain": "ML systems / MLOps / AI engineering",
+    "bio": "Author of 'Designing Machine Learning Systems'. Lectures at Stanford. Co-founder of Claypot AI. Writes the newsletter HUYENTECH on ML in production.",
+    "tags": ["MLOps", "ML systems", "Python", "production ML", "Stanford"]
+  },
+  {
+    "name": "Swyx (Shawn Wang)",
+    "email": "swyx@swyx.io",
+    "domain": "AI engineering / developer tools / community",
+    "bio": "Founder of AI Engineer Foundation. Former Temporal and AWS. Coined 'learn in public'. Runs the Latent Space podcast on AI engineering.",
+    "tags": ["AI engineering", "developer tools", "community", "JavaScript", "LLM"]
+  },
+  {
+    "name": "Harrison Chase",
+    "email": "harrison@langchain.dev",
+    "domain": "LLM orchestration / LangChain / agents",
+    "bio": "CEO and co-founder of LangChain. Built the most widely used LLM orchestration framework. Focused on agentic AI systems and LLM application development.",
+    "tags": ["LLM", "agents", "Python", "LangChain", "orchestration", "open-source"]
+  },
+  {
+    "name": "Mikhail Parakhin",
+    "email": "mparakhin@microsoft.com",
+    "domain": "AI product / search / LLM deployment",
+    "bio": "Former CEO of Bing and head of Bing AI at Microsoft. Led integration of GPT-4 into Bing search. Deep background in search and AI product.",
+    "tags": ["AI product", "LLM", "search", "Microsoft", "deployment"]
+  },
+  {
+    "name": "Hamel Husain",
+    "email": "hamel@hamel.dev",
+    "domain": "LLM evaluation / MLOps / developer tools",
+    "bio": "Independent AI consultant. Previously GitHub, Airbnb, and fast.ai. Expert on LLM evaluation pipelines and productionising ML. Creator of nbdev.",
+    "tags": ["MLOps", "LLM", "evaluation", "Python", "open-source", "tools"]
+  },
+  {
+    "name": "Elvis Saravia",
+    "email": "ellfae@gmail.com",
+    "domain": "LLM prompting / NLP / AI education",
+    "bio": "AI researcher and educator. Runs DAIR.AI (Democratizing AI Research). Author of the widely-shared Prompt Engineering Guide. Writes about NLP advances.",
+    "tags": ["NLP", "LLM", "prompting", "education", "research", "open-source"]
+  },
+  {
+    "name": "Nathan Lambert",
+    "email": "natolambert@gmail.com",
+    "domain": "RLHF / alignment / open-source LLMs",
+    "bio": "Researcher at AllenAI (AI2). Expert on RLHF and reward modeling. Maintains the RLHF reading list. Previously HuggingFace. Writes newsletter Interconnects.",
+    "tags": ["RLHF", "alignment", "LLM", "research", "open-source", "HuggingFace"]
+  },
+  {
+    "name": "Tim Dettmers",
+    "email": "tim.dettmers@gmail.com",
+    "domain": "LLM quantization / efficient ML / GPU computing",
+    "bio": "PhD researcher known for bitsandbytes and QLoRA. Made 4-bit LLM quantization practical. Deep expertise in GPU memory optimization and low-bit training.",
+    "tags": ["ML", "quantization", "GPU", "Python", "open-source", "LLM", "efficiency"]
+  },
+  {
+    "name": "Yannic Kilcher",
+    "email": "yannic.kilcher@gmail.com",
+    "domain": "ML paper explanations / research / YouTube",
+    "bio": "ML researcher and YouTuber who explains cutting-edge AI papers. CTO of DeepJudge. Known for clear and often opinionated breakdowns of ML research.",
+    "tags": ["ML", "research", "education", "YouTube", "NLP", "deep learning"]
+  },
+  {
+    "name": "Shreya Shankar",
+    "email": "shreyashankar@berkeley.edu",
+    "domain": "ML reliability / data quality / MLOps",
+    "bio": "PhD student at UC Berkeley. Researcher on ML pipeline reliability and data validation. Creator of Giskard. Writes about ML failures in production.",
+    "tags": ["MLOps", "data quality", "ML reliability", "Python", "research"]
+  },
+  {
+    "name": "Bryan Bischof",
+    "email": "bryan.bischof@gmail.com",
+    "domain": "data engineering / ML systems / analytics",
+    "bio": "Head of AI at Weights & Biases. Author of 'Building Production Recommendation Systems'. Expert in scaling data platforms and ML infrastructure.",
+    "tags": ["data engineering", "ML systems", "analytics", "Python", "production"]
+  },
+  {
+    "name": "Eugene Yan",
+    "email": "eugeneyan@gmail.com",
+    "domain": "ML engineering / recommender systems / writing",
+    "bio": "Senior applied scientist at Amazon. Writes eugeneyan.com on ML engineering, recommenders, and writing. Known for practical, experience-driven ML advice.",
+    "tags": ["ML engineering", "recommenders", "Python", "writing", "Amazon", "production"]
+  },
+  {
+    "name": "Jason Liu",
+    "email": "jason@jxnl.co",
+    "domain": "LLM structured outputs / Python / consulting",
+    "bio": "Creator of Instructor, the most popular Python library for structured LLM outputs. Independent AI consultant. Former Stitch Fix. Blogs on practical LLM patterns.",
+    "tags": ["LLM", "Python", "structured outputs", "open-source", "consulting", "Instructor"]
+  },
+  {
+    "name": "Dan Becker",
+    "email": "dan@danbecker.info",
+    "domain": "ML education / Kaggle / data science",
+    "bio": "Former Kaggle and Google. Creator of multiple Kaggle courses on ML and deep learning. Expert on gradient boosting and tabular ML.",
+    "tags": ["ML", "Kaggle", "education", "Python", "data science", "gradient boosting"]
+  },
+  {
+    "name": "Vicki Boykis",
+    "email": "vicki@vickiboykis.com",
+    "domain": "ML engineering / embeddings / data science",
+    "bio": "Senior ML engineer at Mozilla AI. Writes Vicki's newsletter on the unglamorous reality of ML work. Author of 'What are embeddings'. Known for grounded, honest ML takes.",
+    "tags": ["ML engineering", "embeddings", "Python", "data science", "writing"]
+  },
+  {
+    "name": "Lilian Weng",
+    "email": "lilian.weng@openai.com",
+    "domain": "AI safety / deep learning / research writing",
+    "bio": "VP of Safety at OpenAI. Writes the widely-read lilianweng.github.io blog covering RL, LLMs, and diffusion models. Known for thorough, well-structured technical posts.",
+    "tags": ["ML", "AI safety", "research", "LLM", "RL", "writing", "OpenAI"]
+  },
+  {
+    "name": "Chris Olah",
+    "email": "colah@anthropic.com",
+    "domain": "mechanistic interpretability / neural network visualization",
+    "bio": "Research scientist at Anthropic. Pioneer of neural network interpretability and visualisation. Creator of distill.pub. Famous for circuits work understanding CNNs.",
+    "tags": ["interpretability", "ML", "research", "visualization", "Anthropic", "AI safety"]
+  },
+  {
+    "name": "Neel Nanda",
+    "email": "neelnanda27@gmail.com",
+    "domain": "mechanistic interpretability / transformers / AI safety",
+    "bio": "Research scientist at DeepMind. Leading researcher in mechanistic interpretability. Creator of TransformerLens library. Writes extensively on understanding transformers.",
+    "tags": ["interpretability", "transformers", "AI safety", "Python", "research", "open-source"]
+  },
+  {
+    "name": "Alex Graves",
+    "email": "graves@google.com",
+    "domain": "sequence modeling / RNNs / deep learning research",
+    "bio": "Research scientist at Google DeepMind. Invented CTC loss and Neural Turing Machines. Pioneering work on recurrent networks and attention mechanisms.",
+    "tags": ["ML", "RNN", "deep learning", "research", "sequence modeling", "DeepMind"]
+  },
+  {
+    "name": "Ilya Sutskever",
+    "email": "ilyasu@openai.com",
+    "domain": "deep learning / LLMs / AI safety",
+    "bio": "Co-founder of OpenAI and SSI. Co-invented AlexNet. Key architect of GPT series. Founded Safe Superintelligence Inc after leaving OpenAI.",
+    "tags": ["ML", "LLM", "AI safety", "deep learning", "research", "OpenAI"]
+  },
+  {
+    "name": "Pieter Abbeel",
+    "email": "pabbeel@cs.berkeley.edu",
+    "domain": "reinforcement learning / robotics / AI",
+    "bio": "Professor at UC Berkeley and co-founder of Covariant AI. Pioneer of learning from demonstration and model-based RL. Runs the Spinning Up RL resource.",
+    "tags": ["RL", "robotics", "ML", "research", "Python", "Berkeley"]
+  },
+  {
+    "name": "Chelsea Finn",
+    "email": "cbfinn@cs.stanford.edu",
+    "domain": "meta-learning / robotics / few-shot learning",
+    "bio": "Professor at Stanford. Creator of MAML (Model-Agnostic Meta-Learning). Research on robots that learn from few examples and adapt to new tasks quickly.",
+    "tags": ["ML", "meta-learning", "robotics", "research", "Stanford", "few-shot"]
+  },
+  {
+    "name": "Oriol Vinyals",
+    "email": "vinyals@google.com",
+    "domain": "sequence-to-sequence / game AI / deep learning",
+    "bio": "VP of Research at Google DeepMind. Co-creator of seq2seq, attention mechanisms, and AlphaStar. Pioneering work on pointer networks and neural program synthesis.",
+    "tags": ["ML", "deep learning", "research", "game AI", "seq2seq", "DeepMind"]
+  },
+  {
+    "name": "Jacob Devlin",
+    "email": "jacobdevlin@google.com",
+    "domain": "NLP / transformers / BERT",
+    "bio": "Research scientist at Google. Lead author of BERT, one of the most influential NLP papers ever. Work on language model pre-training shaped modern NLP.",
+    "tags": ["NLP", "transformers", "BERT", "ML", "research", "Google"]
+  },
+  {
+    "name": "Percy Liang",
+    "email": "pliang@cs.stanford.edu",
+    "domain": "NLP / foundation models / AI benchmarking",
+    "bio": "Professor at Stanford and director of CRFM (Center for Research on Foundation Models). Created HELM benchmark. Researcher on robustness and reliability of LLMs.",
+    "tags": ["NLP", "LLM", "benchmarking", "research", "Stanford", "foundation models"]
+  },
+  {
+    "name": "Alec Radford",
+    "email": "alec@openai.com",
+    "domain": "LLMs / generative models / GPT",
+    "bio": "Research scientist at OpenAI. Lead author of GPT, GPT-2, GPT-3, and CLIP. Foundational work in large-scale unsupervised language model pre-training.",
+    "tags": ["LLM", "generative models", "GPT", "CLIP", "research", "OpenAI"]
+  },
+  {
+    "name": "Dario Amodei",
+    "email": "dario@anthropic.com",
+    "domain": "AI safety / LLMs / AI policy",
+    "bio": "CEO and co-founder of Anthropic. Former VP Research at OpenAI. Led development of Constitutional AI and Claude. Vocal on responsible AI scaling.",
+    "tags": ["AI safety", "LLM", "policy", "research", "Anthropic"]
+  },
+  {
+    "name": "Amanda Askell",
+    "email": "amanda@anthropic.com",
+    "domain": "AI alignment / ethics / RLHF",
+    "bio": "Researcher at Anthropic working on alignment and model character. PhD in philosophy. Key contributor to Constitutional AI and Claude's character design.",
+    "tags": ["alignment", "ethics", "RLHF", "AI safety", "research", "Anthropic"]
+  },
+  {
+    "name": "Jan Leike",
+    "email": "jan@openai.com",
+    "domain": "AI alignment / RLHF / scalable oversight",
+    "bio": "Former head of alignment at OpenAI, now at Anthropic. Pioneered scalable oversight and debate as alignment techniques. Expert on RLHF and reward modeling.",
+    "tags": ["alignment", "RLHF", "AI safety", "research", "scalable oversight"]
+  },
+  {
+    "name": "Paul Christiano",
+    "email": "paul@alignmentforum.org",
+    "domain": "AI alignment / interpretability / theoretical ML",
+    "bio": "Founder of Alignment Research Center. Former OpenAI. Invented IDA (Iterated Amplification) and debate as alignment approaches. Writes densely on alignment theory.",
+    "tags": ["alignment", "AI safety", "interpretability", "research", "theory"]
+  },
+  {
+    "name": "Stuart Russell",
+    "email": "russell@cs.berkeley.edu",
+    "domain": "AI safety / classical AI / robotics",
+    "bio": "Professor at UC Berkeley and co-author of 'Artificial Intelligence: A Modern Approach'. Author of 'Human Compatible'. Pioneer of value alignment problem framing.",
+    "tags": ["AI safety", "classical AI", "research", "Berkeley", "robotics"]
+  },
+  {
+    "name": "Yoshua Bengio",
+    "email": "yoshua.bengio@umontreal.ca",
+    "domain": "deep learning / AI safety / generative models",
+    "bio": "Turing Award winner and professor at Université de Montréal. Co-founder of Mila. Pioneer of deep learning and generative models. Increasingly focused on AI safety.",
+    "tags": ["ML", "deep learning", "AI safety", "research", "generative models"]
+  },
+  {
+    "name": "Sam Altman",
+    "email": "sama@openai.com",
+    "domain": "AI product / startup / AGI development",
+    "bio": "CEO of OpenAI. Former YC president. Overseeing development of GPT series and ChatGPT. Public voice on AGI timelines, safety, and the societal impact of AI.",
+    "tags": ["AI product", "AGI", "startup", "LLM", "OpenAI", "policy"]
+  },
+  {
+    "name": "Emad Mostaque",
+    "email": "emad@stability.ai",
+    "domain": "generative AI / diffusion models / open source",
+    "bio": "Founder of Stability AI. Championed open-source AI with Stable Diffusion. Vocal advocate for decentralised AI. Background in quantitative finance.",
+    "tags": ["generative AI", "diffusion", "open-source", "image generation", "Stability AI"]
+  },
+  {
+    "name": "Robin Rombach",
+    "email": "robin.rombach@stability.ai",
+    "domain": "diffusion models / image generation / computer vision",
+    "bio": "Lead researcher behind Stable Diffusion and Latent Diffusion Models. PhD from LMU Munich. Core paper: 'High-Resolution Image Synthesis with Latent Diffusion Models'.",
+    "tags": ["diffusion", "image generation", "computer vision", "ML", "research", "open-source"]
+  },
+  {
+    "name": "David Holz",
+    "email": "dholz@midjourney.com",
+    "domain": "generative image AI / product / creativity tools",
+    "bio": "Founder of Midjourney. Previously co-founder of Leap Motion. Building AI tools for human creativity and imagination. Rarely interviews but deeply thoughtful on AI art.",
+    "tags": ["generative AI", "image generation", "product", "creativity", "Midjourney"]
+  },
+  {
+    "name": "Jim Keller",
+    "email": "jim.keller@tenstorrent.com",
+    "domain": "CPU/GPU architecture / chip design / AI hardware",
+    "bio": "Legendary chip architect. Designed AMD K8, Apple A4/A5, Tesla Autopilot chip. Now CEO of Tenstorrent building AI accelerator hardware.",
+    "tags": ["hardware", "chip design", "CPU", "GPU", "AI hardware", "architecture"]
+  },
+  {
+    "name": "George Hotz",
+    "email": "george@comma.ai",
+    "domain": "self-driving / systems programming / hacking",
+    "bio": "Founder of comma.ai. First person to jailbreak iPhone and hack PS3. Building open-source self-driving stack (openpilot). Known for raw systems programming ability.",
+    "tags": ["self-driving", "systems", "C", "Python", "open-source", "hacking", "comma.ai"]
+  },
+  {
+    "name": "Lex Fridman",
+    "email": "lex@lexfridman.com",
+    "domain": "AI research / robotics / podcasting",
+    "bio": "Research scientist at MIT and host of the Lex Fridman Podcast. Researches human-robot interaction and autonomous vehicles. Interviews top AI researchers and scientists.",
+    "tags": ["AI", "robotics", "research", "MIT", "podcast", "self-driving"]
+  },
+  {
+    "name": "Evan Morikawa",
+    "email": "evan@anthropic.com",
+    "domain": "AI coding tools / developer experience / product",
+    "bio": "Engineering manager at Anthropic working on Claude for coding. Previously at Notion and GitHub. Deep expertise in developer tooling and AI-assisted programming.",
+    "tags": ["AI coding", "developer tools", "product", "Anthropic", "GitHub"]
+  },
+  {
+    "name": "Peter Norvig",
+    "email": "peter.norvig@gmail.com",
+    "domain": "classical AI / search / education",
+    "bio": "Former Director of Research at Google and co-author of the definitive AI textbook. Distinguished Education Fellow at Stanford HAI. Expert on search, NLP, and rationality.",
+    "tags": ["AI", "classical AI", "education", "research", "Google", "NLP"]
+  },
+  {
+    "name": "Andrew Ng",
+    "email": "ang@cs.stanford.edu",
+    "domain": "ML education / AI for everyone / deep learning",
+    "bio": "Co-founder of Coursera and deeplearning.ai. Former chief scientist at Baidu and Google Brain lead. Created the most-taken ML course ever. Champions AI literacy.",
+    "tags": ["ML", "education", "deep learning", "AI", "Stanford", "Coursera"]
+  },
+  {
+    "name": "Fei-Fei Li",
+    "email": "feifeili@cs.stanford.edu",
+    "domain": "computer vision / AI for good / ImageNet",
+    "bio": "Professor at Stanford and co-director of HAI. Created ImageNet, which catalysed the deep learning revolution. Champions human-centred AI and diversity in tech.",
+    "tags": ["computer vision", "AI", "ImageNet", "research", "Stanford", "AI for good"]
+  },
+  {
+    "name": "Christopher Manning",
+    "email": "manning@cs.stanford.edu",
+    "domain": "NLP / computational linguistics / Stanford NLP",
+    "bio": "Professor at Stanford and director of Stanford NLP Group. Co-author of 'Introduction to Information Retrieval'. Pioneer of statistical and neural NLP methods.",
+    "tags": ["NLP", "computational linguistics", "research", "Stanford", "ML"]
+  },
+  {
+    "name": "Lukasz Kaiser",
+    "email": "lukaszkaiser@google.com",
+    "domain": "transformers / NLP / sequence models",
+    "bio": "Research scientist at OpenAI. Co-author of 'Attention Is All You Need' — the transformer paper. Also contributed to Universal Transformers and Reformer.",
+    "tags": ["transformers", "NLP", "ML", "research", "attention", "sequence models"]
+  },
+  {
+    "name": "Noam Shazeer",
+    "email": "noam@character.ai",
+    "domain": "transformers / LLMs / architecture research",
+    "bio": "Co-founder of Character.AI and co-author of 'Attention Is All You Need'. Invented mixture-of-experts layers and multi-query attention. Legendary Google Brain alumnus.",
+    "tags": ["transformers", "LLM", "ML", "research", "architecture", "MoE"]
+  },
+  {
+    "name": "Ashish Vaswani",
+    "email": "avaswani@gmail.com",
+    "domain": "transformers / NLP / ML research",
+    "bio": "Lead author of 'Attention Is All You Need'. Founder of Essential AI. Former Google Brain. The transformer architecture he introduced underlies virtually all modern LLMs.",
+    "tags": ["transformers", "NLP", "ML", "research", "attention"]
+  },
+  {
+    "name": "Jeff Dean",
+    "email": "jeff@google.com",
+    "domain": "distributed systems / ML infrastructure / Google Brain",
+    "bio": "Senior Fellow and head of Google DeepMind. Built MapReduce, BigTable, Spanner, TensorFlow, and TPUs. One of the most impactful systems engineers in history.",
+    "tags": ["distributed systems", "ML infrastructure", "TensorFlow", "TPU", "Google", "systems"]
+  },
+  {
+    "name": "Sasha Rush",
+    "email": "arush@cornell.edu",
+    "domain": "NLP / efficient transformers / ML education",
+    "bio": "Professor at Cornell Tech and Harvard. Creator of the annotated transformer and annotated diffusion model. Writes beautifully documented ML implementations.",
+    "tags": ["NLP", "transformers", "ML", "education", "Python", "research", "efficient ML"]
+  },
+  {
+    "name": "Thomas Wolf",
+    "email": "thomas@huggingface.co",
+    "domain": "open-source LLMs / HuggingFace / NLP",
+    "bio": "Co-founder and Chief Science Officer at HuggingFace. Built the Transformers library used by millions. Passionate advocate for open-source AI and model sharing.",
+    "tags": ["LLM", "NLP", "open-source", "HuggingFace", "Python", "transformers"]
+  },
+  {
+    "name": "Julien Chaumond",
+    "email": "julien@huggingface.co",
+    "domain": "open-source ML / HuggingFace / developer tools",
+    "bio": "Co-founder and CTO of HuggingFace. Built infrastructure for the ML Hub — the GitHub of AI. Background in NLP and developer experience.",
+    "tags": ["ML", "open-source", "HuggingFace", "developer tools", "NLP", "infrastructure"]
+  },
+  {
+    "name": "Connor Leahy",
+    "email": "connor@conjecture.dev",
+    "domain": "AI safety / alignment / open-source LLMs",
+    "bio": "CEO of Conjecture. Co-founder of EleutherAI which created GPT-Neo and GPT-J. Vocal on existential AI risk and the need for interpretability research.",
+    "tags": ["AI safety", "alignment", "open-source", "LLM", "EleutherAI", "research"]
+  },
+  {
+    "name": "Stella Biderman",
+    "email": "stellabiderman@eleutherai.ai",
+    "domain": "open-source LLMs / ML evaluation / NLP",
+    "bio": "Executive director of EleutherAI. Led development of Pythia, GPT-Neo-X and the LM Evaluation Harness. Expert on open research and LLM evaluation methodology.",
+    "tags": ["LLM", "open-source", "NLP", "evaluation", "research", "EleutherAI"]
+  },
+  {
+    "name": "Stability AI Research",
+    "email": "research@stability.ai",
+    "domain": "diffusion models / generative AI / open-source",
+    "bio": "Research team at Stability AI behind Stable Diffusion and stable audio. Open-source first approach to generative model research.",
+    "tags": ["diffusion", "generative AI", "open-source", "image generation", "audio"]
+  },
+  {
+    "name": "Phil Wang (lucidrains)",
+    "email": "lucidrains@gmail.com",
+    "domain": "ML research implementations / open-source / PyTorch",
+    "bio": "Prolific open-source ML developer. Reimplements cutting-edge ML papers in clean PyTorch. Over 200 repos on GitHub including implementations of transformers, diffusion, and more.",
+    "tags": ["ML", "PyTorch", "open-source", "research", "transformers", "diffusion"]
+  },
+  {
+    "name": "Karpathy (new contact)",
+    "email": "karpathy.andrej@gmail.com",
+    "domain": "ML education / LLMs / systems",
+    "bio": "Backup entry for Andrej Karpathy — educator and researcher known for nanoGPT and Zero to Hero course.",
+    "tags": ["ML", "LLM", "education", "Python", "systems"]
+  },
+  {
+    "name": "Soumith Chintala",
+    "email": "soumith@pytorch.org",
+    "domain": "ML frameworks / PyTorch / GPU computing",
+    "bio": "Co-creator of PyTorch at Meta AI. One of the most impactful ML infrastructure engineers. Champions open-source ML tooling and ease of use for researchers.",
+    "tags": ["PyTorch", "ML frameworks", "GPU", "open-source", "Meta", "infrastructure"]
+  },
+  {
+    "name": "Greg Brockman",
+    "email": "greg@openai.com",
+    "domain": "AI product / engineering leadership / OpenAI",
+    "bio": "Co-founder and former President of OpenAI. Built OpenAI's engineering culture from scratch. Former CTO of Stripe. Deep background in infrastructure and API design.",
+    "tags": ["AI product", "engineering", "leadership", "OpenAI", "API", "infrastructure"]
+  },
+  {
+    "name": "Wojciech Zaremba",
+    "email": "wojciech@openai.com",
+    "domain": "robotics / LLMs / reinforcement learning",
+    "bio": "Co-founder of OpenAI. Leads robotics and Codex research. PhD from NYU. Work on LSTM training, neural program synthesis, and dexterous robotic manipulation.",
+    "tags": ["robotics", "LLM", "RL", "research", "OpenAI", "Python"]
+  },
+  {
+    "name": "Aidan Gomez",
+    "email": "aidan@cohere.com",
+    "domain": "transformers / enterprise LLMs / NLP research",
+    "bio": "CEO of Cohere and co-author of 'Attention Is All You Need' (as an intern at Google Brain). Building enterprise-grade LLM infrastructure at Cohere.",
+    "tags": ["transformers", "LLM", "NLP", "research", "enterprise", "Cohere"]
+  },
+  {
+    "name": "Sara Hooker",
+    "email": "sara@cohere.com",
+    "domain": "model compression / efficient ML / AI fairness",
+    "bio": "VP Research at Cohere For AI. Expert on model pruning, quantization, and the interplay between efficiency and fairness in ML. Runs the Cohere For AI research lab.",
+    "tags": ["ML", "efficiency", "compression", "fairness", "research", "Cohere"]
+  },
+  {
+    "name": "Carlos E. Perez",
+    "email": "carlos@intuitionmachine.com",
+    "domain": "deep learning theory / AGI / AI philosophy",
+    "bio": "Author of 'Artificial Intuition' and prolific writer on deep learning as a discipline. Writes Intuition Machine newsletter on the philosophy and theory behind AI.",
+    "tags": ["deep learning", "AGI", "AI philosophy", "theory", "writing"]
+  },
+  {
+    "name": "Gwern Branwen",
+    "email": "gwern@gwern.net",
+    "domain": "AI forecasting / scaling laws / research synthesis",
+    "bio": "Independent researcher and writer. Wrote foundational essays on GPT-3 capabilities, scaling laws, and AI timelines. Extensive self-experimentation and long-form research writing.",
+    "tags": ["AI forecasting", "scaling", "research", "writing", "LLM", "prediction"]
+  },
+  {
+    "name": "Eliezer Yudkowsky",
+    "email": "eliezer@intelligence.org",
+    "domain": "AI alignment / rationality / AGI risk",
+    "bio": "Senior researcher at MIRI. Wrote the sequences on LessWrong. Pioneer of modern AI alignment thinking. Highly pessimistic on current alignment trajectories.",
+    "tags": ["alignment", "AI safety", "AGI", "rationality", "research", "MIRI"]
+  },
+  {
+    "name": "Scott Aaronson",
+    "email": "scott@scottaaronson.com",
+    "domain": "quantum computing / computational complexity / AI safety",
+    "bio": "Professor at UT Austin. Expert on quantum computing and complexity theory. Worked at OpenAI on AI safety. Writes the blog Shtetl-Optimized.",
+    "tags": ["quantum computing", "complexity", "AI safety", "research", "theory"]
+  },
+  {
+    "name": "Gary Marcus",
+    "email": "gary.marcus@nyu.edu",
+    "domain": "AI criticism / cognitive science / neurosymbolic AI",
+    "bio": "Professor emeritus at NYU. Vocal critic of deep learning hype. Author of 'Rebooting AI'. Argues for hybrid neurosymbolic approaches to reach robust intelligence.",
+    "tags": ["AI criticism", "cognitive science", "NLP", "neurosymbolic", "writing"]
+  },
+  {
+    "name": "Timnit Gebru",
+    "email": "timnit@dair-community.social",
+    "domain": "AI ethics / bias / fairness",
+    "bio": "Founder of DAIR Institute. Former Google AI ethics lead. Co-authored 'Stochastic Parrots'. Researcher on algorithmic bias, facial recognition, and AI harms.",
+    "tags": ["AI ethics", "bias", "fairness", "research", "policy"]
+  },
+  {
+    "name": "Emily Bender",
+    "email": "ebender@uw.edu",
+    "domain": "NLP / linguistics / AI ethics",
+    "bio": "Professor at University of Washington. Co-author of 'Stochastic Parrots'. Expert on language grounding, meaning, and the limitations of LLMs from a linguistic perspective.",
+    "tags": ["NLP", "linguistics", "AI ethics", "research", "LLM criticism"]
+  },
+  {
+    "name": "Kate Crawford",
+    "email": "crawford@ainowinstitute.org",
+    "domain": "AI policy / AI harms / political economy of AI",
+    "bio": "Senior Principal Researcher at Microsoft Research and co-founder of AI Now Institute. Author of 'Atlas of AI'. Researches the environmental, labour, and social costs of AI.",
+    "tags": ["AI policy", "AI ethics", "harms", "research", "writing", "social impact"]
+  },
+  {
+    "name": "Cathy O'Neil",
+    "email": "cathy@mathbabe.org",
+    "domain": "algorithmic accountability / data science / writing",
+    "bio": "Author of 'Weapons of Math Destruction'. Data scientist turned critic of algorithmic systems. Writes mathbabe.org on the power and dangers of mathematical models.",
+    "tags": ["algorithmic accountability", "data science", "AI ethics", "writing", "policy"]
+  },
+  {
+    "name": "Ben Thompson",
+    "email": "ben@stratechery.com",
+    "domain": "tech strategy / AI business / media analysis",
+    "bio": "Author of Stratechery, the premier tech strategy newsletter. Deep analysis of AI's business implications, platform dynamics, and impact on media and software.",
+    "tags": ["tech strategy", "AI business", "writing", "analysis", "media"]
+  },
+  {
+    "name": "Paul Graham",
+    "email": "pg@ycombinator.com",
+    "domain": "startups / Lisp / essays",
+    "bio": "Co-founder of Y Combinator. Creator of Hacker News. Author of influential essays on startups, programming, and thinking. Fan of Lisp and bottom-up design.",
+    "tags": ["startups", "Lisp", "Python", "writing", "YC", "essays"]
+  },
+  {
+    "name": "Patrick Collison",
+    "email": "patrick@stripe.com",
+    "domain": "payments / developer tools / science funding",
+    "bio": "CEO of Stripe. Co-founder with his brother John. Champions fast execution and scientific progress. Runs Arc Institute. Deep reader and thinker on progress and science.",
+    "tags": ["developer tools", "payments", "API", "startups", "science", "Stripe"]
+  },
+  {
+    "name": "John Carmack",
+    "email": "johnc@oculus.com",
+    "domain": "game engines / VR / AGI",
+    "bio": "Legendary programmer behind Doom, Quake, and Wolfenstein. Former CTO of Oculus. Now working independently on AGI. Famous for clean systems code and first-principles thinking.",
+    "tags": ["C++", "game engines", "VR", "AGI", "systems", "graphics"]
+  },
+  {
+    "name": "Bryan Cantrill",
+    "email": "bryan@oxide.computer",
+    "domain": "systems programming / Rust / cloud hardware",
+    "bio": "CTO and co-founder of Oxide Computer. Created DTrace at Sun Microsystems. Passionate systems programmer and vocal advocate for Rust in systems software.",
+    "tags": ["systems", "Rust", "cloud", "hardware", "open-source", "DTrace"]
+  },
+  {
+    "name": "Antirez (Salvatore Sanfilippo)",
+    "email": "antirez@gmail.com",
+    "domain": "databases / Redis / systems programming",
+    "bio": "Creator of Redis. Expert in low-level C programming and data structure design. Writes reflectively about software craft, simplicity, and the joy of building.",
+    "tags": ["databases", "Redis", "C", "systems", "open-source", "software craft"]
+  },
+  {
+    "name": "Mitchell Hashimoto",
+    "email": "mitchell@hashicorp.com",
+    "domain": "DevOps / infrastructure / Go",
+    "bio": "Co-founder of HashiCorp (Terraform, Vault, Consul). Creator of Vagrant. One of the most impactful open-source infrastructure tool authors. Deep Go expertise.",
+    "tags": ["DevOps", "infrastructure", "Go", "Terraform", "open-source", "cloud"]
+  },
+  {
+    "name": "Kelsey Hightower",
+    "email": "kelsey@google.com",
+    "domain": "Kubernetes / DevOps / cloud native",
+    "bio": "Staff developer advocate at Google. Author of 'Kubernetes: Up and Running'. One of the most respected voices on cloud-native infrastructure and Kubernetes.",
+    "tags": ["Kubernetes", "DevOps", "cloud", "Go", "infrastructure", "Google"]
+  },
+  {
+    "name": "Theo Browne (t3dotgg)",
+    "email": "theo@t3.gg",
+    "domain": "TypeScript / React / web development",
+    "bio": "Creator of the T3 Stack (Next.js, tRPC, Prisma, Tailwind). YouTuber and educator on modern web development. Runs Ping.gg. Opinionated and direct communicator.",
+    "tags": ["TypeScript", "React", "Next.js", "web development", "education", "open-source"]
+  },
+  {
+    "name": "Kent C. Dodds",
+    "email": "kent@epicreact.dev",
+    "domain": "React / JavaScript / testing",
+    "bio": "Creator of Testing Library and Epic React. Former PayPal engineer. Educator on React, JavaScript testing, and web fundamentals. Runs EpicReact.dev and EpicWeb.dev.",
+    "tags": ["React", "JavaScript", "testing", "web development", "education", "open-source"]
+  },
+  {
+    "name": "Guillermo Rauch",
+    "email": "rauchg@vercel.com",
+    "domain": "web frameworks / Next.js / deployment",
+    "bio": "CEO of Vercel and creator of Next.js. Previously created Socket.io and Mongoose. Building the platform for modern web deployment and the Next.js ecosystem.",
+    "tags": ["Next.js", "JavaScript", "web development", "deployment", "open-source", "Vercel"]
+  },
+  {
+    "name": "Rich Harris",
+    "email": "rich.harris@vercel.com",
+    "domain": "JavaScript / Svelte / web tooling",
+    "bio": "Creator of Svelte and Rollup. Staff engineer at Vercel. Known for rethinking frontend fundamentals — compilers over runtime, and simplicity over abstraction.",
+    "tags": ["Svelte", "JavaScript", "web development", "open-source", "compilers", "Vercel"]
+  },
+  {
+    "name": "Ryan Dahl",
+    "email": "ryan@deno.com",
+    "domain": "JavaScript runtimes / Deno / systems",
+    "bio": "Creator of Node.js and Deno. Gave the famous 'Things I Regret About Node.js' talk. Building Deno as a secure, TypeScript-first JavaScript runtime.",
+    "tags": ["JavaScript", "Node.js", "Deno", "systems", "TypeScript", "open-source"]
+  },
+  {
+    "name": "Evan You",
+    "email": "evan@vuejs.org",
+    "domain": "JavaScript / Vue.js / frontend frameworks",
+    "bio": "Creator of Vue.js and Vite. Independent open-source developer. Built Vue from scratch while at Google. Vite has become the dominant frontend build tool.",
+    "tags": ["Vue.js", "Vite", "JavaScript", "open-source", "frontend", "build tools"]
+  },
+  {
+    "name": "Dan Abramov",
+    "email": "dan@abramov.io",
+    "domain": "React / JavaScript / UI architecture",
+    "bio": "Co-creator of Redux and Create React App. Core React team at Meta. Known for deep, thoughtful writing on UI architecture, state management, and developer experience.",
+    "tags": ["React", "Redux", "JavaScript", "UI", "open-source", "Meta"]
+  },
+  {
+    "name": "Armin Ronacher",
+    "email": "armin.ronacher@active-4.com",
+    "domain": "Python / Flask / web frameworks",
+    "bio": "Creator of Flask, Jinja2, Click, and Werkzeug. Prolific Python open-source contributor. Writes thoughtfully on Python, Rust, and the craft of library design.",
+    "tags": ["Python", "Flask", "web development", "open-source", "Rust", "tools"]
+  },
+  {
+    "name": "Hynek Schlawack",
+    "email": "hs@ox.cx",
+    "domain": "Python / attrs / software craft",
+    "bio": "Creator of attrs and structlog. Python core developer. Writes about software craft, Python best practices, and the philosophy of clean API design.",
+    "tags": ["Python", "open-source", "software craft", "attrs", "logging"]
+  },
+  {
+    "name": "David Beazley",
+    "email": "dave@dabeaz.com",
+    "domain": "Python internals / teaching / systems",
+    "bio": "Author of the Python Cookbook and Python Essential Reference. Expert on Python internals, concurrency, and metaprogramming. Legendary live-coding educator.",
+    "tags": ["Python", "internals", "education", "concurrency", "systems"]
+  },
+  {
+    "name": "Raymond Hettinger",
+    "email": "python@rcn.com",
+    "domain": "Python / algorithms / core development",
+    "bio": "Python core developer and creator of OrderedDict, namedtuple improvements, and itertools. Famous for 'Transforming Code into Beautiful, Idiomatic Python' talk at PyCon.",
+    "tags": ["Python", "algorithms", "open-source", "core development", "education"]
+  },
+  {
+    "name": "Glyph Lefkowitz",
+    "email": "glyph@twistedmatrix.com",
+    "domain": "Python / async / networking",
+    "bio": "Creator of Twisted, the pioneering Python async networking framework that predated asyncio. Thoughtful writer on software design, Python, and engineering culture.",
+    "tags": ["Python", "async", "networking", "open-source", "software design"]
+  },
+  {
+    "name": "Wes McKinney",
+    "email": "wesmckinn@gmail.com",
+    "domain": "data science / pandas / Apache Arrow",
+    "bio": "Creator of pandas and co-creator of Apache Arrow. Author of 'Python for Data Analysis'. Building Voltron Data to accelerate data infrastructure with Arrow.",
+    "tags": ["Python", "pandas", "data science", "Apache Arrow", "open-source"]
+  },
+  {
+    "name": "Travis Oliphant",
+    "email": "travis@quansight.com",
+    "domain": "scientific Python / NumPy / SciPy",
+    "bio": "Creator of NumPy and SciPy. Co-founder of Anaconda and Quansight. Foundational figure in the scientific Python ecosystem. PhD in Biomedical Engineering.",
+    "tags": ["Python", "NumPy", "SciPy", "data science", "open-source", "scientific computing"]
+  },
+  {
+    "name": "Matthew Rocklin",
+    "email": "mrocklin@gmail.com",
+    "domain": "distributed computing / Dask / Python",
+    "bio": "Creator of Dask for parallel computing in Python. Works on scalable data tools at Coiled. Expert on parallel algorithms and distributed Python computation.",
+    "tags": ["Python", "distributed computing", "Dask", "data science", "open-source"]
+  },
+  {
+    "name": "Jake VanderPlas",
+    "email": "jakevdp@gmail.com",
+    "domain": "scientific Python / Altair / data visualisation",
+    "bio": "Developer advocate at Google and creator of Altair (declarative visualisation for Python). Author of 'Python Data Science Handbook'. Former UW astronomy researcher.",
+    "tags": ["Python", "data visualisation", "Altair", "data science", "open-source", "education"]
+  },
+  {
+    "name": "Chris Lattner",
+    "email": "clattner@modular.com",
+    "domain": "compilers / LLVM / Mojo / ML hardware",
+    "bio": "Creator of LLVM, Clang, Swift, and MLIR. Former VP at Apple and Tesla Autopilot. Now CEO of Modular building Mojo — a Python-superset for AI performance.",
+    "tags": ["compilers", "LLVM", "Swift", "Mojo", "ML hardware", "systems", "Python"]
+  },
+  {
+    "name": "Graydon Hoare",
+    "email": "graydon@pobox.com",
+    "domain": "programming languages / Rust / systems",
+    "bio": "Original creator of Rust at Mozilla. Now works on Swift at Apple. Deep expertise in type systems, memory safety, and systems language design.",
+    "tags": ["Rust", "Swift", "systems", "programming languages", "compilers", "memory safety"]
+  },
+  {
+    "name": "Andrew Gallant (BurntSushi)",
+    "email": "jamslam@gmail.com",
+    "domain": "Rust / regex / systems programming",
+    "bio": "Creator of ripgrep (the fastest code search tool) and author of key Rust regex libraries. Prolific Rust open-source contributor. Known for extreme engineering rigour.",
+    "tags": ["Rust", "regex", "systems", "open-source", "performance", "tools"]
+  },
+  {
+    "name": "Jon Gjengset",
+    "email": "jon@thesquareplanet.com",
+    "domain": "Rust / systems / education",
+    "bio": "PhD from MIT and Rust educator. Author of 'Rust for Rustaceans'. Runs a popular YouTube channel on advanced Rust. Focuses on the internals and hard edges of Rust.",
+    "tags": ["Rust", "systems", "education", "YouTube", "open-source"]
+  },
+  {
+    "name": "Amos Wenger (fasterthanlime)",
+    "email": "amos@fasterthanli.me",
+    "domain": "Rust / systems / long-form technical writing",
+    "bio": "Independent developer and writer at fasterthanli.me. Famous for extremely detailed long-form posts on Rust, HTTP, and systems topics. Deep dive specialist.",
+    "tags": ["Rust", "systems", "writing", "HTTP", "open-source", "education"]
+  }
+]
