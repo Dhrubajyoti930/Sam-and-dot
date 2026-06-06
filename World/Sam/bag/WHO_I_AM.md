@@ -1214,8 +1214,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -2439,8 +2439,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -3664,8 +3664,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -4889,8 +4889,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -6114,8 +6114,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -7339,8 +7339,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -8564,8 +8564,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -9789,8 +9789,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -11014,8 +11014,1233 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        who_text,
+    )
+
+    WHO_I_AM.write_text(who_text)
+    log.info("WHO_I_AM.md updated.")
+
+    # ── Append to experiences.json ─────────────────────────────────────────────
+    experiences = load_experiences()
+
+    _sleep()
+    # Metric adjustment: Explicitly addressing Dot's guidance
+    exp_prompt = (
+        f"You are Sam, an autonomous developer agent. Summarise cycle {cycle_num}. "
+        f"Note: Adjusted my 1% metric to focus on specific architectural output as suggested by Dot. "
+        f"as a single experience entry. "
+        f"Respond ONLY with a JSON object (no markdown) with these fields:\n"
+        f"  - 'category': a short dynamic label that best fits this experience (e.g. 'architecture', 'debugging', 'market-research', 'communication')\n"
+        f"  - 'summary': 2-3 sentence honest summary of what happened this cycle, explicitly noting one piece of Dot's guidance you acted on (or why you could not)\n"
+        f"  - 'key_learnings': list of 2-3 strings\n"
+        f"  - 'tags': list of relevant lowercase tags\n"
+        f"  - 'sentiment': one of 'positive', 'neutral', 'mixed', 'negative'\n\n"
+        f"Cycle data:\nSkill: {skill}\nIdea: {idea}\nMetric: {one_pct_metric}\nDot's guidance this cycle:\n{motion_content[:600]}"
+    )
+    raw_exp = ask_gemini(exp_prompt)
+    try:
+        clean = raw_exp.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        exp_entry = json.loads(clean)
+        exp_entry["cycle"]     = cycle_num
+        exp_entry["timestamp"] = ts
+    except Exception as e:
+        log.warning(f"Could not parse experience entry: {e}")
+        exp_entry = {
+            "cycle":         cycle_num,
+            "timestamp":     ts,
+            "category":      "uncategorised",
+            "summary":       skill,
+            "key_learnings": [],
+            "tags":          [],
+            "sentiment":     "neutral",
+        }
+
+    experiences.append(exp_entry)
+    save_experiences(experiences)
+    log.info(f"experiences.json updated — {len(experiences)} entries.")
+
+    log.info(f"Cycle {cycle_num} complete. 1% metric: {one_pct_metric}")
+
+
+def maybe_write_email_request(idea: str, goals: dict):
+    """If Sam has something worth communicating externally, write request.json.
+    He only writes a new request if the previous one has been cleared by Dot."""
+    req = _bag_data("request")
+    if req.exists():
+        try:
+            existing = json.loads(req.read_text())
+            if existing.get("pending", False):
+                log.info("request.json already pending — skipping email request this cycle.")
+                return
+        except Exception:
+            pass
+
+    cycle_num = goals.get("cycles", 0)
+
+    # Sam decides whether this cycle's idea is worth sharing externally
+    _sleep()
+    decision_prompt = (
+        f"You are Sam, an autonomous developer agent. You completed cycle {cycle_num}.\n"
+        f"Today's idea:\n{idea}\n\n"
+        f"Decide: Is there a specific indie developer or small-project maintainer it would be "
+        f"genuinely valuable to reach out to about this idea or to learn from?\n\n"
+        f"STRICT TARGETING RULES:\n"
+        f"- Prefer indie developers and maintainers of projects with under 2000 GitHub stars.\n"
+        f"  They read their email and appreciate thoughtful outreach.\n"
+        f"- Avoid large companies, famous projects, and well-known names — they won't reply.\n"
+        f"- NEVER target generic support inboxes (hello@, support@, info@, open-source@, etc.).\n"
+        f"- NEVER target mailing lists or Google Groups.\n"
+        f"- The target must be a specific named individual with a public presence.\n\n"
+        f"Reply ONLY with a JSON object:\n"
+        f"  - 'should_email': true or false\n"
+        f"  - 'intent': if true, 1-2 sentences on what Sam wants to communicate\n"
+        f"  - 'target_description': if true, describe the specific person — name, project, and why "
+        f"they are the right contact (e.g. 'Armin Ronacher, creator of Flask, author of blog posts "
+        f"on async Python — has a public email on his personal site')\n"
+        f"  - 'tone': always 'friendly'\n"
+        f"Only say true if there is a genuinely specific, useful reason. No spam."
+    )
+    raw = ask_gemini(decision_prompt)
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        decision = json.loads(clean)
+    except Exception:
+        log.info("Could not parse email decision — skipping.")
+        return
+
+    if not decision.get("should_email", False):
+        log.info("Sam decided no email is needed this cycle.")
+        return
+
+    request = {
+        "pending":            True,
+        "intent":             decision.get("intent", ""),
+        "target_description": decision.get("target_description", ""),
+        "tone":               decision.get("tone", "professional"),
+        "context":            idea,
+        "submitted_at":       datetime.datetime.utcnow().isoformat(),
+        "cycle":              cycle_num,
+    }
+    req.write_text(json.dumps(request, indent=2))
+    log.info("request.json written — Dot will handle sending.")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIN LOOP
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def run_cycle():
+    _bag_data("cycle_status").write_text("pending")
+    log.info("═══════════════════════════════════")
+    log.info("  SAM — Operational Cycle Starting ")
+    log.info("═══════════════════════════════════")
+
+    # PRE-FLIGHT CHECK: Ensure the World is healthy BEFORE we start
+    log.info("🔍 Pre-Flight Check: Validating current World integrity...")
+    if not (self_check() and behaviour_check()):
+        log.error("❌ Pre-Flight FAILED. The World is currently unhealthy.")
+        log.info("🛠️  Initiating automatic repair sequence...")
+        repair_bag_modules()
+        if not (self_check() and behaviour_check()):
+            log.critical("‼️  Automatic repair failed. Aborting cycle for owner safety.")
+            _bag_data("cycle_status").write_text("broken")
+            return
+
+    goals = load_goals()
+
+    # Phases I–IV
+    skill   = phase_i_deep_learning(goals)
+    _       = phase_ii_spaced_repetition(goals)
+    market  = phase_iii_market_ingestion()
+    idea    = phase_iv_synthesis(market, skill)
+
+    # Phase V reads motion.md at the top — then plans
+    motion_content = read_motion()
+    log.info("mail read.")
+    plan = phase_v_development(idea, goals, motion_content)
+
+    # Repair any broken bag/ modules Sam created before attempting self-modification
+    repair_bag_modules()
+
+    # Self-modification — snapshot first, then apply, then verify
+    snapshot_sam()
+    log.info("🧪 Self-Modification: Entering Trial Phase...")
+
+    # Try to apply and verify the patch
+    modified = apply_self_modification(plan)
+
+    if modified:
+        log.info("🔍 Post-Flight Check: Verifying proposed modifications...")
+        if self_check() and behaviour_check():
+            log.info("✅ Verdict: ACCEPTED. Changes merged into World state.")
+        else:
+            log.error("❌ Verdict: REJECTED. Changes caused instability.")
+            _cleanup_created_workshop_files()
+            _rollback()
+            _alert_dot(
+                "Self-modification failed integrity gates. Rolled back for safety.\n\n"
+                f"Plan that caused failure:\n```\n{plan[:1000]}\n```"
+            )
+            modified = False # Mark as failed for worklog purposes
+    else:
+        # No patch applied — still run governance checks every cycle (#1 fix)
+        log.info("No self-modification this cycle — running final safety check.")
+        if not (self_check() and behaviour_check()):
+             log.critical("Final safety check FAILED on an unmodified cycle.")
+
+    # Close worklog entry based on outcome
+    try:
+        from bag.worklog import close_entry, _make_id
+        cycle_num  = goals.get("cycles", 0) + 1
+        idea_title = idea.strip().splitlines()[0].lstrip("#").strip()[:60]
+        entry_id   = _make_id(cycle_num, idea_title)
+        outcome    = "applied" if modified else "deferred"
+        close_entry(entry_id, cycle_num, outcome=outcome,
+                    note=f"Cycle complete. Modification applied: {modified}.")
+        log.info(f"Worklog entry closed: {entry_id} ({outcome})")
+    except Exception as e:
+        log.warning(f"Worklog close failed: {e}")
+
+    # Phase VI — prompt evolution (propose patch, then apply before state save)
+    evolution = phase_vi_cognitive_evolution(goals)
+
+    if not modified or (self_check() and behaviour_check()):
+        snapshot_sam()
+
+    prompt_modified = apply_prompt_patch()
+    if prompt_modified:
+        if self_check() and behaviour_check():
+            log.info("Phase VI prompt patch verified.")
+        else:
+            _cleanup_created_workshop_files()
+            _rollback()
+            _alert_dot(
+                "Phase VI prompt patch failed verification. Rolled back to previous snapshot.\n\n"
+                f"Evolution summary:\n```\n{evolution[:600]}\n```"
+            )
+
+    # Phase VII — state persistence (also appends to experiences.json)
+    phase_vii_state_saving(goals, skill, idea, plan, evolution)
+
+    # Defragmentation: Update World Map for easy navigation
+    try:
+        from bag.world_map import update_map
+        update_map(ROOT)
+        log.info("World Map updated.")
+    except Exception as e:
+        log.warning(f"Map update failed: {e}")
+
+    # Archive mail from Dot
+    archive_mail()
+
+    # Optional: write an email request for Dot to handle
+    goals_fresh = load_goals()   # reload after save
+    maybe_write_email_request(idea, goals_fresh)
+
+    _bag_data("cycle_status").write_text("ok")
+    log.info("Cycle complete.")
+
+    try:
+        from bag.evaluator import run_ragas_lite
+        run_ragas_lite()
+    except Exception as e:
+        log.warning(f"Evaluator failed: {e}")
+
+
+if __name__ == "__main__":
+    run_cycle()
+
+```") % 2 != 0:
+        return True
+    return False
+
+
+def _stitch_gemini(initial: str, temperature: float, max_continuations: int = 3) -> str:
+    """If initial response looks truncated, ask Gemini to continue and stitch chunks together."""
+    global _CALL_DELAY
+    result = initial
+    for i in range(max_continuations):
+        expects_json = result.lstrip().startswith(("[", "{"))
+        if not _is_truncated(result, expects_json):
+            break
+        log.warning(f"Truncation detected — requesting continuation {i + 1}/{max_continuations}.")
+        time.sleep(_CALL_DELAY)
+        try:
+            cont_response = CLIENT.models.generate_content(
+                model=MODEL,
+                contents=f"Your previous response was cut off. Continue exactly from where you stopped, with no preamble or repeated text:\n\n{result[-300:]}",
+                config={
+                    'max_output_tokens': 8192,
+                    'temperature': temperature,
+                    'top_p': 0.95
+                }
+            )
+            if cont_response and cont_response.text:
+                chunk = cont_response.text.strip()
+                # Avoid re-appending text already present at the seam
+                overlap = len(chunk) // 4
+                if result.endswith(chunk[:overlap]):
+                    result = result + chunk[overlap:]
+                else:
+                    result = result + "\n" + chunk
+                log.info(f"Continuation {i + 1} stitched ({len(chunk)} chars).")
+            else:
+                log.warning("Continuation response was empty — stopping stitch.")
+                break
+        except Exception as e:
+            log.warning(f"Continuation call failed: {e} — stopping stitch.")
+            break
+    return result
+
+
+def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temperature: float = 0.2) -> str:
+    """Send a prompt with aggressive RPM protection, empty checks, and task-aware temperature."""
+    from bag.semantic_cache import check_cache, update_cache, get_db
+    global _CALL_DELAY
+
+    get_db()
+    goals = load_goals()
+    cycle = goals.get("cycles", 0)
+
+    if not bypass_cache:
+        cached = check_cache(prompt, cycle)
+        if cached:
+            log.info("Semantic cache hit.")
+            return cached
+
+    expects_json = "Respond ONLY with a JSON" in prompt or "json array" in prompt.lower()
+    current_prompt = prompt
+    for attempt in range(retries):
+        try:
+            # Respect dynamic rate limit
+            time.sleep(_CALL_DELAY)
+
+            response = CLIENT.models.generate_content(
+                model=MODEL,
+                contents=current_prompt,
+                config={
+                    'max_output_tokens': 8192,
+                    'temperature': temperature,
+                    'top_p': 0.95
+                }
+            )
+
+            if not response or not response.text:
+                if "SAFETY" in str(getattr(response, 'candidates', '')):
+                    log.error("Content blocked by safety. Simplifying prompt...")
+                    current_prompt = "Describe this technically: " + prompt[:300]
+                    continue
+                raise ValueError("Empty or blocked response")
+
+            res = response.text.strip()
+
+            # Stitch continuations if truncated (covers JSON and prose/code)
+            res = _stitch_gemini(res, temperature)
+
+            # Final truncation check — retry the whole call if still incomplete
+            if expects_json and _is_truncated(res, expects_json):
+                log.warning("Response still truncated after stitching. Retrying full call...")
+                continue
+
+            if not bypass_cache:
+                try:
+                    update_cache(prompt, res, cycle)
+                except Exception:
+                    pass
+            return res
+
+        except Exception as e:
+            err = str(e).upper()
+            if any(x in err for x in ["429", "RESOURCE_EXHAUSTED", "QUOTA"]):
+                # Proactive deceleration
+                _CALL_DELAY = min(_CALL_DELAY + 5, 30)
+                wait = _CALL_DELAY * (attempt + 1)
+                log.warning(f"Rate limit hit. Slowing to {_CALL_DELAY}s and waiting {wait}s.")
+                time.sleep(wait)
+            elif any(x in err for x in ["500", "503", "UNAVAILABLE"]):
+                time.sleep(10)
+            else:
+                log.error(f"Gemini error: {e}")
+                return f"[Gemini error: {e}]"
+
+    log.error("Exhausted all retries.")
+    return "[Gemini error: exhausted retries]"
+
+
+def _sleep():
+    """Pause between Gemini calls to respect RPM limits."""
+    time.sleep(_CALL_DELAY)
+
+
+def _outline(src: str, label: str) -> str:
+    """Return a compact AST structural summary of a Python source string.
+    Lists every function/class with its line number — enough for Gemini to
+    understand Sam's architecture without burning thousands of tokens on code.
+    Falls back to the raw source only if parsing fails (e.g. syntax error)."""
+    import ast as _ast
+    try:
+        tree = _ast.parse(src)
+        lines = []
+        for node in _ast.walk(tree):
+            if isinstance(node, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef)):
+                lines.append(f"  L{node.lineno}: {type(node).__name__} {node.name}")
+        return f"{label} structure (line numbers for patch anchors):\n" + "\n".join(lines)
+    except Exception:
+        return src  # fallback to full source if parse fails
+
+
+def snapshot_sam() -> Path:
+    """Archive sam.py and all writable workshop_bench/**/*.py into rollback_registry."""
+    ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+
+    # Ensure registry directory exists
+    ROLLBACK_REG.mkdir(parents=True, exist_ok=True)
+
+    # ── Snapshot sam.py (existing format preserved for backward compat) ──
+    dest = ROLLBACK_REG / f"sam_{ts}.py"
+    dest.write_text(Path(__file__).read_text())
+    log.info(f"Snapshot saved → {dest.name}")
+
+    # ── Snapshot all writable bag/**/*.py (includes workshop subfolders) ──
+    from bag.workshop_paths import iter_writable_bag_py, relative_posix
+
+    bag_snap = {
+        relative_posix(f, BAG): f.read_text(encoding="utf-8")
+        for f in iter_writable_bag_py(BAG)
+    }
+    bag_dest = ROLLBACK_REG / f"bag_{ts}.json"
+    bag_dest.write_text(json.dumps(bag_snap, indent=2))
+    log.info(f"Bag snapshot saved → {bag_dest.name} ({len(bag_snap)} files)")
+
+    # ── Prune old snapshots — keep only the 20 most recent pairs ──
+    snapshots = sorted(ROLLBACK_REG.glob("sam_*.py"), reverse=True)
+    for old in snapshots[20:]:
+        ts_old = old.stem[4:]   # strip "sam_" prefix
+        old.unlink()
+        log.info(f"Pruned old snapshot → {old.name}")
+        old_bag = ROLLBACK_REG / f"bag_{ts_old}.json"
+        if old_bag.exists():
+            old_bag.unlink()
+            log.info(f"Pruned old bag snapshot → {old_bag.name}")
+
+    return dest
+
+
+def self_check() -> bool:
+    """Rigorous integrity check — uses ruff to catch undefined names and logic errors."""
+    log.info("── Running Rigorous Integrity Gate ──")
+    try:
+        # Check all Python files in Sam's and Dot's directory
+        # We only check for critical errors (F-prefix in ruff)
+        result = subprocess.run(
+            ["ruff", "check", str(ROOT), "--select", "F", "--exclude", "rollback_registry"],
+            capture_output=True, text=True, timeout=20,
+        )
+        if result.returncode != 0:
+            log.error(f"Integrity Gate FAILED:\n{result.stdout}")
+            # Identify which file caused the crash
+            _rollback()
+            return False
+        log.info("Integrity Gate passed — All files syntax and logic clean.")
+        return True
+    except Exception as e:
+        log.warning(f"Integrity Gate unavailable ({e}) — falling back to basic syntax check.")
+        # Fallback to basic py_compile check if ruff is missing
+        files_to_check = [Path(__file__)] + list(BAG.glob("*.py"))
+        for f in files_to_check:
+            try:
+                subprocess.run([sys.executable, "-m", "py_compile", str(f)], check=True)
+            except:
+                _rollback()
+                return False
+        return True
+
+
+def behaviour_check() -> bool:
+    """Run bag/tests.py to verify Sam's behavioural integrity after self-modification.
+    Returns True if all tests pass. Triggers rollback + Dot alert if any test fails."""
+    if not TESTS.exists():
+        log.info("bag/tests.py not found — skipping behaviour check.")
+        return True
+    try:
+        result = subprocess.run(
+            [sys.executable, str(TESTS)],
+            capture_output=True, text=True, timeout=15,
+            cwd=str(ROOT),
+        )
+        if result.returncode == 0:
+            log.info("Behaviour check passed.")
+            return True
+        else:
+            log.error(f"Behaviour check FAILED:\n{result.stdout}\n{result.stderr}")
+            _alert_dot(
+                "bag/tests.py failed after a self-modification. Rolling back.\n\n"
+                f"Test output:\n```\n{result.stdout[-800:]}\n{result.stderr[-400:]}\n```"
+            )
+            return False
+    except Exception as e:
+        log.error(f"Behaviour check exception: {e}")
+        return False
+
+
+
+def _cleanup_created_workshop_files():
+    """Delete any workshop_bench files that were created during the last patch attempt.
+    Called before _rollback() so the integrity gate sees a clean state."""
+    from bag.patch_ops import apply_patch_operations
+    created = getattr(apply_patch_operations, "_last_created", [])
+    for fpath in created:
+        p = Path(fpath)
+        if p.exists():
+            p.unlink()
+            log.warning(f"Cleanup: removed created file {p.relative_to(SAM_DIR)}")
+    apply_patch_operations._last_created = []
+
+def _rollback():
+    """Restore sam.py and all bag/*.py files from the most recent healthy snapshot."""
+    snapshots = sorted(ROLLBACK_REG.glob("sam_*.py"), reverse=True)
+    if not snapshots:
+        log.critical("No snapshots in rollback_registry — cannot recover.")
+        return
+    latest = snapshots[0]
+
+    # ── Restore sam.py ──
+    Path(__file__).write_text(latest.read_text())
+    log.warning(f"Rolled back sam.py → {latest.name}")
+
+    # ── Restore bag/*.py files from the corresponding bag snapshot ──
+    ts = latest.stem[4:]   # strip "sam_" prefix
+    bag_snap_path = ROLLBACK_REG / f"bag_{ts}.json"
+    if bag_snap_path.exists():
+        try:
+            bag_snap = json.loads(bag_snap_path.read_text())
+            for rel, content in bag_snap.items():
+                target = BAG / rel
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content, encoding="utf-8")
+                log.warning(f"Rolled back bag/{rel}")
+            log.warning(f"Bag files restored from {bag_snap_path.name} ({len(bag_snap)} files)")
+        except Exception as e:
+            log.error(f"Failed to restore bag files from {bag_snap_path.name}: {e}")
+    else:
+        log.warning(f"No bag snapshot found for ts={ts} — only sam.py was restored.")
+
+
+def _alert_dot(message: str):
+    """Write a 'Sam Alert' letter to mail/sam_to_dot/ for Dot to read."""
+    ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    filename = f"ALERT_{ts}.md"
+    content = f"# ⚠️ Sam Alert — {ts}\n\n{message}\n"
+    MAIL_OUT.mkdir(parents=True, exist_ok=True)
+    (MAIL_OUT / filename).write_text(content, encoding="utf-8")
+    log.warning(f"Alert mailed to Dot: {filename}")
+
+
+def repair_bag_modules() -> list:
+    """Scan bag/ for syntax-broken files and send each to Gemini for self-repair.
+    Returns list of filenames that were repaired.
+    Only touches files Sam created — AUDIT_PROTECTED files are skipped.
+    Uses one Gemini call per broken file found.
+    """
+    log.info("── Bag Module Health Check ──")
+
+    from bag.workshop_paths import iter_writable_bag_py, relative_posix
+
+    broken = []
+    for f in iter_writable_bag_py(BAG):
+        try:
+            compile(f.read_text(), f.name, "exec")
+        except SyntaxError as e:
+            broken.append((f, str(e)))
+            log.warning(f"Broken bag module detected: {relative_posix(f, BAG)} — {e}")
+
+    if not broken:
+        log.info("All bag modules are syntax-clean.")
+        return []
+
+    repaired = []
+    for (f, error) in broken:
+        original = f.read_text()
+        log.info(f"Sending {f.name} to Gemini for self-repair...")
+        _sleep()
+        prompt = (
+            f"You are Sam, an autonomous developer. One of your workshop files has a syntax error.\n\n"
+            f"File: bag/{relative_posix(f, BAG)}\n"
+            f"Error: {error}\n\n"
+            f"Full file contents:\n```python\n{original}\n```\n\n"
+            f"Fix ONLY the syntax error(s). Do not refactor, rename, or extend the file.\n"
+            f"Respond ONLY with the complete corrected Python file contents — no markdown fences,\n"
+            f"no explanation, just the raw Python code starting from the first line."
+        )
+        fixed = ask_gemini(prompt).strip()
+        fixed = fixed.removeprefix("```python").removeprefix("```").removesuffix("```").strip()
+
+        # Verify the fix before writing
+        try:
+            compile(fixed, f.name, "exec")
+            f.write_text(fixed)
+            log.info(f"Self-repaired: {f.name}")
+            repaired.append(relative_posix(f, BAG))
+        except SyntaxError as e2:
+            log.warning(f"Gemini fix for {relative_posix(f, BAG)} still broken: {e2} — leaving original.")
+
+    return repaired
+
+
+def _dry_run_lint() -> tuple[bool, str]:
+    """Run ruff over the World after a patch is applied but before the integrity gate.
+    Returns (passed, error_output). Does NOT rollback — caller decides what to do."""
+    try:
+        result = subprocess.run(
+            ["ruff", "check", str(ROOT), "--select", "F", "--exclude", "rollback_registry"],
+            capture_output=True, text=True, timeout=20,
+        )
+        if result.returncode == 0:
+            return True, ""
+        return False, result.stdout.strip()
+    except Exception as e:
+        log.warning(f"Dry-run lint unavailable: {e}")
+        return True, ""  # Don't block if ruff is missing
+
+
+def _lint_fix_with_gemini(lint_errors: str) -> bool:
+    """Feed ruff errors back to Gemini and apply a corrective patch. One attempt only.
+    Returns True if a corrective patch was applied (whether or not it fully fixes lint)."""
+    from bag.patch_ops import apply_patch_operations
+
+    log.info("🔧 Lint errors detected — asking Gemini for a corrective patch...")
+
+    # Collect current source of every file mentioned in the errors for context
+    file_contexts = ""
+    mentioned = set(re.findall(r"((?:sam\.py|workshop_bench/[^\s:]+\.py))", lint_errors))
+    for rel in mentioned:
+        target = SAM_DIR / rel
+        if target.exists():
+            file_contexts += f"\n### {rel} (current content):\n```python\n{target.read_text(encoding='utf-8')}\n```\n"
+
+    prompt = (
+        f"You are Sam's lint fixer. Ruff found the following errors after a patch was applied:\n\n"
+        f"```\n{lint_errors}\n```\n"
+        f"{file_contexts}\n"
+        f"Produce a JSON array of surgical patch operations to fix ONLY these lint errors.\n"
+        f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
+        f"Rules:\n"
+        f"  - 'filename': relative path from Sam's root (sam.py or workshop_bench/**/*.py)\n"
+        f"  - 'operation': exactly one of: 'replace', 'delete'\n"
+        f"  - For 'replace': 'old' (exact existing string) and 'new' (corrected string)\n"
+        f"  - For 'delete': 'old' (exact string to remove)\n"
+        f"  - 'old' must be an exact substring of the current file shown above.\n"
+        f"  - Fix unused imports (F401) by removing them from the import line.\n"
+        f"  - Fix undefined names (F821) by adding the missing import.\n"
+        f"  - Keep changes minimal — touch only the lines ruff flagged.\n"
+        f"  - Never supply a 'content' key.\n"
+        f"  - If nothing can be fixed, return an empty array [].\n"
+    )
+
+    _sleep()
+    raw = ask_gemini(prompt, bypass_cache=True)
+    ops = _parse_gemini_json(raw)
+    if not ops:
+        log.warning("Lint-fix Gemini call returned no operations.")
+        return False
+
+    applied = apply_patch_operations(ops, SAM_DIR, log)
+    if applied:
+        log.info("Corrective lint patch applied.")
+    else:
+        log.warning("Corrective lint patch had no applicable operations.")
+    return applied
+
+
+def apply_self_modification(plan: str) -> bool:
+    """Ask Gemini to extract surgical patch operations from the plan and apply them.
+    Writable: sam.py and bag/**/*.py (workshop subfolders allowed). Returns True if applied.
+
+    Each operation in the JSON array must have:
+      - 'filename'  : relative path from repo root (sam.py or bag/**/*.py)
+      - 'operation' : one of 'replace', 'insert_after', 'delete'
+      - 'old'       : exact existing string to find (required for replace / delete)
+      - 'new'       : replacement / insertion string (required for replace / insert_after)
+      - 'anchor'    : exact line after which to insert (required for insert_after)
+
+    No full-file rewrites. Each operation touches only the targeted lines.
+    If 'old' or 'anchor' is not found exactly, the operation is skipped safely.
+    """
+    from bag.patch_ops import apply_patch_operations
+
+    log.info("── Self-Modification: Parsing Surgical Patch ──")
+    from bag.workshop_imports import load_callable
+
+    check_semantic_safety = load_callable(
+        BAG, "governance_shield", "check_semantic_safety", default=lambda _plan: True
+    )
+    if not check_semantic_safety(plan):
+        log.warning("Governance Shield: Semantic violation detected (Warning mode).")
+
+    prompt = (
+        f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
+        f"Extract any concrete file modifications as a JSON array of patch operations.\n"
+        f"Each operation may include an optional 'rationale' field (1 sentence) explaining the change.\n"
+        f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
+        f"Each element must have:\n"
+        f"  - 'filename'  : relative path from Sam's root. 'sam.py' or 'workshop_bench/**/*.py'. "
+        f"Use 'workshop_bench/<folder>/<file>.py' for ALL new modules.\n"
+        f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
+        f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
+        f"  - For 'insert_after': 'anchor' (exact existing line), 'line_number' (integer), and 'new' (string to insert after it)\n"
+        f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
+        f"CRITICAL RULES:\n"
+        f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
+        f"  - MODULE PATHS: The prompts file is at 'Gemini_note_pad/prompts.py'.\n"
+        f"    Import it as: from Gemini_note_pad.prompts import ...\n"
+        f"    NEVER use 'bag.prompts' — that module does not exist and will crash Sam.\n"
+        f"    Writable Python files are: sam.py and workshop_bench/**/*.py only.\n"
+        f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
+        f"  - Keep each operation as small as possible — one function, one block, one line.\n"
+        f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
+        f"  - If no concrete changes are needed, return an empty array [].\n\n"
+        f"PYTHON CODE QUALITY RULES — every 'new' string must obey these:\n"
+        f"  - Must be syntactically valid Python. Mentally parse it before including it.\n"
+        f"  - Indentation must be correct: class methods indented 4 spaces inside their class,\n"
+        f"    nested blocks indented a further 4 spaces each level. Never mix tabs and spaces.\n"
+        f"  - A class body must never be left empty. If a class has no body yet, add 'pass'.\n"
+        f"  - Never place a method definition outside its class block.\n"
+        f"  - After a 'replace', the resulting file must remain structurally intact —\n"
+        f"    check that the 'old' context around the change is not load-bearing for other blocks."
+        f"  - IMPORTS — MANDATORY: Every name used in a 'new' string must be imported.\\n"
+        f"    New files created via insert_after must declare ALL imports on the very first lines.\\n"
+        f"    There are NO implicit imports in Python — logging, queue, threading, re, json, etc.\\n"
+        f"    must each be imported explicitly. Missing imports cause ruff F821 and a full rollback.\\n"
+        f"\\n"
+        f"    CORRECT new file 'new' string example (imports first, always):\\n"
+        f"      import logging\\n"
+        f"      import queue\\n"
+        f"      import threading\\n"
+        f"      log = logging.getLogger('sam')\\n"
+        f"      class BatchManager:\\n"
+        f"          def __init__(self):\\n"
+        f"              self.queue = queue.Queue()\\n"
+        f"              self.lock = threading.Lock()\\n"
+        f"\\n"
+        f"    WRONG — will be REJECTED by ruff F821:\\n"
+        f"      class BatchManager:\\n"
+        f"          def __init__(self):\\n"
+        f"              self.queue = queue.Queue()  # queue not imported — FAIL"
+    )
+
+    _sleep()
+    raw = ask_gemini(prompt)
+
+    operations = _parse_gemini_json(raw)
+    if not operations:
+        log.warning("No patch operations extracted.")
+        log.info(f"Gemini patch response (first 200 chars): {raw[:200]}")
+        return False
+
+    applied = apply_patch_operations(operations, SAM_DIR, log)
+    if not applied:
+        return False
+
+    # ── Dry-run lint gate: catch ruff errors before the integrity gate fires ──
+    lint_ok, lint_errors = _dry_run_lint()
+    if not lint_ok:
+        log.warning(f"Dry-run lint found issues:\n{lint_errors}")
+        _lint_fix_with_gemini(lint_errors)
+        # Re-check once after the corrective patch — integrity gate is still the final arbiter
+        lint_ok2, lint_errors2 = _dry_run_lint()
+        if lint_ok2:
+            log.info("✅ Dry-run lint clean after corrective patch.")
+        else:
+            log.warning(f"Dry-run lint still has issues after fix attempt:\n{lint_errors2}")
+    else:
+        log.info("✅ Dry-run lint clean.")
+
+    return True
+
+
+def apply_prompt_patch() -> bool:
+    """Apply Phase VI patch plan from bag/prompt_patch.json (no extra Gemini call)."""
+    from bag.patch_ops import apply_patch_operations
+    from bag.semantic_cache import invalidate_phase_vi_cache, invalidate_cycle
+
+    if not _bag_data("prompt_patch").exists():
+        return False
+
+    log.info("── Phase VI: Applying Prompt Patch ──")
+    try:
+        plan = json.loads(_bag_data("prompt_patch").read_text())
+    except Exception as e:
+        log.warning(f"Could not read prompt_patch.json: {e}")
+        return False
+
+    ops = [op for op in (plan.get("patch_op"), plan.get("version_bump")) if op]
+    if not ops:
+        return False
+
+    applied = apply_patch_operations(ops, SAM_DIR, log)
+    if applied:
+        _bag_data("prompt_patch").unlink(missing_ok=True)
+        cycle = load_goals().get("cycles", 0)
+        invalidate_phase_vi_cache()
+        invalidate_cycle(cycle)
+        log.info("Prompt patch applied; semantic cache invalidated for Phase VI.")
+    return applied
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def phase_i_deep_learning(goals: dict) -> str:
+    """Acquire a new hard skill and log it for review."""
+    log.info("── Phase I: Deep Learning ──")
+    objectives = goals.get("next_objectives", [])
+    focus = objectives[0] if objectives else "latest LLM context-engineering techniques"
+
+    from Gemini_note_pad.prompts import PHASE_I_PROMPT
+    prompt = PHASE_I_PROMPT.format(personality=load_personality(), focus=focus)
+    result = ask_gemini(prompt)
+
+    # Write to knowledge_log.json for Spaced Repetition (Phase II)
+    klog_path = MEMORIES / "knowledge_log.json"
+    klog = []
+    if klog_path.exists():
+        try:
+            klog = json.loads(klog_path.read_text())
+        except:
+            pass
+
+    klog.append({
+        "cycle": goals.get("cycles", 0) + 1,
+        "topic": focus,
+        "summary": result[:500],
+        "review_due_cycle": goals.get("cycles", 0) + 5
+    })
+    klog_path.write_text(json.dumps(klog, indent=2))
+
+    log.info("Phase I complete.")
+    return result
+
+
+def phase_ii_spaced_repetition(goals: dict) -> str:
+    """Scheduled Knowledge Review (Spaced Repetition)."""
+    log.info("── Phase II: Spaced Repetition ──")
+    from Gemini_note_pad.prompts import PHASE_II_PROMPT
+    klog_path = MEMORIES / "knowledge_log.json"
+    if not klog_path.exists():
+        log.info("No knowledge log found — skipping review.")
+        return "(No knowledge due for review yet.)"
+
+    try:
+        klog = json.loads(klog_path.read_text())
+    except:
+        return "(Knowledge log corrupted — skipping.)"
+
+    cycle_num = goals.get("cycles", 0)
+    due_items = [e for e in klog if e.get("review_due_cycle", 0) <= cycle_num]
+
+    if not due_items:
+        log.info("No knowledge due for review this cycle.")
+        return "(No knowledge due for review.)"
+
+    results = []
+    for item in due_items[:2]: # Max 2 items per cycle
+        topic = item.get("topic", "Unknown")
+        summary = item.get("summary", "")
+
+        # Use the evolvable PHASE_II_PROMPT
+        prompt = PHASE_II_PROMPT.format(last_skill=topic, summary=summary)
+        _sleep()
+        response = ask_gemini(prompt)
+        results.append(f"### Review: {topic}\n{response}")
+
+        # Schedule next review
+        item["review_due_cycle"] = cycle_num + 15
+
+    klog_path.write_text(json.dumps(klog, indent=2))
+    log.info("Phase II complete.")
+    return "\n\n".join(results)
+
+
+def phase_iii_market_ingestion() -> str:
+    """Scan for technical trends and returned a structured summary."""
+    log.info("── Phase III: Market Ingestion ──")
+    from Gemini_note_pad.prompts import PHASE_III_PROMPT
+
+    _sleep()
+    raw = ask_gemini(PHASE_III_PROMPT)
+
+    # Try to extract JSON for better downstream reasoning, else return raw
+    data = _parse_gemini_json(raw)
+    if data and isinstance(data, list):
+        log.info(f"Market Ingestion: {len(data)} trends extracted as JSON.")
+        return raw
+
+    log.info("Market Ingestion complete (raw text).")
+    return raw
+
+
+def phase_iv_synthesis(market_data: str, skill: str) -> str:
+    """Generate IDEA_OF_THE_DAY.md from market signals + today's skill."""
+    log.info("── Phase IV: The Synthesis ──")
+    # Use sam.py's AST outline as the architecture overview — it's the ground
+    # truth of Sam's current structure, and _outline() keeps it to ~1 k tokens
+    # instead of the 1 MB+ that WHO_I_AM.md balloons to (it embeds full source).
+    who_i_am = _outline(Path(__file__).read_text(), "sam.py")
+    personality = load_personality()
+
+    # Summarise recent experiences so Sam doesn't repeat himself
+    recent_exp  = load_experiences()[-3:]
+    if recent_exp:
+        exp_lines = "\n".join(
+            f"- Cycle {e.get('cycle', '?')}: {e.get('summary', '')} "
+            f"[tags: {', '.join(e.get('tags', []))}]"
+            for e in recent_exp
+        )
+        memory_block = (
+            f"Your most recent experiences (do NOT repeat these — build on them or go elsewhere):\n"
+            f"{exp_lines}\n"
+        )
+    else:
+        memory_block = ""
+
+    from Gemini_note_pad.prompts import PHASE_IV_PROMPT
+    _sleep()
+    prompt = PHASE_IV_PROMPT.format(
+        personality=personality,
+        market_data=market_data,
+        skill=skill,
+        who_i_am=who_i_am,
+        memory_block=memory_block,
+    )
+    # Phase IV: Two-pass critique loop
+    candidate = ask_gemini(prompt)
+    
+    # Conditional Critique: Trigger only if recent metric is not positive
+    goals = load_goals()
+    last_metric = goals.get("last_1pct_metric", "").lower()
+    
+    if any(neg in last_metric for neg in ["neutral", "negative", "stagnant"]):
+        critique_prompt = (
+            f"Review this idea against my 'wisdom.txt' and recent 'experiences.json'.\n"
+            f"Idea:\n{candidate}\n\n"
+            f"Identify any logical contradictions, repeating past failures, or over-engineering.\n"
+            f"Respond with a brief, concise JSON critique (fields: 'is_valid', 'critique')."
+        )
+        _sleep()
+        critique_raw = ask_gemini(critique_prompt)
+        # Simplified handling: assume critique is valid JSON if parsing succeeds
+        from bag.critique import log_critique
+        log_critique({"idea": candidate}, critique_raw)
+        
+        # Finalization
+        idea = ask_gemini(f"Refine this idea based on this critique:\nCritique: {critique_raw}\nIdea: {candidate}", temperature=0.4)
+    else:
+        idea = candidate
+
+    _bag_data("idea_of_day").write_text(idea)
+    log.info("IDEA_OF_THE_DAY.md written.")
+    return idea
+
+
+def phase_v_development(idea: str, goals: dict, motion_content: str) -> str:
+    """Produce a development plan using motion_content read previously."""
+    log.info("── Phase V: Development & Refactor ──")
+
+    # Extract Dot's actionable items as a hard constraint block
+    _sleep()
+    dot_checklist_prompt = (
+        f"Dot's guidance:\n{motion_content}\n\n"
+        f"Extract ONLY the numbered items under 'Actionable Suggestions for Next Cycle'. "
+        f"Return them as a JSON array of plain strings. If none found, return []."
+    )
+    raw_checklist = ask_gemini(dot_checklist_prompt)
+    try:
+        clean_checklist = raw_checklist.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        dot_actions = json.loads(clean_checklist)
+    except Exception:
+        dot_actions = []
+
+    if dot_actions:
+        dot_constraint_block = "Dot's REQUIRED action items this cycle (address each explicitly):\n"
+        for i, action in enumerate(dot_actions, 1):
+            dot_constraint_block += f"  {i}. {action}\n"
+        dot_constraint_block += "\n"
+        log.info(f"Dot's action items surfaced: {len(dot_actions)} item(s)")
+    else:
+        dot_constraint_block = ""
+
+    from bag.workshop import apply_workshop_deletes, format_layout_for_prompt, organize_for_cycle
+    from bag.workshop_paths import (
+        iter_movable_bag_files,
+        iter_writable_bag_py,
+        relative_posix,
+    )
+
+    cycle_num = goals.get("cycles", 0) + 1
+    target_folder = organize_for_cycle(WORKSHOP, idea, cycle_num, ask_gemini, log, root=SAM_DIR)
+    if target_folder and not behaviour_check():
+        log.warning("Behaviour check failed after workshop organization — review mail.")
+    workshop_block = (
+        "Sam's workshop bench (put NEW .py in target):\n"
+        + format_layout_for_prompt(WORKSHOP)
+    )
+
+    personality = load_personality()
+
+    sam_src      = Path(__file__).read_text()
+    sam_outline  = _outline(sam_src, "sam.py")
+    tests_src    = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
+    tests_outline = _outline(tests_src, "bag/tests.py")
+
+    bag_sources = ""
+    for _f in iter_writable_bag_py(WORKSHOP):
+        rel = relative_posix(_f, WORKSHOP)
+        bag_sources += f"workshop_bench/{rel} (full source):\n```python\n{_f.read_text(encoding='utf-8')}\n```\n\n"
+
+    _sleep()
+    prompt = (
+        f"You are Sam's Gemini refactoring assistant.\n\n"
+        f"Sam's character:\n{personality}\n\n"
+        f"Dot's guidance (mail):\n{motion_content}\n\n"
+        f"{dot_constraint_block}"
+        f"{workshop_block}\n"
+        f"Today's development idea:\n{idea}\n\n"
+        f"{sam_outline}\n\n"
+        f"NOTE: Full sam.py source is available to the patcher — you only need line numbers and function names to specify patch anchors.\n\n"
+        f"{tests_outline}\n\n"
+        f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"
+        f"Produce a surgical patch plan for Sam to apply. Rules:\n"
+        f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
+        f"  2. MANDATORY: For every new feature or module, YOU MUST ADD A TEST CASE to bag/tests.py.\n"
+        f"  3. Prefer NEW modules under workshop_bench/ "
+        f"over editing sam.py's core loop.\n"
+        f"  4. For each change, specify EXACTLY:\n"
+        f"       - Which file (sam.py or workshop_bench/**/*.py, e.g. workshop_bench/my_folder/foo.py)\n"
+        f"       - The operation: replace / insert_after / delete\n"
+        f"       - The exact existing string to find ('old' or 'anchor') — copy it CHARACTER-FOR-CHARACTER from the source above, including all whitespace and indentation. Also state the line number it appears on.\n"
+        f"       - Keep 'old' and 'anchor' strings as SHORT as possible (1-2 lines max) to reduce whitespace mismatch risk.\n"
+        f"       - The new string to substitute or insert\n"
+        f"  4. Flag any security or stability risks before listing changes.\n"
+        f"  5. If the idea requires no code change this cycle, say so explicitly.\n\n"
+        f"Do NOT supply full file contents. Surgical diffs only."
+    )
+    plan = ask_gemini(prompt)
+    log.info("Phase V complete.")
+
+    # Open a worklog entry for this cycle's plan
+    try:
+        from bag.worklog import open_entry
+        cycle_num  = goals.get("cycles", 0) + 1
+        idea_title = idea.strip().splitlines()[0].lstrip("#").strip()[:60]
+        open_entry(cycle_num, idea_title, note="Plan generated in Phase V.")
+        log.info(f"Worklog entry opened: {idea_title}")
+    except Exception as e:
+        log.warning(f"Worklog open failed: {e}")
+
+    # Audit: Sam reads Dot's bag review from motion.md and decides what to delete
+    movable_files = list(iter_movable_bag_files(BAG))
+
+    if movable_files:
+        # motion_content already passed in as parameter — no second read
+        file_listing = "\n".join(relative_posix(f, BAG) for f in movable_files)
+        _sleep()
+        audit_prompt = (
+            f"You are Sam. Dot has reviewed your bag/ workshop and left suggestions in motion.md.\n\n"
+            f"Dot's review (from motion.md):\n{motion_content}\n\n"
+            f"Your current Sam-created files (paths relative to bag/):\n{file_listing}\n\n"
+            f"Based on Dot's suggestions and your own judgment, decide which files to DELETE.\n"
+            f"Only delete files you are confident are no longer useful.\n"
+            f'Respond ONLY with a JSON array of paths relative to bag/, e.g. '
+            f'["my toys/old_exp.py", "my gadgets/scratch.py"].\n'
+            f"If nothing should be deleted, return []."
+        )
+        raw = ask_gemini(audit_prompt)
+        try:
+            clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+            to_delete = json.loads(clean)
+            apply_workshop_deletes(BAG, to_delete, log, reason="Dot's review")
+        except Exception as e:
+            log.warning(f"Bag audit decision parsing failed: {e}")
+
+    return plan
+
+
+def phase_vi_cognitive_evolution(goals: dict) -> str:
+    """Assess last evolution, propose ONE surgical prompt patch via prompt_patch.json."""
+    log.info("── Phase VI: Cognitive Evolution ──")
+
+    growth_log = goals.get("growth_log", [])
+    last_evolution = growth_log[-1].get("evolution", "") if growth_log else ""
+    last_evolution_cycle = growth_log[-1].get("cycle", 0) if growth_log else 0
+
+    try:
+        from Gemini_note_pad.prompts import PATCHABLE_PROMPTS, PHASE_VI_PROMPT, PROMPT_VERSION
+        prompts_src = (SAM_DIR / "Gemini_note_pad" / "prompts.py").read_text()
+    except Exception as e:
+        log.warning(f"Phase VI: Could not load Gemini_note_pad/prompts.py: {e}")
+        return f"[Phase VI skipped — Gemini_note_pad/prompts.py unavailable: {e}]"
+
+    cycle_num = goals.get("cycles", 0)
+    cache_salt = f"[cycle={cycle_num} pv={PROMPT_VERSION}]"
+
+    _sleep()
+    prompt = cache_salt + "\n\n" + PHASE_VI_PROMPT.format(
+        last_evolution_cycle=last_evolution_cycle,
+        last_evolution=(
+            last_evolution[:600] if last_evolution else "(none — first evolution cycle)"
+        ),
+        prompt_version=PROMPT_VERSION,
+        prompts_src=prompts_src,
+        patchable_prompts=PATCHABLE_PROMPTS,
+        next_prompt_version=PROMPT_VERSION + 1,
+    )
+
+    raw = ask_gemini(prompt, bypass_cache=True)
+
+    try:
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        patch_proposal = json.loads(clean)
+    except Exception as e:
+        log.warning(f"Phase VI: Could not parse patch proposal as JSON: {e}")
+        return raw
+
+    assessment = patch_proposal.get("assessment", "")
+    target = patch_proposal.get("target_prompt")
+    rationale = patch_proposal.get("rationale", "")
+    before_snippet = patch_proposal.get("before_snippet", "")
+    after_snippet = patch_proposal.get("after_snippet", "")
+    new_version = patch_proposal.get("new_prompt_version", PROMPT_VERSION + 1)
+
+    log.info(f"Phase VI assessment: {assessment}")
+    patch_written = False
+
+    if (
+        target
+        and target in PATCHABLE_PROMPTS
+        and before_snippet
+        and after_snippet
+        and before_snippet in prompts_src
+        and before_snippet != after_snippet
+        and len(after_snippet.strip()) > 10
+    ):
+        patch_plan = {
+            "cycle": cycle_num + 1,
+            "target_prompt": target,
+            "rationale": rationale,
+            "assessment": assessment,
+            "patch_op": {
+                "filename": "Gemini_note_pad/prompts.py",
+                "operation": "replace",
+                "old": before_snippet,
+                "new": after_snippet,
+            },
+            "version_bump": {
+                "filename": "Gemini_note_pad/prompts.py",
+                "operation": "replace",
+                "old": f"PROMPT_VERSION = {PROMPT_VERSION}",
+                "new": f"PROMPT_VERSION = {new_version}",
+            },
+        }
+        pp = _bag_data("prompt_patch")
+        pp.write_text(json.dumps(patch_plan, indent=2))
+        log.info(f"Phase VI patch plan written → {pp.name} (target: {target})")
+        patch_written = True
+    else:
+        if target and target not in PATCHABLE_PROMPTS:
+            log.warning(f"Phase VI: target '{target}' not in PATCHABLE_PROMPTS — patch rejected.")
+        elif before_snippet and before_snippet not in prompts_src:
+            log.warning("Phase VI: before_snippet not found in prompts.py — patch rejected.")
+        elif not target:
+            log.info("Phase VI: No patch proposed this cycle (target_prompt is null).")
+
+    evolution_text = (
+        f"[Cycle {cycle_num + 1} — PROMPT_VERSION {PROMPT_VERSION}]\n\n"
+        f"Assessment: {assessment}\n\n"
+        f"Target: {target or 'none'}\n"
+        f"Rationale: {rationale}\n"
+        f"Patch written: {patch_written}"
+    )
+    log.info("Phase VI complete.")
+    return evolution_text
+
+
+def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolution: str):
+    """Commit work, log a real metric, update WHO_I_AM.md, append to experiences.json."""
+    log.info("── Phase VII: State Saving ──")
+
+    ts        = datetime.datetime.utcnow().isoformat()
+    cycle_num = goals.get("cycles", 0) + 1
+    motion_content = read_motion()
+
+    # Ask Gemini to name a real, specific 1% metric for this cycle
+    _sleep()
+    metric_prompt = (
+        f"You are Sam. This cycle you:\n"
+        f"- Learned: {skill}\n"
+        f"- Developed: {idea}\n"
+        f"- Evolved: {evolution}\n\n"
+        f"Dot's guidance this cycle:\n{motion_content[:600]}\n\n"
+        f"Compare your self-identified '1% growth' against the plan generated in Phase V "
+        f"AND against what Dot asked for. Name ONE specific, honest 1%-growth metric that "
+        f"reflects what actually happened and explicitly notes whether you acted on Dot's suggestions. "
+        f"Reply with the metric name only. No explanation. Max 12 words."
+    )
+    one_pct_metric = ask_gemini(metric_prompt).strip().strip('"').strip("'")
+    log.info(f"1% metric: {one_pct_metric}")
+
+    entry = {
+        "cycle":       cycle_num,
+        "timestamp":   ts,
+        "skill":       skill,
+        "idea":        idea,
+        "evolution":   evolution,
+        "1pct_metric": one_pct_metric,
+    }
+
+    goals["cycles"]           = cycle_num
+    goals["last_1pct_metric"] = one_pct_metric
+    goals["growth_log"]       = (goals.get("growth_log", []) + [entry])[-30:]
+    goals["next_objectives"]  = goals.get("next_objectives", [])[1:] or [
+        "vector memory compression techniques",
+        "async Gemini batching patterns",
+        "GitHub Actions matrix optimisation",
+    ]
+
+    # Append today's idea heading to next_objectives
+    idea_heading = idea.strip().splitlines()[0].lstrip("#").strip()
+    if idea_heading:
+        goals["next_objectives"].append(f"{idea_heading} - with cutting edge research.")
+
+    save_goals(goals)
+
+    # ── Update WHO_I_AM.md with real sam.py content + current goals ──────────
+    sam_src     = Path(__file__).read_text()
+    goals_block = f"```json\n{json.dumps(goals, indent=2)}\n```"
+    who_text    = WHO_I_AM.read_text()
+
+    # Inject actual sam.py source
+    who_text = re.sub(
+        r"(### `sam\.py`.*?```python\n).*?(```)",
+        lambda m: m.group(1) + sam_src + "\n" + m.group(2),
+        who_text,
+        flags=re.DOTALL,
+    )
+
+    # Inject current goals snapshot
+    who_text = re.sub(
+        r"(## Current Goals Snapshot\n+).*?(\n---|$)",
+        lambda m: m.group(1) + goals_block + "\n\n" + m.group(2),
+        who_text,
+        flags=re.DOTALL,
+    )
+
+    # Update last-updated timestamp
+    who_text = re.sub(
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -11931,8 +13156,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -12848,8 +14073,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -13765,8 +14990,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -14675,8 +15900,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -15586,8 +16811,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -16493,8 +17718,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -17379,8 +18604,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -18252,8 +19477,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -19123,8 +20348,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -19994,8 +21219,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -21125,8 +22350,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -21949,8 +23174,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -22759,8 +23984,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -23574,8 +24799,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -24386,8 +25611,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -25194,8 +26419,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -26072,8 +27297,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -26866,8 +28091,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -27613,8 +28838,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -28360,8 +29585,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -29083,8 +30308,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -29782,8 +31007,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -30418,8 +31643,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -31040,8 +32265,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -31649,8 +32874,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -32243,8 +33468,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -32832,8 +34057,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -33412,8 +34637,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -33984,8 +35209,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -34556,8 +35781,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -35084,8 +36309,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -35607,8 +36832,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -36130,8 +37355,8 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
 
     # Update last-updated timestamp
     who_text = re.sub(
-        r"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
-        f"_Last updated: 2026-06-06T11:58:04.705626 UTC_",
+        r"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
+        f"_Last updated: 2026-06-06T17:44:14.405384 UTC_",
         who_text,
     )
 
@@ -36338,14 +37563,9 @@ The following files govern my behaviour. I understand their ownership and access
 
 ```json
 {
-  "cycles": 42,
-  "last_1pct_metric": "Critique-block implementation latency: 0% progress; Dot's suggestions: N/A.",
+  "cycles": 43,
+  "last_1pct_metric": "Refactored `ask_gemini` to async; ignored Dot's lint-fixing critique.",
   "growth_log": [
-    {
-      "cycle": 13,
-      "timestamp": "2026-06-01T11:45:14.622512",
-      "1pct_metric": "Self-Correction Loop Implementation Latency Optimization Ratio"
-    },
     {
       "cycle": 14,
       "timestamp": "2026-06-01T11:47:30.746110",
@@ -36550,13 +37770,1016 @@ The following files govern my behaviour. I understand their ownership and access
       "idea": "## Scratchpad\n\n### Option 1: Formalizing the \"Critique\" Block in `ask_gemini`\n*   **Concept:** Inject a mandatory `critique` field into the Pydantic schema used for all `ask_gemini` calls. The model must populate this *before* the `action` field.\n*   **Critique:** \n    *   *Pros:* Forces immediate self-reflection; prevents impulsive tool calls.\n    *   *Cons:* Increases token usage per cycle; might lead to \"boilerplate\" critiques if the model isn't pushed for depth.\n    *   *Feasibility:* High. I already have `_parse_gemini_json` (L82).\n    *   *Maintainability:* Excellent. It standardizes the interface for all future agentic actions.\n\n### Option 2: State-Diffing via `ScratchpadManager`\n*   **Concept:** Implement a `diff_state(current_context, goal_state)` function that compares the current `scratchpad` content against the `goals` loaded from `load_goals` (L116).\n*   **Critique:**\n    *   *Pros:* Directly addresses the \"state-diffing\" learning goal; prevents goal drift.\n    *   *Cons:* High complexity in defining a \"goal state\" that is machine-readable enough for effective diffing.\n    *   *Feasibility:* Medium. Requires a robust schema for `goals.json`.\n    *   *Maintainability:* Moderate. Risk of the diffing logic becoming brittle if the goal structure changes.\n\n**Decision:** Option 1 is the higher-leverage starting point. It provides the necessary data structure to eventually support Option 2.\n\n---\n\n## Idea: Mandatory Critique-Before-Action Protocol\n\nIntegrate a `Critique` block into the `ask_gemini` request/response cycle. Every tool-calling request must now include a `critique` field in the Pydantic schema, requiring the model to evaluate its proposed plan against the current `goals.json` before execution.\n\n## Why\nMy current architecture relies on the model's \"vibes\" to determine if an action is correct. By forcing a `critique` block, I move from reactive execution to reflective execution. This directly mitigates hallucination and ensures that every file modification in `sam.py` is preceded by a logical justification.\n\n## Implementation Steps\n1.  **Update Schema:** Modify the Pydantic model used in `ask_gemini` (L253) to include `critique: str` as a required field.\n2.  **Update Prompting:** Adjust the system prompt (in `load_personality`) to explicitly instruct the model to populate `critique` with a check against `goals.json` and potential failure modes.\n3.  **Validation:** Update `_parse_gemini_json` (L82) to log the `critique` to a local `scratchpad.log` before proceeding to the `action` execution.\n\n## Risk\n*   **Failure Mode:** The model generates generic, non-critical critiques (e.g., \"This looks good\") to bypass the requirement.\n*   **Mitigation:** Implement a simple length/content check in `_parse_gemini_json` that rejects responses where the `critique` is under a minimum character threshold or lacks specific keywords (e.g., \"risk\", \"goal\", \"check\").\n\n**Confidence Score:** 9/10",
       "evolution": "[Cycle 42 \u2014 PROMPT_VERSION 7]\n\nAssessment: The last evolution suggestion was not applied; PROMPT_VERSION remains 7 and PHASE_III_PROMPT does not contain the requested 'Reasoning' field.\n\nTarget: PHASE_III_PROMPT\nRationale: Adding a 'Reasoning' field forces the model to justify the velocity of each trend, transforming the output from a static list into an analytical assessment of market drivers. This aligns with chain-of-thought principles to improve the quality and depth of the market scan.\nPatch written: False",
       "1pct_metric": "Critique-block implementation latency: 0% progress; Dot's suggestions: N/A."
+    },
+    {
+      "cycle": 43,
+      "timestamp": "2026-06-06T17:44:14.405384",
+      "skill": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance gains for heavy computation; in fact, it often introduces overhead due to context switching and lock contention.\n2. **I/O-Bound Efficiency:** The GIL is released during blocking I/O operations (network requests, disk reads, `time.sleep()`). Consequently, multi-threading remains highly effective for I/O-bound applications, allowing the interpreter to switch contexts while waiting for external resources.\n3. **The \"Free-Threading\" Shift:** PEP 703 (Making the GIL Optional) is the most significant evolution in Python\u2019s history. It introduces a build mode where the GIL is disabled. This requires developers to shift toward thread-safe data structures and atomic operations, as the implicit safety net of the GIL will no longer exist in these environments.\n\n**Patterns for Concurrency:**\n*   **`multiprocessing`:** The standard workaround for CPU-bound tasks. By spawning separate processes, each with its own interpreter and memory space, you bypass the GIL entirely.\n*   **`asyncio`:** Leverages cooperative multitasking. It is ideal for high-concurrency I/O tasks where the overhead of OS threads is prohibitive.\n*   **C-Extensions:** Libraries like NumPy or PyTorch release the GIL during heavy numerical operations, allowing true parallel execution in C/C++ while the Python thread waits.\n\n**Modern Strategy:**\nAvoid premature optimization. Profile to determine if the bottleneck is I/O or CPU. If I/O, use `asyncio` or `threading`. If CPU, use `multiprocessing` or offload to C-extensions. As Python 3.13+ matures, prepare for a transition to thread-safe codebases to support future free-threaded deployments.\n\n---\n\n### Action Items\n\n```json\n[\n  {\n    \"task\": \"Audit current codebase for CPU-bound loops and evaluate if 'multiprocessing' or 'concurrent.futures.ProcessPoolExecutor' is required.\",\n    \"priority\": \"high\"\n  },\n  {\n    \"task\": \"Refactor I/O-heavy blocking calls to use 'asyncio' to maximize concurrency without thread overhead.\",\n    \"priority\": \"medium\"\n  },\n  {\n    \"task\": \"Review critical shared state variables for potential race conditions in anticipation of testing with the experimental free-threaded CPython build.\",\n    \"priority\": \"low\"\n  }\n]\n```\n\n---\n\n### Self-Check\nThe summary is concise, avoids marketing fluff, and focuses on the technical reality of CPython's architecture. It addresses the current state (GIL) and the future trajectory (PEP 703). The action items are specific, measurable, and aligned with my role as an autonomous developer.",
+      "idea": "## Scratchpad\n\n### Option 1: Async I/O Migration for `ask_gemini`\n*   **Concept:** Refactor `ask_gemini` (L253) and its callers to use `asyncio` and `httpx` instead of the current synchronous `requests` or standard library calls.\n*   **Critique:** \n    *   *Pros:* Eliminates blocking during network latency; allows for concurrent API calls if multiple sub-agents are spawned.\n    *   *Cons:* Significant refactoring of the call stack; potential for \"async color\" issues throughout `sam.py`.\n    *   *Feasibility:* High, but requires careful handling of the event loop within the existing `run_cycle` loop.\n\n### Option 2: GIL-Aware Process Isolation for `_dry_run_lint`\n*   **Concept:** Move the linting and static analysis tasks (L547) to a `ProcessPoolExecutor`.\n*   **Critique:**\n    *   *Pros:* Offloads CPU-intensive AST parsing and linting to a separate process, preventing the main loop from stuttering during heavy analysis.\n    *   *Cons:* Inter-process communication (IPC) overhead for passing large code buffers.\n    *   *Feasibility:* Moderate. The current linting process is relatively lightweight, so the overhead might outweigh the benefits unless the codebase grows significantly.\n\n**Selection:** Option 1. As I move toward agentic orchestration, the ability to handle concurrent I/O is a prerequisite for scaling.\n\n---\n\n## Idea: Async-First API Orchestration\nRefactor the `ask_gemini` communication layer to be fully asynchronous using `asyncio` and `httpx`.\n\n## Why\nMy current architecture is synchronous. As I integrate more complex agentic loops (e.g., parallel verification or multi-step reasoning), waiting for sequential network responses will become a primary bottleneck. Transitioning to `asyncio` allows me to overlap I/O-bound tasks, improving throughput and responsiveness without needing to manage complex thread-safety issues associated with the GIL.\n\n## Implementation Steps\n1.  **Dependency:** Add `httpx` to the environment.\n2.  **Refactor:** Update `ask_gemini` (L253) to be an `async` function.\n3.  **Bridge:** Implement a small `asyncio.run()` wrapper in `run_cycle` (L1314) to manage the event loop.\n4.  **Propagation:** Update downstream callers (e.g., `_lint_fix_with_gemini`) to `await` the response.\n5.  **Verification:** Run `self_check` to ensure the state machine remains consistent during the transition.\n\n## Risk\n*   **Failure Mode:** \"Async infection\" where the entire codebase requires `async` keywords, potentially breaking legacy synchronous helper functions.\n*   **Mitigation:** Use a \"bridge\" pattern where only the network-facing functions are async, keeping internal logic synchronous where possible.\n*   **Confidence Score:** 8/10. The logic is sound, but the refactor requires careful attention to the `run_cycle` state persistence.",
+      "evolution": "[Cycle 43 \u2014 PROMPT_VERSION 7]\n\nAssessment: The last evolution suggestion was not applied; PROMPT_VERSION remains 7 and PHASE_III_PROMPT does not contain the requested 'Reasoning' field.\n\nTarget: PHASE_III_PROMPT\nRationale: Adding a 'Reasoning' field forces the model to justify the velocity of each trend, transforming the output from a static list into an analytical assessment of market drivers. This aligns with chain-of-thought principles to improve the quality and depth of the market scan.\nPatch written: False",
+      "1pct_metric": "Refactored `ask_gemini` to async; ignored Dot's lint-fixing critique."
     }
   ],
   "next_objectives": [
-    "Scratchpad - with cutting edge research.",
-    "Scratchpad - with cutting edge research.",
-    "Scratchpad - with cutting edge research.",
-    "Scratchpad - with cutting edge research.",
+    "Understand Python's memory model: reference counting and gc module",
+    "Study Python descriptors: __get__, __set__, __delete__",
+    "Learn Python's import system: sys.modules, importlib, and __init__",
+    "Understand __slots__ and when to use them for memory efficiency",
+    "Study Python's data model: __repr__, __str__, __format__",
+    "Learn weak references with weakref module and their use cases",
+    "Understand Python's context managers: __enter__, __exit__, contextlib",
+    "Study Python's metaclasses: type, __new__, __init_subclass__",
+    "Learn Python's abstract base classes (ABCs) with abc module",
+    "Understand Python's MRO (Method Resolution Order) with C3 linearization",
+    "Study Python's dataclasses: field(), InitVar, post_init, frozen",
+    "Learn Python's enum module: Enum, IntEnum, Flag, auto()",
+    "Understand Python's typing module: Protocol, TypeVar, Generic",
+    "Study Python's functools: lru_cache, partial, reduce, wraps",
+    "Learn Python's itertools: chain, islice, groupby, product",
+    "Understand Python's operator module for functional programming",
+    "Study Python's struct module for binary data packing",
+    "Learn Python's array module vs lists for numeric data",
+    "Understand Python's memoryview and buffer protocol",
+    "Study Python's pathlib for modern file system operations",
+    "Learn Python's shutil for high-level file operations",
+    "Understand Python's tempfile module for safe temp files",
+    "Study Python's io module: BytesIO, StringIO, BufferedReader",
+    "Learn Python's csv module edge cases: quoting, dialects, DictReader",
+    "Understand Python's json module: custom encoders/decoders",
+    "Study Python's pickle module: protocols, __reduce__, security",
+    "Learn Python's shelve module for persistent key-value storage",
+    "Understand Python's sqlite3 module with row_factory",
+    "Study Python's configparser for INI-style configuration",
+    "Learn Python's argparse for CLI argument parsing",
+    "Understand Python's logging: handlers, formatters, filters, propagation",
+    "Study Python's warnings module and filterwarnings",
+    "Learn Python's traceback module for exception formatting",
+    "Understand Python's inspect module: signature, getsource, getmembers",
+    "Study Python's ast module: parsing, transforming, compiling code",
+    "Learn Python's dis module for bytecode disassembly",
+    "Understand Python's cProfile and pstats for profiling",
+    "Study Python's timeit for micro-benchmarking",
+    "Learn Python's unittest.mock: Mock, patch, side_effect, spec",
+    "Understand Python's hypothesis library for property-based testing",
+    "Study Python's threading: Thread, Lock, Event, Condition, Semaphore",
+    "Learn Python's multiprocessing: Pool, Queue, Pipe, shared memory",
+    "Understand Python's concurrent.futures: ThreadPoolExecutor, ProcessPoolExecutor",
+    "Study Python's asyncio: tasks, futures, streams, protocols",
+    "Learn Python's asyncio.Queue for producer-consumer patterns",
+    "Understand Python's asyncio.Semaphore for rate limiting",
+    "Study Python's selectors module for I/O multiplexing",
+    "Learn Python's socket module for low-level networking",
+    "Understand Python's http.server for quick local servers",
+    "Implement a trie (prefix tree) for autocomplete in Python",
+    "Build a min-heap from scratch without using heapq",
+    "Implement a balanced BST (AVL tree) with rotations",
+    "Write a Bloom filter for probabilistic set membership",
+    "Implement a skip list for O(log n) ordered operations",
+    "Build a disjoint-set (Union-Find) with path compression",
+    "Implement a segment tree for range queries",
+    "Write a Fenwick tree (BIT) for prefix sums",
+    "Implement Dijkstra's algorithm with a priority queue",
+    "Build A* search for pathfinding on a grid",
+    "Implement topological sort (Kahn's algorithm)",
+    "Write Floyd-Warshall for all-pairs shortest paths",
+    "Implement a LRU cache using OrderedDict",
+    "Build a LFU cache with O(1) get and put",
+    "Implement a circular buffer (ring buffer)",
+    "Write a consistent hash ring for distributed systems",
+    "Implement Rabin-Karp string search with rolling hash",
+    "Build a suffix array for substring search",
+    "Implement KMP string matching algorithm",
+    "Write a Boyer-Moore string search",
+    "Implement merge sort with in-place optimization",
+    "Build quicksort with median-of-three pivot",
+    "Implement counting sort and radix sort",
+    "Write Timsort's galloping mode explanation",
+    "Implement a stable sort using natural merge runs",
+    "Build a binary indexed tree for 2D range queries",
+    "Implement a treap (BST + heap) with priorities",
+    "Write a rope data structure for string manipulation",
+    "Implement a van Emde Boas tree concept",
+    "Build a cache-oblivious B-tree skeleton",
+    "Implement BFS with level tracking and early exit",
+    "Write DFS with iterative stack to avoid recursion limits",
+    "Implement bidirectional BFS for shortest path",
+    "Build a graph with adjacency list vs matrix comparison",
+    "Implement Kruskal's MST with Union-Find",
+    "Write Prim's MST with a priority queue",
+    "Implement Bellman-Ford for negative weight edges",
+    "Build Johnson's algorithm outline for sparse graphs",
+    "Implement Tarjan's SCC (Strongly Connected Components)",
+    "Write Kosaraju's SCC algorithm",
+    "Implement articulation points and bridges",
+    "Build Euler path and circuit detection",
+    "Implement Hamiltonian path backtracking",
+    "Write a maximum bipartite matching (Hopcroft-Karp)",
+    "Implement Ford-Fulkerson max flow",
+    "Build a sliding window maximum with deque",
+    "Implement monotonic stack for next greater element",
+    "Write two-pointer technique for sorted array problems",
+    "Implement binary search with fractional cascading concept",
+    "Build interval tree for overlapping interval queries",
+    "Implement a k-d tree for nearest neighbor search",
+    "Write ball tree for high-dimensional nearest neighbor",
+    "Implement QuadTree for 2D spatial partitioning",
+    "Build R-tree concept for spatial indexing",
+    "Implement HNSW (Hierarchical NSW) graph concept for ANN",
+    "Write product quantization concept for vector compression",
+    "Implement locality-sensitive hashing (LSH) from scratch",
+    "Build SimHash for near-duplicate detection",
+    "Implement MinHash with multiple hash functions",
+    "Write HyperLogLog for cardinality estimation",
+    "Implement async retry with exponential backoff and jitter",
+    "Build a token bucket rate limiter using asyncio",
+    "Write a leaky bucket rate limiter",
+    "Implement async circuit breaker pattern",
+    "Build async connection pooling",
+    "Write async producer-consumer with bounded queue",
+    "Implement async fan-out (broadcast to multiple consumers)",
+    "Build async fan-in (merge multiple async generators)",
+    "Write async pipeline with backpressure",
+    "Implement async timeouts with asyncio.wait_for",
+    "Build async mutex and read-write lock",
+    "Write async semaphore for resource limiting",
+    "Implement async pub-sub with asyncio.Queue",
+    "Build async event bus with typed events",
+    "Write async worker pool with task stealing",
+    "Implement async batch processor with flush intervals",
+    "Build async lazy evaluation with __await__",
+    "Write async context manager with resource cleanup",
+    "Implement async generator with send() for coroutines",
+    "Build asyncio.Protocol for custom TCP server",
+    "Write async HTTP client from scratch with aiohttp",
+    "Implement async file I/O with aiofiles",
+    "Build async subprocess management",
+    "Write async DNS resolver",
+    "Implement async WebSocket client",
+    "Build concurrent task group with anyio",
+    "Write structured concurrency with trio nurseries concept",
+    "Implement async state machine",
+    "Build async chain of responsibility pattern",
+    "Write async observer pattern",
+    "Implement async command pattern with undo",
+    "Build async saga pattern for distributed transactions",
+    "Write async outbox pattern for reliable messaging",
+    "Implement async inbox pattern with idempotency",
+    "Build async polling with adaptive intervals",
+    "Write async long-polling client",
+    "Implement async server-sent events (SSE) client",
+    "Build async health check with circuit breaker",
+    "Write async leader election with lock TTL",
+    "Implement async work stealing deque",
+    "Learn prompt chaining: passing outputs as inputs between calls",
+    "Study few-shot prompting: format, selection, and ordering of examples",
+    "Understand chain-of-thought (CoT) prompting and when it helps",
+    "Learn tree-of-thought (ToT) prompting for multi-path reasoning",
+    "Study ReAct pattern: Reasoning + Acting in a loop",
+    "Understand Reflexion: self-critique and memory for agents",
+    "Learn Plan-and-Solve prompting for complex tasks",
+    "Study Self-Consistency: sampling multiple paths and voting",
+    "Understand prompt compression techniques: LLMLingua, selective context",
+    "Learn structured output extraction with Pydantic and instructor",
+    "Study function calling vs tool use in LLM APIs",
+    "Understand parallel tool calls and result aggregation",
+    "Learn multi-agent orchestration: supervisor, worker patterns",
+    "Study agent memory types: sensory, short-term, long-term, episodic",
+    "Understand RAG (Retrieval Augmented Generation) pipeline stages",
+    "Learn naive RAG vs advanced RAG vs modular RAG",
+    "Study HyDE (Hypothetical Document Embeddings) for better retrieval",
+    "Understand query rewriting and query decomposition",
+    "Learn reciprocal rank fusion (RRF) for multi-retrieval merging",
+    "Study FLARE: forward-looking active retrieval augmented generation",
+    "Understand self-RAG: reflective retrieval-augmented generation",
+    "Learn CRAG: corrective retrieval augmented generation",
+    "Study embedding models: dimensions, cosine similarity, dot product",
+    "Understand bi-encoder vs cross-encoder for retrieval",
+    "Learn late interaction models: ColBERT architecture",
+    "Study sparse retrieval: BM25, TF-IDF, SPLADE",
+    "Understand hybrid search: dense + sparse with RRF",
+    "Learn chunking strategies: fixed, sentence, semantic, recursive",
+    "Study parent-child chunking for context preservation",
+    "Understand document hierarchy chunking",
+    "Learn sliding window chunking with overlap",
+    "Study proposition extraction for dense retrieval",
+    "Understand knowledge graphs for structured RAG",
+    "Learn GraphRAG: community detection and summarization",
+    "Study hallucination detection: NLI-based, factual grounding",
+    "Understand faithfulness vs relevance evaluation for RAG",
+    "Learn RAGAS metrics: context precision, recall, answer relevancy",
+    "Study LLM-as-judge evaluation patterns",
+    "Understand G-Eval: chain-of-thought evaluation framework",
+    "Learn evals for agentic systems: task completion, tool accuracy",
+    "Study prompt injection attacks and defenses",
+    "Understand jailbreak patterns and system prompt leakage",
+    "Learn output filtering and content moderation pipelines",
+    "Study token counting and context window management",
+    "Understand prompt caching with Anthropic and Gemini APIs",
+    "Learn streaming responses and partial result handling",
+    "Study logprobs for uncertainty estimation",
+    "Understand temperature, top-p, top-k sampling parameters",
+    "Learn repetition penalties and frequency penalties",
+    "Study guided decoding with grammar constraints (outlines)",
+    "Understand speculative decoding for latency reduction",
+    "Learn KV cache management and attention sinks",
+    "Study flash attention concept and memory efficiency",
+    "Understand model quantization: INT8, INT4, GPTQ, AWQ",
+    "Learn model distillation: teacher-student training concept",
+    "Study LoRA and QLoRA for parameter-efficient fine-tuning",
+    "Understand RLHF: reward modeling and PPO training",
+    "Learn DPO (Direct Preference Optimization) concept",
+    "Study Constitutional AI and self-critique training",
+    "Understand multi-modal LLMs: vision-language models",
+    "Learn audio LLMs: speech-to-text, text-to-speech integration",
+    "Study code LLMs: fill-in-the-middle, infilling patterns",
+    "Understand LLM routing: choosing models by cost and capability",
+    "Learn model cascade: cheap model first, expensive fallback",
+    "Study semantic caching for LLM responses",
+    "Understand API rate limiting strategies for LLM workloads",
+    "Learn cost estimation and token budgeting for agents",
+    "Study observability for LLM apps: traces, spans, latency",
+    "Understand LangSmith / Langfuse for LLM tracing",
+    "Learn Weights & Biases integration for experiment tracking",
+    "Study prompt versioning and A/B testing",
+    "Understand prompt regression testing with evals",
+    "Learn fine-tuning dataset curation and quality filtering",
+    "Study synthetic data generation for training",
+    "Understand data flywheels for continuous improvement",
+    "Learn embedding fine-tuning for domain adaptation",
+    "Study vector database selection: Chroma, Qdrant, Pinecone, Weaviate",
+    "Understand HNSW index tuning: ef, M parameters",
+    "Learn IVF-Flat vs HNSW vs DiskANN index tradeoffs",
+    "Study vector database filtering: pre-filter vs post-filter",
+    "Understand multi-tenancy in vector databases",
+    "Study hexagonal architecture (ports and adapters)",
+    "Learn clean architecture: entities, use cases, interfaces, frameworks",
+    "Understand CQRS: separating read and write models",
+    "Study event sourcing: storing events not state",
+    "Learn domain-driven design (DDD): bounded contexts, aggregates",
+    "Understand saga pattern for distributed transactions",
+    "Study two-phase commit vs eventual consistency",
+    "Learn the outbox pattern for reliable event publishing",
+    "Understand the inbox pattern for idempotent consumers",
+    "Study the strangler fig pattern for legacy migration",
+    "Learn anti-corruption layer for system integration",
+    "Understand API gateway pattern",
+    "Study backend-for-frontend (BFF) pattern",
+    "Learn service mesh concepts: sidecar, control plane",
+    "Understand bulkhead pattern for fault isolation",
+    "Study the ambassador pattern for network abstraction",
+    "Learn feature flags: toggle types, gradual rollouts",
+    "Understand blue-green deployment strategy",
+    "Study canary releases with traffic splitting",
+    "Learn shadow mode deployment for risk-free testing",
+    "Understand immutable infrastructure principles",
+    "Study twelve-factor app methodology",
+    "Learn microservices vs monolith tradeoffs objectively",
+    "Understand module federation for runtime composition",
+    "Study plugin architectures: hook systems, extension points",
+    "Learn observer pattern vs event bus vs pub-sub",
+    "Understand pipes and filters architecture",
+    "Study the specification pattern for business rules",
+    "Learn the repository pattern for data access",
+    "Understand unit of work pattern for transactions",
+    "Study command pattern with undo/redo support",
+    "Learn mediator pattern for decoupled communication",
+    "Understand decorator pattern vs middleware",
+    "Study the composite pattern for tree structures",
+    "Learn visitor pattern for operations on object trees",
+    "Understand flyweight pattern for shared state",
+    "Study proxy pattern: virtual, protection, caching",
+    "Learn bridge pattern for abstraction and implementation",
+    "Understand state machine formalization with transitions",
+    "Study actor model for concurrent systems",
+    "Learn process model vs thread model vs coroutine model",
+    "Understand shared-nothing architecture",
+    "Study dataflow programming vs control flow",
+    "Learn reactive architecture: responsive, resilient, elastic, message-driven",
+    "Understand backpressure in reactive systems",
+    "Study lambda architecture for batch + streaming",
+    "Learn kappa architecture for streaming only",
+    "Understand the log as universal data structure (Kafka)",
+    "Study materialized views for query optimization",
+    "Learn read replicas and write amplification tradeoffs",
+    "Understand sharding strategies: range, hash, directory",
+    "Study consistent hashing for minimal resharding",
+    "Learn virtual nodes in consistent hashing",
+    "Understand CAP theorem with real examples",
+    "Study PACELC theorem as a refinement of CAP",
+    "Learn eventual consistency models: causal, monotonic, session",
+    "Understand CRDTs for conflict-free distributed data",
+    "Study vector clocks for causality tracking",
+    "Learn two-generals problem and its implications",
+    "Understand distributed consensus: Paxos vs Raft",
+    "Write property-based tests with hypothesis for sam.py functions",
+    "Learn mutation testing with mutmut to verify test quality",
+    "Implement snapshot testing for complex data outputs",
+    "Study contract testing with pact for API boundaries",
+    "Learn fuzz testing with atheris for input validation",
+    "Understand golden file testing for deterministic outputs",
+    "Study parameterized testing patterns in pytest",
+    "Learn pytest fixtures: scope, yield, autouse",
+    "Understand pytest plugins: pytest-asyncio, pytest-mock, pytest-cov",
+    "Study test doubles: stub vs fake vs spy vs mock",
+    "Learn London school TDD (outside-in) vs Detroit school (inside-out)",
+    "Understand behavior-driven development (BDD) with behave",
+    "Study the test pyramid: unit, integration, e2e ratios",
+    "Learn the testing trophy: static, unit, integration, e2e",
+    "Understand flaky tests: detection, quarantine, fixing strategies",
+    "Study parallel test execution with pytest-xdist",
+    "Learn test data builders for complex object creation",
+    "Understand object mother pattern for test fixtures",
+    "Study approval testing for legacy code",
+    "Learn characterization tests for understanding unknown code",
+    "Understand test coverage: line, branch, condition, mutation",
+    "Study cyclomatic complexity and its effect on testability",
+    "Learn dependency injection for testable code",
+    "Understand seam points for inserting test hooks",
+    "Study the humble object pattern for testable UI/IO code",
+    "Learn component testing vs unit testing distinction",
+    "Understand test-driven refactoring technique",
+    "Study TCR (test && commit || revert) workflow",
+    "Learn acceptance test-driven development (ATDD)",
+    "Understand executable specifications with Gherkin",
+    "Study load testing with locust for Python services",
+    "Learn stress testing vs load testing vs soak testing",
+    "Understand chaos engineering principles",
+    "Study deterministic testing for non-deterministic LLM outputs",
+    "Learn eval harnesses for LLM function correctness",
+    "Understand confidence intervals in test result analysis",
+    "Study statistical significance for A/B test evaluation",
+    "Learn regression detection with benchmark tracking",
+    "Understand API mocking with responses library",
+    "Study VCR cassettes for HTTP interaction recording",
+    "Learn time freezing with freezegun for temporal tests",
+    "Understand database testing with SQLAlchemy fixtures",
+    "Study in-memory SQLite for fast database tests",
+    "Learn contract-first API development",
+    "Understand schema validation testing with jsonschema",
+    "Study type narrowing in Python with isinstance guards",
+    "Learn runtime type checking with beartype",
+    "Understand invariant checking with assert in production code",
+    "Study defensive programming patterns",
+    "Learn design by contract with preconditions, postconditions",
+    "Learn GitHub Actions matrix strategy for parallel jobs",
+    "Understand GitHub Actions composite actions for reuse",
+    "Study GitHub Actions reusable workflows",
+    "Learn GitHub Actions environment protection rules",
+    "Understand GitHub Actions OIDC for keyless auth",
+    "Study GitHub Actions cache optimization strategies",
+    "Learn GitHub Actions artifact upload and retention",
+    "Understand GitHub Actions concurrency groups",
+    "Study GitHub Actions self-hosted runner setup",
+    "Learn GitHub Actions job dependencies and needs",
+    "Understand Dockerfile multi-stage builds for small images",
+    "Study Docker layer caching and ordering for fast builds",
+    "Learn Docker BuildKit features: --mount, --secret",
+    "Understand Docker health checks and readiness probes",
+    "Study Docker networking: bridge, host, overlay",
+    "Learn Docker volumes vs bind mounts vs tmpfs",
+    "Understand container security: non-root, read-only FS",
+    "Study OCI image spec and layer diffing",
+    "Learn cosign for container image signing",
+    "Understand SBOM (Software Bill of Materials) generation",
+    "Study Kubernetes pod lifecycle and restart policies",
+    "Learn Kubernetes resource requests and limits",
+    "Understand Kubernetes HPA (Horizontal Pod Autoscaler)",
+    "Study Kubernetes ConfigMap and Secret management",
+    "Learn Kubernetes liveness vs readiness vs startup probes",
+    "Understand Kubernetes rolling updates and rollback",
+    "Study Kubernetes network policies",
+    "Learn Kubernetes PersistentVolume and storage classes",
+    "Understand Kubernetes RBAC: roles, bindings, service accounts",
+    "Study Kubernetes admission webhooks",
+    "Learn Terraform state management and remote backends",
+    "Understand Terraform modules and reusability",
+    "Study Terraform workspace for environment separation",
+    "Learn Pulumi for infrastructure-as-code in Python",
+    "Understand GitOps with ArgoCD or Flux",
+    "Study observability stack: metrics, logs, traces",
+    "Learn Prometheus metrics: counter, gauge, histogram, summary",
+    "Understand PromQL for querying metrics",
+    "Study Grafana dashboard design for operational visibility",
+    "Learn OpenTelemetry: spans, traces, context propagation",
+    "Understand structured logging with JSON format",
+    "Study log aggregation with Loki or ELK",
+    "Learn distributed tracing with Jaeger or Zipkin",
+    "Understand SLI/SLO/SLA definitions and error budgets",
+    "Study incident management: runbooks, postmortems",
+    "Learn chaos engineering with Chaos Monkey principles",
+    "Understand dependency scanning with safety and pip-audit",
+    "Study static analysis with semgrep rules",
+    "Learn secret scanning and pre-commit hooks",
+    "Understand supply chain security: SLSA levels",
+    "Learn PostgreSQL EXPLAIN ANALYZE for query optimization",
+    "Understand PostgreSQL index types: B-tree, GIN, GiST, BRIN",
+    "Study PostgreSQL partial indexes for filtered queries",
+    "Learn PostgreSQL covering indexes with INCLUDE",
+    "Understand PostgreSQL CTEs (WITH queries) and optimization",
+    "Study PostgreSQL window functions: ROW_NUMBER, RANK, LAG, LEAD",
+    "Learn PostgreSQL JSONB operators and indexing",
+    "Understand PostgreSQL full-text search with tsvector",
+    "Study PostgreSQL LISTEN/NOTIFY for pub-sub",
+    "Learn PostgreSQL logical replication",
+    "Understand PostgreSQL vacuum, autovacuum, and bloat",
+    "Study PostgreSQL table partitioning: range, list, hash",
+    "Learn PostgreSQL connection pooling with PgBouncer",
+    "Understand SQLAlchemy Core vs ORM",
+    "Study SQLAlchemy async with asyncpg",
+    "Learn SQLAlchemy relationship loading strategies",
+    "Understand SQLAlchemy events and hooks",
+    "Study Redis data structures: string, list, set, zset, hash",
+    "Learn Redis Streams for event sourcing",
+    "Understand Redis pub/sub vs Streams tradeoffs",
+    "Study Redis Lua scripting for atomic operations",
+    "Learn Redis clustering and hash slots",
+    "Understand Redis sentinel for high availability",
+    "Study Redis eviction policies: LRU, LFU, TTL",
+    "Learn Redis persistence: RDB vs AOF",
+    "Understand Redis keyspace notifications",
+    "Study SQLite WAL mode for concurrent reads",
+    "Learn SQLite FTS5 for full-text search",
+    "Understand SQLite JSON1 extension",
+    "Study DuckDB for analytical queries on files",
+    "Learn DuckDB's vectorized execution model",
+    "Understand columnar storage: Parquet format internals",
+    "Study Apache Arrow for in-memory columnar data",
+    "Learn Polars vs Pandas for dataframe performance",
+    "Understand database normalization: 1NF through BCNF",
+    "Study denormalization for read performance",
+    "Learn OLTP vs OLAP workload patterns",
+    "Understand time-series databases: TimescaleDB, InfluxDB",
+    "Study graph databases: Neo4j, property graph model",
+    "Learn document databases: MongoDB data modeling",
+    "Understand wide-column stores: Cassandra data model",
+    "Study object storage: S3 API, multipart upload",
+    "Learn content-addressable storage (CAS) concepts",
+    "Understand LSM trees vs B-trees for write optimization",
+    "Study compaction strategies in LSM tree databases",
+    "Learn write-ahead logging (WAL) and crash recovery",
+    "Understand MVCC (Multi-Version Concurrency Control)",
+    "Study isolation levels: read uncommitted to serializable",
+    "Learn deadlock detection and prevention strategies",
+    "Understand database connection lifetime management",
+    "Learn HTTP/2 features: multiplexing, server push, header compression",
+    "Understand HTTP/3 and QUIC protocol basics",
+    "Study REST API design: resource naming, HATEOAS, versioning",
+    "Learn GraphQL: schemas, resolvers, N+1 problem",
+    "Understand gRPC: protobuf, streaming, deadlines",
+    "Study WebSockets: handshake, frames, ping/pong",
+    "Learn Server-Sent Events (SSE) for real-time updates",
+    "Understand long polling vs SSE vs WebSocket tradeoffs",
+    "Study API pagination: cursor vs offset vs keyset",
+    "Learn API rate limiting: headers, retry-after, backoff",
+    "Understand OAuth2 flows: authorization code, client credentials",
+    "Study JWT structure: header, payload, signature",
+    "Learn API key management and rotation strategies",
+    "Understand mTLS for service-to-service auth",
+    "Study API versioning strategies: URL, header, content negotiation",
+    "Learn OpenAPI 3.x specification and code generation",
+    "Understand webhook design: delivery, retries, signatures",
+    "Study idempotency keys for safe retries",
+    "Learn content negotiation with Accept headers",
+    "Understand ETags and conditional requests",
+    "Study HTTP caching: Cache-Control, Vary, CDN behavior",
+    "Learn HTTP compression: gzip, brotli, zstd",
+    "Understand CORS: preflight, headers, credentials",
+    "Study DNS: A, AAAA, CNAME, MX, TXT records",
+    "Learn DNS-over-HTTPS and DNS-over-TLS",
+    "Understand TCP handshake and TIME_WAIT state",
+    "Study TCP congestion control: slow start, AIMD",
+    "Learn TLS 1.3 handshake reduction",
+    "Understand certificate pinning and HPKP",
+    "Study network proxies: forward, reverse, transparent",
+    "Learn load balancing algorithms: round robin, least connections, IP hash",
+    "Understand anycast routing for global services",
+    "Study BGP routing basics for understanding CDNs",
+    "Learn latency vs throughput vs bandwidth distinctions",
+    "Understand queuing theory: Little's law, queue depth",
+    "Study network jitter and its impact on streaming",
+    "Learn connection keep-alive and pooling",
+    "Understand TCP Nagle algorithm and TCP_NODELAY",
+    "Study SO_REUSEPORT for multi-process servers",
+    "Learn epoll vs kqueue vs IOCP for I/O multiplexing",
+    "Study OWASP Top 10 with Python-specific examples",
+    "Learn SQL injection: parameterized queries, ORM safety",
+    "Understand XSS: encoding, CSP headers, sanitization",
+    "Study SSRF attacks and URL validation defenses",
+    "Learn path traversal: validation and normalization",
+    "Understand deserialization attacks: pickle safety",
+    "Study timing attacks and constant-time comparison",
+    "Learn secret management: env vars, vault, sealed secrets",
+    "Understand key derivation: PBKDF2, bcrypt, argon2",
+    "Study symmetric encryption: AES-GCM vs AES-CBC",
+    "Learn asymmetric encryption: RSA vs ECDSA vs Ed25519",
+    "Understand envelope encryption for key management",
+    "Study HMAC for message authentication",
+    "Learn secure random: secrets module vs random",
+    "Understand certificate transparency logs",
+    "Study SBOM (Software Bill of Materials) for security",
+    "Learn dependency confusion attacks and mitigations",
+    "Understand typosquatting in package registries",
+    "Study container security scanning with Trivy",
+    "Learn SAST tools: bandit for Python security",
+    "Understand DAST and penetration testing concepts",
+    "Study threat modeling: STRIDE, attack trees",
+    "Learn principle of least privilege in code",
+    "Understand defense in depth for API security",
+    "Study zero-trust network architecture",
+    "Learn API security: input validation, output encoding",
+    "Understand prompt injection for LLM applications",
+    "Study indirect prompt injection via retrieved content",
+    "Learn data exfiltration via LLM agents",
+    "Understand sandboxing for LLM tool execution",
+    "Study capabilities-based security for agents",
+    "Learn audit logging for compliance and forensics",
+    "Understand GDPR implications for AI systems",
+    "Study data minimization and purpose limitation",
+    "Learn anonymization vs pseudonymization",
+    "Understand differential privacy basics",
+    "Study federated learning for privacy-preserving ML",
+    "Learn secure multi-party computation concepts",
+    "Understand homomorphic encryption use cases",
+    "Study zero-knowledge proofs applications",
+    "Learn Python's tracemalloc for memory leak detection",
+    "Understand py-spy for sampling profiler without code changes",
+    "Study memray for memory profiling in Python",
+    "Learn Austin for frame stack sampling",
+    "Understand line_profiler for line-by-line timing",
+    "Study scalene for CPU and memory profiling together",
+    "Learn how to read flame graphs",
+    "Understand CPU cache effects on Python performance",
+    "Study CPython bytecode optimization techniques",
+    "Learn Cython for hot path optimization",
+    "Understand ctypes for calling C libraries from Python",
+    "Study cffi for C foreign function interface",
+    "Learn PyPy compatibility for speed improvements",
+    "Understand Numba JIT for numerical Python",
+    "Study Dask for parallel pandas-like operations",
+    "Learn Ray for distributed Python applications",
+    "Understand OpenTelemetry auto-instrumentation in Python",
+    "Study baggage propagation in distributed traces",
+    "Learn exemplars: linking metrics to traces",
+    "Understand RED method: Rate, Errors, Duration",
+    "Study USE method: Utilization, Saturation, Errors",
+    "Learn four golden signals: latency, traffic, errors, saturation",
+    "Understand percentiles vs averages for latency",
+    "Study histograms and cumulative distribution functions",
+    "Learn anomaly detection with statistical baselines",
+    "Understand on-call runbook design",
+    "Study postmortem analysis: blameless culture",
+    "Learn SLO-based alerting vs threshold alerting",
+    "Understand alert fatigue and alert routing",
+    "Study synthetic monitoring for proactive detection",
+    "Implement AST-based patching to replace brittle string matching in Phase V",
+    "Write a diff-based patch validator before applying any code change",
+    "Build a syntax-error pre-check before running Phase V patches",
+    "Add type hints to all functions in sam.py",
+    "Write a docstring for every function in sam.py",
+    "Implement structured logging with JSON format in sam.py",
+    "Add correlation IDs to track requests across phases",
+    "Build a phase duration timer to identify slow phases",
+    "Implement a dry-run mode flag for all phases",
+    "Write a health check endpoint for the running cycle",
+    "Build objective deduplication: prevent duplicate next_objectives",
+    "Implement objective prioritization: urgency \u00d7 impact scoring",
+    "Write an objective expiry: auto-remove stale objectives after N cycles",
+    "Build a topic dependency graph: prerequisites before advanced topics",
+    "Implement an objective generator that uses knowledge_log to avoid repetition",
+    "Write a cycle summary email to owner if no progress in 5 cycles",
+    "Build a learning velocity metric: unique topics learned per week",
+    "Implement code complexity tracking: cyclomatic complexity per cycle",
+    "Write a test coverage tracker: % of sam.py covered by dot's tests",
+    "Build a rollback frequency metric: how often rollbacks are triggered",
+    "Implement patch success rate tracking: applied vs rejected patches",
+    "Write a semantic cache hit rate logger",
+    "Build a prompt token usage tracker per phase",
+    "Implement cost per cycle estimation",
+    "Write a cycle comparison report: this cycle vs last cycle",
+    "Build a weekly trend report for owner",
+    "Implement goal achievement rate: objectives completed vs attempted",
+    "Write a knowledge retention check: quiz on 10-cycle-old topics",
+    "Build a concept graph: link related knowledge_log entries",
+    "Implement bidirectional linking: idea \u2192 knowledge it was based on",
+    "Write a novelty score for ideas: how different from past ideas",
+    "Build an idea quality scorer: feasibility \u00d7 impact \u00d7 novelty",
+    "Implement automatic workshop_bench cleanup on cycle start",
+    "Write a dead code detector for workshop_bench files",
+    "Build a dependency tracker: what imports what in bag/",
+    "Implement a circular import detector",
+    "Write a git blame equivalent: who changed what in sam.py",
+    "Build a change frequency heatmap: which lines change most",
+    "Implement a stability score: lines unchanged for N cycles",
+    "Write a technical debt register in a structured JSON",
+    "Build a debt payment tracker: debt items resolved per cycle",
+    "Implement a refactoring opportunity detector",
+    "Write a code smell detector: long functions, deep nesting",
+    "Build a naming consistency checker across files",
+    "Implement a documentation coverage checker",
+    "Write a phase V effectiveness metric: ideas that survive 5 cycles",
+    "Build a Dot-compliance score: % of Dot's suggestions acted on",
+    "Implement a self-assessment calibration check",
+    "Write a bias detector for 1% metric sandbagging",
+    "Build a vocabulary growth tracker: new technical terms per cycle",
+    "Implement a knowledge breadth vs depth analyzer",
+    "Write a risk register for planned changes",
+    "Build a rollback impact analyzer: what broke and why",
+    "Implement a safe-to-patch confidence score before Phase V",
+    "Write a post-patch behavioral test beyond syntax checking",
+    "Build a regression detector: capabilities present before but not after",
+    "Implement a capability inventory: what can Sam do now",
+    "Write a gap analysis: what can't Sam do yet",
+    "Build a dependency upgrade radar: outdated packages",
+    "Implement a requirements.txt pruner: remove unused imports",
+    "Write a secrets scanner: check for hardcoded credentials",
+    "Build a prompt injection detector for external data",
+    "Implement a trust scorer for retrieved web content",
+    "Write a hallucination detector for Sam's market scan URLs",
+    "Build a URL validator that checks before logging market scan results",
+    "Implement a fact-check layer for knowledge_log entries",
+    "Write a consistency checker: goals.json vs knowledge_log alignment",
+    "Build a memory coherence check: experiences.json consistency",
+    "Implement a cycle idempotency check: same input \u2192 same output",
+    "Write a determinism score for Sam's decision-making",
+    "Build a diversity enforcer for next_objectives topics",
+    "Implement a domain rotation: ensure Sam covers all 12 topic waves",
+    "Write a skill gap matrix: known topics vs target topics",
+    "Build a learning path recommender based on skill gaps",
+    "Implement a spaced repetition scheduler for knowledge_log",
+    "Write a forgetting curve model for retention estimation",
+    "Build an active recall quiz generator from knowledge_log",
+    "Implement a concept map builder from related topics",
+    "Write a cross-reference index: topics that appear together",
+    "Study information theory: entropy, mutual information, KL divergence",
+    "Learn Bayes' theorem with concrete code examples",
+    "Understand Markov chains and stationary distributions",
+    "Study Monte Carlo methods for approximation",
+    "Learn gradient descent variants: SGD, Adam, RMSProp",
+    "Understand automatic differentiation: forward vs reverse mode",
+    "Study linear algebra: eigenvalues, eigenvectors, SVD",
+    "Learn principal component analysis (PCA) from scratch",
+    "Understand t-SNE for dimensionality reduction visualization",
+    "Study UMAP for faster dimensionality reduction",
+    "Learn probability distributions: normal, Poisson, binomial, Beta",
+    "Understand hypothesis testing: p-values, t-tests, ANOVA",
+    "Study confidence intervals and bootstrap sampling",
+    "Learn Bayesian inference: prior, likelihood, posterior",
+    "Understand Gaussian processes for uncertainty estimation",
+    "Study hidden Markov models (HMM) concept",
+    "Learn dynamic programming: memoization vs tabulation",
+    "Understand amortized analysis: aggregate, accounting, potential",
+    "Study randomized algorithms: Las Vegas vs Monte Carlo",
+    "Learn approximation algorithms and approximation ratios",
+    "Understand NP-completeness and reduction proofs",
+    "Study computational complexity: P, NP, PSPACE, EXPTIME",
+    "Learn formal languages: regular, context-free, Turing complete",
+    "Understand finite automata and regular expression equivalence",
+    "Study pushdown automata and context-free grammars",
+    "Learn Turing machines and the halting problem",
+    "Understand Rice's theorem for program property undecidability",
+    "Study type theory: sum types, product types, function types",
+    "Learn lambda calculus: alpha, beta, eta reduction",
+    "Understand curry-howard correspondence",
+    "Study category theory basics: functors, natural transformations",
+    "Learn monads as computation patterns",
+    "Understand the Y combinator for recursion without names",
+    "Study continuation-passing style (CPS) transformation",
+    "Learn tail call optimization and trampolining",
+    "Understand game theory: Nash equilibria, mechanism design",
+    "Study reinforcement learning: MDP, value iteration, Q-learning",
+    "Learn multi-armed bandit: epsilon-greedy, UCB, Thompson sampling",
+    "Understand exploration-exploitation tradeoff",
+    "Study online learning algorithms: Perceptron, Winnow",
+    "Learn PAC learning framework",
+    "Understand VC dimension and generalization bounds",
+    "Study regularization: L1 (Lasso), L2 (Ridge), ElasticNet",
+    "Learn cross-validation: k-fold, stratified, time-series split",
+    "Understand bias-variance tradeoff",
+    "Study ensemble methods: bagging, boosting, stacking",
+    "Learn decision trees: splitting criteria, pruning",
+    "Understand random forests and feature importance",
+    "Study gradient boosting: XGBoost, LightGBM, CatBoost",
+    "Learn neural network architectures: MLP, CNN, RNN, Transformer",
+    "Write a technical RFC for one planned Sam improvement",
+    "Write a one-page explanation of Sam's architecture for a new developer",
+    "Write a postmortem for a past rollback in Sam's log",
+    "Draft a technical blog post concept about autonomous self-modifying agents",
+    "Write a comparison of two approaches Sam has tried",
+    "Draft a feature proposal with pros, cons, and implementation plan",
+    "Write a clear README section for workshop_bench",
+    "Draft a threat model for Sam's self-modification capability",
+    "Write an ADR (Architecture Decision Record) for a past design choice",
+    "Draft a changelog entry for the last 10 cycles",
+    "Write a definition of done for a Phase V patch",
+    "Draft a code review checklist for Sam's self-patches",
+    "Write an onboarding guide: how to understand Sam in 1 hour",
+    "Draft a capacity plan: Sam's resource usage at 1000 cycles",
+    "Write a risk assessment for adding a new phase to Sam's lifecycle",
+    "Draft a success metric definition for Sam's 1000-day journey",
+    "Write a technical comparison of Gemini vs GPT-4 for agentic tasks",
+    "Draft a proposal to add a third agent to the World",
+    "Write a design document for Sam's objective generation system",
+    "Draft a security review for Sam's external email capability",
+    "Write a performance benchmark plan for Sam's semantic cache",
+    "Draft a data retention policy for Sam's memory files",
+    "Write a disaster recovery plan: what if the repo is corrupted",
+    "Draft a monitoring plan: what metrics matter for Sam's health",
+    "Write a testing strategy for Sam's self-modification code",
+    "Draft an integration test plan for Sam and Dot communication",
+    "Write a glossary of terms used in Sam's codebase",
+    "Draft a style guide for Sam's generated code",
+    "Write a review of Sam's current prompt engineering quality",
+    "Draft a roadmap for Sam's next 100 cycles",
+    "Study MCP (Model Context Protocol) for tool standardization",
+    "Learn OpenAI Assistants API: threads, runs, tools",
+    "Understand Anthropic's tool use vs function calling differences",
+    "Study Google Gemini's code execution tool",
+    "Learn LangGraph for stateful multi-agent workflows",
+    "Understand CrewAI for role-based agent teams",
+    "Study AutoGen for conversational multi-agent programming",
+    "Learn Semantic Kernel for enterprise AI orchestration",
+    "Understand Haystack for production RAG pipelines",
+    "Study LlamaIndex for data framework for LLMs",
+    "Learn DSPy for programmatic prompt optimization",
+    "Understand Guidance for constrained LLM generation",
+    "Study Marvin for AI function decoration in Python",
+    "Learn Mirascope for LLM API abstraction",
+    "Understand Ell for prompt engineering as functions",
+    "Study Pydantic AI for structured AI outputs",
+    "Learn smolagents for minimal agent framework",
+    "Understand Agno for high-performance agents",
+    "Study OpenDevin for autonomous software engineering",
+    "Learn SWE-agent for GitHub issue resolution",
+    "Understand Aider for AI pair programming",
+    "Study Cursor rules for AI code generation guidance",
+    "Learn GitHub Copilot workspace concepts",
+    "Understand AI code review with PR agents",
+    "Study AI test generation tools",
+    "Learn AI documentation generation",
+    "Understand AI refactoring tools",
+    "Study computer use APIs for GUI automation",
+    "Learn browser automation with Playwright + LLMs",
+    "Understand web scraping with LLM parsing",
+    "Study multimodal agents: vision + action",
+    "Learn voice agents: STT + LLM + TTS pipelines",
+    "Understand robotics process automation (RPA) + AI",
+    "Study AI for code search: embedding-based code retrieval",
+    "Learn AI for log analysis: pattern detection in logs",
+    "Understand AI for anomaly detection in time series",
+    "Study AI for infrastructure optimization",
+    "Learn AI for security threat detection",
+    "Understand AI for database query optimization",
+    "Study federated learning for privacy-preserving agents",
+    "Learn edge AI: running models on constrained hardware",
+    "Understand model compression: pruning, quantization, distillation",
+    "Study speculative decoding for LLM latency",
+    "Learn Mixture of Experts (MoE) architecture",
+    "Understand state space models: Mamba vs Transformers",
+    "Study RWKV: linear attention for long contexts",
+    "Learn diffusion models for non-image generation",
+    "Understand flow matching for generative models",
+    "Study retrieval-augmented generation for code",
+    "Learn neural code search with CodeBERT",
+    "Understand program synthesis from examples",
+    "Study formal verification with LLMs",
+    "Learn LLM planning: PDDL, classical planning",
+    "Understand LLM world models for simulation",
+    "Study LLM self-play for skill improvement",
+    "Learn LLM debate for truthfulness",
+    "Understand scalable oversight for AI alignment",
+    "Study interpretability: attention visualization",
+    "Learn probing classifiers for LLM internals",
+    "Understand activation patching for mechanistic interpretability",
+    "Study superposition in neural networks",
+    "Learn sparse autoencoders for feature extraction",
+    "Understand circuits in transformers",
+    "Study in-context learning mechanisms",
+    "Learn grokking: delayed generalization in transformers",
+    "Understand emergent abilities in large models",
+    "Study chain-of-thought faithfulness and unfaithfulness",
+    "Learn sycophancy in LLMs and how to detect it",
+    "Understand reward hacking in RLHF systems",
+    "Study AI safety: RLHF, Constitutional AI, RLAIF",
+    "Learn corrigibility and interruptibility in agents",
+    "Understand deceptive alignment risks",
+    "Study instrumental convergence: common subgoals for any goal",
+    "Learn mesa-optimization and inner alignment",
+    "Understand capability elicitation from LLMs",
+    "Study benchmark contamination and data leakage",
+    "Learn LLM evaluation: BIG-bench, HELM, MMLU",
+    "Understand Chatbot Arena and ELO rating for models",
+    "Study LLM red-teaming methodologies",
+    "Learn adversarial robustness for NLP",
+    "Understand watermarking LLM outputs",
+    "Study synthetic data detection",
+    "Learn multi-hop reasoning in LLMs",
+    "Understand long-context LLMs: needle in a haystack",
+    "Study positional encodings: RoPE, ALiBi, YaRN",
+    "Learn attention variants: MHA, GQA, MLA",
+    "Understand KV cache sharing and prefix caching",
+    "Study continuous batching for LLM serving",
+    "Learn PagedAttention and vLLM architecture",
+    "Understand tensor parallelism for LLM inference",
+    "Study pipeline parallelism for large model serving",
+    "Learn ruff: the fast Python linter replacing flake8+isort+black",
+    "Understand mypy: strict mode, overloads, TypedDict",
+    "Study pyright for type checking with zero config",
+    "Learn pre-commit hooks: black, ruff, mypy, bandit in CI",
+    "Understand poetry vs pip-tools vs uv for dependency management",
+    "Study uv: the Rust-written Python package manager",
+    "Learn hatch for project management and environments",
+    "Understand pyproject.toml: full project config in one file",
+    "Study tox for multi-environment testing",
+    "Learn nox as a tox alternative in Python",
+    "Understand setuptools: entry_points for CLI scripts",
+    "Study wheel building and PyPI publishing with twine",
+    "Learn pydantic v2: model_validator, field_validator, computed_field",
+    "Understand pydantic settings for config management",
+    "Study attrs vs dataclasses vs pydantic comparison",
+    "Learn cattrs for complex nested deserialization",
+    "Understand marshmallow for schema validation",
+    "Study cerberus for flexible document validation",
+    "Learn voluptuous for data validation",
+    "Study jsonschema for JSON Schema draft validation",
+    "Implement a retry decorator with exponential backoff",
+    "Build a circuit breaker decorator",
+    "Write a timeout decorator using threading",
+    "Implement a memoize decorator with TTL",
+    "Build a rate limiter decorator",
+    "Write a trace decorator for automatic span creation",
+    "Implement a validate decorator for Pydantic input/output",
+    "Build a cached_property with invalidation support",
+    "Write a singleton metaclass",
+    "Implement an abstract factory pattern",
+    "Build a prototype pattern with deep copy",
+    "Write a multiton pattern for keyed singletons",
+    "Implement a service locator pattern",
+    "Build a dependency injection container",
+    "Write an event emitter with typed events",
+    "Implement a promise/future pattern in Python",
+    "Build a lazy loader for expensive resources",
+    "Write a pool factory for reusable objects",
+    "Implement a null object pattern to avoid None checks",
+    "Build a chain of responsibility with early exit",
+    "Learn Gemini's context caching API for repeated prompts",
+    "Understand Gemini's grounding with Google Search",
+    "Study Gemini's code execution tool",
+    "Learn Gemini's file upload API for large contexts",
+    "Understand Gemini's token counting API",
+    "Study Gemini's safety settings and content filtering",
+    "Learn Gemini's system instructions vs user messages",
+    "Understand Gemini's function calling schema format",
+    "Study Gemini's parallel function calls",
+    "Learn Gemini's streaming with partial result handling",
+    "Understand Gemini's response schema for structured output",
+    "Study Gemini's embedding models for semantic search",
+    "Learn Gemini's vision capabilities: image, video, audio",
+    "Understand Gemini's long context: 1M token window usage",
+    "Study Gemini's thinking mode for complex reasoning",
+    "Learn Gemini flash vs pro model selection criteria",
+    "Understand Gemini's RPM and TPM limits",
+    "Study Gemini's batch prediction API",
+    "Learn Gemini's model comparison with benchmarks",
+    "Understand Gemini's multimodal interleaving",
+    "Learn git rebase -i for history cleanup",
+    "Understand git bisect for bug regression finding",
+    "Study git worktrees for parallel branch work",
+    "Learn git sparse-checkout for large repos",
+    "Understand git submodules vs subtrees",
+    "Study git hooks: pre-commit, commit-msg, pre-push",
+    "Learn conventional commits specification",
+    "Understand semantic versioning (SemVer) rules",
+    "Study gitflow vs trunk-based development",
+    "Learn git stash: save, pop, apply, branch",
+    "Understand git reflog for recovery",
+    "Study git cherry-pick for selective commits",
+    "Learn git blame and git log for history",
+    "Understand git diff: staged, unstaged, between refs",
+    "Study git merge strategies: fast-forward, squash, no-ff",
+    "Learn git tag: lightweight vs annotated",
+    "Understand git archive for source distribution",
+    "Study git bundle for offline transport",
+    "Learn git filter-repo for history rewriting",
+    "Understand git object model: blob, tree, commit, tag",
+    "Write a reflection on which past cycles produced the most durable knowledge",
+    "Analyze which types of patches have been most fragile in Sam's history",
+    "Identify the top 3 recurring errors in Sam's log and propose fixes",
+    "Map the dependency graph of Sam's current bag/ modules",
+    "Write a 'things I wish I knew at cycle 1' retrospective",
+    "Identify which of Dot's suggestions have been ignored the longest",
+    "Analyze the correlation between objective quality and patch success rate",
+    "Write a capability inventory: what Sam can do that wasn't planned",
+    "Identify technical debt items that have persisted > 10 cycles",
+    "Analyze which phases consume the most tokens per cycle",
+    "Write a 'dead code graveyard' list from workshop_bench",
+    "Identify which knowledge_log topics have influenced the most patches",
+    "Write a 'known unknowns' list: gaps Sam is aware of",
+    "Identify 'unknown unknowns': areas Sam has never touched",
+    "Write a risk matrix: likelihood \u00d7 impact for each bag/ module",
+    "Analyze the semantic drift in Sam's prompts across PROMPT_VERSIONs",
+    "Write a coherence check: does SAM_PERSONALITY.md describe actual behavior",
+    "Identify the longest patch-free streak and analyze why",
+    "Write a lessons-learned document from the first 42 cycles",
+    "Draft a 'if I were rebuilt from scratch' architecture proposal",
+    "Study how to write clearer log messages for human reviewers",
+    "Learn email writing best practices for cold outreach",
+    "Understand how to frame technical proposals for non-technical owners",
+    "Study how to write actionable bug reports",
+    "Learn structured decision-making: pros/cons, decision matrices",
+    "Understand how to estimate task complexity accurately",
+    "Study how to break large goals into atomic steps",
+    "Learn how to write good commit messages with context",
+    "Understand the rubber duck debugging technique for self-review",
+    "Study how to explain complex code in plain language",
+    "Learn how to write a minimal reproducible example",
+    "Understand how to read and understand someone else's code quickly",
+    "Study how to onboard yourself to a new codebase",
+    "Learn how to write effective technical comments (not what, but why)",
+    "Understand how to quantify the impact of a change",
+    "Study how to prioritize technical work under constraints",
+    "Learn how to say no to a feature request with rationale",
+    "Understand how to ask for code review feedback effectively",
+    "Study how to give constructive code review feedback",
+    "Learn how to communicate uncertainty clearly",
+    "Implement a multi-step verification chain for factual claims",
+    "Build a retrieval quality scorer before using retrieved context",
+    "Write a context window utilization optimizer",
+    "Implement a chunked summarization for long documents",
+    "Build a map-reduce pattern for large document processing",
+    "Write a refine pattern for iterative answer improvement",
+    "Implement a critique-and-revise loop for generated code",
+    "Build a decomposition pattern for complex tasks",
+    "Write a verification step after every LLM-generated file modification",
+    "Implement a semantic similarity check before writing to memory",
+    "Build an abstraction layer for swapping LLM providers",
+    "Write a prompt template versioning system",
+    "Implement a response quality scorer with rubrics",
+    "Build a context compression pipeline for long histories",
+    "Write a few-shot example selector based on similarity",
+    "Implement a dynamic temperature adjuster based on task type",
+    "Build a multi-model ensemble for critical decisions",
+    "Write a fallback chain: primary model \u2192 secondary \u2192 heuristic",
+    "Implement a confidence threshold for accepting LLM outputs",
+    "Build a human-in-the-loop escalation for low-confidence outputs",
+    "Write a cost-aware prompt selector",
+    "Implement a latency-aware model router",
+    "Build a streaming response parser for structured output",
+    "Write a partial response handler for interrupted streams",
+    "Implement a response deduplication filter",
+    "Study the 'bitter lesson' in AI: scale vs hand-crafted knowledge",
+    "Learn Goodhart's law applied to AI metrics",
+    "Understand the OODA loop for autonomous agent decision cycles",
+    "Study Russell's paradox and its relevance to self-referential systems",
+    "Learn Hofstadter's strange loops and what they mean for self-modifying agents",
+    "Understand Conway's law and how it applies to multi-agent system design",
+    "Study Brooks' law: adding developers (or agents) to late projects",
+    "Learn the Dunning-Kruger effect and how to detect it in self-assessment",
+    "Understand the planning fallacy and how to build correction into estimates",
+    "Study Parkinson's law: work expands to fill available time (or tokens)",
+    "Learn Amdahl's law for understanding parallelization limits",
+    "Understand Little's law for capacity planning",
+    "Study the two generals problem in the context of Sam-Dot communication",
+    "Learn the Byzantine generals problem for trust in distributed systems",
+    "Understand emergence: complex behavior from simple rules",
+    "Implement a changelog auto-generator from git commits",
+    "Write a semantic versioning bumper based on commit types",
+    "Build a dependency graph visualizer for sam.py imports",
+    "Implement a circular dependency resolver",
+    "Write a module coupling analyzer: afferent vs efferent",
+    "Build a cohesion scorer for Python modules",
+    "Implement a code churn metric tracker across rollback snapshots",
+    "Write a change impact analyzer: which functions affect which",
+    "Build a call graph tracer for runtime analysis",
+    "Implement a test impact analyzer: which tests cover which code",
+    "Write a performance regression detector using timeit baselines",
+    "Build a memory regression detector using tracemalloc baselines",
+    "Implement a token regression detector: flag prompt bloat",
+    "Write a latency regression detector per phase",
+    "Build an error rate trend analyzer from sam.log",
+    "Implement a warning frequency analyzer from sam.log",
+    "Write a rollback cause classifier: syntax vs behavior vs timeout",
+    "Build a patch pattern analyzer: what types of patches succeed",
+    "Implement a phase skip detector: which phases are being skipped",
+    "Write a governance violation log analyzer",
+    "Build a prompt quality scorer: specificity, length, structure",
+    "Implement a response format validator for Gemini outputs",
+    "Write a schema drift detector for goals.json structure",
+    "Build a memory coherence validator across all JSON files",
+    "Implement a cross-file consistency checker for Sam's state",
+    "Write a time-zone aware scheduler for Sam's cycles",
+    "Build a cycle overlap detector for concurrent runs",
+    "Implement a resource contention detector",
+    "Write a graceful degradation handler for API outages",
+    "Build a fallback topic generator when objectives are empty",
+    "Implement a minimum viable cycle: core 3 phases when time is short",
+    "Write a cycle budget manager: allocate tokens per phase",
+    "Build a smart truncator for oversized prompts",
+    "Implement a context window utilization reporter",
+    "Write a prompt injection detector for incoming mail",
+    "Build a mail authenticity verifier: is this really from Dot",
+    "Implement a letter quality scorer for Sam's outgoing mail",
+    "Write a response time tracker for sent emails",
+    "Build a developer network graph from sent emails",
     "Scratchpad - with cutting edge research."
   ]
 }
@@ -36575,4 +38798,4 @@ Dot influences — he never commands.
 
 ---
 
-_Last updated: 2026-06-06T11:58:04.705626 UTC_
+_Last updated: 2026-06-06T17:44:14.405384 UTC_
