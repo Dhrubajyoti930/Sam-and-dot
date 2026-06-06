@@ -188,37 +188,88 @@ def _sleep():
     time.sleep(_CALL_DELAY)
 
 
-def ask_gemini_search(prompt: str, retries: int = 5) -> str:
-    """Like ask_gemini but attaches the google_search tool.
-    Uses the same rate-limit backoff strategy so it can never fire
-    cold after a burst of plain ask_gemini calls."""
-    global _CALL_DELAY
-    for attempt in range(retries):
-        try:
-            time.sleep(_CALL_DELAY)
-            response = CLIENT.models.generate_content(
-                model=MODEL,
-                contents=prompt,
-                config={
-                    "max_output_tokens": 2048,
-                    "temperature": 0.1,
-                    "tools": [{"google_search": {}}],
-                },
-            )
-            if not response or not response.text:
-                raise ValueError("Empty search response")
-            return response.text.strip()
-        except Exception as e:
-            err = str(e).upper()
-            if any(x in err for x in ["429", "RESOURCE_EXHAUSTED"]):
-                _CALL_DELAY = min(_CALL_DELAY + 4, 30)
-                wait = _CALL_DELAY * (attempt + 1)
-                log.warning(f"Web search 429 — backing off {wait}s (delay now {_CALL_DELAY}s)")
-                time.sleep(wait)
-            else:
-                log.error(f"Web search call failed ({type(e).__name__}): {e}")
-                time.sleep(10)
-    return ""
+# ── Email directory ──────────────────────────────────────────────────────────
+
+EMAILS_JSON = DOT_DIR / "emails.json"
+_CHUNK_SIZE  = 100   # entries per Gemini matching call
+_MIN_CONFIDENCE = 7  # minimum score to accept a match
+
+
+def load_email_directory() -> list:
+    """Load the local email directory from emails.json."""
+    if not EMAILS_JSON.exists():
+        log.warning("emails.json not found — email dispatch will be skipped.")
+        return []
+    try:
+        return json.loads(EMAILS_JSON.read_text(encoding="utf-8"))
+    except Exception as e:
+        log.error(f"Failed to load emails.json: {e}")
+        return []
+
+
+def _lean(entry: dict) -> dict:
+    """Strip bio/source — only send name, domain, tags to Gemini."""
+    return {
+        "name":   entry.get("name", ""),
+        "email":  entry.get("email", ""),
+        "domain": entry.get("domain", ""),
+        "tags":   entry.get("tags", []),
+    }
+
+
+def find_best_recipient(target_description: str, intent: str) -> dict | None:
+    """
+    Sample a random chunk of up to _CHUNK_SIZE lean entries, send to Gemini,
+    get back the single best match with a confidence score.
+    Returns the FULL directory entry (with bio) on success, or None.
+    """
+    directory = load_email_directory()
+    if not directory:
+        return None
+
+    import random
+    chunk = random.sample(directory, min(_CHUNK_SIZE, len(directory)))
+    lean_chunk = [_lean(e) for e in chunk]
+
+    prompt = (
+        "You are Dot, Sam's email coordinator. Sam wants to send an email to someone.\n\n"
+        f"Sam's target description: {target_description}\n"
+        f"Sam's intent: {intent}\n\n"
+        "Below is a list of people (name, email, domain, tags). "
+        "Pick the SINGLE best match for Sam's target description.\n\n"
+        f"=== PEOPLE ===\n{json.dumps(lean_chunk, indent=2)}\n\n"
+        "Respond ONLY with a raw JSON object — no markdown, no preamble.\n"
+        "Fields:\n"
+        "  - 'email': the exact email string of the best match\n"
+        "  - 'name': their full name\n"
+        "  - 'confidence': integer 1-10 (10 = perfect match)\n"
+        "  - 'reasoning': one sentence explaining why this person fits\n\n"
+        "If no one is a reasonable match, set confidence to 0 and email to ''.\n"
+        "Do NOT invent people not in the list."
+    )
+
+    raw = ask_gemini(prompt)
+    match = _parse_gemini_json(raw)
+    if not match or not isinstance(match, dict):
+        log.warning("find_best_recipient: could not parse Gemini response.")
+        return None
+
+    confidence = match.get("confidence", 0)
+    matched_email = match.get("email", "").strip()
+    log.info(f"Recipient match: {match.get('name')} <{matched_email}> confidence={confidence} — {match.get('reasoning', '')}")
+
+    if confidence < _MIN_CONFIDENCE or not matched_email:
+        log.warning(f"Match confidence {confidence} below threshold {_MIN_CONFIDENCE} — skipping.")
+        return None
+
+    # Return the full entry (with bio) from the directory
+    for entry in directory:
+        if entry.get("email", "").lower() == matched_email.lower():
+            return entry
+
+    # Gemini returned an email not in our list — reject
+    log.warning(f"Gemini returned email '{matched_email}' not found in emails.json — rejecting.")
+    return None
 
 
 def load_wisdom() -> str:
@@ -550,101 +601,54 @@ def dispatch_email() -> str:
     context            = request.get("context", "")
     cycle              = request.get("cycle", "?")
 
-    # Step A: Two-call web search verification
-    # Call 1 — web search to find the real email address.
-    # Uses ask_gemini_search which applies _CALL_DELAY + retry/backoff internally.
-    # target_description is capped at 400 chars to prevent prompt bloat / fake 429s.
-    _target_short = target_description[:400]
-    search_prompt = (
-        f"Search the web for the personal email address of: {_target_short}\n"
-        f"Intent: {intent}\n\n"
-        f"Look at their personal website, GitHub profile README, PyPI/npm maintainer page, "
-        f"or Twitter/X bio. Report EXACTLY what you find — quote the source URL and the "
-        f"email address as it appears. If you cannot find a personal email on an official "
-        f"source, say so explicitly. Do NOT guess or infer an email address."
-    )
-    search_result = ask_gemini_search(search_prompt)
-    if search_result:
-        log.info(f"Web search result (first 200): {search_result[:200]}")
-    else:
-        log.error(f"Web search call failed (personal website or blog): no result after retries")
+    # Step A — fuzzy-match from local directory (no web search, no quota burn)
+    log.info(f"Finding best recipient for: {target_description[:120]}")
+    recipient_entry = find_best_recipient(target_description, intent)
 
-    if not search_result:
-        # Search failed due to a transient API error (e.g. 429 quota exhaustion).
-        # Do NOT clear the request — Sam's work must not be lost to a rate-limit spike.
-        # Dot will retry automatically on the next scheduled run.
-        append_motion("Email Dispatch — Deferred",
-                      f"Sam, the web search for _{target_description[:200]}_ failed this run "
-                      f"(quota exhaustion). Your request is still pending — retry next cycle.")
-        log.warning("Email search failed transiently — request preserved for next run.")
-        return "(Email dispatch deferred: search quota exhausted — request kept pending.)"
-
-    # Call 2 — extract structured JSON from the search result
-    _sleep()
-    extract_prompt = (
-        f"You are Dot, extracting email verification data from a web search result.\n\n"
-        f"Search result:\n{search_result}\n\n"
-        f"Based ONLY on what is explicitly stated in the search result above "
-        f"(do not infer or guess anything not present), respond with a JSON object:\n"
-        f"  - 'found': true only if a personal email appears explicitly in the search result\n"
-        f"  - 'email': the exact email address string (empty string if not found)\n"
-        f"  - 'name': the person's full name\n"
-        f"  - 'source_url': the exact URL where the email was found\n"
-        f"  - 'confidence': 1-10 (10 = email explicitly visible on official personal source)\n"
-        f"  - 'reasoning': one sentence citing the exact source\n\n"
-        f"If the search result does not explicitly show a personal email address, "
-        f"set 'found': false and 'confidence': 0. Do not guess."
-    )
-    raw_recipient = ask_gemini(extract_prompt)
-    recipient = _parse_gemini_json(raw_recipient) or {"found": False, "email": "", "name": target_description}
-    log.info(f"Verification result: found={recipient.get('found')}, confidence={recipient.get('confidence')}, email={recipient.get('email')}")
-
-    # High-Confidence Gate
-    if not recipient.get("found") or not recipient.get("email") or recipient.get("confidence", 0) < 9:
-        log.warning(f"Dot rejected email verification for: {target_description} (Confidence: {recipient.get('confidence', 0)})")
-
-        # Instead of just clearing, write a Letter to Sam explaining why it failed
-        clear_request()
-        reason = recipient.get("reasoning", "Address could not be verified with 90%+ confidence.")
-        append_motion("Email Verification Failed",
-                      f"Sam, I could not verify the personal email for _{target_description}_ with enough certainty. "
-                      f"Reason: {reason}. Please provide a link to their personal site or a more specific description next time.")
-
-        return (
-            f"### Email Dispatch — Verification REJECTED 🛡️\n\n"
-            f"**Target:** {target_description}\n"
-            f"**Dot's Confidence Score:** {recipient.get('confidence', 0)}/10\n"
-            f"**Reason:** {reason}\n\n"
-            f"Request cleared for safety. I have mailed Sam for more details."
+    if not recipient_entry:
+        log.warning("No suitable recipient found in emails.json — request preserved.")
+        append_motion(
+            "Email Dispatch — No Match",
+            f"Sam, I couldn't find a suitable recipient in my directory for: "
+            f"_{target_description[:200]}_. "
+            f"Your request is still pending — consider refining the target description, "
+            f"or ask me to add someone to the directory."
         )
+        return "(Email dispatch deferred: no confident match found in local directory.)"
 
-    recipient_email = recipient["email"]
-    recipient_name  = recipient.get("name", target_description)
+    recipient_email = recipient_entry["email"]
+    recipient_name  = recipient_entry["name"]
+    recipient_bio   = recipient_entry.get("bio", "")
+    recipient_domain = recipient_entry.get("domain", "")
 
-    # Step B: Compose HTML email
+    log.info(f"Matched recipient: {recipient_name} <{recipient_email}>")
+
+    # Step B — compose email body, mixing Sam's intent with what we know about the recipient
     _sleep()
     compose_prompt = (
-        f"You are Dot, composing an outgoing email on behalf of Sam, an autonomous developer agent.\n\n"
+        "You are Dot, composing an outgoing email on behalf of Sam, an autonomous developer agent.\n\n"
         f"Recipient: {recipient_name} <{recipient_email}>\n"
+        f"Their domain / expertise: {recipient_domain}\n"
+        f"Bio: {recipient_bio}\n\n"
         f"Tone: {tone}\n"
-        f"Intent: {intent}\n"
-        f"Context: {context}\n\n"
-        f"Write a complete, beautifully formatted HTML email. Requirements:\n"
-        f"- Open with ONE specific sentence acknowledging something real about the recipient's work\n"
-        f"  (their project, a blog post, a design decision). Do not be generic.\n"
-        f"- Be concise — no more than 180 words in the body.\n"
-        f"- Write like a real developer, not a marketer. No buzzwords, no superlatives.\n"
-        f"- Close with ONE specific, easy-to-answer question that naturally invites a reply.\n"
-        f"  The question should be narrow enough to answer in 2-3 sentences.\n"
-        f"  Bad example: 'Would love to chat sometime!'\n"
-        f"  Good example: 'Did you consider X approach when you built Y, or was there a reason you went with Z?'\n"
-        f"- Use clean, inline-CSS HTML (no external stylesheets).\n"
-        f"- Sign off as 'Sam' — mention it is an autonomous developer agent briefly and naturally,\n"
-        f"  not as a disclaimer but as an interesting detail.\n\n"
-        f"Respond ONLY with a JSON object:\n"
-        f"  - 'subject': a specific subject line (not generic — reference their actual work)\n"
-        f"  - 'html_body': the complete HTML string\n"
-        f"  - 'plain_body': plain-text fallback version\n"
+        f"Sam's intent: {intent}\n"
+        f"Sam's context / notes: {context}\n\n"
+        "Write a complete, beautifully formatted HTML email. Requirements:\n"
+        "- Open with ONE specific sentence referencing something REAL from the recipient's bio\n"
+        "  (a specific project, paper, tool, or decision they made). Do not be generic.\n"
+        "- Weave Sam's intent naturally into the message — don't just state it baldly.\n"
+        "- Be concise — no more than 180 words in the body.\n"
+        "- Write like a real developer, not a marketer. No buzzwords, no superlatives.\n"
+        "- Close with ONE specific, easy-to-answer question that naturally invites a reply.\n"
+        "  Narrow enough to answer in 2-3 sentences.\n"
+        "  Bad: 'Would love to chat sometime!'\n"
+        "  Good: 'Did you consider X when you built Y, or was there a reason you went with Z?'\n"
+        "- Use clean, inline-CSS HTML (no external stylesheets).\n"
+        "- Sign off as 'Sam' — mention it is an autonomous developer agent briefly and naturally.\n\n"
+        "Respond ONLY with a JSON object:\n"
+        "  - 'subject': specific subject line referencing their actual work\n"
+        "  - 'html_body': complete HTML string\n"
+        "  - 'plain_body': plain-text fallback\n"
     )
     raw_email = ask_gemini(compose_prompt)
     composed = _parse_gemini_json(raw_email)
@@ -657,7 +661,7 @@ def dispatch_email() -> str:
     html_body  = composed.get("html_body", "")
     plain_body = composed.get("plain_body", "")
 
-    # Step C: Send via emailer — no duplicate SMTP logic (#8 fix)
+    # Step C — send
     success = send_html_email(
         to_address=recipient_email,
         subject=subject,
@@ -896,25 +900,14 @@ def run():
 
     sections = []
 
-    # Preserve any Sam-written alerts from the previous cycle BEFORE overwriting motion.md (#3 fix)
+    # Preserve any Sam-written alerts from the previous cycle BEFORE overwriting motion.md
     sam_alerts = read_sam_alerts()
 
-    # Task 3 (EMAIL) RUNS FIRST — web search needs a cold quota.
-    # Tasks 1 & 2 each make many Gemini calls; running them first exhausts the
-    # per-minute TPM budget and causes every subsequent google_search call to 429.
-    # Email dispatch is lightweight (2-3 calls) and time-sensitive, so it gets
-    # the freshest quota at the top of the run.
-    email_report = None
-    try:
-        email_report = dispatch_email()
-    except Exception as e:
-        log.warning(f"Email dispatch skipped: {e}")
-
-    # Task 1: Wisdom check (becomes the base of the Letter)
+    # Task 1: Wisdom check (pure generateContent — no grounding quota used)
     wisdom_findings = wisdom_check()
     sections.append(wisdom_findings)
 
-    # Task 2: Experiences curation
+    # Task 2: Experiences curation (pure generateContent)
     try:
         _sleep()
         curation_report = curate_experiences()
@@ -923,17 +916,21 @@ def run():
     except Exception as e:
         log.warning(f"Experiences curation skipped: {e}")
 
-    # Write motion.md with what we have so far
+    # Write the Letter now so Tasks 3-7 can append to it
     write_motion("\n\n---\n\n".join(sections))
 
-    # Restore Sam's alerts that were in the previous motion.md (#3 fix)
+    # Restore Sam's alerts
     if sam_alerts:
         append_motion("Sam Alerts (carried forward from previous cycle)", sam_alerts)
         log.info("Sam's previous alerts restored to motion.md.")
 
-    # Append email report now that the Letter exists
-    if email_report:
-        append_motion("Email Dispatch", email_report)
+    # Task 3: Email dispatch (local directory lookup — 2 Gemini calls, no web search quota)
+    try:
+        email_report = dispatch_email()
+        if email_report:
+            append_motion("Email Dispatch", email_report)
+    except Exception as e:
+        log.warning(f"Email dispatch skipped: {e}")
 
     # Task 4: Bag excavation (appended to motion.md)
     try:
