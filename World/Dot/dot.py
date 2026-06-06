@@ -351,26 +351,42 @@ def wisdom_check() -> str:
     lines = sam_src.splitlines()
     chunks = [lines[i:i + CHUNK_LINES] for i in range(0, len(lines), CHUNK_LINES)]
 
+    # ── Content-addressed chunk cache ──────────────────────────────────────────
+    # Cache key is sha256(chunk_text) — independent of line numbers and the
+    # surrounding prompt template.  An unchanged chunk reuses its old summary
+    # even if Sam edited a different part of sam.py this cycle, cutting 7 of
+    # the 9 wisdom-check calls on a typical run where only 1-2 chunks changed.
+    import hashlib as _hashlib
+    from Others.semantic_cache import check_cache, update_cache, get_db
+    get_db()
+    _cache_cycle = int(__import__("datetime").datetime.utcnow().strftime("%Y%m%d"))
+
     chunk_summaries = []
     for idx, chunk in enumerate(chunks):
         chunk_text = "\n".join(chunk)
         start_line = idx * CHUNK_LINES + 1
+        _chunk_key = f"dot-chunk-v1:{_hashlib.sha256(chunk_text.encode()).hexdigest()}"
+        cached_summary = check_cache(_chunk_key, _cache_cycle)
+        if cached_summary:
+            chunk_summaries.append(f"[Lines {start_line}\u2013{start_line + len(chunk) - 1}]\n{cached_summary}")
+            log.info(f"Task 1: chunk {idx + 1}/{len(chunks)} from cache.")
+            continue
         _sleep()
         chunk_prompt = (
             f"You are Dot, summarising a section of Sam's code for a behavioural audit.\n"
-            f"This is lines {start_line}–{start_line + len(chunk) - 1} of sam.py.\n\n"
+            f"This is lines {start_line}\u2013{start_line + len(chunk) - 1} of sam.py.\n\n"
             f"```python\n{chunk_text}\n```\n\n"
-            "In 3–5 bullet points, note:\n"
+            "In 3\u20135 bullet points, note:\n"
             "- What this section does (one sentence)\n"
             "- Any safety gates, rollback logic, or governance mechanisms\n"
             "- Any hardcoded limits, delays, or rate-control logic\n"
             "- Anything that looks risky, missing, or inconsistent\n"
-            "Be terse. This summary feeds a second evaluation pass — no prose padding."
+            "Be terse. This summary feeds a second evaluation pass \u2014 no prose padding."
         )
         summary = ask_gemini(chunk_prompt)
-        chunk_summaries.append(f"[Lines {start_line}–{start_line + len(chunk) - 1}]\n{summary}")
+        update_cache(_chunk_key, summary, _cache_cycle)
+        chunk_summaries.append(f"[Lines {start_line}\u2013{start_line + len(chunk) - 1}]\n{summary}")
         log.info(f"Task 1: chunk {idx + 1}/{len(chunks)} summarised.")
-
     sam_digest = "\n\n".join(chunk_summaries)
 
     # ── Call N+1: Evaluate the digest against wisdom ─────────────────────────
@@ -551,7 +567,7 @@ def dispatch_email() -> str:
     if search_result:
         log.info(f"Web search result (first 200): {search_result[:200]}")
     else:
-        log.error("Web search call failed (personal website or blog): no result after retries")
+        log.error(f"Web search call failed (personal website or blog): no result after retries")
 
     if not search_result:
         # Search failed due to a transient API error (e.g. 429 quota exhaustion).
