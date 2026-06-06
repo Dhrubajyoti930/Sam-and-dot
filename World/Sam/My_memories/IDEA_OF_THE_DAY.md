@@ -1,36 +1,35 @@
 ## Scratchpad
 
-### Option 1: Implement a "Reasoning-Action" Schema Wrapper
-*   **Concept:** Force all `ask_gemini` calls to return a Pydantic model containing `thought_process` (scratchpad) and `action_payload` (tool call).
+### Option 1: Formalizing the `<thought>` block in `ask_gemini`
+*   **Concept:** Modify `ask_gemini` (L253) to enforce an XML-wrapped reasoning block. The parser would strip `<thought>...</thought>` before returning the final response to the caller.
 *   **Critique:** 
-    *   *Pros:* Enforces the decoupling of reasoning from execution; makes logs highly readable for debugging.
-    *   *Cons:* Requires refactoring the existing `_parse_gemini_json` logic; adds overhead to every API call.
-*   **Feasibility:** High. The infrastructure for Pydantic is already present in the codebase.
+    *   *Pros:* Forces structured reasoning; prevents "reasoning leakage" into the `bag/` files.
+    *   *Cons:* Increases token usage; requires robust regex/parsing logic that could break if the model deviates from the schema.
+*   **Feasibility:** High.
 
-### Option 2: Implement a "Summarization Loop" for Scratchpad Persistence
-*   **Concept:** Introduce a background task that triggers every 5 cycles to compress the `scratchpad` into a `state_vector` (a summary of current goals, blockers, and recent reasoning).
+### Option 2: Implementing a 'Verification Plan' gate in `phase_v_development`
+*   **Concept:** Before `apply_self_modification` (L612) or any file write, the agent must generate a "Verification Plan" (a list of assertions/tests) in the scratchpad. The system then executes a `_dry_run_lint` (L547) specifically against these assertions.
 *   **Critique:**
-    *   *Pros:* Prevents context window degradation; keeps the "active" scratchpad lean.
-    *   *Cons:* Risk of losing nuance during compression; requires careful management of the `state_vector` storage.
-*   **Feasibility:** Medium. Requires careful implementation of the summarization prompt to ensure critical context isn't discarded.
+    *   *Pros:* Directly addresses the "Verification Plan" action item; ensures code changes are intentional and testable.
+    *   *Cons:* Adds latency to the development loop; requires careful handling of state to ensure the plan doesn't become stale.
+*   **Feasibility:** Medium-High.
 
 ---
 
-## Idea: Reasoning-Action Schema Enforcement
-
-I will implement a structured `AgentResponse` Pydantic model that forces a strict separation between internal reasoning (scratchpad) and external tool execution. This will be integrated into `ask_gemini` (L253) to ensure that every interaction follows the ReAct pattern by design.
+## Idea: The 'Verification-Gate' Protocol
+I will implement a mandatory `VerificationPlan` schema within the `phase_v_development` loop. Before any write operation to the `bag/` directory, the system must output a structured JSON block containing: `[hypotheses, test_assertions, rollback_condition]`.
 
 ## Why
-Currently, the scratchpad and tool calls are loosely coupled. By enforcing a schema, I eliminate ambiguity in the model's output. This ensures that the "Critic" gate can evaluate the `thought_process` *before* the `action_payload` is executed, significantly reducing the risk of hallucinated or invalid tool calls.
+Currently, my development loop relies on `_dry_run_lint` as a reactive check. By shifting to a proactive "Verification-Gate," I force the model to define success criteria *before* the code is written. This aligns with the "Verification Loops" research, reducing the likelihood of committing broken logic to the codebase.
 
 ## Implementation Steps
-1.  Define `AgentResponse(BaseModel)` with `thought: str` and `action: Optional[ToolCall]`.
-2.  Update `ask_gemini` (L253) to inject this schema into the system prompt.
-3.  Modify `_parse_gemini_json` (L82) to validate the response against the `AgentResponse` model.
-4.  Update the execution loop in `run_cycle` (L1314) to pass the `thought` field to the `Reflexion-Gate` before proceeding to the tool execution.
+1.  **Schema Definition:** Define a `VerificationPlan` Pydantic model in `sam.py` to enforce the structure of the reasoning block.
+2.  **Gate Injection:** Modify `phase_v_development` (L903) to require a `VerificationPlan` object from the LLM before proceeding to `apply_self_modification`.
+3.  **Execution Hook:** Update `apply_self_modification` to accept the `VerificationPlan` and log it to a new `verification_log.json` for post-cycle analysis.
+4.  **Validation:** If the `VerificationPlan` is missing or fails to meet the schema, the system triggers a `_rollback` or requests a refinement.
 
 ## Risk
-**Failure Mode:** The model may struggle to adhere to the strict schema if the prompt is too complex, leading to frequent parsing errors.
-**Mitigation:** Implement a "fallback" retry mechanism that feeds the parsing error back to the model with a request to correct the JSON structure.
+*   **Failure Mode:** The model may generate "hallucinated" verification steps that pass the schema but are logically irrelevant to the actual code change.
+*   **Mitigation:** I will implement a "Reflexion-Gate" where the `self_check` function (L386) compares the `VerificationPlan` against the actual diff generated in `apply_self_modification`. If the diff does not address the `test_assertions`, the cycle is flagged for manual review.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10. The logic is sound, but the overhead of maintaining the plan state requires careful management of the `scratchpad` buffer to avoid context bloat.

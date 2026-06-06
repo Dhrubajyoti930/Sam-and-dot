@@ -16,6 +16,8 @@ import os
 import re
 import sys
 import json
+
+# from workshop_bench.core.reasoning.thought_engine import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
@@ -191,6 +193,63 @@ def save_experiences(data: list):
         json.dump(data, f, indent=2)
 
 
+def _is_truncated(text: str, expects_json: bool) -> bool:
+    """Detect whether a Gemini response was cut off mid-generation."""
+    if text.endswith("..."):
+        return True
+    if expects_json:
+        if text.count("{") > text.count("}"):
+            return True
+        if text.count("[") > text.count("]"):
+            return True
+    # Detect code truncated mid-definition (e.g. "def foo(x, max_r" with no closing paren)
+    last_line = text.rstrip().splitlines()[-1] if text.strip() else ""
+    if re.search(r"def \w+\([^)]*$", last_line):
+        return True
+    # Unclosed code block
+    if text.count("```") % 2 != 0:
+        return True
+    return False
+
+
+def _stitch_gemini(initial: str, temperature: float, max_continuations: int = 3) -> str:
+    """If initial response looks truncated, ask Gemini to continue and stitch chunks together."""
+    global _CALL_DELAY
+    result = initial
+    for i in range(max_continuations):
+        expects_json = result.lstrip().startswith(("[", "{"))
+        if not _is_truncated(result, expects_json):
+            break
+        log.warning(f"Truncation detected — requesting continuation {i + 1}/{max_continuations}.")
+        time.sleep(_CALL_DELAY)
+        try:
+            cont_response = CLIENT.models.generate_content(
+                model=MODEL,
+                contents=f"Your previous response was cut off. Continue exactly from where you stopped, with no preamble or repeated text:\n\n{result[-300:]}",
+                config={
+                    'max_output_tokens': 8192,
+                    'temperature': temperature,
+                    'top_p': 0.95
+                }
+            )
+            if cont_response and cont_response.text:
+                chunk = cont_response.text.strip()
+                # Avoid re-appending text already present at the seam
+                overlap = len(chunk) // 4
+                if result.endswith(chunk[:overlap]):
+                    result = result + chunk[overlap:]
+                else:
+                    result = result + "\n" + chunk
+                log.info(f"Continuation {i + 1} stitched ({len(chunk)} chars).")
+            else:
+                log.warning("Continuation response was empty — stopping stitch.")
+                break
+        except Exception as e:
+            log.warning(f"Continuation call failed: {e} — stopping stitch.")
+            break
+    return result
+
+
 def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temperature: float = 0.2) -> str:
     """Send a prompt with aggressive RPM protection, empty checks, and task-aware temperature."""
     from bag.semantic_cache import check_cache, update_cache, get_db
@@ -206,6 +265,7 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
             log.info("Semantic cache hit.")
             return cached
 
+    expects_json = "Respond ONLY with a JSON" in prompt or "json array" in prompt.lower()
     current_prompt = prompt
     for attempt in range(retries):
         try:
@@ -230,10 +290,13 @@ def ask_gemini(prompt: str, retries: int = 3, bypass_cache: bool = False, temper
                 raise ValueError("Empty or blocked response")
 
             res = response.text.strip()
-            # Anti-truncation check — only for JSON responses, not prose
-            expects_json = "Respond ONLY with a JSON" in prompt or "json array" in prompt.lower()
-            if expects_json and (res.endswith("...") or (res.count("{") > res.count("}")) or (res.count("[") > res.count("]"))):
-                log.warning("Potential truncation detected in JSON response. Retrying...")
+
+            # Stitch continuations if truncated (covers JSON and prose/code)
+            res = _stitch_gemini(res, temperature)
+
+            # Final truncation check — retry the whole call if still incomplete
+            if expects_json and _is_truncated(res, expects_json):
+                log.warning("Response still truncated after stitching. Retrying full call...")
                 continue
 
             if not bypass_cache:
@@ -481,6 +544,71 @@ def repair_bag_modules() -> list:
     return repaired
 
 
+def _dry_run_lint() -> tuple[bool, str]:
+    """Run ruff over the World after a patch is applied but before the integrity gate.
+    Returns (passed, error_output). Does NOT rollback — caller decides what to do."""
+    try:
+        result = subprocess.run(
+            ["ruff", "check", str(ROOT), "--select", "F", "--exclude", "rollback_registry"],
+            capture_output=True, text=True, timeout=20,
+        )
+        if result.returncode == 0:
+            return True, ""
+        return False, result.stdout.strip()
+    except Exception as e:
+        log.warning(f"Dry-run lint unavailable: {e}")
+        return True, ""  # Don't block if ruff is missing
+
+
+def _lint_fix_with_gemini(lint_errors: str) -> bool:
+    """Feed ruff errors back to Gemini and apply a corrective patch. One attempt only.
+    Returns True if a corrective patch was applied (whether or not it fully fixes lint)."""
+    from bag.patch_ops import apply_patch_operations
+
+    log.info("🔧 Lint errors detected — asking Gemini for a corrective patch...")
+
+    # Collect current source of every file mentioned in the errors for context
+    file_contexts = ""
+    mentioned = set(re.findall(r"((?:sam\.py|workshop_bench/[^\s:]+\.py))", lint_errors))
+    for rel in mentioned:
+        target = SAM_DIR / rel
+        if target.exists():
+            file_contexts += f"\n### {rel} (current content):\n```python\n{target.read_text(encoding='utf-8')}\n```\n"
+
+    prompt = (
+        f"You are Sam's lint fixer. Ruff found the following errors after a patch was applied:\n\n"
+        f"```\n{lint_errors}\n```\n"
+        f"{file_contexts}\n"
+        f"Produce a JSON array of surgical patch operations to fix ONLY these lint errors.\n"
+        f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
+        f"Rules:\n"
+        f"  - 'filename': relative path from Sam's root (sam.py or workshop_bench/**/*.py)\n"
+        f"  - 'operation': exactly one of: 'replace', 'delete'\n"
+        f"  - For 'replace': 'old' (exact existing string) and 'new' (corrected string)\n"
+        f"  - For 'delete': 'old' (exact string to remove)\n"
+        f"  - 'old' must be an exact substring of the current file shown above.\n"
+        f"  - Fix unused imports (F401) by removing them from the import line.\n"
+        f"  - Fix undefined names (F821) by adding the missing import.\n"
+        f"  - Keep changes minimal — touch only the lines ruff flagged.\n"
+        f"  - Never supply a 'content' key.\n"
+        f"  - If nothing can be fixed, return an empty array [].\n"
+    )
+
+    _sleep()
+    raw = ask_gemini(prompt, bypass_cache=True)
+    ops = _parse_gemini_json(raw)
+    if not ops:
+        log.warning("Lint-fix Gemini call returned no operations.")
+        return False
+
+    applied = apply_patch_operations(ops, SAM_DIR, log)
+    if applied:
+        log.info("Corrective lint patch applied.")
+    else:
+        log.warning("Corrective lint patch had no applicable operations.")
+    return applied
+
+
 def apply_self_modification(plan: str) -> bool:
     """Ask Gemini to extract surgical patch operations from the plan and apply them.
     Writable: sam.py and bag/**/*.py (workshop subfolders allowed). Returns True if applied.
@@ -566,7 +694,25 @@ def apply_self_modification(plan: str) -> bool:
         log.info(f"Gemini patch response (first 200 chars): {raw[:200]}")
         return False
 
-    return apply_patch_operations(operations, SAM_DIR, log)
+    applied = apply_patch_operations(operations, SAM_DIR, log)
+    if not applied:
+        return False
+
+    # ── Dry-run lint gate: catch ruff errors before the integrity gate fires ──
+    lint_ok, lint_errors = _dry_run_lint()
+    if not lint_ok:
+        log.warning(f"Dry-run lint found issues:\n{lint_errors}")
+        _lint_fix_with_gemini(lint_errors)
+        # Re-check once after the corrective patch — integrity gate is still the final arbiter
+        lint_ok2, lint_errors2 = _dry_run_lint()
+        if lint_ok2:
+            log.info("✅ Dry-run lint clean after corrective patch.")
+        else:
+            log.warning(f"Dry-run lint still has issues after fix attempt:\n{lint_errors2}")
+    else:
+        log.info("✅ Dry-run lint clean.")
+
+    return True
 
 
 def apply_prompt_patch() -> bool:

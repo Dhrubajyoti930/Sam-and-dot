@@ -17,7 +17,7 @@ import re
 import sys
 import json
 
-# from workshop_bench.core.reasoning.scratchpad import ScratchpadEntry, Status, log_entry
+# from workshop_bench.core.reasoning.thought_engine import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
