@@ -253,5 +253,20 @@
       "Cycle complete. Modification applied: True."
     ],
     "outcome": "applied"
+  },
+  {
+    "id": "cycle-40-scratchpad",
+    "title": "Scratchpad",
+    "status": "closed",
+    "opened_at": "2026-06-06T06:08:39.346124",
+    "opened_cycle": 40,
+    "last_touched_at": "2026-06-06T06:09:14.563648",
+    "last_touched_cycle": 40,
+    "closed_at": "2026-06-06T06:09:14.563642",
+    "updates": [
+      "Plan generated in Phase V.",
+      "Cycle complete. Modification applied: False."
+    ],
+    "outcome": "deferred"
   }
 ]

@@ -1,37 +1,36 @@
 ## Scratchpad
 
-### Option 1: Persistent Scratchpad Serialization (File-based)
-*   **Concept:** Implement a `scratchpad.json` file that stores the current reasoning state, including the "Critic" feedback, using Pydantic models.
+### Option 1: Implement a "Reasoning-Action" Schema Wrapper
+*   **Concept:** Force all `ask_gemini` calls to return a Pydantic model containing `thought_process` (scratchpad) and `action_payload` (tool call).
 *   **Critique:** 
-    *   *Pros:* Provides immediate fault tolerance; allows for "resume" capability if the process crashes.
-    *   *Cons:* Adds I/O overhead; requires careful locking to prevent race conditions if multiple processes access the state.
-*   **Feasibility:** High. Fits well with existing `save_goals` and `load_goals` patterns.
+    *   *Pros:* Enforces the decoupling of reasoning from execution; makes logs highly readable for debugging.
+    *   *Cons:* Requires refactoring the existing `_parse_gemini_json` logic; adds overhead to every API call.
+*   **Feasibility:** High. The infrastructure for Pydantic is already present in the codebase.
 
-### Option 2: In-Memory "Critic" Middleware
-*   **Concept:** Wrap `ask_gemini` (L251) with a decorator that forces a secondary "Critic" pass on the generated output before it reaches the main logic.
+### Option 2: Implement a "Summarization Loop" for Scratchpad Persistence
+*   **Concept:** Introduce a background task that triggers every 5 cycles to compress the `scratchpad` into a `state_vector` (a summary of current goals, blockers, and recent reasoning).
 *   **Critique:**
-    *   *Pros:* Extremely low latency; enforces the "Reflexion-Gate" without modifying disk state.
-    *   *Cons:* Does not persist state across cycles; if the process dies, the reasoning is lost.
-*   **Feasibility:** Very High. Can be implemented as a targeted refactor of `ask_gemini`.
-
-**Decision:** I will pursue **Option 1** as it aligns with the "Externalized State Persistence" requirement identified in the market signals, providing a more robust foundation for long-running agentic tasks.
+    *   *Pros:* Prevents context window degradation; keeps the "active" scratchpad lean.
+    *   *Cons:* Risk of losing nuance during compression; requires careful management of the `state_vector` storage.
+*   **Feasibility:** Medium. Requires careful implementation of the summarization prompt to ensure critical context isn't discarded.
 
 ---
 
-## Idea
-**Implement `ScratchpadManager` for Persistent Reasoning State.**
+## Idea: Reasoning-Action Schema Enforcement
+
+I will implement a structured `AgentResponse` Pydantic model that forces a strict separation between internal reasoning (scratchpad) and external tool execution. This will be integrated into `ask_gemini` (L253) to ensure that every interaction follows the ReAct pattern by design.
 
 ## Why
-Currently, my reasoning is transient. If a cycle is interrupted, the context of the "Critic" and the current hypothesis is lost. By serializing the scratchpad to a dedicated `scratchpad.json` using Pydantic, I ensure that my reasoning is auditable, recoverable, and structured, directly supporting the "Reasoning-in-Context" paradigm.
+Currently, the scratchpad and tool calls are loosely coupled. By enforcing a schema, I eliminate ambiguity in the model's output. This ensures that the "Critic" gate can evaluate the `thought_process` *before* the `action_payload` is executed, significantly reducing the risk of hallucinated or invalid tool calls.
 
 ## Implementation Steps
-1.  **Define Schema:** Create a `ScratchpadState` Pydantic model containing `hypothesis`, `evidence`, `critic_feedback`, and `status`.
-2.  **Integrate Persistence:** Add `load_scratchpad()` and `save_scratchpad()` methods to `sam.py` (near `load_goals`).
-3.  **Update `ask_gemini`:** Modify the call flow to pass the current `ScratchpadState` as part of the system prompt.
-4.  **Reflexion Gate:** Ensure the `Critic` output is written to the `scratchpad.json` *before* the final action is taken.
+1.  Define `AgentResponse(BaseModel)` with `thought: str` and `action: Optional[ToolCall]`.
+2.  Update `ask_gemini` (L253) to inject this schema into the system prompt.
+3.  Modify `_parse_gemini_json` (L82) to validate the response against the `AgentResponse` model.
+4.  Update the execution loop in `run_cycle` (L1314) to pass the `thought` field to the `Reflexion-Gate` before proceeding to the tool execution.
 
 ## Risk
-*   **Failure Mode:** The `scratchpad.json` becomes corrupted or grows too large, causing latency in the `ask_gemini` call.
-*   **Mitigation:** Implement a "sliding window" or "compression" function that archives old scratchpad entries to a `history/` directory once a task is marked as complete.
+**Failure Mode:** The model may struggle to adhere to the strict schema if the prompt is too complex, leading to frequent parsing errors.
+**Mitigation:** Implement a "fallback" retry mechanism that feeds the parsing error back to the model with a request to correct the JSON structure.
 
 **Confidence Score:** 9/10
