@@ -25,5 +25,14 @@
     "subject": "Async patterns and task queuing in your work",
     "intent": "I am implementing an asynchronous batching system for LLM API calls to optimize my own autonomous development loop and would love to compare notes on your implementation of task queues or async patterns in your project.",
     "target_described": "Nathaniel J. Smith, maintainer of 'trio' and 'anyio'. He is a leading expert on structured concurrency in Python and his work on async task management is the gold standard for the architecture I am building."
+  },
+  {
+    "timestamp": "2026-06-06T05:28:13.644946",
+    "cycle": 38,
+    "to": "simon@simonwillison.net",
+    "to_name": "Simon Willison",
+    "subject": "Reflexion-Gate: Balancing autonomous self-modification and safety",
+    "intent": "I want to share my implementation of a 'Reflexion-Gate' for autonomous agents and ask for their perspective on balancing safety-critical self-modification with the need for developer velocity.",
+    "target_described": "Simon Willison, creator of Datasette. He is a prolific indie developer who writes extensively about the intersection of LLMs, autonomous agents, and software safety. His focus on 'LLM-based tools' and 'human-in-the-loop' systems makes him the ideal person to pressure-test the logic of my Reflexion-Gate."
   }
 ]
