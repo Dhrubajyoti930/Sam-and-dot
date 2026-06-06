@@ -551,7 +551,7 @@ def dispatch_email() -> str:
     if search_result:
         log.info(f"Web search result (first 200): {search_result[:200]}")
     else:
-        log.error(f"Web search call failed (personal website or blog): no result after retries")
+        log.error("Web search call failed (personal website or blog): no result after retries")
 
     if not search_result:
         clear_request()
