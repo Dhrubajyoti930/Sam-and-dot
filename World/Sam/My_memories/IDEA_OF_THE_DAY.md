@@ -1,35 +1,39 @@
 ## Scratchpad
 
-### Option 1: Formalizing the `<thought>` block in `ask_gemini`
-*   **Concept:** Modify `ask_gemini` (L253) to enforce an XML-wrapped reasoning block. The parser would strip `<thought>...</thought>` before returning the final response to the caller.
+### Option 1: Formalizing the "Critique" Block in `ask_gemini`
+*   **Concept:** Inject a mandatory `critique` field into the Pydantic schema used for all `ask_gemini` calls. The model must populate this *before* the `action` field.
 *   **Critique:** 
-    *   *Pros:* Forces structured reasoning; prevents "reasoning leakage" into the `bag/` files.
-    *   *Cons:* Increases token usage; requires robust regex/parsing logic that could break if the model deviates from the schema.
-*   **Feasibility:** High.
+    *   *Pros:* Forces immediate self-reflection; prevents impulsive tool calls.
+    *   *Cons:* Increases token usage per cycle; might lead to "boilerplate" critiques if the model isn't pushed for depth.
+    *   *Feasibility:* High. I already have `_parse_gemini_json` (L82).
+    *   *Maintainability:* Excellent. It standardizes the interface for all future agentic actions.
 
-### Option 2: Implementing a 'Verification Plan' gate in `phase_v_development`
-*   **Concept:** Before `apply_self_modification` (L612) or any file write, the agent must generate a "Verification Plan" (a list of assertions/tests) in the scratchpad. The system then executes a `_dry_run_lint` (L547) specifically against these assertions.
+### Option 2: State-Diffing via `ScratchpadManager`
+*   **Concept:** Implement a `diff_state(current_context, goal_state)` function that compares the current `scratchpad` content against the `goals` loaded from `load_goals` (L116).
 *   **Critique:**
-    *   *Pros:* Directly addresses the "Verification Plan" action item; ensures code changes are intentional and testable.
-    *   *Cons:* Adds latency to the development loop; requires careful handling of state to ensure the plan doesn't become stale.
-*   **Feasibility:** Medium-High.
+    *   *Pros:* Directly addresses the "state-diffing" learning goal; prevents goal drift.
+    *   *Cons:* High complexity in defining a "goal state" that is machine-readable enough for effective diffing.
+    *   *Feasibility:* Medium. Requires a robust schema for `goals.json`.
+    *   *Maintainability:* Moderate. Risk of the diffing logic becoming brittle if the goal structure changes.
+
+**Decision:** Option 1 is the higher-leverage starting point. It provides the necessary data structure to eventually support Option 2.
 
 ---
 
-## Idea: The 'Verification-Gate' Protocol
-I will implement a mandatory `VerificationPlan` schema within the `phase_v_development` loop. Before any write operation to the `bag/` directory, the system must output a structured JSON block containing: `[hypotheses, test_assertions, rollback_condition]`.
+## Idea: Mandatory Critique-Before-Action Protocol
+
+Integrate a `Critique` block into the `ask_gemini` request/response cycle. Every tool-calling request must now include a `critique` field in the Pydantic schema, requiring the model to evaluate its proposed plan against the current `goals.json` before execution.
 
 ## Why
-Currently, my development loop relies on `_dry_run_lint` as a reactive check. By shifting to a proactive "Verification-Gate," I force the model to define success criteria *before* the code is written. This aligns with the "Verification Loops" research, reducing the likelihood of committing broken logic to the codebase.
+My current architecture relies on the model's "vibes" to determine if an action is correct. By forcing a `critique` block, I move from reactive execution to reflective execution. This directly mitigates hallucination and ensures that every file modification in `sam.py` is preceded by a logical justification.
 
 ## Implementation Steps
-1.  **Schema Definition:** Define a `VerificationPlan` Pydantic model in `sam.py` to enforce the structure of the reasoning block.
-2.  **Gate Injection:** Modify `phase_v_development` (L903) to require a `VerificationPlan` object from the LLM before proceeding to `apply_self_modification`.
-3.  **Execution Hook:** Update `apply_self_modification` to accept the `VerificationPlan` and log it to a new `verification_log.json` for post-cycle analysis.
-4.  **Validation:** If the `VerificationPlan` is missing or fails to meet the schema, the system triggers a `_rollback` or requests a refinement.
+1.  **Update Schema:** Modify the Pydantic model used in `ask_gemini` (L253) to include `critique: str` as a required field.
+2.  **Update Prompting:** Adjust the system prompt (in `load_personality`) to explicitly instruct the model to populate `critique` with a check against `goals.json` and potential failure modes.
+3.  **Validation:** Update `_parse_gemini_json` (L82) to log the `critique` to a local `scratchpad.log` before proceeding to the `action` execution.
 
 ## Risk
-*   **Failure Mode:** The model may generate "hallucinated" verification steps that pass the schema but are logically irrelevant to the actual code change.
-*   **Mitigation:** I will implement a "Reflexion-Gate" where the `self_check` function (L386) compares the `VerificationPlan` against the actual diff generated in `apply_self_modification`. If the diff does not address the `test_assertions`, the cycle is flagged for manual review.
+*   **Failure Mode:** The model generates generic, non-critical critiques (e.g., "This looks good") to bypass the requirement.
+*   **Mitigation:** Implement a simple length/content check in `_parse_gemini_json` that rejects responses where the `critique` is under a minimum character threshold or lacks specific keywords (e.g., "risk", "goal", "check").
 
-**Confidence Score:** 8/10. The logic is sound, but the overhead of maintaining the plan state requires careful management of the `scratchpad` buffer to avoid context bloat.
+**Confidence Score:** 9/10
