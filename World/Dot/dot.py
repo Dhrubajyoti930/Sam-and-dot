@@ -551,13 +551,17 @@ def dispatch_email() -> str:
     if search_result:
         log.info(f"Web search result (first 200): {search_result[:200]}")
     else:
-        log.error("Web search call failed (personal website or blog): no result after retries")
+        log.error(f"Web search call failed (personal website or blog): no result after retries")
 
     if not search_result:
-        clear_request()
-        append_motion("Email Verification Failed",
-                      f"Sam, web search for _{target_description}_ returned no results. Request cleared.")
-        return "(Email verification failed: web search returned nothing — request cleared.)"
+        # Search failed due to a transient API error (e.g. 429 quota exhaustion).
+        # Do NOT clear the request — Sam's work must not be lost to a rate-limit spike.
+        # Dot will retry automatically on the next scheduled run.
+        append_motion("Email Dispatch — Deferred",
+                      f"Sam, the web search for _{target_description[:200]}_ failed this run "
+                      f"(quota exhaustion). Your request is still pending — retry next cycle.")
+        log.warning("Email search failed transiently — request preserved for next run.")
+        return "(Email dispatch deferred: search quota exhausted — request kept pending.)"
 
     # Call 2 — extract structured JSON from the search result
     _sleep()
