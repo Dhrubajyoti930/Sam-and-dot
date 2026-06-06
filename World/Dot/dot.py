@@ -188,7 +188,7 @@ def _sleep():
     time.sleep(_CALL_DELAY)
 
 
-def ask_gemini_search(prompt: str, retries: int = 3) -> str:
+def ask_gemini_search(prompt: str, retries: int = 5) -> str:
     """Like ask_gemini but attaches the google_search tool.
     Uses the same rate-limit backoff strategy so it can never fire
     cold after a burst of plain ask_gemini calls."""
@@ -879,7 +879,18 @@ def run():
     # Preserve any Sam-written alerts from the previous cycle BEFORE overwriting motion.md (#3 fix)
     sam_alerts = read_sam_alerts()
 
-    # Task 1: Wisdom check (always runs first — becomes the base of motion.md)
+    # Task 3 (EMAIL) RUNS FIRST — web search needs a cold quota.
+    # Tasks 1 & 2 each make many Gemini calls; running them first exhausts the
+    # per-minute TPM budget and causes every subsequent google_search call to 429.
+    # Email dispatch is lightweight (2-3 calls) and time-sensitive, so it gets
+    # the freshest quota at the top of the run.
+    email_report = None
+    try:
+        email_report = dispatch_email()
+    except Exception as e:
+        log.warning(f"Email dispatch skipped: {e}")
+
+    # Task 1: Wisdom check (becomes the base of the Letter)
     wisdom_findings = wisdom_check()
     sections.append(wisdom_findings)
 
@@ -900,14 +911,9 @@ def run():
         append_motion("Sam Alerts (carried forward from previous cycle)", sam_alerts)
         log.info("Sam's previous alerts restored to motion.md.")
 
-    # Task 3: Email dispatch (appended to motion.md)
-    try:
-        _sleep()
-        email_report = dispatch_email()
-        if email_report:
-            append_motion("Email Dispatch", email_report)
-    except Exception as e:
-        log.warning(f"Email dispatch skipped: {e}")
+    # Append email report now that the Letter exists
+    if email_report:
+        append_motion("Email Dispatch", email_report)
 
     # Task 4: Bag excavation (appended to motion.md)
     try:
