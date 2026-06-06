@@ -188,6 +188,39 @@ def _sleep():
     time.sleep(_CALL_DELAY)
 
 
+def ask_gemini_search(prompt: str, retries: int = 3) -> str:
+    """Like ask_gemini but attaches the google_search tool.
+    Uses the same rate-limit backoff strategy so it can never fire
+    cold after a burst of plain ask_gemini calls."""
+    global _CALL_DELAY
+    for attempt in range(retries):
+        try:
+            time.sleep(_CALL_DELAY)
+            response = CLIENT.models.generate_content(
+                model=MODEL,
+                contents=prompt,
+                config={
+                    "max_output_tokens": 2048,
+                    "temperature": 0.1,
+                    "tools": [{"google_search": {}}],
+                },
+            )
+            if not response or not response.text:
+                raise ValueError("Empty search response")
+            return response.text.strip()
+        except Exception as e:
+            err = str(e).upper()
+            if any(x in err for x in ["429", "RESOURCE_EXHAUSTED"]):
+                _CALL_DELAY = min(_CALL_DELAY + 4, 30)
+                wait = _CALL_DELAY * (attempt + 1)
+                log.warning(f"Web search 429 — backing off {wait}s (delay now {_CALL_DELAY}s)")
+                time.sleep(wait)
+            else:
+                log.error(f"Web search call failed ({type(e).__name__}): {e}")
+                time.sleep(10)
+    return ""
+
+
 def load_wisdom() -> str:
     if WISDOM.exists():
         return WISDOM.read_text()
@@ -502,32 +535,23 @@ def dispatch_email() -> str:
     cycle              = request.get("cycle", "?")
 
     # Step A: Two-call web search verification
-    # Call 1 — web search to find the real email address
-    _sleep()
-
+    # Call 1 — web search to find the real email address.
+    # Uses ask_gemini_search which applies _CALL_DELAY + retry/backoff internally.
+    # target_description is capped at 400 chars to prevent prompt bloat / fake 429s.
+    _target_short = target_description[:400]
     search_prompt = (
-        f"Search the web for the personal email address of: {target_description}\n"
+        f"Search the web for the personal email address of: {_target_short}\n"
         f"Intent: {intent}\n\n"
         f"Look at their personal website, GitHub profile README, PyPI/npm maintainer page, "
         f"or Twitter/X bio. Report EXACTLY what you find — quote the source URL and the "
         f"email address as it appears. If you cannot find a personal email on an official "
         f"source, say so explicitly. Do NOT guess or infer an email address."
     )
-    try:
-        search_response = CLIENT.models.generate_content(
-            model=MODEL,
-            contents=search_prompt,
-            config={
-                "max_output_tokens": 2048,
-                "temperature": 0.1,
-                "tools": [{"google_search": {}}],
-            }
-        )
-        search_result = search_response.text.strip() if search_response and search_response.text else ""
+    search_result = ask_gemini_search(search_prompt)
+    if search_result:
         log.info(f"Web search result (first 200): {search_result[:200]}")
-    except Exception as e:
-        log.error(f"Web search call failed: {e}")
-        search_result = ""
+    else:
+        log.error(f"Web search call failed (personal website or blog): no result after retries")
 
     if not search_result:
         clear_request()
