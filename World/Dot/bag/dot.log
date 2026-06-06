@@ -510,3 +510,47 @@
 2026-06-06 05:28:39,401 [DOT][INFO] Today is Saturday — inbox check reserved for Sunday.
 2026-06-06 05:28:39,403 [DOT][INFO] Worklog: no stale entries.
 2026-06-06 05:28:40,327 [DOT][INFO] Dot's daily run complete.
+2026-06-06 08:06:32,037 [DOT][INFO] ═══════════════════════════════════
+2026-06-06 08:06:32,037 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-06 08:06:32,037 [DOT][INFO] ═══════════════════════════════════
+2026-06-06 08:06:32,037 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-06 08:06:48,060 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-06 08:06:55,052 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-06 08:06:55,056 [DOT][INFO] Task 1: chunk 1/8 summarised.
+2026-06-06 08:06:55,057 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-06-06 08:06:55,057 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-06-06 08:06:55,058 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-06-06 08:06:55,058 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-06-06 08:06:55,058 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-06-06 08:06:55,059 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-06-06 08:06:55,059 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-06-06 08:07:11,061 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-06 08:07:17,834 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-06 08:07:17,835 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-06-06 08:07:25,835 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-06 08:07:25,837 [DOT][INFO] Task 2: 7 experiences → 2 batch(es) of ≤5.
+2026-06-06 08:07:33,838 [DOT][INFO] Task 2: batch 1/2 — cycles [13, 17, 19, 20, 21]
+2026-06-06 08:07:33,839 [DOT][INFO] Dot cache hit.
+2026-06-06 08:07:41,839 [DOT][INFO] Task 2: batch 2/2 — cycles [39, 40]
+2026-06-06 08:07:49,841 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-06 08:07:53,164 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-06 08:07:53,167 [DOT][INFO] Experiences curated: 5 kept, 0 forgotten, 1 consolidated. Total now: 6.
+2026-06-06 08:07:53,167 [DOT][INFO] Letter written to Sam: Letter_20260606T080753Z.md
+2026-06-06 08:07:53,168 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-06 08:07:53,168 [DOT][INFO] Finding best recipient for: Harrison Chase, creator of LangChain. While LangChain is large, Harrison maintains a very active, hands-on presence on T
+2026-06-06 08:08:01,170 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-06 08:08:02,511 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-06 08:08:02,514 [DOT][INFO] Recipient match: Harrison Chase <harrison@langchain.dev> confidence=10 — He is explicitly identified as the creator of LangChain and the target individual described by Sam for discussing agentic frameworks and schema enforcement.
+2026-06-06 08:08:02,514 [DOT][INFO] Matched recipient: Harrison Chase <harrison@langchain.dev>
+2026-06-06 08:08:18,516 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-06 08:08:24,243 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-06 08:08:25,359 [DOT][INFO] Email sent to harrison@langchain.dev: 'Refining ReAct loops: Pydantic schema enforcement vs. output stability'
+2026-06-06 08:08:25,360 [DOT][INFO] Appended to Letter_20260606T080753Z.md: Email Dispatch
+2026-06-06 08:08:33,361 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-06 08:08:49,363 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-06 08:08:53,810 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-06 08:08:53,812 [DOT][INFO] Bag review complete.
+2026-06-06 08:08:53,813 [DOT][INFO] Appended to Letter_20260606T080753Z.md: Bag Excavation Findings
+2026-06-06 08:08:53,813 [DOT][INFO] Today is Saturday — inbox check reserved for Sunday.
+2026-06-06 08:08:53,815 [DOT][INFO] Worklog: no stale entries.
+2026-06-06 08:08:54,591 [DOT][INFO] Dot's daily run complete.
