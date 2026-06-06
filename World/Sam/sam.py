@@ -1299,7 +1299,7 @@ def maybe_write_email_request(idea: str, goals: dict):
         "intent":             decision.get("intent", ""),
         "target_description": decision.get("target_description", ""),
         "tone":               decision.get("tone", "professional"),
-        "context":            idea,
+        "context":            idea[:1000],   # cap: prevents TPM bloat in Dot's compose prompt
         "submitted_at":       datetime.datetime.utcnow().isoformat(),
         "cycle":              cycle_num,
     }
