@@ -9,11 +9,12 @@ class BasePlugin:
 class PluginManager:
     __slots__ = ('plugin_dir', 'plugins')
     def __init__(self, plugin_dir: Path):
+        import weakref
         self.plugin_dir = plugin_dir
-        self.plugins = []
+        self.plugins = weakref.WeakValueDictionary()
 
     def run(self, context: dict):
-        for plugin in self.plugins:
+        for plugin in self.plugins.values():
             plugin.run(context)
 
     def load_plugins(self):
@@ -24,6 +25,7 @@ class PluginManager:
             try:
                 spec.loader.exec_module(module)
                 if hasattr(module, "Plugin"):
-                    self.plugins.append(module.Plugin())
+                    plugin = module.Plugin()
+                    self.plugins[path.stem] = plugin
             except Exception as e:
                 print(f"Failed to load plugin {path.name}: {e}")
