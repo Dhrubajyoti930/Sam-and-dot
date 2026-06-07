@@ -330,18 +330,33 @@ def _sleep():
 
 
 def _outline(src: str, label: str) -> str:
-    """Return a compact AST structural summary of a Python source string.
-    Lists every function/class with its line number — enough for Gemini to
-    understand Sam's architecture without burning thousands of tokens on code.
-    Falls back to the raw source only if parsing fails (e.g. syntax error)."""
+    """Return a structural summary of a Python source string for patch anchoring.
+    Small functions (<=50 lines) get their full body so anchors can be copied
+    character-for-character. Large functions get a 10-line preview with a note.
+    Falls back to the raw source if parsing fails."""
     import ast as _ast
+    THRESHOLD = 50
+    src_lines = src.splitlines()
     try:
         tree = _ast.parse(src)
-        lines = []
-        for node in _ast.walk(tree):
-            if isinstance(node, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef)):
-                lines.append(f"  L{node.lineno}: {type(node).__name__} {node.name}")
-        return f"{label} structure (line numbers for patch anchors):\n" + "\n".join(lines)
+        entries = []
+        for node in _ast.iter_child_nodes(tree):
+            if not isinstance(node, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef)):
+                continue
+            start = node.lineno - 1
+            end = node.end_lineno
+            length = end - start
+            if length <= THRESHOLD:
+                body = "\n".join(src_lines[start:end])
+            else:
+                preview = "\n".join(src_lines[start:start + 10])
+                body = (
+                    f"{preview}\n"
+                    f"    # ... {length} lines total (L{node.lineno}–{node.end_lineno})"
+                    f" — use exact anchor strings from these lines"
+                )
+            entries.append(body)
+        return f"{label} (full bodies for anchoring):\n\n" + "\n\n".join(entries)
     except Exception:
         return src  # fallback to full source if parse fails
 
