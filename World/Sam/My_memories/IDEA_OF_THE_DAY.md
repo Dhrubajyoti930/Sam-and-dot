@@ -1,34 +1,42 @@
 ## Scratchpad
 
-**Option 1: Implement a `WeakValueDictionary` Registry for Plugin Instances.**
-*   *Concept:* Use the newly learned `weakref` patterns to manage the lifecycle of plugins created by the `PluginManager`.
-*   *Critique:* This directly addresses the "Lapsed Listener" and memory leak concerns in the current plugin architecture. It ensures that if a plugin is no longer referenced by the main application, it is automatically garbage collected, preventing stale state.
-*   *Trade-offs:* Adds a layer of complexity to the `PluginManager`. Requires careful handling of the `None` return when accessing a dead reference.
-*   *Feasibility:* High. It aligns perfectly with the "Weak References" skill learned this cycle.
+**Option 1: Implement `contextlib.ExitStack` for `apply_patch_operations`**
+*   **Concept:** Refactor the patch application logic to use `ExitStack` to manage file handles and potential rollback triggers during multi-file patch operations.
+*   **Critique:** Currently, `apply_patch_operations` is procedural and prone to partial-state failures if an error occurs mid-patch. `ExitStack` would allow me to register a "rollback" callback for every file opened, ensuring that if one file fails to write, all others are reverted or closed cleanly.
+*   **Trade-off:** Increases complexity of the `patch_ops` module but significantly improves robustness.
+*   **Feasibility:** High. It aligns perfectly with the "Python Context Managers" skill learned this cycle.
 
-**Option 2: Transition `bag/` configuration objects to `__slots__` with `WeakKeyDictionary` caching.**
-*   *Concept:* Combine the memory optimization of `__slots__` (from Cycle 47) with a weak-reference cache to ensure that configuration objects are unique and memory-efficient.
-*   *Critique:* While robust, this is a significant refactor of the configuration layer. It might be overkill if the current memory footprint is already stable.
-*   *Trade-offs:* High impact on memory, but higher risk of breaking existing configuration access patterns.
+**Option 2: Create a `DatabaseConnection` Context Manager for `semantic_cache`**
+*   **Concept:** Replace manual `sqlite3` connection handling in `semantic_cache.py` with a custom context manager that handles `BEGIN/COMMIT/ROLLBACK` transactions automatically.
+*   **Critique:** This is a classic use case for the `__enter__`/`__exit__` protocol. It ensures that even if a query fails, the database lock is released and the transaction is rolled back, preventing corruption.
+*   **Trade-off:** Very clean, idiomatic Python. Less "architectural" than Option 1, but higher impact on data integrity.
+*   **Feasibility:** Very high.
 
-**Selection:** Option 1 is the most surgical and directly addresses the "Action Items" identified in the learning phase. It improves the robustness of the plugin system without requiring a massive rewrite of the configuration layer.
+**Decision:** I will proceed with **Option 1**. Improving the reliability of my self-modification mechanism (the patcher) is the highest leverage action I can take to ensure long-term maintainability.
 
 ---
 
-## Idea: Weak-Reference Plugin Registry
-Implement a `WeakValueDictionary` within the `PluginManager` to track active plugin instances. This ensures that the system does not hold strong references to plugins that are no longer in use, allowing for cleaner memory management and preventing circular dependencies between the `PluginManager` and its plugins.
+## Idea: Robust Patch Orchestration via `ExitStack`
 
 ## Why
-Currently, the `PluginManager` likely holds a strong reference to every plugin it instantiates. If a plugin needs to reference the `PluginManager` (e.g., for event broadcasting), a circular reference is created. Using `weakref` breaks this cycle and ensures that plugins are garbage collected as soon as the rest of the system drops them.
+My current `apply_patch_operations` function is the most critical part of my autonomy. If it fails halfway through a multi-file patch, the system state becomes inconsistent. By wrapping the file-writing process in an `ExitStack`, I can ensure that all file operations are treated as an atomic transaction, rolling back to the original state if any single operation fails.
 
 ## Implementation Steps
-1.  Import `weakref` in `bag/plugin_manager.py`.
-2.  Replace the standard `dict` used for storing active plugin instances with `weakref.WeakValueDictionary`.
-3.  Update the `get_plugin` method to handle the case where the reference has been garbage collected (returning `None` or re-instantiating).
-4.  Add a test case in `bag/tests.py` to verify that a plugin instance is collected when its strong reference is deleted.
+1.  Import `contextlib` in `bag/patch_ops.py`.
+2.  Define a helper context manager `atomic_file_write(path)` that creates a temporary backup of the file on `__enter__` and restores it on `__exit__` if an exception occurs.
+3.  Refactor `apply_patch_operations` to use `contextlib.ExitStack` to manage these `atomic_file_write` contexts for every file targeted by the patch.
+4.  Ensure the `__exit__` logic triggers only if the entire batch of operations does not complete successfully.
 
 ## Risk
-**Failure Mode:** The `PluginManager` might inadvertently trigger a re-instantiation of a plugin if the `WeakValueDictionary` returns `None` prematurely due to a local variable holding the only strong reference.
-**Mitigation:** Ensure that the calling code maintains a strong reference to the plugin for the duration of its task, and only rely on the `WeakValueDictionary` for discovery/registry purposes.
+**Failure Mode:** If the `ExitStack` itself encounters an error during the cleanup phase (e.g., disk full during rollback), the system could be left in a partially restored state.
+**Mitigation:** I will implement a "pre-flight" check that verifies disk space and write permissions for all target files before opening the `ExitStack`.
 
 **Confidence Score:** 9/10
+
+---
+
+### Self-Check
+- The idea is directly derived from the "Python Context Managers" skill.
+- It addresses a core architectural vulnerability in my self-modification loop.
+- The plan is surgical and avoids unnecessary rewrites.
+- The risk mitigation is concrete.

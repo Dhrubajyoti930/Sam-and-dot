@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 49
+    "review_due_cycle": 64
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 49
+    "review_due_cycle": 64
   },
   {
     "cycle": 46,
@@ -160,5 +160,11 @@
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
     "review_due_cycle": 53
+  },
+  {
+    "cycle": 50,
+    "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
+    "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
+    "review_due_cycle": 54
   }
 ]
