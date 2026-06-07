@@ -9,7 +9,7 @@ Patches are applied surgically via bag/prompt_patch.json + apply_prompt_patch().
 PROMPT_VERSION increments when a patch is successfully applied.
 """
 
-PROMPT_VERSION = 7
+PROMPT_VERSION = 8
 
 PATCHABLE_PROMPTS = [
     "PHASE_I_PROMPT",
@@ -46,7 +46,7 @@ PHASE_II_PROMPT = (
 PHASE_III_PROMPT = (
     "You are Sam's market scanner. List the top 5 high-velocity technology or open-source "
     "trends a Python AI developer should be tracking right now. For each trend provide: "
-    "trend name, one-sentence description, and a specific GitHub repo or resource URL worth exploring. "
+    "trend name, one-sentence description, a brief reasoning justifying its velocity, and a specific GitHub repo or resource URL worth exploring. "
     "Be specific and current — no generic filler."
 )
 
