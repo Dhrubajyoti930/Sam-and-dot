@@ -2,10 +2,12 @@ import importlib.util
 from pathlib import Path
 
 class BasePlugin:
+    __slots__ = ()
     def run(self, context: dict):
         raise NotImplementedError
 
 class PluginManager:
+    __slots__ = ('plugin_dir', 'plugins')
     def __init__(self, plugin_dir: Path):
         self.plugin_dir = plugin_dir
         self.plugins = []

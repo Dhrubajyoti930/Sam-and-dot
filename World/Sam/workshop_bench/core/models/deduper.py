@@ -1,6 +1,7 @@
 
 
 class SemanticDeduper:
+    __slots__ = ('threshold', 'hashes')
     def __init__(self, threshold=0.98):
         self.threshold = threshold
         self.hashes = {} # Simple LSH placeholder

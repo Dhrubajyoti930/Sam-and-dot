@@ -1,6 +1,7 @@
 import threading
 
 class LazyProperty:
+    __slots__ = ('func', 'lock', 'name')
     def __init__(self, func):
         self.func = func
         self.lock = threading.Lock()

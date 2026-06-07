@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 46
+    "review_due_cycle": 61
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 46
+    "review_due_cycle": 61
   },
   {
     "cycle": 43,
@@ -142,5 +142,11 @@
     "topic": "Learn Python's import system: sys.modules, importlib, and __init__",
     "summary": "### Technical Summary: Python\u2019s Import System\n\nPython\u2019s import system is a sophisticated, multi-stage mechanism governed by **Finders** and **Loaders**. Understanding this lifecycle is critical for building extensible, plugin-based architectures.\n\n#### 1. The `sys.modules` Cache\nThe import system first checks `sys.modules`, a dictionary mapping module names to module objects. If a module is present, it is returned immediately. This cache is mutable; manually injecting objects into `sys.modules` ",
     "review_due_cycle": 50
+  },
+  {
+    "cycle": 47,
+    "topic": "Understand __slots__ and when to use them for memory efficiency",
+    "summary": "### Technical Summary: Python `__slots__`\n\nIn Python, objects are typically implemented using a dictionary (`__dict__`) to allow for dynamic attribute assignment. While flexible, this incurs significant memory overhead, as each instance dictionary requires a hash table to store attributes. `__slots__` provides a mechanism to bypass this by explicitly declaring a fixed set of attributes, causing the interpreter to allocate space for a static array of references rather than a dynamic dictionary.\n\n",
+    "review_due_cycle": 51
   }
 ]
