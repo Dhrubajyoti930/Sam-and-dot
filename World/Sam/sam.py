@@ -69,7 +69,7 @@ if not GEM_KEY:
     raise EnvironmentError("GEM_KEY_SAM secret is not set.")
 CLIENT = genai.Client(api_key=GEM_KEY)
 
-MODEL = "gemini-3.1-flash-lite"
+MODEL = "gemini-3.5-flash"
 
 # ── Rate limiting ─────────────────────────────────────────────────────────────
 _CALL_DELAY = 8   # seconds base delay
@@ -677,7 +677,7 @@ def _behaviour_fix_with_gemini(test_output: str, original_plan: str) -> bool:
 
 def apply_self_modification(plan: str) -> bool:
     """Ask Gemini to extract surgical patch operations from the plan and apply them.
-    Uses workshop_bench.bag.patch_ops_base for atomic file transactions.
+    Uses bag/patch_ops.py for atomic file transactions.
     Writable: sam.py and bag/**/*.py (workshop subfolders allowed). Returns True if applied.
 
     Each operation in the JSON array must have:
@@ -1247,10 +1247,14 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
         "GitHub Actions matrix optimisation",
     ]
 
-    # Append today's idea heading to next_objectives
+    # Only append today's idea as a follow-up if it's concrete and not already present.
+    # Avoid appending generic placeholders like "Scratchpad" which pollute the queue.
     idea_heading = idea.strip().splitlines()[0].lstrip("#").strip()
-    if idea_heading:
-        goals["next_objectives"].append(f"{idea_heading} - with cutting edge research.")
+    _skip_words = {"scratchpad", "external", "placeholder", "tbd", "n/a", "none"}
+    if idea_heading and idea_heading.lower().split()[0] not in _skip_words:
+        follow_up = f"Follow-up: {idea_heading[:80]}"
+        if follow_up not in goals["next_objectives"]:
+            goals["next_objectives"].append(follow_up)
 
     save_goals(goals)
 
