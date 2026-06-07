@@ -1312,6 +1312,9 @@ def maybe_write_email_request(idea: str, goals: dict):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def run_cycle():
+
+    import tracemalloc
+    tracemalloc.start()
     _bag_data("cycle_status").write_text("pending")
     log.info("═══════════════════════════════════")
     log.info("  SAM — Operational Cycle Starting ")

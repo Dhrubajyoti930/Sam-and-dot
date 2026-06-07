@@ -14,10 +14,10 @@ Operational Lifecycle:
 
 import os
 import re
-
-
 import sys
 import json
+
+# from workshop_bench.core.reasoning.thought_engine import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
@@ -1312,6 +1312,9 @@ def maybe_write_email_request(idea: str, goals: dict):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def run_cycle():
+
+    import tracemalloc
+    tracemalloc.start()
     _bag_data("cycle_status").write_text("pending")
     log.info("═══════════════════════════════════")
     log.info("  SAM — Operational Cycle Starting ")
