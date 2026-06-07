@@ -14,10 +14,10 @@ Operational Lifecycle:
 
 import os
 import re
-
-
 import sys
 import json
+
+# from workshop_bench.core.reasoning.thought_engine import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
@@ -606,6 +606,56 @@ def _lint_fix_with_gemini(lint_errors: str) -> bool:
         log.info("Corrective lint patch applied.")
     else:
         log.warning("Corrective lint patch had no applicable operations.")
+    return applied
+
+
+def _behaviour_fix_with_gemini(test_output: str, original_plan: str) -> bool:
+    """Feed a failed behaviour-check output back to Gemini for a corrective patch.
+    One attempt only. Returns True if a patch was applied (not necessarily passing)."""
+    from bag.patch_ops import apply_patch_operations
+
+    log.info("🔧 Behaviour check failed — asking Gemini for a corrective patch...")
+
+    # Gather source of files the original plan touched
+    file_contexts = ""
+    mentioned = set(re.findall(r"((?:sam\.py|workshop_bench/[^\s:]+\.py))", original_plan))
+    for rel in mentioned:
+        target = SAM_DIR / rel
+        if target.exists():
+            file_contexts += f"\n### {rel} (current content):\n```python\n{target.read_text(encoding='utf-8')}\n```\n"
+
+    tests_src = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
+
+    prompt = (
+        f"You are Sam's self-correction assistant. A patch was applied but the behaviour "
+        f"check (bag/tests.py) failed immediately after.\n\n"
+        f"Failing test output:\n```\n{test_output[:1200]}\n```\n\n"
+        f"The original patch plan that caused this:\n```\n{original_plan[:800]}\n```\n\n"
+        f"bag/tests.py (so you know exactly what each test checks):\n```python\n{tests_src}\n```\n"
+        f"{file_contexts}\n"
+        f"Produce a JSON array of minimal surgical patch operations that fix the test failure.\n"
+        f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
+        f"Rules:\n"
+        f"  - 'filename': relative path from Sam's root (sam.py or workshop_bench/**/*.py)\n"
+        f"  - 'operation': exactly one of: 'replace', 'insert_after', 'delete'\n"
+        f"  - 'old' / 'anchor' must be exact substrings of the current file shown above.\n"
+        f"  - Fix only what the test failure demands — do not refactor anything else.\n"
+        f"  - Ensure all imports needed by new code are present.\n"
+        f"  - If nothing can be fixed safely, return an empty array [].\n"
+    )
+
+    _sleep()
+    raw = ask_gemini(prompt, bypass_cache=True)
+    ops = _parse_gemini_json(raw)
+    if not ops:
+        log.warning("Behaviour-fix Gemini call returned no operations.")
+        return False
+
+    applied = apply_patch_operations(ops, SAM_DIR, log)
+    if applied:
+        log.info("Corrective behaviour patch applied — re-verifying...")
+    else:
+        log.warning("Corrective behaviour patch had no applicable operations.")
     return applied
 
 
@@ -1312,6 +1362,9 @@ def maybe_write_email_request(idea: str, goals: dict):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def run_cycle():
+
+    import tracemalloc
+    tracemalloc.start()
     _bag_data("cycle_status").write_text("pending")
     log.info("═══════════════════════════════════")
     log.info("  SAM — Operational Cycle Starting ")
@@ -1356,14 +1409,29 @@ def run_cycle():
         if self_check() and behaviour_check():
             log.info("✅ Verdict: ACCEPTED. Changes merged into World state.")
         else:
-            log.error("❌ Verdict: REJECTED. Changes caused instability.")
-            _cleanup_created_workshop_files()
-            _rollback()
-            _alert_dot(
-                "Self-modification failed integrity gates. Rolled back for safety.\n\n"
-                f"Plan that caused failure:\n```\n{plan[:1000]}\n```"
-            )
-            modified = False # Mark as failed for worklog purposes
+            log.warning("⚠️  Post-flight failed — attempting self-correction (1 attempt)...")
+            # Capture the test output for the corrective prompt
+            test_result = subprocess.run(
+                [sys.executable, str(TESTS)],
+                capture_output=True, text=True, timeout=15, cwd=str(ROOT),
+            ) if TESTS.exists() else None
+            test_output = (test_result.stdout + test_result.stderr) if test_result else ""
+
+            correction_applied = _behaviour_fix_with_gemini(test_output, plan)
+
+            if correction_applied and self_check() and behaviour_check():
+                log.info("✅ Verdict: ACCEPTED after self-correction.")
+            else:
+                log.error("❌ Verdict: REJECTED. Self-correction did not resolve instability.")
+                _cleanup_created_workshop_files()
+                _rollback()
+                _alert_dot(
+                    "Self-modification failed integrity gates. Rolled back for safety.\n\n"
+                    f"Plan that caused failure:\n```\n{plan[:800]}\n```\n\n"
+                    f"Self-correction attempt {'applied a patch but still failed' if correction_applied else 'produced no patch'}.\n"
+                    f"Test output:\n```\n{test_output[:600]}\n```"
+                )
+                modified = False  # Mark as failed for worklog purposes
     else:
         # No patch applied — still run governance checks every cycle (#1 fix)
         log.info("No self-modification this cycle — running final safety check.")
