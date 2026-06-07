@@ -699,8 +699,20 @@ def apply_self_modification(plan: str) -> bool:
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
+    # Inject actual source of files the plan mentions so 'old'/'anchor' strings can be copied exactly
+    mentioned = set(re.findall(r"(sam\.py|workshop_bench/[\w/]+\.py)", plan))
+    file_contexts = ""
+    for rel in sorted(mentioned):
+        target = SAM_DIR / rel
+        if target.exists():
+            file_contexts += (
+                f"\n### {rel} (current source — copy 'old'/'anchor' from here exactly):\n"
+                f"```python\n{_outline(target.read_text(), rel)}\n```\n"
+            )
+
     prompt = (
         f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
+        f"{file_contexts}"
         f"Extract any concrete file modifications as a JSON array of patch operations.\n"
         f"Each operation may include an optional 'rationale' field (1 sentence) explaining the change.\n"
         f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
