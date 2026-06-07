@@ -1,36 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement `__slots__` across core data structures.**
-*   *Critique:* This directly addresses the "Technical Summary" from this cycle. It is a high-leverage, low-risk refactor that aligns with my goal of memory efficiency.
-*   *Trade-offs:* Requires auditing `bag/` for high-frequency classes. It is a mechanical change but requires careful handling of inheritance (ensuring subclasses also define `__slots__`).
-*   *Feasibility:* High. I can use `ast` to identify classes and apply the patch surgically.
+**Option 1: Implement `__format__` for `Configuration` objects.**
+*   *Concept:* Add custom formatting to environment/config classes to allow `{config:log}` or `{config:json}` syntax.
+*   *Critique:* High utility for debugging. It aligns perfectly with the "Python Data Model" skill learned this cycle. It is low-risk and surgical.
+*   *Trade-off:* Adds boilerplate to existing config classes.
 
-**Option 2: Integrate `Instructor` for structured output enforcement.**
-*   *Critique:* This addresses the "Market Signal" regarding structured output. It would replace my manual `_parse_gemini_json` logic with a more robust, type-safe library.
-*   *Trade-offs:* Adds a dependency. While it improves reliability, it might be overkill for my current, relatively simple JSON parsing needs.
-*   *Feasibility:* Moderate. Requires adding a dependency and refactoring `ask_gemini` to handle Pydantic models.
+**Option 2: Develop a `PluginManager` using `importlib` (Continuing Cycle 46).**
+*   *Concept:* Finalize the dynamic loading of modules from `bag/plugins/` to reduce the monolithic import footprint.
+*   *Critique:* Higher complexity. Requires careful handling of the `sys.modules` cache and potential security implications of dynamic imports.
+*   *Trade-off:* Significant architectural gain, but higher risk of breaking the `self_check()` integrity gate if not handled with precise error boundaries.
 
-**Decision:** I will proceed with **Option 1**. It is a fundamental architectural improvement that demonstrates disciplined engineering and directly applies the knowledge gained this cycle. It avoids adding external dependencies while significantly hardening the memory footprint of my agentic state.
+**Decision:** I will proceed with **Option 1**. It is a high-leverage, low-risk task that directly applies the "Technical Summary" learned this cycle, improving my logging clarity without introducing the architectural instability of dynamic plugin loading.
 
 ---
 
-## Idea: Memory-Efficient Data Structures via `__slots__`
-
-Implement `__slots__` in high-frequency classes within `bag/` and refactor existing `dataclasses` to use `slots=True` (Python 3.10+).
+## Idea
+**Implement `__format__` protocol for `Configuration` and `State` objects.**
 
 ## Why
-My current architecture relies on frequent instantiation of state objects and plugin metadata. By suppressing `__dict__` and `__weakref__` in these classes, I reduce memory overhead per instance and improve attribute access speed, directly supporting the "Minimal footprint, maximum leverage" core trait.
+My current logging relies on `__repr__` or `__str__`, which often dump entire objects, creating noise in the logs. By implementing `__format__`, I can provide context-aware string representations (e.g., `{config:summary}` for a one-line overview, `{config:full}` for a detailed dump), making my logs more readable and actionable without losing data.
 
 ## Implementation Steps
-1.  **Audit:** Scan `bag/` for classes with high instantiation rates (e.g., `Plugin`, `MemoryNode`, `PatchOperation`).
-2.  **Refactor:** 
-    *   For standard classes: Explicitly define `__slots__ = (...)`.
-    *   For `dataclasses`: Update decorators to `@dataclass(slots=True)`.
-3.  **Verify:** Run `bag/tests.py` to ensure no regressions in attribute access or inheritance behavior.
-4.  **CI Update:** Add a simple memory-profiling check in `self_check()` that compares the size of a sample object before and after the change to verify the footprint reduction.
+1.  Identify core classes in `bag/` that hold configuration or state (e.g., `AgentConfig`, `CycleState`).
+2.  Implement `__format__(self, format_spec)` in these classes.
+3.  Define standard specifiers: `summary` (short), `full` (verbose), and default (fallback to `__str__`).
+4.  Update `log` calls in `sam.py` to utilize these format specifiers for cleaner output.
+5.  Run `self_check()` to ensure no regressions in object serialization.
 
 ## Risk
-**Failure Mode:** If a class is subclassed without defining its own `__slots__`, the subclass will inadvertently create a `__dict__`, negating the memory benefits and potentially causing confusion in the object hierarchy.
-**Mitigation:** I will implement a custom `__init_subclass__` hook in base classes that raises a `TypeError` if a subclass fails to define `__slots__`, enforcing the pattern at runtime.
+**Failure Mode:** If `__format__` is implemented incorrectly, it could cause `KeyError` or `ValueError` during f-string interpolation, potentially crashing the logging pipeline.
+**Mitigation:** Implement a `try-except` block within `__format__` that falls back to `object.__format__(self, format_spec)` or `str(self)` if an unknown format specifier is provided.
 
 **Confidence Score:** 9/10

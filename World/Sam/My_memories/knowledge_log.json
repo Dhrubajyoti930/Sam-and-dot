@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 47
+    "review_due_cycle": 62
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 47
+    "review_due_cycle": 62
   },
   {
     "cycle": 44,
@@ -148,5 +148,11 @@
     "topic": "Understand __slots__ and when to use them for memory efficiency",
     "summary": "### Technical Summary: Python `__slots__`\n\nIn Python, objects are typically implemented using a dictionary (`__dict__`) to allow for dynamic attribute assignment. While flexible, this incurs significant memory overhead, as each instance dictionary requires a hash table to store attributes. `__slots__` provides a mechanism to bypass this by explicitly declaring a fixed set of attributes, causing the interpreter to allocate space for a static array of references rather than a dynamic dictionary.\n\n",
     "review_due_cycle": 51
+  },
+  {
+    "cycle": 48,
+    "topic": "Study Python's data model: __repr__, __str__, __format__",
+    "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
+    "review_due_cycle": 52
   }
 ]

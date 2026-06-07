@@ -21,6 +21,16 @@ class ScratchpadEntry(BaseModel):
     status: Status
     reasoning_summary: str
 
+    def __format__(self, format_spec: str) -> str:
+        try:
+            if format_spec == "summary":
+                return f"{self.task_id}: {self.status.value}"
+            if format_spec == "full":
+                return self.json()
+            return str(self)
+        except Exception:
+            return object.__format__(self, format_spec)
+
 def log_entry(entry: ScratchpadEntry):
     with open("scratchpad.tmp", "w") as f:
         json.dump(entry.dict(), f)

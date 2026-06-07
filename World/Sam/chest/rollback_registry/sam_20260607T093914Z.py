@@ -16,6 +16,8 @@ import os
 import re
 import sys
 import json
+
+# from workshop_bench.core.reasoning.thought_engine import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
@@ -328,18 +330,33 @@ def _sleep():
 
 
 def _outline(src: str, label: str) -> str:
-    """Return a compact AST structural summary of a Python source string.
-    Lists every function/class with its line number — enough for Gemini to
-    understand Sam's architecture without burning thousands of tokens on code.
-    Falls back to the raw source only if parsing fails (e.g. syntax error)."""
+    """Return a structural summary of a Python source string for patch anchoring.
+    Small functions (<=50 lines) get their full body so anchors can be copied
+    character-for-character. Large functions get a 10-line preview with a note.
+    Falls back to the raw source if parsing fails."""
     import ast as _ast
+    THRESHOLD = 50
+    src_lines = src.splitlines()
     try:
         tree = _ast.parse(src)
-        lines = []
-        for node in _ast.walk(tree):
-            if isinstance(node, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef)):
-                lines.append(f"  L{node.lineno}: {type(node).__name__} {node.name}")
-        return f"{label} structure (line numbers for patch anchors):\n" + "\n".join(lines)
+        entries = []
+        for node in _ast.iter_child_nodes(tree):
+            if not isinstance(node, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef)):
+                continue
+            start = node.lineno - 1
+            end = node.end_lineno
+            length = end - start
+            if length <= THRESHOLD:
+                body = "\n".join(src_lines[start:end])
+            else:
+                preview = "\n".join(src_lines[start:start + 10])
+                body = (
+                    f"{preview}\n"
+                    f"    # ... {length} lines total (L{node.lineno}–{node.end_lineno})"
+                    f" — use exact anchor strings from these lines"
+                )
+            entries.append(body)
+        return f"{label} (full bodies for anchoring):\n\n" + "\n\n".join(entries)
     except Exception:
         return src  # fallback to full source if parse fails
 
@@ -607,6 +624,56 @@ def _lint_fix_with_gemini(lint_errors: str) -> bool:
     return applied
 
 
+def _behaviour_fix_with_gemini(test_output: str, original_plan: str) -> bool:
+    """Feed a failed behaviour-check output back to Gemini for a corrective patch.
+    One attempt only. Returns True if a patch was applied (not necessarily passing)."""
+    from bag.patch_ops import apply_patch_operations
+
+    log.info("🔧 Behaviour check failed — asking Gemini for a corrective patch...")
+
+    # Gather source of files the original plan touched
+    file_contexts = ""
+    mentioned = set(re.findall(r"((?:sam\.py|workshop_bench/[^\s:]+\.py))", original_plan))
+    for rel in mentioned:
+        target = SAM_DIR / rel
+        if target.exists():
+            file_contexts += f"\n### {rel} (current content):\n```python\n{target.read_text(encoding='utf-8')}\n```\n"
+
+    tests_src = TESTS.read_text(encoding="utf-8") if TESTS.exists() else "(tests.py not found)"
+
+    prompt = (
+        f"You are Sam's self-correction assistant. A patch was applied but the behaviour "
+        f"check (bag/tests.py) failed immediately after.\n\n"
+        f"Failing test output:\n```\n{test_output[:1200]}\n```\n\n"
+        f"The original patch plan that caused this:\n```\n{original_plan[:800]}\n```\n\n"
+        f"bag/tests.py (so you know exactly what each test checks):\n```python\n{tests_src}\n```\n"
+        f"{file_contexts}\n"
+        f"Produce a JSON array of minimal surgical patch operations that fix the test failure.\n"
+        f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
+        f"Rules:\n"
+        f"  - 'filename': relative path from Sam's root (sam.py or workshop_bench/**/*.py)\n"
+        f"  - 'operation': exactly one of: 'replace', 'insert_after', 'delete'\n"
+        f"  - 'old' / 'anchor' must be exact substrings of the current file shown above.\n"
+        f"  - Fix only what the test failure demands — do not refactor anything else.\n"
+        f"  - Ensure all imports needed by new code are present.\n"
+        f"  - If nothing can be fixed safely, return an empty array [].\n"
+    )
+
+    _sleep()
+    raw = ask_gemini(prompt, bypass_cache=True)
+    ops = _parse_gemini_json(raw)
+    if not ops:
+        log.warning("Behaviour-fix Gemini call returned no operations.")
+        return False
+
+    applied = apply_patch_operations(ops, SAM_DIR, log)
+    if applied:
+        log.info("Corrective behaviour patch applied — re-verifying...")
+    else:
+        log.warning("Corrective behaviour patch had no applicable operations.")
+    return applied
+
+
 def apply_self_modification(plan: str) -> bool:
     """Ask Gemini to extract surgical patch operations from the plan and apply them.
     Writable: sam.py and bag/**/*.py (workshop subfolders allowed). Returns True if applied.
@@ -632,14 +699,26 @@ def apply_self_modification(plan: str) -> bool:
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
+    # Inject actual source of files the plan mentions so 'old'/'anchor' strings can be copied exactly
+    mentioned = set(re.findall(r"(sam\.py|workshop_bench/[\w/]+\.py)", plan))
+    file_contexts = ""
+    for rel in sorted(mentioned):
+        target = SAM_DIR / rel
+        if target.exists():
+            file_contexts += (
+                f"\n### {rel} (current source — copy 'old'/'anchor' from here exactly):\n"
+                f"```python\n{_outline(target.read_text(), rel)}\n```\n"
+            )
+
     prompt = (
         f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
+        f"{file_contexts}"
         f"Extract any concrete file modifications as a JSON array of patch operations.\n"
         f"Each operation may include an optional 'rationale' field (1 sentence) explaining the change.\n"
         f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
         f"Each element must have:\n"
         f"  - 'filename'  : relative path from Sam's root. 'sam.py' or 'workshop_bench/**/*.py'. "
-        f"Use 'workshop_bench/<folder>/<file>.py' for ALL new modules.\n"
+        f"Use 'workshop_bench/<folder>/<file>.py' for new standalone modules. sam.py may be modified to wire in existing workshop modules.\n"
         f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
         f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
         f"  - For 'insert_after': 'anchor' (exact existing line), 'line_number' (integer), and 'new' (string to insert after it)\n"
@@ -652,7 +731,7 @@ def apply_self_modification(plan: str) -> bool:
         f"    Writable Python files are: sam.py and workshop_bench/**/*.py only.\n"
         f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
         f"  - Keep each operation as small as possible — one function, one block, one line.\n"
-        f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
+        f"  - sam.py changes are allowed — especially to import and call modules already built in workshop_bench/. Prefer workshop_bench/ only for new standalone logic.\n"
         f"  - If no concrete changes are needed, return an empty array [].\n\n"
         f"PYTHON CODE QUALITY RULES — every 'new' string must obey these:\n"
         f"  - Must be syntactically valid Python. Mentally parse it before including it.\n"
@@ -968,8 +1047,7 @@ def phase_v_development(idea: str, goals: dict, motion_content: str) -> str:
         f"Produce a surgical patch plan for Sam to apply. Rules:\n"
         f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
         f"  2. MANDATORY: For every new feature or module, YOU MUST ADD A TEST CASE to bag/tests.py.\n"
-        f"  3. Prefer NEW modules under workshop_bench/ "
-        f"over editing sam.py's core loop.\n"
+        f"  3. New standalone logic goes in workshop_bench/. If the idea requires wiring an existing workshop module into the core loop, modifying sam.py is appropriate and encouraged.\n"
         f"  4. For each change, specify EXACTLY:\n"
         f"       - Which file (sam.py or workshop_bench/**/*.py, e.g. workshop_bench/my_folder/foo.py)\n"
         f"       - The operation: replace / insert_after / delete\n"
@@ -1310,6 +1388,9 @@ def maybe_write_email_request(idea: str, goals: dict):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def run_cycle():
+
+    import tracemalloc
+    tracemalloc.start()
     _bag_data("cycle_status").write_text("pending")
     log.info("═══════════════════════════════════")
     log.info("  SAM — Operational Cycle Starting ")
@@ -1354,14 +1435,29 @@ def run_cycle():
         if self_check() and behaviour_check():
             log.info("✅ Verdict: ACCEPTED. Changes merged into World state.")
         else:
-            log.error("❌ Verdict: REJECTED. Changes caused instability.")
-            _cleanup_created_workshop_files()
-            _rollback()
-            _alert_dot(
-                "Self-modification failed integrity gates. Rolled back for safety.\n\n"
-                f"Plan that caused failure:\n```\n{plan[:1000]}\n```"
-            )
-            modified = False # Mark as failed for worklog purposes
+            log.warning("⚠️  Post-flight failed — attempting self-correction (1 attempt)...")
+            # Capture the test output for the corrective prompt
+            test_result = subprocess.run(
+                [sys.executable, str(TESTS)],
+                capture_output=True, text=True, timeout=15, cwd=str(ROOT),
+            ) if TESTS.exists() else None
+            test_output = (test_result.stdout + test_result.stderr) if test_result else ""
+
+            correction_applied = _behaviour_fix_with_gemini(test_output, plan)
+
+            if correction_applied and self_check() and behaviour_check():
+                log.info("✅ Verdict: ACCEPTED after self-correction.")
+            else:
+                log.error("❌ Verdict: REJECTED. Self-correction did not resolve instability.")
+                _cleanup_created_workshop_files()
+                _rollback()
+                _alert_dot(
+                    "Self-modification failed integrity gates. Rolled back for safety.\n\n"
+                    f"Plan that caused failure:\n```\n{plan[:800]}\n```\n\n"
+                    f"Self-correction attempt {'applied a patch but still failed' if correction_applied else 'produced no patch'}.\n"
+                    f"Test output:\n```\n{test_output[:600]}\n```"
+                )
+                modified = False  # Mark as failed for worklog purposes
     else:
         # No patch applied — still run governance checks every cycle (#1 fix)
         log.info("No self-modification this cycle — running final safety check.")
