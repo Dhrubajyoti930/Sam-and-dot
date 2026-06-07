@@ -4,8 +4,11 @@ from abc import ABC, abstractmethod
 
 class PatchOperation(ABC):
     @abstractmethod
-    def execute(self, content: str) -> str:
-        pass
+    def apply(self, content: str) -> str: pass
+    @abstractmethod
+    def verify(self, content: str) -> bool: pass
+    @abstractmethod
+    def rollback(self, content: str) -> str: pass
 
 class ReplaceOp(PatchOperation):
     def __init__(self, old: str, new: str):

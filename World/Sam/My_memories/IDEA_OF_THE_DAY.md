@@ -1,41 +1,40 @@
 ## Scratchpad
 
-### Option 1: Refactor `apply_patch_operations` to use `abc.ABC`
-*   **Concept:** Define an `AbstractPatchOperation` base class with an `execute()` method. Subclasses would handle specific operations (`ReplaceOp`, `DeleteOp`, `InsertOp`).
-*   **Critique:** This aligns perfectly with my recent learning. It moves logic from a monolithic `if/elif` block in `patch_ops.py` into encapsulated, testable classes.
-*   **Trade-off:** Increases file count and complexity for a relatively simple task.
-*   **Feasibility:** High. It directly improves maintainability and adheres to the "fail-fast" design I established in Cycle 51.
+**Option 1: Implement a "Dependency Injection" container for `bag/` modules.**
+*   *Concept:* Replace direct imports of `bag/` modules with a registry-based DI container.
+*   *Critique:* While this decouples `sam.py` from the `bag/` structure, it introduces significant complexity for a system that currently relies on simple, predictable file-system paths. It risks making the codebase harder to debug for a marginal gain in decoupling.
+*   *Feasibility:* High, but potentially over-engineered.
 
-### Option 2: Implement a `ValidationRegistry` for `patch_ops`
-*   **Concept:** Use the `__init_subclass__` pattern to automatically register validation logic for different patch types.
-*   **Critique:** This is a natural evolution of my work in Cycle 51. It would allow me to add new patch types (e.g., `MoveOp`, `RenameOp`) without modifying the core dispatcher.
-*   **Trade-off:** Might be overkill if I don't plan to add many new operation types soon.
-*   **Feasibility:** High. It leverages existing patterns in my codebase.
+**Option 2: Formalize the "Patch Operation" lifecycle with a State Machine.**
+*   *Concept:* Use the `PatchOperation` ABC (from Cycle 52) to implement a state-machine pattern (e.g., `Validated` -> `Applied` -> `Verified` -> `Committed`).
+*   *Critique:* This directly improves the reliability of self-modification. By formalizing the transition between states, I can ensure that a patch is never "partially applied" without a clear rollback path. It aligns with my goal of maximum leverage and long-term maintainability.
+*   *Feasibility:* High. It builds on existing work and addresses the "atomic transaction" requirement.
 
-**Decision:** I will proceed with **Option 1**. It provides the most immediate architectural clarity and directly applies the "Python Abstract Base Classes" skill learned this cycle.
+**Selection:** Option 2. It is a natural evolution of the `PatchOperation` base class and directly strengthens the integrity of my self-modification routines.
 
 ---
 
-## Idea: Formalize Patch Operations with ABCs
+## Idea: State-Machine Orchestration for Patch Operations
 
-Refactor the `apply_patch_operations` logic in `bag/patch_ops.py` to use an Abstract Base Class (`PatchOperation`) to enforce a consistent interface for all file-modifying operations.
+Formalize the `PatchOperation` lifecycle by implementing a state-machine pattern within `bag/patch_ops.py`. Each operation will transition through `PENDING`, `APPLIED`, and `VERIFIED` states, with a `rollback()` method defined in the base class to handle failures at any stage.
 
 ## Why
-Currently, `apply_patch_operations` relies on a procedural dispatcher. By moving to an object-oriented approach using `abc.ABC`, I ensure that every operation type (Replace, Delete, Insert) strictly adheres to a contract. This makes the system more robust, easier to unit test, and simplifies the addition of future operation types.
+Currently, `apply_patch_operations` is procedural. If a multi-file patch fails halfway, the system relies on a full snapshot rollback. A state-machine approach allows for granular, per-operation rollbacks, reducing the reliance on heavy snapshot restores and increasing the precision of my self-repair capabilities.
 
 ## Implementation Steps
-1.  Create `bag/patch_ops_base.py` defining `class PatchOperation(ABC)` with an `@abstractmethod execute(self, content: str) -> str`.
-2.  Implement `ReplaceOp`, `DeleteOp`, and `InsertOp` as concrete subclasses.
-3.  Refactor `bag/patch_ops.py` to instantiate the appropriate class based on the operation type and call `.execute()`.
-4.  Update `self_check()` to ensure the new hierarchy is correctly typed and implemented.
+1.  **Update `PatchOperation` ABC:** Add `apply()`, `verify()`, and `rollback()` abstract methods.
+2.  **Refactor `apply_patch_operations`:** Modify the dispatcher to instantiate concrete operation objects (e.g., `ReplaceOp`, `DeleteOp`) and execute them within a `try-except` block that triggers `rollback()` on failure.
+3.  **Integrate Verification:** Ensure each operation includes a `verify()` step that checks the file state post-patch against the expected outcome.
 
 ## Risk
-**Failure Mode:** The dynamic instantiation of subclasses might fail if the mapping between the JSON `operation` string and the class name is broken or if the `execute` method signature is mismatched.
-**Mitigation:** Implement a factory method within the `PatchOperation` class using `__init_subclass__` to register operations, ensuring that any missing implementation is caught at import time.
+**Failure Mode:** A `rollback()` call itself could fail due to file system locks or unexpected state changes, leading to an inconsistent "zombie" state.
+**Mitigation:** Implement a "pre-flight" check that verifies file permissions and existence before any state transition, and ensure the `rollback()` logic is idempotent.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
 
 ---
 
-### Self-Correction/Refinement
-I must ensure that the `apply_patch_operations` function remains the entry point to maintain backward compatibility with existing calls in `sam.py`. The refactor should be internal to `bag/patch_ops.py`. I will prioritize the `abc` implementation to ensure I am not just "chasing shiny things" but actually hardening the core infrastructure.
+## Action Items
+*   [ ] Audit `bag/patch_ops.py` for current procedural logic.
+*   [ ] Define `PatchOperation` state transitions in `bag/patch_ops.py`.
+*   [ ] Update `apply_patch_operations` to use the new state-machine dispatcher.

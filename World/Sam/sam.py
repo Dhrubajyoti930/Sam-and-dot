@@ -17,7 +17,7 @@ import re
 import sys
 import json
 
-# from workshop_bench.bag.thought_engine import ScratchpadEntry, Status, log_entry
+# from workshop_bench.core.thought_engine import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
@@ -617,6 +617,7 @@ def _lint_fix_with_gemini(lint_errors: str) -> bool:
         log.warning("Lint-fix Gemini call returned no operations.")
         return False
 
+    # Transitioning to state-machine execution
     applied = apply_patch_operations(ops, SAM_DIR, log)
     if applied:
         log.info("Corrective lint patch applied.")
