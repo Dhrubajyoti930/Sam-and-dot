@@ -677,7 +677,7 @@ def _behaviour_fix_with_gemini(test_output: str, original_plan: str) -> bool:
 
 def apply_self_modification(plan: str) -> bool:
     """Ask Gemini to extract surgical patch operations from the plan and apply them.
-    Uses bag/patch_ops.py for atomic file transactions.
+    Uses workshop_bench.bag.patch_ops_base for atomic file transactions.
     Writable: sam.py and bag/**/*.py (workshop subfolders allowed). Returns True if applied.
 
     Each operation in the JSON array must have:
