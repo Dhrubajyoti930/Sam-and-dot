@@ -17,7 +17,7 @@ import re
 import sys
 import json
 
-# from workshop_bench.core.thought_engine import ScratchpadEntry, Status, log_entry
+# from workshop_bench.models.thought_engine import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
@@ -80,38 +80,17 @@ _CALL_DELAY = 8   # seconds base delay
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _parse_gemini_json(text: str) -> dict | list | None:
-    """Robustly extract and parse a JSON block from Gemini's response using balanced brackets."""
+    """Robustly extract and parse a JSON block using regex to find the first { or [ and last } or ]."""
     if not text:
         return None
-    for start_char, end_char in [('[', ']'), ('{', '}')]:
-        start = text.find(start_char)
-        if start == -1:
-            continue
-        depth = 0
-        in_string = False
-        escape = False
-        for i, ch in enumerate(text[start:], start):
-            if escape:
-                escape = False
-                continue
-            if ch == '\\' and in_string:
-                escape = True
-                continue
-            if ch == '"' and not escape:
-                in_string = not in_string
-            if not in_string:
-                if ch == start_char:
-                    depth += 1
-                elif ch == end_char:
-                    depth -= 1
-                    if depth == 0:
-                        try:
-                            clean = text[start:i+1]
-                            clean = re.sub(r',\s*([\]\}])', r'\1', clean)
-                            return json.loads(clean)
-                        except Exception:
-                            break
-    return None
+    match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
+    if not match:
+        return None
+    try:
+        clean = re.sub(r',\s*([\]\}])', r'\1', match.group(1))
+        return json.loads(clean)
+    except (json.JSONDecodeError, Exception):
+        return None
 
 def load_goals() -> dict:
     """Safe goal loader with corruption recovery."""

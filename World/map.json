@@ -31,6 +31,7 @@
     "Sam/chest/rollback_registry/sam_20260607T143028Z.py",
     "Sam/chest/rollback_registry/sam_20260607T123303Z.py",
     "Sam/chest/rollback_registry/sam_20260607T143120Z.py",
+    "Sam/chest/rollback_registry/sam_20260607T174955Z.py",
     "Sam/chest/rollback_registry/sam_20260607T101529Z.py",
     "Sam/chest/rollback_registry/sam_20260607T101453Z.py",
     "Sam/chest/rollback_registry/sam_20260607T085732Z.py",
@@ -38,9 +39,8 @@
     "Sam/chest/rollback_registry/sam_20260607T093914Z.py",
     "Sam/chest/rollback_registry/sam_20260607T121131Z.py",
     "Sam/chest/rollback_registry/sam_20260607T133806Z.py",
-    "Sam/chest/rollback_registry/sam_20260607T065033Z.py",
     "Sam/chest/rollback_registry/sam_20260607T123131Z.py",
-    "Sam/chest/rollback_registry/sam_20260607T064958Z.py",
+    "Sam/chest/rollback_registry/sam_20260607T175114Z.py",
     "Sam/chest/rollback_registry/sam_20260607T121052Z.py",
     "Sam/chest/rollback_registry/sam_20260607T092007Z.py",
     "Sam/chest/rollback_registry/sam_20260607T093827Z.py",
@@ -54,12 +54,11 @@
     "Sam/workshop_bench/core/compressor.py",
     "Sam/workshop_bench/core/critic.py",
     "Sam/workshop_bench/core/plugin_manager.py",
-    "Sam/workshop_bench/core/patch_ops_base.py",
     "Sam/workshop_bench/core/lazy.py",
     "Sam/workshop_bench/core/verification.py",
-    "Sam/workshop_bench/core/thought_engine.py",
     "Sam/workshop_bench/core/deduper.py",
-    "Sam/workshop_bench/core/async_gemini.py"
+    "Sam/workshop_bench/models/thought_engine.py",
+    "Sam/workshop_bench/models/async_gemini.py"
   ],
   "tests": [
     "Dot/tests/tests.py"

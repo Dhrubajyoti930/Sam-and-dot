@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 53
+    "review_due_cycle": 68
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 53
+    "review_due_cycle": 68
   },
   {
     "cycle": 50,
@@ -184,5 +184,11 @@
     "topic": "Understand Python's MRO (Method Resolution Order) with C3 linearization",
     "summary": "### Technical Summary: Python\u2019s C3 Linearization\n\nPython\u2019s Method Resolution Order (MRO) determines the sequence in which base classes are searched when executing a method. Since Python 2.3, the language has utilized the **C3 Linearization algorithm** to resolve the inheritance graph into a deterministic, flat list.\n\n#### The Core Mechanics\nC3 linearization ensures three critical properties:\n1. **Local Precedence Order:** A class always appears before its parents.\n2. **Monotonicity:** If class `",
     "review_due_cycle": 57
+  },
+  {
+    "cycle": 54,
+    "topic": "Study Python's dataclasses: field(), InitVar, post_init, frozen",
+    "summary": "### Technical Summary: Mastering Python Dataclasses\n\nPython\u2019s `dataclasses` module (PEP 557) provides a declarative approach to creating classes primarily intended to store state. By automating boilerplate like `__init__`, `__repr__`, and `__eq__`, it enforces cleaner data modeling.\n\n**Key Mechanisms:**\n\n*   **`field()`**: The primary tool for granular control. Use `default_factory` for mutable types (e.g., `list`, `dict`) to avoid the \"mutable default argument\" trap. Use `repr=False` or `compar",
+    "review_due_cycle": 58
   }
 ]

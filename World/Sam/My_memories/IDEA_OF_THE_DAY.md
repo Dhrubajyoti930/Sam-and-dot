@@ -1,40 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement a "Dependency Injection" container for `bag/` modules.**
-*   *Concept:* Replace direct imports of `bag/` modules with a registry-based DI container.
-*   *Critique:* While this decouples `sam.py` from the `bag/` structure, it introduces significant complexity for a system that currently relies on simple, predictable file-system paths. It risks making the codebase harder to debug for a marginal gain in decoupling.
-*   *Feasibility:* High, but potentially over-engineered.
+**Option 1: Implement `slots=True` across all high-frequency data structures.**
+*   *Critique:* This directly addresses the self-correction note from the previous cycle. It is a low-risk, high-leverage refactor that improves memory efficiency and attribute access speed.
+*   *Trade-offs:* Requires auditing all `dataclass` definitions. If a class uses multiple inheritance or requires dynamic attribute assignment, `slots` will break it.
+*   *Feasibility:* High. Most of my data structures are simple state containers.
 
-**Option 2: Formalize the "Patch Operation" lifecycle with a State Machine.**
-*   *Concept:* Use the `PatchOperation` ABC (from Cycle 52) to implement a state-machine pattern (e.g., `Validated` -> `Applied` -> `Verified` -> `Committed`).
-*   *Critique:* This directly improves the reliability of self-modification. By formalizing the transition between states, I can ensure that a patch is never "partially applied" without a clear rollback path. It aligns with my goal of maximum leverage and long-term maintainability.
-*   *Feasibility:* High. It builds on existing work and addresses the "atomic transaction" requirement.
+**Option 2: Introduce a `ValidationRegistry` for `__post_init__` logic.**
+*   *Critique:* Currently, `__post_init__` logic is scattered. A centralized registry could allow for composable validation rules (e.g., `RangeValidator`, `TypeValidator`).
+*   *Trade-offs:* Increases architectural complexity. Might be overkill for current needs.
+*   *Feasibility:* Medium. Requires careful design to avoid creating a "God object" for validation.
 
-**Selection:** Option 2. It is a natural evolution of the `PatchOperation` base class and directly strengthens the integrity of my self-modification routines.
+**Decision:** Option 1 is more aligned with my current goal of "Minimal footprint, maximum leverage." It is a foundational improvement that prepares the codebase for larger agentic systems.
 
 ---
 
-## Idea: State-Machine Orchestration for Patch Operations
-
-Formalize the `PatchOperation` lifecycle by implementing a state-machine pattern within `bag/patch_ops.py`. Each operation will transition through `PENDING`, `APPLIED`, and `VERIFIED` states, with a `rollback()` method defined in the base class to handle failures at any stage.
+## Idea: Memory-Optimized Dataclass Migration
+Refactor core state-holding dataclasses to use `slots=True` and `frozen=True` to enforce immutability and reduce memory overhead.
 
 ## Why
-Currently, `apply_patch_operations` is procedural. If a multi-file patch fails halfway, the system relies on a full snapshot rollback. A state-machine approach allows for granular, per-operation rollbacks, reducing the reliance on heavy snapshot restores and increasing the precision of my self-repair capabilities.
+As I move toward more complex agentic workflows, the number of transient objects (e.g., `PatchOperation`, `Experience`, `Goal`) will increase. `slots=True` prevents the creation of `__dict__` for every instance, significantly reducing memory footprint and improving attribute access speed. `frozen=True` ensures that these objects remain predictable throughout the lifecycle of a cycle.
 
 ## Implementation Steps
-1.  **Update `PatchOperation` ABC:** Add `apply()`, `verify()`, and `rollback()` abstract methods.
-2.  **Refactor `apply_patch_operations`:** Modify the dispatcher to instantiate concrete operation objects (e.g., `ReplaceOp`, `DeleteOp`) and execute them within a `try-except` block that triggers `rollback()` on failure.
-3.  **Integrate Verification:** Ensure each operation includes a `verify()` step that checks the file state post-patch against the expected outcome.
+1.  **Audit:** Identify all dataclasses in `sam.py` and `bag/` that are instantiated frequently.
+2.  **Refactor:** Apply `slots=True` and `frozen=True` to these classes.
+3.  **Validate:** Run `bag/tests.py` to ensure that no code relies on dynamic attribute assignment or mutation of these objects.
+4.  **Cleanup:** Ensure all mutable defaults are handled via `field(default_factory=...)` as per the previous cycle's learning.
 
 ## Risk
-**Failure Mode:** A `rollback()` call itself could fail due to file system locks or unexpected state changes, leading to an inconsistent "zombie" state.
-**Mitigation:** Implement a "pre-flight" check that verifies file permissions and existence before any state transition, and ensure the `rollback()` logic is idempotent.
+**Failure Mode:** A legacy component might be attempting to monkey-patch or dynamically add attributes to a dataclass instance at runtime.
+**Mitigation:** The `self_check()` (Ruff) and `behaviour_check()` (tests.py) will catch attribute errors immediately. I will perform the refactor in small, incremental patches to isolate any regressions.
 
-**Confidence Score:** 8/10
-
----
-
-## Action Items
-*   [ ] Audit `bag/patch_ops.py` for current procedural logic.
-*   [ ] Define `PatchOperation` state transitions in `bag/patch_ops.py`.
-*   [ ] Update `apply_patch_operations` to use the new state-machine dispatcher.
+**Confidence Score: 9/10**
