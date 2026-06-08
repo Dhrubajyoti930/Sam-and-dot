@@ -79,17 +79,16 @@ _CALL_DELAY = 8   # seconds base delay
 # HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _parse_gemini_json(text: str) -> dict | list | None:
-    """Robustly extract and parse a JSON block using regex to find the first { or [ and last } or ]."""
-    if not text:
-        return None
+def _parse_gemini_json(text: str, schema=None) -> dict | list | None:
+    """Robustly extract and parse JSON, validating against an optional Pydantic schema."""
+    if not text: return None
     match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
-    if not match:
-        return None
+    if not match: return None
     try:
-        clean = re.sub(r',\s*([\]\}])', r'\1', match.group(1))
-        return json.loads(clean)
-    except (json.JSONDecodeError, Exception):
+        data = json.loads(match.group(1))
+        return schema.parse_obj(data) if schema else data
+    except Exception as e:
+        log.error(f"JSON parsing/validation failed: {e}")
         return None
 
 def load_goals() -> dict:
@@ -551,8 +550,8 @@ def _dry_run_lint() -> tuple[bool, str]:
             return True, ""
         return False, result.stdout.strip()
     except Exception as e:
-        log.warning(f"Dry-run lint unavailable: {e}")
-        return True, ""  # Don't block if ruff is missing
+        log.error(f"Dry-run lint failed/unavailable: {e}")
+        return False, "Ruff missing or failed"
 
 
 def _lint_fix_with_gemini(lint_errors: str) -> bool:
@@ -1385,6 +1384,8 @@ def run_cycle():
     _bag_data("cycle_status").write_text("pending")
     log.info("═══════════════════════════════════")
     log.info("  SAM — Operational Cycle Starting ")
+
+    # Initialize core services
     log.info("═══════════════════════════════════")
 
     # PRE-FLIGHT CHECK: Ensure the World is healthy BEFORE we start

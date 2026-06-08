@@ -17,7 +17,7 @@ import re
 import sys
 import json
 
-# from workshop_bench.core.reasoning.thought_engine import ScratchpadEntry, Status, log_entry
+# from workshop_bench.models.thought_engine import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
@@ -80,38 +80,17 @@ _CALL_DELAY = 8   # seconds base delay
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _parse_gemini_json(text: str) -> dict | list | None:
-    """Robustly extract and parse a JSON block from Gemini's response using balanced brackets."""
+    """Robustly extract and parse a JSON block using regex to find the first { or [ and last } or ]."""
     if not text:
         return None
-    for start_char, end_char in [('[', ']'), ('{', '}')]:
-        start = text.find(start_char)
-        if start == -1:
-            continue
-        depth = 0
-        in_string = False
-        escape = False
-        for i, ch in enumerate(text[start:], start):
-            if escape:
-                escape = False
-                continue
-            if ch == '\\' and in_string:
-                escape = True
-                continue
-            if ch == '"' and not escape:
-                in_string = not in_string
-            if not in_string:
-                if ch == start_char:
-                    depth += 1
-                elif ch == end_char:
-                    depth -= 1
-                    if depth == 0:
-                        try:
-                            clean = text[start:i+1]
-                            clean = re.sub(r',\s*([\]\}])', r'\1', clean)
-                            return json.loads(clean)
-                        except Exception:
-                            break
-    return None
+    match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
+    if not match:
+        return None
+    try:
+        clean = re.sub(r',\s*([\]\}])', r'\1', match.group(1))
+        return json.loads(clean)
+    except (json.JSONDecodeError, Exception):
+        return None
 
 def load_goals() -> dict:
     """Safe goal loader with corruption recovery."""
@@ -373,12 +352,12 @@ def snapshot_sam() -> Path:
     dest.write_text(Path(__file__).read_text())
     log.info(f"Snapshot saved → {dest.name}")
 
-    # ── Snapshot all writable bag/**/*.py (includes workshop subfolders) ──
+    # ── Snapshot all writable workshop_bench/**/*.py ──
     from bag.workshop_paths import iter_writable_bag_py, relative_posix
 
     bag_snap = {
-        relative_posix(f, BAG): f.read_text(encoding="utf-8")
-        for f in iter_writable_bag_py(BAG)
+        relative_posix(f, WORKSHOP): f.read_text(encoding="utf-8")
+        for f in iter_writable_bag_py(WORKSHOP)
     }
     bag_dest = ROLLBACK_REG / f"bag_{ts}.json"
     bag_dest.write_text(json.dumps(bag_snap, indent=2))
@@ -480,18 +459,18 @@ def _rollback():
     Path(__file__).write_text(latest.read_text())
     log.warning(f"Rolled back sam.py → {latest.name}")
 
-    # ── Restore bag/*.py files from the corresponding bag snapshot ──
+    # ── Restore workshop_bench/*.py files from the corresponding bag snapshot ──
     ts = latest.stem[4:]   # strip "sam_" prefix
     bag_snap_path = ROLLBACK_REG / f"bag_{ts}.json"
     if bag_snap_path.exists():
         try:
             bag_snap = json.loads(bag_snap_path.read_text())
             for rel, content in bag_snap.items():
-                target = BAG / rel
+                target = WORKSHOP / rel
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(content, encoding="utf-8")
-                log.warning(f"Rolled back bag/{rel}")
-            log.warning(f"Bag files restored from {bag_snap_path.name} ({len(bag_snap)} files)")
+                log.warning(f"Rolled back workshop_bench/{rel}")
+            log.warning(f"Workshop files restored from {bag_snap_path.name} ({len(bag_snap)} files)")
         except Exception as e:
             log.error(f"Failed to restore bag files from {bag_snap_path.name}: {e}")
     else:
@@ -509,7 +488,7 @@ def _alert_dot(message: str):
 
 
 def repair_bag_modules() -> list:
-    """Scan bag/ for syntax-broken files and send each to Gemini for self-repair.
+    """Scan workshop_bench/ for syntax-broken files and send each to Gemini for self-repair.
     Returns list of filenames that were repaired.
     Only touches files Sam created — AUDIT_PROTECTED files are skipped.
     Uses one Gemini call per broken file found.
@@ -519,12 +498,12 @@ def repair_bag_modules() -> list:
     from bag.workshop_paths import iter_writable_bag_py, relative_posix
 
     broken = []
-    for f in iter_writable_bag_py(BAG):
+    for f in iter_writable_bag_py(WORKSHOP):
         try:
             compile(f.read_text(), f.name, "exec")
         except SyntaxError as e:
             broken.append((f, str(e)))
-            log.warning(f"Broken bag module detected: {relative_posix(f, BAG)} — {e}")
+            log.warning(f"Broken workshop module detected: {relative_posix(f, WORKSHOP)} — {e}")
 
     if not broken:
         log.info("All bag modules are syntax-clean.")
@@ -535,9 +514,10 @@ def repair_bag_modules() -> list:
         original = f.read_text()
         log.info(f"Sending {f.name} to Gemini for self-repair...")
         _sleep()
+        rel = relative_posix(f, WORKSHOP)
         prompt = (
             f"You are Sam, an autonomous developer. One of your workshop files has a syntax error.\n\n"
-            f"File: bag/{relative_posix(f, BAG)}\n"
+            f"File: workshop_bench/{rel}\n"
             f"Error: {error}\n\n"
             f"Full file contents:\n```python\n{original}\n```\n\n"
             f"Fix ONLY the syntax error(s). Do not refactor, rename, or extend the file.\n"
@@ -552,9 +532,9 @@ def repair_bag_modules() -> list:
             compile(fixed, f.name, "exec")
             f.write_text(fixed)
             log.info(f"Self-repaired: {f.name}")
-            repaired.append(relative_posix(f, BAG))
+            repaired.append(rel)
         except SyntaxError as e2:
-            log.warning(f"Gemini fix for {relative_posix(f, BAG)} still broken: {e2} — leaving original.")
+            log.warning(f"Gemini fix for {rel} still broken: {e2} — leaving original.")
 
     return repaired
 
@@ -616,6 +596,7 @@ def _lint_fix_with_gemini(lint_errors: str) -> bool:
         log.warning("Lint-fix Gemini call returned no operations.")
         return False
 
+    # Transitioning to state-machine execution
     applied = apply_patch_operations(ops, SAM_DIR, log)
     if applied:
         log.info("Corrective lint patch applied.")
@@ -676,6 +657,7 @@ def _behaviour_fix_with_gemini(test_output: str, original_plan: str) -> bool:
 
 def apply_self_modification(plan: str) -> bool:
     """Ask Gemini to extract surgical patch operations from the plan and apply them.
+    Uses bag/patch_ops.py for atomic file transactions.
     Writable: sam.py and bag/**/*.py (workshop subfolders allowed). Returns True if applied.
 
     Each operation in the JSON array must have:
@@ -699,27 +681,43 @@ def apply_self_modification(plan: str) -> bool:
     if not check_semantic_safety(plan):
         log.warning("Governance Shield: Semantic violation detected (Warning mode).")
 
+    # Inject actual source of files the plan mentions so 'old'/'anchor' strings can be copied exactly
+    # Always include sam.py — it's almost always relevant and Gemini needs exact anchors from it
+    mentioned = set(re.findall(r"(sam\.py|workshop_bench/[\w/]+\.py)", plan))
+    mentioned.add("sam.py")
+    file_contexts = ""
+    for rel in sorted(mentioned):
+        target = SAM_DIR / rel
+        if target.exists():
+            file_contexts += (
+                f"\n### {rel} (current source — copy 'old'/'anchor' from here exactly):\n"
+                f"```python\n{_outline(target.read_text(), rel)}\n```\n"
+            )
+
     prompt = (
         f"You are Sam's surgical code patcher. Below is a development plan:\n\n{plan}\n\n"
+        f"{file_contexts}"
         f"Extract any concrete file modifications as a JSON array of patch operations.\n"
         f"Each operation may include an optional 'rationale' field (1 sentence) explaining the change.\n"
         f"Respond ONLY with a JSON array — no markdown, no explanation, no preamble.\n\n"
         f"Each element must have:\n"
         f"  - 'filename'  : relative path from Sam's root. 'sam.py' or 'workshop_bench/**/*.py'. "
-        f"Use 'workshop_bench/<folder>/<file>.py' for ALL new modules.\n"
+        f"Use 'workshop_bench/<folder>/<file>.py' for new standalone modules. sam.py may be modified to wire in existing workshop modules.\n"
         f"  - 'operation' : exactly one of: 'replace', 'insert_after', 'delete'\n"
         f"  - For 'replace': 'old' (exact existing string) and 'new' (replacement string)\n"
         f"  - For 'insert_after': 'anchor' (exact existing line), 'line_number' (integer), and 'new' (string to insert after it)\n"
         f"  - For 'delete': 'old' (exact existing string to remove)\n\n"
         f"CRITICAL RULES:\n"
         f"  - Never supply a 'content' key — full file rewrites are forbidden.\n"
+        f"  - ALLOWED FILES ONLY: 'sam.py' and 'workshop_bench/**/*.py'. Any patch targeting\n"
+        f"    bag/tests.py, bag/patch_ops.py, bag/governance_shield.py, or ANY other bag/ file\n"
+        f"    will be silently rejected — do NOT waste operations on them.\n"
         f"  - MODULE PATHS: The prompts file is at 'Gemini_note_pad/prompts.py'.\n"
         f"    Import it as: from Gemini_note_pad.prompts import ...\n"
         f"    NEVER use 'bag.prompts' — that module does not exist and will crash Sam.\n"
-        f"    Writable Python files are: sam.py and workshop_bench/**/*.py only.\n"
         f"  - 'old' and 'anchor' must be exact substrings of the current file — copy them precisely.\n"
         f"  - Keep each operation as small as possible — one function, one block, one line.\n"
-        f"  - Prefer adding new functions to bag/ files over modifying sam.py.\n"
+        f"  - sam.py changes are allowed — especially to import and call modules already built in workshop_bench/. Prefer workshop_bench/ only for new standalone logic.\n"
         f"  - If no concrete changes are needed, return an empty array [].\n\n"
         f"PYTHON CODE QUALITY RULES — every 'new' string must obey these:\n"
         f"  - Must be syntactically valid Python. Mentally parse it before including it.\n"
@@ -1031,20 +1029,20 @@ def phase_v_development(idea: str, goals: dict, motion_content: str) -> str:
         f"{sam_outline}\n\n"
         f"NOTE: Full sam.py source is available to the patcher — you only need line numbers and function names to specify patch anchors.\n\n"
         f"{tests_outline}\n\n"
-        f"Sam's current bag helper files (full source — patch targets):\n{bag_sources}"
+        f"Sam's current workshop files (full source — valid patch targets):\n{bag_sources}"
         f"Produce a surgical patch plan for Sam to apply. Rules:\n"
         f"  1. Describe only targeted, minimal changes — never rewrite whole files.\n"
-        f"  2. MANDATORY: For every new feature or module, YOU MUST ADD A TEST CASE to bag/tests.py.\n"
-        f"  3. Prefer NEW modules under workshop_bench/ "
-        f"over editing sam.py's core loop.\n"
+        f"  2. WRITABLE FILES ONLY: patches may only target 'sam.py' or 'workshop_bench/**/*.py'.\n"
+        f"     Never target bag/tests.py, bag/patch_ops.py, or any other bag/ infra file — those are protected and patches to them will be silently rejected.\n"
+        f"  3. New standalone logic goes in workshop_bench/. If the idea requires wiring an existing workshop module into the core loop, modifying sam.py is appropriate and encouraged.\n"
         f"  4. For each change, specify EXACTLY:\n"
         f"       - Which file (sam.py or workshop_bench/**/*.py, e.g. workshop_bench/my_folder/foo.py)\n"
         f"       - The operation: replace / insert_after / delete\n"
         f"       - The exact existing string to find ('old' or 'anchor') — copy it CHARACTER-FOR-CHARACTER from the source above, including all whitespace and indentation. Also state the line number it appears on.\n"
         f"       - Keep 'old' and 'anchor' strings as SHORT as possible (1-2 lines max) to reduce whitespace mismatch risk.\n"
         f"       - The new string to substitute or insert\n"
-        f"  4. Flag any security or stability risks before listing changes.\n"
-        f"  5. If the idea requires no code change this cycle, say so explicitly.\n\n"
+        f"  5. Flag any security or stability risks before listing changes.\n"
+        f"  6. If the idea requires no code change this cycle, say so explicitly.\n\n"
         f"Do NOT supply full file contents. Surgical diffs only."
     )
     plan = ask_gemini(prompt)
@@ -1229,10 +1227,14 @@ def phase_vii_state_saving(goals: dict, skill: str, idea: str, plan: str, evolut
         "GitHub Actions matrix optimisation",
     ]
 
-    # Append today's idea heading to next_objectives
+    # Only append today's idea as a follow-up if it's concrete and not already present.
+    # Avoid appending generic placeholders like "Scratchpad" which pollute the queue.
     idea_heading = idea.strip().splitlines()[0].lstrip("#").strip()
-    if idea_heading:
-        goals["next_objectives"].append(f"{idea_heading} - with cutting edge research.")
+    _skip_words = {"scratchpad", "external", "placeholder", "tbd", "n/a", "none"}
+    if idea_heading and idea_heading.lower().split()[0] not in _skip_words:
+        follow_up = f"Follow-up: {idea_heading[:80]}"
+        if follow_up not in goals["next_objectives"]:
+            goals["next_objectives"].append(follow_up)
 
     save_goals(goals)
 
