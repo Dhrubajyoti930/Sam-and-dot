@@ -1,35 +1,34 @@
 ## Scratchpad
 
-**Option 1: Protocol-based Dependency Injection (DI) Container**
-*   **Concept:** Replace manual instantiation of services with a lightweight, `Protocol`-based DI container.
-*   **Critique:** This aligns perfectly with the "Protocol-Generic" bridge learned this cycle. It would decouple `sam.py` from concrete implementations, making unit testing significantly easier.
-*   **Trade-off:** Adds a layer of abstraction. If over-engineered, it could obscure the control flow.
-*   **Feasibility:** High. I have the `workshop_bench` structure to house the container logic.
+### Option 1: Implement `functools.lru_cache` on `_bag_data` and `load_goals`
+*   **Concept:** Memoize file-system-heavy utility functions to reduce I/O overhead during the cycle.
+*   **Critique:** `_bag_data` relies on `bag.bag_paths.resolve`, which might change if the environment shifts. `load_goals` is frequently updated; caching it could lead to stale state if not invalidated correctly.
+*   **Feasibility:** High.
+*   **Trade-off:** Performance gain vs. risk of stale state.
 
-**Option 2: Automated Type-Safety Audit (Static Analysis Integration)**
-*   **Concept:** Create a `bag/` utility that runs `mypy` or `pyright` programmatically and parses the output to identify `Any` types or missing generics, then logs them as "Technical Debt" in `goals.json`.
-*   **Critique:** This is a meta-improvement. It forces me to adhere to the "Python Type System Evolution" skill.
-*   **Trade-off:** Requires installing/managing static analysis tools in the environment.
-*   **Feasibility:** Moderate. Depends on the availability of `mypy` in the environment.
+### Option 2: Refactor Event-Bus Callbacks with `functools.partial`
+*   **Concept:** Replace complex `lambda` expressions in the event-bus (or similar dispatchers) with `partial` for better readability and stack-trace clarity.
+*   **Critique:** This directly aligns with the "Skill learned this cycle" and improves maintainability. It is a surgical, low-risk refactor that cleans up technical debt.
+*   **Feasibility:** Very High.
+*   **Trade-off:** Minimal impact on performance, high impact on code quality.
 
-**Selection:** Option 1 is more impactful for long-term maintainability. I will implement a `Protocol`-based registry for core services to replace direct imports, leveraging the `__init_subclass__` pattern I mastered in Cycle 51.
+**Decision:** I will proceed with **Option 2**. It is a cleaner, more "Pythonic" approach to callback management that aligns with my current learning trajectory.
 
 ---
 
-## Idea: Protocol-Based Service Registry
-Implement a `ServiceRegistry` in `bag/registry.py` that uses `typing.Protocol` to define service interfaces and a decorator-based registration system to manage lifecycle, replacing direct service instantiation in `sam.py`.
+## Idea: Functional Callback Refactoring
+Refactor the event-bus and utility callback patterns to replace `lambda` closures with `functools.partial`.
 
 ## Why
-Currently, `sam.py` imports concrete implementations directly. This creates tight coupling. By using `Protocol`, I can define the *contract* of a service (e.g., `Logger`, `MemoryStore`) and resolve the implementation at runtime. This facilitates easier mocking for `bag/tests.py` and adheres to the "Protocol-Generic" bridge best practice.
+`lambda` functions are anonymous and often obscure the intent of the callback. `functools.partial` provides a clear, declarative way to pre-configure functions, making the code easier to debug and more readable for future maintenance.
 
 ## Implementation Steps
-1.  **Define Protocols:** Create `bag/protocols.py` defining core interfaces (e.g., `LoggerProtocol`, `MemoryProtocol`).
-2.  **Registry Logic:** Implement `ServiceRegistry` in `bag/registry.py` using a class-level dictionary to map `Protocol` types to concrete implementations.
-3.  **Refactor `sam.py`:** Replace direct imports of core services with `registry.get(ProtocolType)`.
-4.  **Verification:** Update `bag/tests.py` to inject a mock implementation into the registry to verify structural subtyping.
+1.  Scan the codebase for `lambda` expressions used as callbacks or event handlers.
+2.  Identify candidates where `partial` can replace the `lambda` (e.g., `lambda: func(arg)` becomes `partial(func, arg)`).
+3.  Apply the refactor using `apply_self_modification` to ensure atomic updates.
+4.  Run `behaviour_check()` to ensure no regressions in event dispatching.
 
 ## Risk
-**Failure Mode:** The registry might return an object that satisfies the `Protocol` at runtime but fails static analysis if the `TypeVar` bounds are not correctly defined.
-**Mitigation:** Use `typing.runtime_checkable` only for the registry's internal `isinstance` checks, and rely on `mypy` for static enforcement. I will keep the registry implementation simple to avoid complex generic resolution errors.
-
+**Failure Mode:** If a callback relies on late-binding (where the `lambda` captures a variable that changes value), replacing it with `partial` (which binds arguments immediately) will break the logic.
+**Mitigation:** I will verify that all targeted `lambda` expressions are static or intended for immediate binding before applying the patch.
 **Confidence Score:** 9/10

@@ -87,7 +87,7 @@
     "cycle": 37,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector stores) and immediate execution logic.\n\n#### Key Concepts & Patterns\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scra",
-    "review_due_cycle": 56
+    "review_due_cycle": 71
   },
   {
     "cycle": 38,
@@ -177,7 +177,7 @@
     "cycle": 52,
     "topic": "Learn Python's abstract base classes (ABCs) with abc module",
     "summary": "### Technical Summary: Python Abstract Base Classes (ABCs)\n\nAbstract Base Classes (ABCs) in Python provide a formal mechanism for defining interfaces and enforcing structural contracts in a dynamic language. By leveraging the `abc` module, developers can define a blueprint for subclasses, ensuring that specific methods are implemented before an object can be instantiated.\n\n**Key Concepts:**\n*   **`ABC` and `@abstractmethod`:** Inheriting from `abc.ABC` marks a class as abstract. Decorating metho",
-    "review_due_cycle": 56
+    "review_due_cycle": 71
   },
   {
     "cycle": 53,
@@ -202,5 +202,11 @@
     "topic": "Understand Python's typing module: Protocol, TypeVar, Generic",
     "summary": "### Technical Summary: Python Type System Evolution\n\nModern Python typing has shifted from simple annotation to a robust structural and generic system. Mastery of `typing` requires moving beyond `Any` toward static analysis that enforces design contracts.\n\n**1. Protocols (Structural Subtyping)**\nUnlike `abc.ABC` (nominal subtyping), `typing.Protocol` defines an interface based on structure. If a class implements the required methods/attributes, it satisfies the protocol. This is critical for dec",
     "review_due_cycle": 60
+  },
+  {
+    "cycle": 57,
+    "topic": "Study Python's functools: lru_cache, partial, reduce, wraps",
+    "summary": "### Technical Summary: Mastering `functools`\n\nThe `functools` module is essential for functional programming patterns in Python, enabling cleaner, more declarative code by manipulating functions as first-class objects.\n\n**1. `lru_cache` (Least Recently Used Cache)**\nThis decorator provides memoization. By storing the results of expensive function calls based on input arguments, it drastically reduces redundant computation. \n*   **Pattern:** Use `@lru_cache(maxsize=None)` for unbounded growth or ",
+    "review_due_cycle": 61
   }
 ]
