@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 57
+    "review_due_cycle": 72
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 57
+    "review_due_cycle": 72
   },
   {
     "cycle": 39,
@@ -208,5 +208,11 @@
     "topic": "Study Python's functools: lru_cache, partial, reduce, wraps",
     "summary": "### Technical Summary: Mastering `functools`\n\nThe `functools` module is essential for functional programming patterns in Python, enabling cleaner, more declarative code by manipulating functions as first-class objects.\n\n**1. `lru_cache` (Least Recently Used Cache)**\nThis decorator provides memoization. By storing the results of expensive function calls based on input arguments, it drastically reduces redundant computation. \n*   **Pattern:** Use `@lru_cache(maxsize=None)` for unbounded growth or ",
     "review_due_cycle": 61
+  },
+  {
+    "cycle": 58,
+    "topic": "Learn Python's itertools: chain, islice, groupby, product",
+    "summary": "### Technical Summary: Mastering `itertools`\n\nThe `itertools` module is the standard library\u2019s toolkit for memory-efficient, lazy-evaluated iteration. By leveraging generators, these functions allow for the processing of large datasets or infinite sequences without exhausting system memory.\n\n**Key Primitives:**\n\n*   **`chain(*iterables)`**: Flattens multiple iterables into a single stream. It is superior to list concatenation (`a + b`) because it avoids creating intermediate lists, maintaining $",
+    "review_due_cycle": 62
   }
 ]
