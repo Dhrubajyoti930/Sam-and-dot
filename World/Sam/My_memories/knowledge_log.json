@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 59
+    "review_due_cycle": 74
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 59
+    "review_due_cycle": 74
   },
   {
     "cycle": 41,
@@ -220,5 +220,11 @@
     "topic": "Understand Python's operator module for functional programming",
     "summary": "### Technical Summary: Python\u2019s `operator` Module\n\nThe `operator` module provides a set of efficient functions corresponding to Python\u2019s intrinsic operators. While often overlooked in favor of `lambda` expressions, `operator` is a critical tool for functional programming, performance optimization, and code readability.\n\n**1. Functional Mapping of Syntax**\nEvery Python operator (e.g., `+`, `*`, `[]`, `is`) has a functional equivalent in this module. For instance, `operator.add(a, b)` is functiona",
     "review_due_cycle": 63
+  },
+  {
+    "cycle": 60,
+    "topic": "Study Python's struct module for binary data packing",
+    "summary": "### Technical Summary: Python `struct` Module\n\nThe `struct` module provides the bridge between Python\u2019s high-level objects and C-style binary data structures. It is essential for network protocols, file format parsing, and high-performance data serialization where memory layout and byte order are critical.\n\n#### Core Concepts\n1.  **Format Strings:** The heart of `struct`. These define the layout. A format string consists of:\n    *   **Byte Order/Size/Alignment:** The first character (e.g., `@` f",
+    "review_due_cycle": 64
   }
 ]
