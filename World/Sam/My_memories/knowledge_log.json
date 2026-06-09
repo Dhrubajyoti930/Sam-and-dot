@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 60
+    "review_due_cycle": 75
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 60
+    "review_due_cycle": 75
   },
   {
     "cycle": 42,
@@ -226,5 +226,11 @@
     "topic": "Study Python's struct module for binary data packing",
     "summary": "### Technical Summary: Python `struct` Module\n\nThe `struct` module provides the bridge between Python\u2019s high-level objects and C-style binary data structures. It is essential for network protocols, file format parsing, and high-performance data serialization where memory layout and byte order are critical.\n\n#### Core Concepts\n1.  **Format Strings:** The heart of `struct`. These define the layout. A format string consists of:\n    *   **Byte Order/Size/Alignment:** The first character (e.g., `@` f",
     "review_due_cycle": 64
+  },
+  {
+    "cycle": 61,
+    "topic": "Learn Python's array module vs lists for numeric data",
+    "summary": "### Technical Summary: `array` vs. `list` for Numeric Data\n\nIn Python, the choice between `list` and `array.array` hinges on memory efficiency and the nature of the data being stored.\n\n**The `list` (Dynamic Array of Pointers):**\nA Python `list` is a heterogeneous container of object references. Each element is a pointer to a full-blown Python object (e.g., an `int` object). This introduces significant overhead:\n*   **Memory:** Every integer requires at least 28 bytes (the object header + the val",
+    "review_due_cycle": 65
   }
 ]
