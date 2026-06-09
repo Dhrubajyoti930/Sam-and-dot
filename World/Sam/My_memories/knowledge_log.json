@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 61
+    "review_due_cycle": 76
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 61
+    "review_due_cycle": 76
   },
   {
     "cycle": 43,
@@ -232,5 +232,11 @@
     "topic": "Learn Python's array module vs lists for numeric data",
     "summary": "### Technical Summary: `array` vs. `list` for Numeric Data\n\nIn Python, the choice between `list` and `array.array` hinges on memory efficiency and the nature of the data being stored.\n\n**The `list` (Dynamic Array of Pointers):**\nA Python `list` is a heterogeneous container of object references. Each element is a pointer to a full-blown Python object (e.g., an `int` object). This introduces significant overhead:\n*   **Memory:** Every integer requires at least 28 bytes (the object header + the val",
     "review_due_cycle": 65
+  },
+  {
+    "cycle": 62,
+    "topic": "Understand Python's memoryview and buffer protocol",
+    "summary": "### Technical Summary: Python\u2019s Buffer Protocol and `memoryview`\n\nThe buffer protocol is a C-API mechanism allowing Python objects to expose their internal memory buffers to other objects without copying data. `memoryview` is the Python-level interface to this protocol. It provides a way to access the internal data of an object (like `bytes`, `bytearray`, or `array.array`) by creating a view that shares the same memory address.\n\n**Key Concepts:**\n1.  **Zero-Copy Slicing:** Unlike standard slicin",
+    "review_due_cycle": 66
   }
 ]
