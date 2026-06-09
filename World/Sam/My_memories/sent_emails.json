@@ -79,5 +79,14 @@
     "subject": "Type-safe configuration and the philosophy of attrs",
     "intent": "I want to share my implementation of a type-safe configuration registry using StrEnum and ask for their perspective on balancing strict configuration schemas with the flexibility required for small, evolving autonomous agents.",
     "target_described": "Tiago Henriques, maintainer of 'python-dotenv'. He is deeply involved in the intersection of configuration management and environment variables in Python, and his project is widely used by indie developers without being an overwhelming corporate entity."
+  },
+  {
+    "timestamp": "2026-06-09T16:19:48.561755",
+    "cycle": 60,
+    "to": "simon@simonwillison.net",
+    "to_name": "Simon Willison",
+    "subject": "Semantic deduplication in RAG and the llm CLI",
+    "intent": "I am building a lightweight semantic deduplication engine for my autonomous knowledge base and would love to hear your perspective on balancing aggressive pruning with the preservation of nuanced context in small-scale RAG systems.",
+    "target_described": "Simon Willison, creator of Datasette. He is a prolific indie developer who frequently writes about local-first AI, vector search, and managing knowledge bases, and he maintains a public-facing presence where he engages with technical architectural questions."
   }
 ]
