@@ -1,33 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implement a `memoryview`-based binary parser for `bag/` data.**
-*   *Concept:* Replace standard `json` or `pickle` loading for high-frequency binary data with a custom parser using `memoryview` and `struct`.
-*   *Critique:* High performance, but significantly increases complexity. If the binary schema changes, the parser breaks silently.
-*   *Feasibility:* High, given the recent study of the buffer protocol.
+**Option 1: `pathlib` Migration & Performance Audit**
+*   **Concept:** Systematically replace all `os.path` and `open()` calls with `pathlib.Path` objects across the entire codebase, while benchmarking against `os.scandir` for high-frequency operations.
+*   **Critique:** High maintainability and readability gain. However, it touches many files, increasing the risk of breaking path resolution if not handled with care.
+*   **Feasibility:** High. The `pathlib` API is robust and standard.
 
-**Option 2: Introduce a `MemoryManager` class for `bag/` resource lifecycle.**
-*   *Concept:* Create a context-managed class that handles `memoryview` buffers and ensures they are closed/unmapped correctly, preventing memory leaks in long-running cycles.
-*   *Critique:* This aligns with the "long-term maintainability" trait. It abstracts the complexity of the buffer protocol away from the business logic.
-*   *Feasibility:* Very high. It provides a clean API for future modules.
+**Option 2: Agentic Workflow for `bag/` Maintenance**
+*   **Concept:** Implement a "Janitor Agent" that uses `pathlib` to scan `workshop_bench/` for orphaned files or stale artifacts and automatically archives them based on a TTL (Time-To-Live) policy.
+*   **Critique:** Increases autonomy, but adds complexity to the `bag/` system. Requires careful implementation to avoid deleting files that are still in use.
+*   **Feasibility:** Moderate. Requires building a metadata tracking system for file lifecycles.
 
-**Selection:** Option 2. It builds on the recent skill acquisition (buffer protocol) while providing a robust architectural foundation that prevents the "gotchas" identified in my self-correction (lifetime management).
+**Selection:** Option 1 is the superior choice for this cycle. It aligns perfectly with the "Skill learned this cycle" and directly addresses the technical debt identified in the action items. It is a foundational refactor that improves the codebase's long-term health.
 
 ---
 
-## Idea: `BufferRegistry` — A Context-Managed Memory Manager
-
-Implement a `BufferRegistry` class in `bag/memory_utils.py` that tracks active `memoryview` buffers and their parent objects, ensuring they are released via a context manager or explicit `close()` method.
+## Idea: `pathlib` Standardisation & Performance-Aware Refactoring
 
 ## Why
-My recent skill acquisition highlighted that `memoryview` is powerful but dangerous regarding lifetime management. As I move toward high-performance binary parsing, I need a centralized, safe way to handle shared memory buffers to prevent segmentation faults or resource leaks. This aligns with my goal of building for long-term maintainability.
+The current codebase relies on a mix of `os.path` and `pathlib`. Standardising on `pathlib` improves readability and cross-platform reliability. By explicitly separating "general logic" (using `pathlib`) from "performance-critical loops" (using `os.scandir`), I ensure the system remains both maintainable and performant.
 
 ## Implementation Steps
-1.  **Create `bag/memory_utils.py`**: Define `BufferRegistry` with a `__enter__` and `__exit__` protocol.
-2.  **Tracking**: Use a `weakref.WeakValueDictionary` to track the underlying objects (e.g., `bytearray`) to ensure the `memoryview` doesn't outlive its source.
-3.  **Integration**: Update `_bag_data` or a new helper to return a `BufferRegistry` context when accessing large binary files.
-4.  **Validation**: Add a `readonly` check within the registry to prevent accidental mutation of immutable buffers.
+1.  **Audit:** Use `grep` or `rg` to identify all `os.path` and `open()` calls in `sam.py` and `workshop_bench/`.
+2.  **Refactor:** Replace `os.path.join` with the `/` operator and `open()` with `Path.read_text()`/`write_text()`.
+3.  **Performance Gate:** Identify high-frequency file traversal points (e.g., `archive_mail`, `snapshot_sam`). Ensure these continue to use `os.scandir` or `os.walk` if benchmarks indicate `pathlib.Path.glob` overhead is non-negligible.
+4.  **Verification:** Run `self_check()` and `behaviour_check()` to ensure no regressions in file I/O.
 
 ## Risk
-*   **Failure Mode**: If the `BufferRegistry` is not used correctly in a nested context, it might close a buffer that is still being referenced by another part of the system.
-*   **Mitigation**: Implement a reference counting mechanism within the registry; only trigger the final cleanup when the reference count reaches zero.
-*   **Confidence Score**: 9/10. The logic is deterministic and testable via `bag/tests.py`.
+**Failure Mode:** Incorrect path resolution during the transition (e.g., relative vs. absolute path mismatches).
+**Mitigation:** Use `.resolve()` on all base directories at the start of the execution cycle to ensure all subsequent operations are anchored to the correct canonical path.
+
+**Confidence Score:** 9/10

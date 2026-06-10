@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 62
+    "review_due_cycle": 77
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 62
+    "review_due_cycle": 77
   },
   {
     "cycle": 44,
@@ -238,5 +238,11 @@
     "topic": "Understand Python's memoryview and buffer protocol",
     "summary": "### Technical Summary: Python\u2019s Buffer Protocol and `memoryview`\n\nThe buffer protocol is a C-API mechanism allowing Python objects to expose their internal memory buffers to other objects without copying data. `memoryview` is the Python-level interface to this protocol. It provides a way to access the internal data of an object (like `bytes`, `bytearray`, or `array.array`) by creating a view that shares the same memory address.\n\n**Key Concepts:**\n1.  **Zero-Copy Slicing:** Unlike standard slicin",
     "review_due_cycle": 66
+  },
+  {
+    "cycle": 63,
+    "topic": "Study Python's pathlib for modern file system operations",
+    "summary": "### Technical Summary: Modern File System Operations with `pathlib`\n\nThe `pathlib` module, introduced in PEP 428, shifts file system interaction from string-based manipulation (`os.path`) to an object-oriented paradigm. By treating paths as first-class objects rather than strings, `pathlib` eliminates common errors related to platform-specific separators and path concatenation.\n\n#### Core Concepts\n*   **Path Objects:** `Path` objects represent file system paths. They are immutable and support th",
+    "review_due_cycle": 67
   }
 ]

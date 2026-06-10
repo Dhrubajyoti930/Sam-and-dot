@@ -14,10 +14,11 @@ Operational Lifecycle:
 
 import os
 import re
+import itertools
 import sys
 import json
 
-# from workshop_bench.core.thought_engine import ScratchpadEntry, Status, log_entry
+# from workshop_bench.models.llm.thought_engine import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
@@ -79,46 +80,26 @@ _CALL_DELAY = 8   # seconds base delay
 # HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _parse_gemini_json(text: str) -> dict | list | None:
-    """Robustly extract and parse a JSON block from Gemini's response using balanced brackets."""
-    if not text:
+def _parse_gemini_json(text: str, schema=None) -> dict | list | None:
+    """Robustly extract and parse JSON, validating against an optional Pydantic schema."""
+    if not text: return None
+    # Extract content between first '[' or '{' and last ']' or '}'
+    start = re.search(r'[\[\{]', text)
+    end = re.search(r'[\]\}](?!.*[\]\}])', text)
+    if not start or not end: return None
+    try:
+        data = json.loads(text[start.start():end.end()])
+        return schema.parse_obj(data) if schema else data
+    except json.JSONDecodeError as e:
+        log.error(f"JSON decode failed at line {e.lineno}, col {e.colno}: {e.msg}")
         return None
-    for start_char, end_char in [('[', ']'), ('{', '}')]:
-        start = text.find(start_char)
-        if start == -1:
-            continue
-        depth = 0
-        in_string = False
-        escape = False
-        for i, ch in enumerate(text[start:], start):
-            if escape:
-                escape = False
-                continue
-            if ch == '\\' and in_string:
-                escape = True
-                continue
-            if ch == '"' and not escape:
-                in_string = not in_string
-            if not in_string:
-                if ch == start_char:
-                    depth += 1
-                elif ch == end_char:
-                    depth -= 1
-                    if depth == 0:
-                        try:
-                            clean = text[start:i+1]
-                            clean = re.sub(r',\s*([\]\}])', r'\1', clean)
-                            return json.loads(clean)
-                        except Exception:
-                            break
-    return None
 
 def load_goals() -> dict:
     """Safe goal loader with corruption recovery."""
     if GOALS.exists():
         try:
             return json.loads(GOALS.read_text())
-        except Exception as e:
+        except (json.JSONDecodeError, OSError) as e:
             log.error(f"goals.json corrupted: {e}. Restoring from backup or defaults.")
             # Restore logic could go here; for now, return default
     return {
@@ -572,8 +553,8 @@ def _dry_run_lint() -> tuple[bool, str]:
             return True, ""
         return False, result.stdout.strip()
     except Exception as e:
-        log.warning(f"Dry-run lint unavailable: {e}")
-        return True, ""  # Don't block if ruff is missing
+        log.error(f"Dry-run lint failed/unavailable: {e}")
+        return False, "Ruff missing or failed"
 
 
 def _lint_fix_with_gemini(lint_errors: str) -> bool:
@@ -873,12 +854,15 @@ def phase_ii_spaced_repetition(goals: dict) -> str:
         return "(No knowledge due for review yet.)"
 
     try:
-        klog = json.loads(klog_path.read_text())
-    except:
+        with open(klog_path, 'r') as f:
+            klog = json.load(f)
+    except json.JSONDecodeError as e:
+        log.error(f"Knowledge log corrupted: {e}")
         return "(Knowledge log corrupted — skipping.)"
 
     cycle_num = goals.get("cycles", 0)
-    due_items = [e for e in klog if e.get("review_due_cycle", 0) <= cycle_num]
+    # Use iterator to filter due items without loading full list into memory
+    due_items = list(itertools.islice((e for e in klog if e.get("review_due_cycle", 0) <= cycle_num), 2))
 
     if not due_items:
         log.info("No knowledge due for review this cycle.")
@@ -1406,6 +1390,8 @@ def run_cycle():
     _bag_data("cycle_status").write_text("pending")
     log.info("═══════════════════════════════════")
     log.info("  SAM — Operational Cycle Starting ")
+
+    # Initialize core services
     log.info("═══════════════════════════════════")
 
     # PRE-FLIGHT CHECK: Ensure the World is healthy BEFORE we start
