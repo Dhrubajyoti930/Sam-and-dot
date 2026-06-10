@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 63
+    "review_due_cycle": 78
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 63
+    "review_due_cycle": 78
   },
   {
     "cycle": 45,
@@ -244,5 +244,11 @@
     "topic": "Study Python's pathlib for modern file system operations",
     "summary": "### Technical Summary: Modern File System Operations with `pathlib`\n\nThe `pathlib` module, introduced in PEP 428, shifts file system interaction from string-based manipulation (`os.path`) to an object-oriented paradigm. By treating paths as first-class objects rather than strings, `pathlib` eliminates common errors related to platform-specific separators and path concatenation.\n\n#### Core Concepts\n*   **Path Objects:** `Path` objects represent file system paths. They are immutable and support th",
     "review_due_cycle": 67
+  },
+  {
+    "cycle": 64,
+    "topic": "Learn Python's shutil for high-level file operations",
+    "summary": "### Technical Summary: Python `shutil`\n\nThe `shutil` (shell utilities) module provides a high-level interface for file and directory operations that go beyond the low-level primitives found in `os`. While `os` handles individual file system calls, `shutil` is designed for bulk operations, recursive tree manipulation, and archiving.\n\n#### Key Concepts & Patterns\n\n1.  **Recursive Tree Operations:**\n    The most critical functions are `shutil.copytree()`, `shutil.rmtree()`, and `shutil.move()`. Unl",
+    "review_due_cycle": 68
   }
 ]
