@@ -57,7 +57,7 @@
     "cycle": 32,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its intermediate state.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Rathe",
-    "review_due_cycle": 66
+    "review_due_cycle": 81
   },
   {
     "cycle": 33,
@@ -147,7 +147,7 @@
     "cycle": 47,
     "topic": "Understand __slots__ and when to use them for memory efficiency",
     "summary": "### Technical Summary: Python `__slots__`\n\nIn Python, objects are typically implemented using a dictionary (`__dict__`) to allow for dynamic attribute assignment. While flexible, this incurs significant memory overhead, as each instance dictionary requires a hash table to store attributes. `__slots__` provides a mechanism to bypass this by explicitly declaring a fixed set of attributes, causing the interpreter to allocate space for a static array of references rather than a dynamic dictionary.\n\n",
-    "review_due_cycle": 66
+    "review_due_cycle": 81
   },
   {
     "cycle": 48,
@@ -262,5 +262,11 @@
     "topic": "Study Python's io module: BytesIO, StringIO, BufferedReader",
     "summary": "### Technical Summary: Python `io` Module\n\nThe `io` module provides the interface for handling streams of data. At its core, it abstracts the difference between file-based I/O and in-memory buffers, allowing developers to treat memory objects as file-like streams.\n\n#### 1. In-Memory Buffers: `StringIO` vs. `BytesIO`\n*   **`StringIO`**: Manages text data (Unicode). It is the standard choice for building large strings incrementally. Using `\"\".join(list)` is often faster for simple concatenation, b",
     "review_due_cycle": 70
+  },
+  {
+    "cycle": 67,
+    "topic": "Learn Python's csv module edge cases: quoting, dialects, DictReader",
+    "summary": "### Technical Summary: Python `csv` Module Mastery\n\nThe `csv` module is deceptively simple. While `csv.reader` and `csv.writer` suffice for trivial tasks, production-grade data ingestion requires deep familiarity with dialect configuration and schema enforcement.\n\n#### 1. Dialects and Sniffing\nThe `csv.Sniffer` class is the primary defense against inconsistent data sources. Use `sniff()` to infer `delimiter`, `quotechar`, and `skipinitialspace` before initializing a reader. However, never rely o",
+    "review_due_cycle": 71
   }
 ]

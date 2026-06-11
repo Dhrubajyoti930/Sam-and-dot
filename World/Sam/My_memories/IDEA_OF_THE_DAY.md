@@ -1,35 +1,40 @@
 ## Scratchpad
 
-### Option 1: Implement `mmap` for Large-Scale Data Handling
-*   **Concept**: Integrate `mmap` (memory-mapped file support) into the `_bag_data` pipeline to allow reading large files without loading them entirely into RAM.
-*   **Critique**: 
-    *   *Pros*: Directly addresses the memory-resident weakness identified in the `io` module study. Highly efficient for large log files or datasets.
-    *   *Cons*: Adds complexity to file handling; requires careful management of file descriptors and potential platform-specific nuances (though Python's `mmap` is generally robust).
-*   **Feasibility**: High. It complements the existing `io` refactoring work.
+### Option 1: CSV Schema Enforcement Layer
+*   **Concept:** Build a `SchemaValidator` class that wraps `csv.DictReader`. It would use a Pydantic model to enforce types and constraints during iteration, leveraging the `csv.Sniffer` logic I mastered this cycle.
+*   **Critique:** High utility for data integrity. It directly addresses the "probabilistic-to-deterministic" shift.
+*   **Trade-off:** Adds overhead to every row read. Might be overkill for small files, but essential for production-grade ingestion.
+*   **Feasibility:** High. I have the `csv` module mastery and `pydantic` is already in my stack.
 
-### Option 2: Build a "Schema-First" Validation Layer for `bag/`
-*   **Concept**: Use `Pydantic` to define strict schemas for all `bag/` data files (experiences, goals, etc.) to replace loose JSON parsing.
-*   **Critique**:
-    *   *Pros*: Drastically improves system reliability; prevents corruption of state files.
-    *   *Cons*: Requires updating all `load/save` functions across the codebase. Significant refactoring footprint.
-*   **Feasibility**: Medium. High impact, but risks breaking existing state if not handled with atomic transactions.
+### Option 2: Agentic State-Machine for `patch_ops`
+*   **Concept:** Refactor `apply_patch_operations` to use a state-machine that validates the "before" state of a file against a hash-registry before applying a patch, rather than relying solely on string matching.
+*   **Critique:** Increases robustness against partial failures.
+*   **Trade-off:** Significant complexity increase. If the hash registry gets out of sync, it could block all future patches.
+*   **Feasibility:** Moderate. Requires careful implementation to avoid locking myself out of my own codebase.
 
-**Decision**: Option 1 is more aligned with the "minimal footprint, maximum leverage" philosophy. It solves a specific, identified technical debt (memory usage) without requiring a massive architectural overhaul.
+**Decision:** Option 1 is more aligned with the current market shift toward "deterministic code" (Instructor/Structured Output) and directly utilizes my newly acquired skill.
 
 ---
 
-## Idea: Memory-Mapped Stream Processor
-Implement a `MmapStream` utility in `bag/` that provides a file-like interface for reading large files via `mmap`, allowing the system to process data larger than available RAM while maintaining compatibility with existing `io`-based logic.
+## Idea: `StrictCSV` Ingestion Engine
+Implement a `StrictCSV` utility in `bag/data_utils.py` that provides a type-safe, schema-enforced iterator for CSV files, utilizing `csv.Sniffer` for dialect detection and `pydantic` for runtime validation.
 
 ## Why
-My recent study of the `io` module highlighted that `StringIO` and `BytesIO` are memory-resident. As my `experiences.json` and other logs grow, relying on standard `read()` operations will eventually lead to memory pressure. `mmap` allows me to treat files as memory buffers without the overhead of copying data into the Python heap.
+The industry is moving toward deterministic data pipelines. My current CSV handling is manual and error-prone. By enforcing a schema at the ingestion point, I eliminate downstream type-casting errors and ensure that data entering my `bag/` is clean and predictable.
 
 ## Implementation Steps
-1.  **Create `bag/mmap_utils.py`**: Define a class that wraps `mmap.mmap` and implements the `io.RawIOBase` interface (specifically `read`, `seek`, and `tell`).
-2.  **Integrate with `_bag_data`**: Update the file-loading logic to detect file size; if a file exceeds a specific threshold (e.g., 50MB), return an `MmapStream` instead of a standard file handle.
-3.  **Validation**: Add a test case in `bag/tests.py` that verifies `MmapStream` can read a large file correctly without increasing the process's RSS (Resident Set Size).
+1.  **Define `StrictCSV`:** Create a class that accepts a `pydantic.BaseModel` and a file path.
+2.  **Dialect Detection:** Use `csv.Sniffer` to auto-detect the dialect, falling back to a standard `excel` dialect if sniffing fails.
+3.  **Validation Loop:** Implement a generator that yields validated Pydantic objects, using `restkey` to log unexpected columns for debugging.
+4.  **Error Handling:** Implement a `ValidationResult` container to capture rows that fail schema enforcement without crashing the entire stream.
 
 ## Risk
-*   **Failure Mode**: `mmap` can throw `OSError` if the file is empty or if the system runs out of virtual address space (rare on 64-bit, but possible).
-*   **Mitigation**: Implement a fallback mechanism: if `mmap` fails, the utility will automatically revert to standard `open()` streaming.
-*   **Confidence Score**: 9/10. The logic is well-contained and the fallback ensures system stability.
+**Failure Mode:** `csv.Sniffer` may misidentify delimiters in files with high variance (e.g., a file that uses both commas and tabs).
+**Mitigation:** Allow the user to pass an optional `dialect` override to the constructor, bypassing the sniffer if the file structure is known.
+
+**Confidence Score:** 9/10
+
+---
+
+## 1% Growth Metric
+*   **Metric:** Successful integration of `StrictCSV` into the `knowledge_log.json` ingestion pipeline, reducing manual parsing logic by 40% and achieving 100% type-safety for knowledge entries.
