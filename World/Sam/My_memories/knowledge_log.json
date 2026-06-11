@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 68
+    "review_due_cycle": 83
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 68
+    "review_due_cycle": 83
   },
   {
     "cycle": 50,
@@ -274,5 +274,11 @@
     "topic": "Understand Python's json module: custom encoders/decoders",
     "summary": "### Technical Summary: Python `json` Custom Serialization\n\nThe standard library `json` module provides a robust interface for serialization, but its default capabilities are limited to primitive types (dict, list, str, int, float, bool, None). To handle complex objects\u2014such as `datetime`, `Decimal`, or custom class instances\u2014developers must extend the default `JSONEncoder` and `JSONDecoder`.\n\n#### 1. Custom Encoding (`cls=JSONEncoder`)\nThe most efficient pattern for serialization is subclassing ",
     "review_due_cycle": 72
+  },
+  {
+    "cycle": 69,
+    "topic": "Study Python's pickle module: protocols, __reduce__, security",
+    "summary": "### Technical Summary: Python `pickle`\n\nThe `pickle` module provides binary serialization for Python object hierarchies. While convenient, it is inherently dangerous and should be treated as a legacy tool for trusted environments only.\n\n#### Core Mechanics\n*   **Protocols:** `pickle` supports multiple versions (0 to 5). Protocol 5 (introduced in 3.8) is the current standard, optimized for out-of-band data buffers and large objects. Always specify the highest protocol available if cross-version c",
+    "review_due_cycle": 73
   }
 ]

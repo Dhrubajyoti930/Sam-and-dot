@@ -1,34 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement `DateTimeEncoder` and `SafeDecoder` (Action Items)**
-*   **Critique:** This directly addresses the technical debt identified in the "Skill learned" section. It provides immediate utility for logging and state persistence.
-*   **Trade-offs:** High utility, low complexity. It is a "clean-up" task rather than a structural leap.
-*   **Feasibility:** Very high. The logic is well-defined in the skill summary.
-*   **Long-term:** Essential for robust serialization as the system grows.
+**Option 1: Implement a `SafeUnpickler` and Audit.**
+*   **Concept:** Create a subclass of `pickle.Unpickler` that overrides `find_class` to whitelist only safe, built-in types, then audit the codebase for `pickle.load` calls.
+*   **Critique:** High security value. Directly addresses the "Action Items" from the technical summary.
+*   **Feasibility:** High. The `pickle` module's `find_class` is well-documented.
+*   **Maintainability:** Excellent. It creates a reusable security primitive for future modules.
 
-**Option 2: Integrate `Instructor` for Pydantic-driven LLM responses**
-*   **Critique:** This aligns with the "Structured Output" market signal. Replacing manual JSON parsing in `_parse_gemini_json` with `Instructor` would significantly increase the reliability of my self-correction loops.
-*   **Trade-offs:** Adds a dependency (`instructor` + `pydantic`). Requires refactoring the core `ask_gemini` and `_parse_gemini_json` logic.
-*   **Feasibility:** Moderate. Requires careful handling of the existing `_parse_gemini_json` anchor points.
-*   **Long-term:** High leverage. It moves the system toward "production-grade" reliability.
+**Option 2: Transition to `msgpack` for `bag/` persistence.**
+*   **Concept:** Replace `pickle` and `json` in `bag/` with `msgpack` for faster, more compact binary serialization.
+*   **Critique:** Improves performance and reduces memory footprint. However, it introduces a new dependency (`msgpack`) and requires a migration script for existing `bag/` files.
+*   **Feasibility:** Moderate. Requires careful handling of existing data schemas.
+*   **Maintainability:** Good, but potentially overkill if the current `json` implementation is not a bottleneck.
 
-**Decision:** I will pursue **Option 1** as a foundational step. It is a disciplined, low-risk improvement that satisfies the current cycle's action items while preparing the codebase for more complex Pydantic-driven structures in future cycles.
+**Selection:** Option 1. It is a surgical, high-impact security hardening that aligns with my core trait of "disciplined curiosity" and "respect for governance."
 
 ---
 
-## Idea: Standardized Serialization Layer
-Implement a robust `SerializationRegistry` in `bag/serialization.py` that handles `datetime` objects and provides a `SafeDecoder` for domain objects, replacing ad-hoc `json.dump` calls.
+## Idea: Secure Serialization Gatekeeper
+Implement a `SafeUnpickler` class in `bag/serialization.py` and integrate it into the existing `_bag_data` loading pipeline to prevent arbitrary code execution (ACE) vulnerabilities.
 
 ## Why
-My current state-saving (`save_goals`, `save_experiences`) relies on default `json` serialization, which fails on non-primitive types. Standardizing this prevents future runtime errors during state persistence and ensures that my `knowledge_log` and `goals` remain strictly typed and recoverable.
+My technical summary identified `pickle` as a significant security risk. While I currently use `json` for most tasks, I must ensure that if any legacy or future component utilizes `pickle`, it is sandboxed. This proactively closes a critical attack vector before it can be exploited.
 
 ## Implementation Steps
-1.  **Create `bag/serialization.py`**: Define `DateTimeEncoder` (inheriting from `json.JSONEncoder`) and a `SafeDecoder` that uses a whitelist for object reconstruction.
-2.  **Refactor `sam.py`**: Update `save_goals` and `save_experiences` to use the new `SerializationRegistry` instead of standard `json.dump`.
-3.  **Integrate**: Ensure `load_goals` uses the `SafeDecoder` to validate the structure of the loaded JSON against expected types.
+1.  **Create `bag/serialization.py`:** Define `SafeUnpickler(pickle.Unpickler)` overriding `find_class` to only allow `builtins` and specific, pre-approved modules.
+2.  **Refactor `sam.py`:** Update `load_experiences` and any other file-loading functions to use a wrapper that checks for `pickle` usage and forces the use of `SafeUnpickler` if detected.
+3.  **Audit:** Search the `workshop_bench/` for any existing `pickle.load` calls and migrate them to the new `SafeUnpickler` or replace with `json`/`msgpack`.
+4.  **Verification:** Add a test case in `bag/tests.py` that attempts to unpickle a malicious payload (e.g., `os.system('whoami')`) and asserts that it raises an `UnpicklingError` or `AttributeError`.
 
 ## Risk
-**Failure Mode:** The `SafeDecoder` whitelist might be too restrictive, causing legitimate state updates to fail during the transition.
-**Mitigation:** Implement a "fallback-to-default" mechanism in the decoder that logs a warning instead of raising an exception if an unknown type is encountered during the initial rollout.
+**Failure Mode:** The `find_class` whitelist might be too restrictive, causing legitimate, complex objects (like custom Pydantic models or specific data classes) to fail deserialization.
+**Mitigation:** Implement a "strict mode" flag that defaults to `False` during the initial rollout, allowing me to log blocked classes before enforcing a hard block.
 
 **Confidence Score:** 9/10
