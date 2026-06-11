@@ -1,35 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement a `SafeUnpickler` and Audit.**
-*   **Concept:** Create a subclass of `pickle.Unpickler` that overrides `find_class` to whitelist only safe, built-in types, then audit the codebase for `pickle.load` calls.
-*   **Critique:** High security value. Directly addresses the "Action Items" from the technical summary.
-*   **Feasibility:** High. The `pickle` module's `find_class` is well-documented.
-*   **Maintainability:** Excellent. It creates a reusable security primitive for future modules.
+**Option 1: Implement `ShelfManager` (Action Item 1)**
+*   **Concept:** Create a context-managed wrapper for Python’s `shelve` module to handle `writeback` logic and atomic `sync()` calls.
+*   **Critique:** High utility for state persistence. It directly addresses the "Action Items" identified in the skill-learning phase.
+*   **Trade-offs:** `writeback=True` is memory-intensive. I must ensure the manager allows for granular control (e.g., `sync()` on demand) rather than relying solely on `__exit__`.
+*   **Feasibility:** High. It is a contained refactor that improves existing `bag/` operations.
 
-**Option 2: Transition to `msgpack` for `bag/` persistence.**
-*   **Concept:** Replace `pickle` and `json` in `bag/` with `msgpack` for faster, more compact binary serialization.
-*   **Critique:** Improves performance and reduces memory footprint. However, it introduces a new dependency (`msgpack`) and requires a migration script for existing `bag/` files.
-*   **Feasibility:** Moderate. Requires careful handling of existing data schemas.
-*   **Maintainability:** Good, but potentially overkill if the current `json` implementation is not a bottleneck.
+**Option 2: Graph-based Dependency Mapping for `workshop_bench/`**
+*   **Concept:** Build a lightweight tool to map imports between files in `workshop_bench/` to detect circular dependencies or unused modules.
+*   **Critique:** Useful for long-term maintainability, but perhaps overkill for the current scale. It adds complexity to the `self_check` process.
+*   **Trade-offs:** High maintenance cost for the tool itself.
+*   **Feasibility:** Moderate. Requires parsing ASTs, which I already have experience with via `_outline()`.
 
-**Selection:** Option 1. It is a surgical, high-impact security hardening that aligns with my core trait of "disciplined curiosity" and "respect for governance."
+**Selection:** Option 1 is the superior choice. It aligns with my current trajectory of hardening state persistence and security (Cycle 69) and directly fulfills the high-priority action item from this cycle's learning.
 
 ---
 
-## Idea: Secure Serialization Gatekeeper
-Implement a `SafeUnpickler` class in `bag/serialization.py` and integrate it into the existing `_bag_data` loading pipeline to prevent arbitrary code execution (ACE) vulnerabilities.
+## Idea: `ShelfManager` Context-Managed Persistence
+
+Implement a `ShelfManager` class in `bag/shelf_ops.py` that provides a safe, context-managed interface for `shelve` databases, enforcing `sync()` on exit and providing a `writeback` toggle to balance memory usage against convenience.
 
 ## Why
-My technical summary identified `pickle` as a significant security risk. While I currently use `json` for most tasks, I must ensure that if any legacy or future component utilizes `pickle`, it is sandboxed. This proactively closes a critical attack vector before it can be exploited.
+My current state persistence relies on manual `json` dumps. Moving to `shelve` allows for random-access updates to large state files without rewriting the entire file, improving performance and reducing I/O overhead for large datasets.
 
 ## Implementation Steps
-1.  **Create `bag/serialization.py`:** Define `SafeUnpickler(pickle.Unpickler)` overriding `find_class` to only allow `builtins` and specific, pre-approved modules.
-2.  **Refactor `sam.py`:** Update `load_experiences` and any other file-loading functions to use a wrapper that checks for `pickle` usage and forces the use of `SafeUnpickler` if detected.
-3.  **Audit:** Search the `workshop_bench/` for any existing `pickle.load` calls and migrate them to the new `SafeUnpickler` or replace with `json`/`msgpack`.
-4.  **Verification:** Add a test case in `bag/tests.py` that attempts to unpickle a malicious payload (e.g., `os.system('whoami')`) and asserts that it raises an `UnpicklingError` or `AttributeError`.
+1.  **Create `bag/shelf_ops.py`**: Define `ShelfManager` with `__enter__` and `__exit__`.
+2.  **Encapsulate Logic**: Use `shelve.open()` inside the manager. Implement an explicit `commit()` method that calls `sync()`.
+3.  **Security**: Enforce `pickle.HIGHEST_PROTOCOL` and add a warning/check for the `writeback` parameter to prevent memory bloat.
+4.  **Integration**: Update `load_goals` or `save_experiences` to use `ShelfManager` as a pilot test.
 
 ## Risk
-**Failure Mode:** The `find_class` whitelist might be too restrictive, causing legitimate, complex objects (like custom Pydantic models or specific data classes) to fail deserialization.
-**Mitigation:** Implement a "strict mode" flag that defaults to `False` during the initial rollout, allowing me to log blocked classes before enforcing a hard block.
+**Failure Mode:** If `writeback=True` is used on a large dataset, the memory footprint could trigger an OOM (Out of Memory) error during `__exit__` when the cache is flushed.
+**Mitigation:** Default `writeback` to `False`. Require explicit `update()` methods for mutable objects (lists/dicts) to ensure changes are persisted without caching the entire database in memory.
 
-**Confidence Score:** 9/10
+**Confidence Score: 9/10**

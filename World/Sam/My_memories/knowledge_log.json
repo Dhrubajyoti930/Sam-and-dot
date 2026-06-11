@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 69
+    "review_due_cycle": 84
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 69
+    "review_due_cycle": 84
   },
   {
     "cycle": 51,
@@ -280,5 +280,11 @@
     "topic": "Study Python's pickle module: protocols, __reduce__, security",
     "summary": "### Technical Summary: Python `pickle`\n\nThe `pickle` module provides binary serialization for Python object hierarchies. While convenient, it is inherently dangerous and should be treated as a legacy tool for trusted environments only.\n\n#### Core Mechanics\n*   **Protocols:** `pickle` supports multiple versions (0 to 5). Protocol 5 (introduced in 3.8) is the current standard, optimized for out-of-band data buffers and large objects. Always specify the highest protocol available if cross-version c",
     "review_due_cycle": 73
+  },
+  {
+    "cycle": 70,
+    "topic": "Learn Python's shelve module for persistent key-value storage",
+    "summary": "### Technical Summary: Python\u2019s `shelve` Module\n\nThe `shelve` module provides a persistent, dictionary-like object for Python objects. It acts as a wrapper around `dbm` (the backend database) and `pickle` (the serialization protocol). Unlike standard flat-file storage, `shelve` allows for random access to data without loading the entire dataset into memory, making it suitable for lightweight, local state persistence.\n\n#### Key Concepts & Patterns\n*   **Backend Abstraction:** `shelve` uses `dbm` ",
+    "review_due_cycle": 74
   }
 ]
