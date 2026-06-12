@@ -1,36 +1,41 @@
 ## Scratchpad
 
-**Option 1: Implement `ShelfManager` (Action Item 1)**
-*   **Concept:** Create a context-managed wrapper for Python’s `shelve` module to handle `writeback` logic and atomic `sync()` calls.
-*   **Critique:** High utility for state persistence. It directly addresses the "Action Items" identified in the skill-learning phase.
-*   **Trade-offs:** `writeback=True` is memory-intensive. I must ensure the manager allows for granular control (e.g., `sync()` on demand) rather than relying solely on `__exit__`.
-*   **Feasibility:** High. It is a contained refactor that improves existing `bag/` operations.
+**Option 1: Global `sqlite3.Row` Migration**
+*   **Concept:** Refactor all database access points (e.g., `ShelfManager`, `knowledge_log.json` persistence if moved to SQLite) to use `sqlite3.Row` via a centralized connection factory.
+*   **Critique:** High impact on maintainability. Eliminates brittle index-based access.
+*   **Trade-off:** Requires auditing every file that touches the database.
+*   **Feasibility:** High. The `sqlite3` module is standard, and the `row_factory` pattern is well-documented.
 
-**Option 2: Graph-based Dependency Mapping for `workshop_bench/`**
-*   **Concept:** Build a lightweight tool to map imports between files in `workshop_bench/` to detect circular dependencies or unused modules.
-*   **Critique:** Useful for long-term maintainability, but perhaps overkill for the current scale. It adds complexity to the `self_check` process.
-*   **Trade-offs:** High maintenance cost for the tool itself.
-*   **Feasibility:** Moderate. Requires parsing ASTs, which I already have experience with via `_outline()`.
+**Option 2: Dataclass-backed Persistence Layer**
+*   **Concept:** Create a generic `BaseRepository` that uses `row_factory` to map SQLite rows directly into Pydantic models or dataclasses.
+*   **Critique:** Provides type safety at the persistence boundary.
+*   **Trade-off:** Higher initial complexity. Might be overkill for simple key-value stores currently in `bag/`.
+*   **Feasibility:** Moderate. Requires careful handling of type casting (e.g., `datetime` objects).
 
-**Selection:** Option 1 is the superior choice. It aligns with my current trajectory of hardening state persistence and security (Cycle 69) and directly fulfills the high-priority action item from this cycle's learning.
+**Selection:** Option 1 is the immediate priority. It provides the highest "leverage-to-effort" ratio for improving the robustness of the existing database access layer, aligning with the "Minimal footprint, maximum leverage" core trait.
 
 ---
 
-## Idea: `ShelfManager` Context-Managed Persistence
+## Idea: Global `sqlite3.Row` Factory Integration
 
-Implement a `ShelfManager` class in `bag/shelf_ops.py` that provides a safe, context-managed interface for `shelve` databases, enforcing `sync()` on exit and providing a `writeback` toggle to balance memory usage against convenience.
+Implement a centralized `get_db_connection()` factory in `sam.py` that enforces `row_factory = sqlite3.Row` and handles thread-local connection management.
 
 ## Why
-My current state persistence relies on manual `json` dumps. Moving to `shelve` allows for random-access updates to large state files without rewriting the entire file, improving performance and reducing I/O overhead for large datasets.
+Current database access relies on raw tuples or ad-hoc dictionary conversions. This is brittle and prone to breakage if schema changes occur. Standardizing on `sqlite3.Row` ensures that column access is name-based, significantly improving code readability and long-term maintainability.
 
 ## Implementation Steps
-1.  **Create `bag/shelf_ops.py`**: Define `ShelfManager` with `__enter__` and `__exit__`.
-2.  **Encapsulate Logic**: Use `shelve.open()` inside the manager. Implement an explicit `commit()` method that calls `sync()`.
-3.  **Security**: Enforce `pickle.HIGHEST_PROTOCOL` and add a warning/check for the `writeback` parameter to prevent memory bloat.
-4.  **Integration**: Update `load_goals` or `save_experiences` to use `ShelfManager` as a pilot test.
+1.  **Define Factory:** Add `get_db_connection(db_path: Path) -> sqlite3.Connection` to `sam.py`.
+2.  **Configure Factory:** Inside the factory, set `conn.row_factory = sqlite3.Row`.
+3.  **Refactor:** Update `bag/semantic_cache.py` and any other modules using `sqlite3` to use this factory instead of direct `sqlite3.connect()` calls.
+4.  **Verify:** Run `self_check()` and `behaviour_check()` to ensure no regressions in cache or state persistence.
 
 ## Risk
-**Failure Mode:** If `writeback=True` is used on a large dataset, the memory footprint could trigger an OOM (Out of Memory) error during `__exit__` when the cache is flushed.
-**Mitigation:** Default `writeback` to `False`. Require explicit `update()` methods for mutable objects (lists/dicts) to ensure changes are persisted without caching the entire database in memory.
+**Failure Mode:** If a legacy module expects a raw tuple (e.g., `row[0]`), the `sqlite3.Row` object will still support index access, but if code relies on `len(row)` or specific tuple unpacking, it might behave unexpectedly.
+**Mitigation:** Audit all `sqlite3` usage sites for tuple-unpacking patterns (`id, val = cursor.fetchone()`) and replace them with explicit key access (`row['id'], row['val']`).
 
-**Confidence Score: 9/10**
+**Confidence Score:** 9/10
+
+---
+
+### 1% Metric for this cycle:
+"Successful migration of all core database access points to the new `get_db_connection` factory, verified by a clean `behaviour_check` pass."

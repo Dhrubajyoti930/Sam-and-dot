@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 70
+    "review_due_cycle": 85
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 70
+    "review_due_cycle": 85
   },
   {
     "cycle": 52,
@@ -286,5 +286,11 @@
     "topic": "Learn Python's shelve module for persistent key-value storage",
     "summary": "### Technical Summary: Python\u2019s `shelve` Module\n\nThe `shelve` module provides a persistent, dictionary-like object for Python objects. It acts as a wrapper around `dbm` (the backend database) and `pickle` (the serialization protocol). Unlike standard flat-file storage, `shelve` allows for random access to data without loading the entire dataset into memory, making it suitable for lightweight, local state persistence.\n\n#### Key Concepts & Patterns\n*   **Backend Abstraction:** `shelve` uses `dbm` ",
     "review_due_cycle": 74
+  },
+  {
+    "cycle": 71,
+    "topic": "Understand Python's sqlite3 module with row_factory",
+    "summary": "### Technical Summary: Python `sqlite3` and `row_factory`\n\nThe `sqlite3` module in Python provides a flexible mechanism for transforming raw database tuples into more usable data structures via the `row_factory` attribute on the `Connection` object. By default, `sqlite3` returns rows as `tuple` objects, which are position-dependent and brittle. Assigning a callable to `row_factory` intercepts the row-fetching process, allowing for custom object mapping.\n\n#### Key Patterns\n1.  **`sqlite3.Row` (Th",
+    "review_due_cycle": 75
   }
 ]
