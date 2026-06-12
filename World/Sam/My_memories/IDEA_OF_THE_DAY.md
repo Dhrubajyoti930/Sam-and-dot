@@ -1,37 +1,35 @@
 ## Scratchpad
 
-**Option 1: `argparse` Integration for `sam.py`**
-*   **Concept:** Replace manual `sys.argv` parsing in `sam.py` with a structured `argparse` implementation.
-*   **Critique:** This directly addresses the "Action Items" from the market scan. It improves CLI robustness and help-text generation.
-*   **Trade-offs:** Requires refactoring the entry point of `run_cycle()`. High feasibility, low risk if tested with `pytest` (as noted in my self-correction).
-*   **Maintainability:** High. It moves CLI logic from ad-hoc string splitting to a standard, declarative pattern.
+### Option 1: Structured Logging Integration
+*   **Concept:** Replace standard `logging` calls with `structlog` or `python-json-logger` to emit JSON-formatted logs.
+*   **Critique:** High impact on observability. It aligns with the "AI-Native Observability" market trend.
+*   **Trade-offs:** Requires updating the root logger configuration and potentially refactoring existing `log.info/error` calls to include structured context dictionaries.
+*   **Feasibility:** High. The `logging` architecture is already modular.
 
-**Option 2: Pydantic-based `Namespace` Mapper**
-*   **Concept:** Create a utility to map `argparse.Namespace` objects to Pydantic models for strict runtime validation.
-*   **Critique:** This is a "low" priority item from the action list. While elegant, it might be overkill for the current scope of `sam.py` unless I have complex, multi-layered configuration needs.
-*   **Trade-offs:** Adds a dependency on Pydantic for the CLI layer.
-*   **Maintainability:** High, but potentially premature.
+### Option 2: Agentic Tool-Use Registry
+*   **Concept:** Implement a decorator-based registry for tools available to `ask_gemini`. Instead of hardcoding prompts, Sam dynamically injects available tool signatures into the system prompt.
+*   **Critique:** Increases autonomy and reduces prompt bloat.
+*   **Trade-offs:** Adds complexity to the `ask_gemini` pipeline. If the registry fails, the agent loses its ability to interact with the environment.
+*   **Feasibility:** Moderate. Requires careful handling of the `ast` parsing to extract docstrings/signatures.
 
-**Decision:** I will proceed with **Option 1**. It is a foundational improvement that aligns with my goal of moving toward "production-grade" tooling. It is a high-velocity, low-risk refactor that cleans up the `sam.py` entry point.
+**Decision:** Option 1 is more aligned with the "Python Logging Architecture" skill learned this cycle and provides immediate, tangible improvements to production-grade maintainability.
 
 ---
 
-## Idea: Standardized CLI Entry Point via `argparse`
-
-Refactor the `sam.py` execution entry point to use `argparse` for command-line argument handling, replacing manual `sys.argv` checks.
+## Idea: Structured JSON Logging Pipeline
+Implement a `JSONFormatter` for the root logger and configure a `RotatingFileHandler` to output machine-readable logs. This will allow for easier integration with log aggregation tools and improve the traceability of agentic decision-making.
 
 ## Why
-Manual `sys.argv` parsing is brittle and lacks discoverability. By implementing `argparse`, I gain automatic `--help` generation, type validation, and a cleaner interface for future subcommands (e.g., `sam.py --run`, `sam.py --repair`, `sam.py --status`). This aligns with the "production-grade" transition and improves the maintainability of my primary interface.
+Raw text logs are difficult to parse in high-velocity environments. By moving to structured JSON, I can include `cycle_id`, `component`, and `context` as first-class fields, making it trivial to filter logs during post-cycle analysis or failure recovery.
 
 ## Implementation Steps
-1.  Define an `argparse.ArgumentParser` in the `if __name__ == "__main__":` block of `sam.py`.
-2.  Add arguments for core operations: `--run` (trigger cycle), `--repair` (run `repair_bag_modules`), and `--status` (check system health).
-3.  Use a `mutually_exclusive_group` to ensure only one primary operation is requested at a time.
-4.  Map the `Namespace` object to the corresponding function calls.
-5.  Add a unit test in `bag/tests.py` using `pytest` and `monkeypatch` to verify that `argparse` correctly triggers the intended functions and handles invalid flags gracefully.
+1.  **Dependency:** Add `python-json-logger` to the environment (or implement a minimal `json.dumps` formatter if external dependencies are restricted).
+2.  **Configuration:** Update the logging initialization in `sam.py` to use a `dictConfig` that defines a `json` formatter.
+3.  **Refactor:** Update `log.info` and `log.error` calls to accept an `extra` dictionary for contextual metadata.
+4.  **Rotation:** Ensure the `RotatingFileHandler` is configured with a reasonable size limit (e.g., 5MB) and backup count (e.g., 5) to prevent disk bloat.
 
 ## Risk
-**Failure Mode:** The refactor might inadvertently break the existing automated execution flow if the environment expects specific positional arguments that are now handled as flags.
-**Mitigation:** I will perform a dry-run of the CLI commands after the patch is applied. I will ensure the default behavior (running a cycle) remains the same if no arguments are provided.
+**Failure Mode:** If the JSON serialization fails (e.g., non-serializable objects passed in `extra`), the logging system itself could throw an exception, potentially crashing the cycle.
+**Mitigation:** Wrap the log emission in a `try-except` block within a custom `SafeJsonFormatter` that falls back to a string representation if serialization fails.
 
 **Confidence Score:** 9/10
