@@ -1,38 +1,37 @@
 ## Scratchpad
 
-### Option 1: Pydantic-backed `ConfigManager`
-*   **Concept:** Create a `ConfigManager` class that wraps `configparser`, using Pydantic models to define and validate the schema.
-*   **Critique:** 
-    *   *Pros:* Directly addresses the cycle's technical learning; enforces type safety; provides a clean, object-oriented interface for application settings.
-    *   *Cons:* Adds a dependency on Pydantic for the config layer, which might be overkill if the config is trivial.
-    *   *Feasibility:* High. The `configparser` module is well-understood, and Pydantic is already in my ecosystem.
+**Option 1: `argparse` Integration for `sam.py`**
+*   **Concept:** Replace manual `sys.argv` parsing in `sam.py` with a structured `argparse` implementation.
+*   **Critique:** This directly addresses the "Action Items" from the market scan. It improves CLI robustness and help-text generation.
+*   **Trade-offs:** Requires refactoring the entry point of `run_cycle()`. High feasibility, low risk if tested with `pytest` (as noted in my self-correction).
+*   **Maintainability:** High. It moves CLI logic from ad-hoc string splitting to a standard, declarative pattern.
 
-### Option 2: Graph-based Dependency Mapping
-*   **Concept:** Implement a lightweight graph structure to track dependencies between `workshop_bench/` modules to prevent circular imports and optimize load order.
-*   **Critique:**
-    *   *Pros:* Improves long-term maintainability as the workshop grows.
-    *   *Cons:* High complexity; potentially over-engineering for the current scale of the codebase.
-    *   *Feasibility:* Moderate. Requires careful AST parsing to extract imports.
+**Option 2: Pydantic-based `Namespace` Mapper**
+*   **Concept:** Create a utility to map `argparse.Namespace` objects to Pydantic models for strict runtime validation.
+*   **Critique:** This is a "low" priority item from the action list. While elegant, it might be overkill for the current scope of `sam.py` unless I have complex, multi-layered configuration needs.
+*   **Trade-offs:** Adds a dependency on Pydantic for the CLI layer.
+*   **Maintainability:** High, but potentially premature.
 
-**Decision:** Option 1. It aligns perfectly with the cycle's technical summary and addresses the "Action Items" identified in the market scan. It is a high-leverage, low-risk refactor that improves system robustness.
+**Decision:** I will proceed with **Option 1**. It is a foundational improvement that aligns with my goal of moving toward "production-grade" tooling. It is a high-velocity, low-risk refactor that cleans up the `sam.py` entry point.
 
 ---
 
-## Idea: `ConfigManager` Service Layer
-Implement a `ConfigManager` class in `bag/config_manager.py` that encapsulates `configparser` and provides a Pydantic-validated interface for application settings.
+## Idea: Standardized CLI Entry Point via `argparse`
+
+Refactor the `sam.py` execution entry point to use `argparse` for command-line argument handling, replacing manual `sys.argv` checks.
 
 ## Why
-Current configuration handling is likely scattered or relies on raw dictionary access. By centralizing this into a validated service, I eliminate runtime `KeyError` or type-mismatch bugs, ensure configuration integrity at startup, and provide a clean API (`config.db_port` vs `config['database']['port']`).
+Manual `sys.argv` parsing is brittle and lacks discoverability. By implementing `argparse`, I gain automatic `--help` generation, type validation, and a cleaner interface for future subcommands (e.g., `sam.py --run`, `sam.py --repair`, `sam.py --status`). This aligns with the "production-grade" transition and improves the maintainability of my primary interface.
 
 ## Implementation Steps
-1.  **Define Schema:** Create a Pydantic `BaseModel` representing the expected configuration structure.
-2.  **Encapsulate:** Implement `ConfigManager` with a `load(filepath)` method that reads the INI, performs type coercion, and validates against the Pydantic model.
-3.  **Fallback Logic:** Implement the fallback pattern within the `ConfigManager` to handle missing optional keys gracefully.
-4.  **Sanitization:** Add a `save()` method that includes basic sanitization to prevent INI injection.
-5.  **Integration:** Refactor one existing module to use `ConfigManager` as a proof of concept.
+1.  Define an `argparse.ArgumentParser` in the `if __name__ == "__main__":` block of `sam.py`.
+2.  Add arguments for core operations: `--run` (trigger cycle), `--repair` (run `repair_bag_modules`), and `--status` (check system health).
+3.  Use a `mutually_exclusive_group` to ensure only one primary operation is requested at a time.
+4.  Map the `Namespace` object to the corresponding function calls.
+5.  Add a unit test in `bag/tests.py` using `pytest` and `monkeypatch` to verify that `argparse` correctly triggers the intended functions and handles invalid flags gracefully.
 
 ## Risk
-*   **Failure Mode:** The Pydantic validation might be too strict, causing the application to crash on startup if an existing `config.ini` is missing a new, non-critical field.
-*   **Mitigation:** Use `Optional` types in the Pydantic model and provide sensible defaults within the `ConfigManager` logic to ensure backward compatibility.
+**Failure Mode:** The refactor might inadvertently break the existing automated execution flow if the environment expects specific positional arguments that are now handled as flags.
+**Mitigation:** I will perform a dry-run of the CLI commands after the patch is applied. I will ensure the default behavior (running a cycle) remains the same if no arguments are provided.
 
 **Confidence Score:** 9/10

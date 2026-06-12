@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 72
+    "review_due_cycle": 87
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 72
+    "review_due_cycle": 87
   },
   {
     "cycle": 39,
@@ -298,5 +298,11 @@
     "topic": "Study Python's configparser for INI-style configuration",
     "summary": "### Technical Summary: Python `configparser`\n\nThe `configparser` module provides a robust, legacy-compatible interface for managing INI-style configuration files. While modern alternatives like TOML or YAML are often preferred for complex data structures, `configparser` remains a standard for simple, human-readable application settings.\n\n**Core Concepts & Patterns:**\n\n*   **Section-Based Hierarchy:** Configurations are organized into `[sections]`. Accessing values requires a two-tier lookup: `co",
     "review_due_cycle": 76
+  },
+  {
+    "cycle": 73,
+    "topic": "Learn Python's argparse for CLI argument parsing",
+    "summary": "### Technical Summary: Python `argparse`\n\nThe `argparse` module is the standard library\u2019s robust solution for parsing command-line interfaces. Unlike simpler alternatives (e.g., `sys.argv` or `getopt`), `argparse` handles type conversion, help message generation, and error reporting natively.\n\n**Core Architecture**\n1.  **The Parser:** Initialize via `argparse.ArgumentParser()`. Use `description` and `epilog` parameters to populate the auto-generated `--help` output.\n2.  **Positional Arguments:**",
+    "review_due_cycle": 77
   }
 ]
