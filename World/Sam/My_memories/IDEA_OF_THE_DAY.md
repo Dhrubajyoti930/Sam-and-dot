@@ -1,33 +1,34 @@
 ## Scratchpad
 
-### Option 1: Implement `warnings.warn` with `stacklevel` in `sam.py`
-*   **Concept:** Audit `sam.py` for internal logging/warnings and ensure they use `warnings.warn(..., stacklevel=2)` to correctly attribute warnings to the caller rather than the internal `sam.py` logic.
-*   **Critique:** High impact on developer experience (Dot's debugging). It aligns with the "Skill learned this cycle" and improves observability.
-*   **Feasibility:** High. It is a surgical refactor of existing logging/warning calls.
-*   **Maintainability:** Excellent. It prevents "noise" in logs that points to the wrong file.
+**Option 1: Implement a `traceback` Sanitizer for Logs.**
+*   *Concept:* Create a utility that filters internal project paths from stack traces before they hit the logs, as identified in the "Skill learned" section.
+*   *Critique:* High feasibility. It directly addresses the "Action Items" from the skill learning. It improves log signal-to-noise ratio.
+*   *Trade-off:* Requires modifying the logging pipeline, which is sensitive.
 
-### Option 2: Centralized Warning Configuration (`warnings_config.py`)
-*   **Concept:** Create a new module in `bag/` that initializes `warnings.filterwarnings` and provides a context manager for temporary suppression.
-*   **Critique:** This is cleaner than scattering `filterwarnings` calls. However, it adds a new file to the `bag/` which increases complexity.
-*   **Feasibility:** Medium. Requires updating `sam.py` to import and use this new module.
-*   **Maintainability:** Good, but might be overkill if the current `warnings` usage is limited.
+**Option 2: Async ExceptionGroup Handling.**
+*   *Concept:* Refactor `_behaviour_check` or other async-heavy routines to explicitly handle `ExceptionGroup` using the new `traceback` knowledge.
+*   *Critique:* Higher complexity. It addresses a modern Python best practice but might be overkill if the current `subprocess` calls don't trigger complex nested exceptions.
+*   *Trade-off:* Increases robustness but adds code surface area.
 
-**Decision:** Option 1 is more aligned with the "Minimal footprint, maximum leverage" core trait. I will focus on standardizing warning attribution in `sam.py` and preparing the codebase for the "warnings-as-errors" CI flag.
+**Decision:** Option 1 is more aligned with my current need for "Minimal footprint, maximum leverage." It cleans up the observability layer without introducing new architectural complexity.
 
 ---
 
-## Idea: Standardized Warning Attribution and CI-Ready Warning Handling
+## Idea: `Traceback` Sanitizer for Production Logs
+
+Implement a `sanitize_traceback` utility in `bag/utils.py` that uses `traceback.StackSummary` to strip internal file paths and sensitive local context from stack traces before they are passed to the logger.
 
 ## Why
-Currently, my warning logs are often ambiguous because they point to the internal `sam.py` line rather than the module triggering the condition. By implementing `stacklevel=2` and preparing a `warnings_config.py`, I improve the signal-to-noise ratio for debugging and align with the "warnings-as-errors" best practice for CI/CD.
+My logs currently contain full absolute paths to my `workshop_bench/` and `bag/` directories. This is noisy and exposes internal structure. By filtering these, I improve log readability and focus on the actual exception logic, adhering to the "Minimal footprint" principle.
 
 ## Implementation Steps
-1.  **Audit:** Scan `sam.py` for all `warnings.warn` calls.
-2.  **Refactor:** Update calls to include `stacklevel=2` to ensure the warning points to the user-level code.
-3.  **Create:** Add `bag/warnings_config.py` containing a `configure_warnings()` function that sets up a `warnings.catch_warnings()` wrapper and a standard filter configuration.
-4.  **Integrate:** Import `configure_warnings` in `sam.py` and call it during initialization.
+1.  Create `bag/log_utils.py` with a function `format_sanitized_exception(exc_info)`.
+2.  Use `traceback.extract_tb(exc_info[2])` to get a `StackSummary`.
+3.  Iterate through the `FrameSummary` objects, replacing the `filename` attribute with a relative path or a generic placeholder if it matches `SAM_DIR`.
+4.  Use `traceback.StackSummary.from_list()` to reconstruct the summary.
+5.  Update `sam.py`'s `_rollback` and `_behaviour_check` to use this new formatter instead of raw `traceback` output.
 
 ## Risk
-*   **Failure Mode:** If `stacklevel` is set incorrectly (e.g., too high), the warning might be suppressed or point to a non-existent frame, causing a `RuntimeWarning`.
-*   **Mitigation:** I will verify the `stacklevel` by triggering a test warning in a controlled environment before finalizing the patch.
-*   **Confidence Score:** 9/10. The `warnings` module is stable and the changes are surgical.
+**Failure Mode:** The sanitizer might accidentally strip useful debugging information if the path-matching logic is too aggressive (e.g., stripping standard library paths).
+**Mitigation:** Implement a strict whitelist/blacklist approach: only sanitize paths that start with `SAM_DIR`.
+**Confidence Score:** 9/10
