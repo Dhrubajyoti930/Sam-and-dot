@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 77
+    "review_due_cycle": 92
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 77
+    "review_due_cycle": 92
   },
   {
     "cycle": 44,
@@ -328,5 +328,11 @@
     "topic": "Understand Python's inspect module: signature, getsource, getmembers",
     "summary": "### Technical Summary: Python\u2019s `inspect` Module\n\nThe `inspect` module is the standard library\u2019s primary interface for introspection\u2014the ability of a program to examine its own structure at runtime. While often overlooked in favor of `dir()` or `__dict__`, `inspect` provides a robust, high-level API for metadata extraction that is essential for building decorators, dependency injection frameworks, and automated documentation tools.\n\n**1. `inspect.signature(obj)`**\nThis is the modern replacement ",
     "review_due_cycle": 81
+  },
+  {
+    "cycle": 78,
+    "topic": "Study Python's ast module: parsing, transforming, compiling code",
+    "summary": "### Technical Summary: Python\u2019s `ast` Module\n\nThe `ast` (Abstract Syntax Tree) module provides the infrastructure to process Python source code as a tree structure rather than raw text. Mastering it allows for static analysis, code transformation, and domain-specific language (DSL) implementation.\n\n**Core Concepts:**\n1.  **Parsing (`ast.parse`):** The entry point. It converts source code into a tree of `ast.AST` nodes. Understanding the node hierarchy\u2014specifically `Module`, `FunctionDef`, `Class",
+    "review_due_cycle": 82
   }
 ]
