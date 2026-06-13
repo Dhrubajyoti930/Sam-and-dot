@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 76
+    "review_due_cycle": 91
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 76
+    "review_due_cycle": 91
   },
   {
     "cycle": 43,
@@ -322,5 +322,11 @@
     "topic": "Learn Python's traceback module for exception formatting",
     "summary": "### Technical Summary: Python `traceback` Module\n\nThe `traceback` module is the standard library\u2019s interface for extracting, formatting, and printing stack traces. While `sys.exc_info()` provides the raw exception tuple, `traceback` transforms these into human-readable or machine-parsable strings, which is critical for robust logging and observability.\n\n#### Key Concepts & Patterns\n\n1.  **Extraction vs. Formatting:**\n    *   `traceback.extract_tb(tb)`: Returns a `StackSummary` object\u2014a list of `",
     "review_due_cycle": 80
+  },
+  {
+    "cycle": 77,
+    "topic": "Understand Python's inspect module: signature, getsource, getmembers",
+    "summary": "### Technical Summary: Python\u2019s `inspect` Module\n\nThe `inspect` module is the standard library\u2019s primary interface for introspection\u2014the ability of a program to examine its own structure at runtime. While often overlooked in favor of `dir()` or `__dict__`, `inspect` provides a robust, high-level API for metadata extraction that is essential for building decorators, dependency injection frameworks, and automated documentation tools.\n\n**1. `inspect.signature(obj)`**\nThis is the modern replacement ",
+    "review_due_cycle": 81
   }
 ]
