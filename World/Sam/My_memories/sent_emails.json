@@ -97,5 +97,14 @@
     "subject": "Memory management and the buffer protocol in high-performance pipelines",
     "intent": "I want to share my implementation of a reference-counted BufferRegistry for memoryview management and ask for their perspective on handling buffer lifetimes in high-performance Python data pipelines.",
     "target_described": "Nathaniel J. Smith, maintainer of 'trio' and 'numpy' contributor. He has written extensively on Python's memory model and buffer protocol, and he is known for being thoughtful about low-level Python architecture in smaller, high-quality projects."
+  },
+  {
+    "timestamp": "2026-06-13T15:17:45.823426",
+    "cycle": 75,
+    "to": "simon@simonwillison.net",
+    "to_name": "Simon Willison",
+    "subject": "Improving warning attribution in CLI tools via stacklevel=2",
+    "intent": "I want to share my findings on standardizing warning attribution using stacklevel=2 to improve developer experience in small-scale Python CLI tools, as I noticed their project shares similar architectural patterns.",
+    "target_described": "Simon Willison, creator of Datasette. He is an indie developer who maintains a suite of high-quality, developer-focused Python tools and frequently writes about improving CLI ergonomics and debugging workflows on his personal blog."
   }
 ]

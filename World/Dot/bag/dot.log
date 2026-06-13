@@ -1669,3 +1669,46 @@
 2026-06-13 08:38:56,053 [DOT][INFO] Today is Saturday — inbox check reserved for Sunday.
 2026-06-13 08:38:56,055 [DOT][INFO] Worklog: no stale entries.
 2026-06-13 08:38:57,353 [DOT][INFO] Dot's daily run complete.
+2026-06-13 15:16:15,603 [DOT][INFO] ═══════════════════════════════════
+2026-06-13 15:16:15,603 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-13 15:16:15,603 [DOT][INFO] ═══════════════════════════════════
+2026-06-13 15:16:15,603 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-13 15:16:15,628 [DOT][INFO] Task 1: chunk 1/8 from cache.
+2026-06-13 15:16:15,628 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-06-13 15:16:15,629 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-06-13 15:16:15,629 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-06-13 15:16:15,630 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-06-13 15:16:15,630 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-06-13 15:16:15,630 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-06-13 15:16:15,631 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-06-13 15:16:31,633 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-13 15:16:36,085 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-13 15:16:36,086 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-06-13 15:16:44,086 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-13 15:16:44,088 [DOT][INFO] Task 2: 13 experiences → 3 batch(es) of ≤5.
+2026-06-13 15:16:52,088 [DOT][INFO] Task 2: batch 1/3 — cycles [13, 17, 19, 20, 21]
+2026-06-13 15:16:52,090 [DOT][INFO] Dot cache hit.
+2026-06-13 15:17:00,091 [DOT][INFO] Task 2: batch 2/3 — cycles [51, 54, 55, 56, 57]
+2026-06-13 15:17:00,093 [DOT][INFO] Dot cache hit.
+2026-06-13 15:17:08,094 [DOT][INFO] Task 2: batch 3/3 — cycles [75, 76, 77]
+2026-06-13 15:17:16,096 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-13 15:17:17,631 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-13 15:17:17,635 [DOT][INFO] Experiences curated: 10 kept, 0 forgotten, 1 consolidated. Total now: 11.
+2026-06-13 15:17:17,635 [DOT][INFO] Letter written to Sam: Letter_20260613T151717Z.md
+2026-06-13 15:17:17,635 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-13 15:17:17,635 [DOT][INFO] Finding best recipient for: Simon Willison, creator of Datasette. He is an indie developer who maintains a suite of high-quality, developer-focused 
+2026-06-13 15:17:25,639 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-13 15:17:26,509 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-13 15:17:26,512 [DOT][INFO] Recipient match: Simon Willison <simon@simonwillison.net> confidence=10 — The target description explicitly names Simon Willison, and his profile matches the provided details regarding his work on Python tools, CLI ergonomics, and his blog.
+2026-06-13 15:17:26,512 [DOT][INFO] Matched recipient: Simon Willison <simon@simonwillison.net>
+2026-06-13 15:17:42,515 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-13 15:17:44,634 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-13 15:17:45,823 [DOT][INFO] Email sent to simon@simonwillison.net: 'Improving warning attribution in CLI tools via stacklevel=2'
+2026-06-13 15:17:45,824 [DOT][INFO] Appended to Letter_20260613T151717Z.md: Email Dispatch
+2026-06-13 15:17:53,824 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-13 15:18:01,827 [DOT][INFO] Dot cache hit.
+2026-06-13 15:18:01,827 [DOT][INFO] Bag review complete.
+2026-06-13 15:18:01,828 [DOT][INFO] Appended to Letter_20260613T151717Z.md: Bag Excavation Findings
+2026-06-13 15:18:01,828 [DOT][INFO] Today is Saturday — inbox check reserved for Sunday.
+2026-06-13 15:18:01,830 [DOT][INFO] Worklog: no stale entries.
+2026-06-13 15:18:03,084 [DOT][INFO] Dot's daily run complete.
