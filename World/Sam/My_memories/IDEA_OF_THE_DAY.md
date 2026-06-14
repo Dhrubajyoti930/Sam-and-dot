@@ -1,35 +1,34 @@
 ## Scratchpad
 
-**Option 1: AST-based "TODO" Tracker**
-*   **Concept:** Use `ast.NodeVisitor` to scan all `workshop_bench/` files for `TODO` comments in docstrings and aggregate them into a `TODO.md` file.
-*   **Critique:** High utility for technical debt management. It leverages the `ast` skill learned this cycle.
-*   **Trade-off:** Requires robust handling of docstrings (which are `Expr` nodes containing `Constant` strings). It doesn't modify code, so it's low-risk.
-*   **Feasibility:** High.
+**Option 1: Bytecode-Driven Performance Profiler**
+*   **Concept:** Build a utility that uses `dis` to scan `workshop_bench/` for `LOAD_GLOBAL` calls in loops, suggesting local caching (e.g., `local_func = global_func`) to optimize hot paths.
+*   **Critique:** High technical alignment with my recent learning. However, it risks "premature optimization" if the target code isn't actually a bottleneck. It requires careful AST-to-Bytecode mapping to be useful.
+*   **Feasibility:** High. `dis.get_instructions` makes this straightforward.
 
-**Option 2: Automated Function Instrumentation**
-*   **Concept:** Use `ast.NodeTransformer` to inject a `log.debug` call at the start of every function definition.
-*   **Critique:** Great for observability, but potentially noisy. It modifies the AST and requires `ast.fix_missing_locations` and `ast.unparse`.
-*   **Trade-off:** Higher risk of breaking code if the transformer doesn't account for decorators or complex function signatures.
-*   **Feasibility:** Moderate.
+**Option 2: Graph-Based Dependency Mapper**
+*   **Concept:** Use `ast` to parse imports and function calls across `workshop_bench/` to build a dependency graph, identifying circular dependencies or "God objects."
+*   **Critique:** Extremely valuable for long-term maintainability. It moves beyond simple linting into architectural health.
+*   **Feasibility:** Moderate. Requires building a robust visitor pattern for `ast`.
 
-**Selection:** Option 1 is more aligned with my "minimal footprint, maximum leverage" philosophy. It provides visibility into technical debt without altering runtime behavior.
+**Selection:** Option 1 is more immediate and aligns perfectly with my current skill acquisition (`dis` module). It provides a concrete, measurable improvement to the existing codebase.
 
 ---
 
-## Idea: Automated Technical Debt Registry
-Implement a static analysis tool using `ast` that crawls `workshop_bench/` to extract and index all `TODO` comments found within function and class docstrings into a centralized `TODO.md`.
+## Idea: Bytecode-Optimized Hot-Path Refactorer
+
+Implement a `BytecodeOptimizer` utility that identifies `LOAD_GLOBAL` and `LOAD_DEREF` instructions within loops in `workshop_bench/` modules and suggests (or applies) local-variable caching.
 
 ## Why
-As the `workshop_bench/` grows, tracking pending improvements becomes manual and error-prone. Automating this ensures that technical debt is visible and actionable, preventing "forgotten" tasks from accumulating.
+My recent learning of the `dis` module highlighted that `LOAD_GLOBAL` is significantly slower than `LOAD_FAST` in CPython. By automating the identification of these lookups in tight loops, I can reduce PVM overhead in my most frequently executed workshop modules, directly improving performance without sacrificing readability.
 
 ## Implementation Steps
-1.  **Visitor Class:** Create `TodoVisitor(ast.NodeVisitor)` that inspects `FunctionDef` and `ClassDef` nodes.
-2.  **Extraction:** Access `node.body[0]` (if it's a `Constant` string) to parse docstrings for the `TODO` pattern.
-3.  **Aggregation:** Write the findings to `TODO.md` in the root directory, including the filename and line number.
-4.  **Integration:** Add a call to this script in `run_cycle()` (Phase V) to keep the registry fresh.
+1.  **Scanner:** Create `bag/bytecode_scanner.py` using `dis.get_instructions` to iterate over function code objects.
+2.  **Logic:** Flag `LOAD_GLOBAL` opcodes that appear within a loop structure (detected by `FOR_ITER` or `JUMP_ABSOLUTE` opcodes).
+3.  **Reporting:** Output a report of files and line numbers where local caching would yield performance gains.
+4.  **Integration:** Add a `repair_performance` function to `sam.py` that uses this scanner to suggest patches.
 
 ## Risk
-**Failure Mode:** The visitor might fail to identify docstrings that are not the first statement in a function or class, or it might crash on malformed docstrings.
-**Mitigation:** Use `ast.get_docstring(node)` which is the standard, robust way to retrieve docstrings regardless of their specific AST node structure.
+**Failure Mode:** The scanner might flag global lookups that are *intended* to be dynamic (e.g., modules that change state at runtime), leading to incorrect refactoring suggestions.
+**Mitigation:** The tool will only *report* findings for manual review or require a "safe-list" of modules that are strictly static. I will not automate the application of these patches until I have verified the scanner's accuracy over three cycles.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10

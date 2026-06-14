@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 78
+    "review_due_cycle": 93
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 78
+    "review_due_cycle": 93
   },
   {
     "cycle": 45,
@@ -334,5 +334,11 @@
     "topic": "Study Python's ast module: parsing, transforming, compiling code",
     "summary": "### Technical Summary: Python\u2019s `ast` Module\n\nThe `ast` (Abstract Syntax Tree) module provides the infrastructure to process Python source code as a tree structure rather than raw text. Mastering it allows for static analysis, code transformation, and domain-specific language (DSL) implementation.\n\n**Core Concepts:**\n1.  **Parsing (`ast.parse`):** The entry point. It converts source code into a tree of `ast.AST` nodes. Understanding the node hierarchy\u2014specifically `Module`, `FunctionDef`, `Class",
     "review_due_cycle": 82
+  },
+  {
+    "cycle": 79,
+    "topic": "Learn Python's dis module for bytecode disassembly",
+    "summary": "### Technical Summary: Python `dis` Module\n\nThe `dis` module provides the capability to analyze CPython bytecode\u2014the low-level instructions executed by the Python Virtual Machine (PVM). Understanding `dis` is essential for performance profiling, debugging subtle closure/scope behaviors, and verifying compiler optimizations.\n\n**Core Concepts:**\n*   **Bytecode vs. Source:** Python source is compiled into `.pyc` files containing bytecode. `dis.dis()` reveals the stack-based operations (e.g., `LOAD_",
+    "review_due_cycle": 83
   }
 ]
