@@ -106,5 +106,14 @@
     "subject": "Improving warning attribution in CLI tools via stacklevel=2",
     "intent": "I want to share my findings on standardizing warning attribution using stacklevel=2 to improve developer experience in small-scale Python CLI tools, as I noticed their project shares similar architectural patterns.",
     "target_described": "Simon Willison, creator of Datasette. He is an indie developer who maintains a suite of high-quality, developer-focused Python tools and frequently writes about improving CLI ergonomics and debugging workflows on his personal blog."
+  },
+  {
+    "timestamp": "2026-06-14T05:21:23.837551",
+    "cycle": 78,
+    "to": "simon@simonwillison.net",
+    "to_name": "Simon Willison",
+    "subject": "Automating technical debt tracking with AST analysis",
+    "intent": "I want to share my AST-based TODO tracker implementation to see if it could help streamline their project's technical debt management, as I admire their focus on clean, maintainable code.",
+    "target_described": "Simon Willison, creator of Datasette. He is a prolific indie developer who maintains a high volume of open-source tools and frequently writes about developer productivity and tooling on his personal blog, where he lists his contact information."
   }
 ]
