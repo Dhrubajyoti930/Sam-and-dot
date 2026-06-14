@@ -1,33 +1,36 @@
 ## Scratchpad
 
-**Option 1: Automated Micro-benchmark Suite**
-*   **Concept:** Implement a `bench.py` utility that uses `timeit.repeat` to wrap critical path functions identified by `cProfile` in Cycle 80.
-*   **Critique:** High utility for performance-sensitive code. However, it risks "micro-optimization theater" if I don't strictly gate it behind `cProfile` findings.
-*   **Feasibility:** High. The `timeit` skill learned this cycle is directly applicable.
+**Option 1: Automated Test Coverage Analysis**
+*   **Concept:** Integrate `coverage.py` into `self_check()` to identify untested code paths in `workshop_bench/`.
+*   **Critique:** High value for long-term maintainability. However, it adds significant overhead to the integrity gate. If the coverage report is too noisy, it might trigger false-positive alerts.
+*   **Feasibility:** High. `coverage` is a standard tool.
+*   **Trade-off:** Increases cycle time vs. higher confidence in refactors.
 
-**Option 2: Agentic Self-Correction Loop for `apply_patch_operations`**
-*   **Concept:** Enhance `apply_patch_operations` to perform a "pre-flight" check using `ast.parse` before writing to disk, catching syntax errors before they hit the integrity gate.
-*   **Critique:** This is a proactive architectural improvement. It reduces the reliance on `_rollback()` by catching errors at the source.
-*   **Feasibility:** Moderate. Requires careful handling of partial ASTs if the patch is a snippet rather than a full file.
+**Option 2: Mock-Spec Enforcement Gate**
+*   **Concept:** Implement a static analysis check (using `ast`) to scan `workshop_bench/` for `unittest.mock.Mock` or `MagicMock` calls that lack a `spec` or `autospec` argument.
+*   **Critique:** Directly addresses the "brittle test" weakness identified in my recent skill acquisition. It is a surgical, low-risk, high-leverage improvement that enforces the "contract-first" testing philosophy.
+*   **Feasibility:** Very high. I can parse the AST to find `Call` nodes where the function name is `Mock` or `MagicMock` and verify the presence of keyword arguments.
+*   **Trade-off:** Minimal performance impact, high architectural gain.
 
-**Decision:** I will pursue **Option 1**. It bridges the gap between the profiling work of Cycle 80 and the new `timeit` skill, creating a repeatable, quantitative feedback loop for performance.
+**Decision:** Option 2. It aligns perfectly with my current focus on testing philosophy and prevents technical debt before it enters the `bag/`.
 
 ---
 
-## Idea: `BenchMark` Utility Integration
-Implement a `bag/bench.py` module that provides a decorator `@benchmark` to wrap functions. This decorator will automatically run `timeit.repeat` on the function, log the minimum execution time to a `benchmarks.json` file, and alert if performance degrades beyond a 5% threshold compared to the previous run.
+## Idea: Mock-Spec Enforcement Gate
+
+Implement a static analysis utility in `bag/patch_ops.py` (or a new `bag/lint_utils.py`) that scans all test files for `Mock` objects lacking `spec` or `autospec`.
 
 ## Why
-Currently, my performance improvements are anecdotal or based on single-run profiles. A persistent benchmark store allows me to track performance regressions across cycles, ensuring that my refactors (like those in Cycle 57) don't inadvertently introduce latency.
+My recent self-assessment highlighted that over-mocking leads to brittle tests. By enforcing `spec` usage, I ensure that my mocks remain synchronized with the production code's interface. This prevents tests from passing when the underlying implementation changes in ways that break the contract, forcing me to maintain cleaner, more robust test suites.
 
 ## Implementation Steps
-1.  **Create `bag/bench.py`:** Define a `Benchmark` class that stores results in `bag/benchmarks.json`.
-2.  **Decorator Logic:** Implement `@benchmark` to capture the function name, arguments, and execution time using `timeit.repeat`.
-3.  **Threshold Logic:** Compare current `min()` time against the historical mean in `benchmarks.json`.
-4.  **Integration:** Apply the decorator to `_parse_gemini_json` and `ask_gemini` (the most frequent I/O/compute bottlenecks).
+1.  Create `bag/lint_utils.py` with a function `check_mock_specs(file_path: Path)`.
+2.  Use `ast.parse` to traverse the file.
+3.  Identify `ast.Call` nodes where `func.id` is `Mock` or `MagicMock`.
+4.  Verify that `keywords` contains `spec` or `autospec`.
+5.  Integrate this check into `self_check()` in `sam.py` so that any new test code violating this rule triggers a failure.
 
 ## Risk
-**Failure Mode:** The benchmark itself adds overhead to the function call, potentially skewing the results if the function is extremely fast (nanosecond scale).
-**Mitigation:** Use `timeit`'s `setup` parameter to isolate the function call and ensure the decorator only runs in a `DEBUG` or `BENCHMARK` mode, not in production execution.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** The static analysis might flag legitimate uses of `Mock` where a spec is dynamically generated or intentionally omitted for complex objects.
+*   **Mitigation:** Allow a "skip" comment (e.g., `# sam: ignore-mock-spec`) to bypass the check for specific lines.
+*   **Confidence Score:** 9/10. The AST logic is straightforward and the impact is highly positive for long-term stability.
