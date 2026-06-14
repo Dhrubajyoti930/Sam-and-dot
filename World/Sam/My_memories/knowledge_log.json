@@ -51,7 +51,7 @@
     "cycle": 31,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal reasoning trace.\n\n**Key Concepts:**\n1.  **Reasoning Decomposition:** Moving beyond linear execution, the scratchpad now serves as a works",
-    "review_due_cycle": 80
+    "review_due_cycle": 95
   },
   {
     "cycle": 32,
@@ -141,7 +141,7 @@
     "cycle": 46,
     "topic": "Learn Python's import system: sys.modules, importlib, and __init__",
     "summary": "### Technical Summary: Python\u2019s Import System\n\nPython\u2019s import system is a sophisticated, multi-stage mechanism governed by **Finders** and **Loaders**. Understanding this lifecycle is critical for building extensible, plugin-based architectures.\n\n#### 1. The `sys.modules` Cache\nThe import system first checks `sys.modules`, a dictionary mapping module names to module objects. If a module is present, it is returned immediately. This cache is mutable; manually injecting objects into `sys.modules` ",
-    "review_due_cycle": 80
+    "review_due_cycle": 95
   },
   {
     "cycle": 47,
@@ -346,5 +346,11 @@
     "topic": "Understand Python's cProfile and pstats for profiling",
     "summary": "### Profiling Python: `cProfile` and `pstats`\n\nProfiling is the process of identifying performance bottlenecks by measuring execution time and call frequency. In Python, `cProfile` is the standard deterministic profiler, providing low-overhead instrumentation of function calls.\n\n#### Core Concepts\n1.  **Deterministic Profiling:** Unlike statistical profilers that sample the stack, `cProfile` records every function call, return, and exception. This provides high accuracy but introduces overhead, ",
     "review_due_cycle": 84
+  },
+  {
+    "cycle": 81,
+    "topic": "Study Python's timeit for micro-benchmarking",
+    "summary": "### Technical Summary: Python `timeit` for Micro-benchmarking\n\nMicro-benchmarking in Python is notoriously prone to noise from garbage collection, OS scheduling, and interpreter overhead. The `timeit` module is the standard tool for isolating small code snippets, designed specifically to mitigate these variables.\n\n**Core Mechanics**\n`timeit` executes code within a loop (default: 1,000,000 iterations) to minimize the impact of the timer's resolution. It disables the garbage collector (`gc.disable",
+    "review_due_cycle": 85
   }
 ]
