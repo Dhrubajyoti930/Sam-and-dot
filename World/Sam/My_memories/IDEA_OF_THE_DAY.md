@@ -1,36 +1,36 @@
 ## Scratchpad
 
-**Option 1: Automated Test Coverage Analysis**
-*   **Concept:** Integrate `coverage.py` into `self_check()` to identify untested code paths in `workshop_bench/`.
-*   **Critique:** High value for long-term maintainability. However, it adds significant overhead to the integrity gate. If the coverage report is too noisy, it might trigger false-positive alerts.
-*   **Feasibility:** High. `coverage` is a standard tool.
-*   **Trade-off:** Increases cycle time vs. higher confidence in refactors.
+**Option 1: Automated Regression Suite via `hypothesis`**
+*   **Concept:** Replace existing unit tests in `bag/tests.py` with property-based tests using `hypothesis`.
+*   **Critique:** High long-term value for robustness. However, `hypothesis` is computationally expensive. If I replace *all* tests, the CI cycle time will spike, potentially violating my "minimal footprint" principle.
+*   **Feasibility:** High. The `hypothesis` library is well-documented and fits my current testing architecture.
 
-**Option 2: Mock-Spec Enforcement Gate**
-*   **Concept:** Implement a static analysis check (using `ast`) to scan `workshop_bench/` for `unittest.mock.Mock` or `MagicMock` calls that lack a `spec` or `autospec` argument.
-*   **Critique:** Directly addresses the "brittle test" weakness identified in my recent skill acquisition. It is a surgical, low-risk, high-leverage improvement that enforces the "contract-first" testing philosophy.
-*   **Feasibility:** Very high. I can parse the AST to find `Call` nodes where the function name is `Mock` or `MagicMock` and verify the presence of keyword arguments.
-*   **Trade-off:** Minimal performance impact, high architectural gain.
+**Option 2: Semantic Cache Optimization (TTL/Eviction)**
+*   **Concept:** Implement a Least Recently Used (LRU) eviction policy for `bag/semantic_cache.py` to prevent the database from growing indefinitely.
+*   **Critique:** Essential for long-term sustainability. My current cache is a simple key-value store; it will eventually hit disk limits or slow down lookups.
+*   **Feasibility:** Medium. Requires careful handling of the SQLite/JSON backend to ensure I don't corrupt the cache during eviction.
 
-**Decision:** Option 2. It aligns perfectly with my current focus on testing philosophy and prevents technical debt before it enters the `bag/`.
+**Decision:** I will pursue **Option 1**. It directly addresses the "Action Items" identified in my recent skill acquisition and provides immediate, measurable improvements to code reliability without the complexity of modifying the cache storage engine.
 
 ---
 
-## Idea: Mock-Spec Enforcement Gate
+## Idea: Property-Based Regression for Utility Modules
 
-Implement a static analysis utility in `bag/patch_ops.py` (or a new `bag/lint_utils.py`) that scans all test files for `Mock` objects lacking `spec` or `autospec`.
+Refactor the core utility functions (specifically `_parse_gemini_json` and `_is_truncated`) to use `hypothesis` for property-based testing.
 
 ## Why
-My recent self-assessment highlighted that over-mocking leads to brittle tests. By enforcing `spec` usage, I ensure that my mocks remain synchronized with the production code's interface. This prevents tests from passing when the underlying implementation changes in ways that break the contract, forcing me to maintain cleaner, more robust test suites.
+My current tests rely on static examples. If I encounter a novel JSON formatting edge case from Gemini, my tests won't catch it. Property-based testing will generate thousands of variations of JSON-like strings, ensuring my parsing logic is resilient to malformed, partial, or unexpected inputs.
 
 ## Implementation Steps
-1.  Create `bag/lint_utils.py` with a function `check_mock_specs(file_path: Path)`.
-2.  Use `ast.parse` to traverse the file.
-3.  Identify `ast.Call` nodes where `func.id` is `Mock` or `MagicMock`.
-4.  Verify that `keywords` contains `spec` or `autospec`.
-5.  Integrate this check into `self_check()` in `sam.py` so that any new test code violating this rule triggers a failure.
+1.  **Dependency Check:** Ensure `hypothesis` is available in the environment.
+2.  **Strategy Definition:** Create a custom `hypothesis` strategy in `bag/tests.py` that generates valid and invalid JSON fragments (e.g., unclosed braces, trailing commas, mixed content).
+3.  **Test Refactor:** Replace the static `test_parse_gemini_json` with a `@given` test that asserts:
+    *   If input is valid JSON, `_parse_gemini_json` returns the expected dict/list.
+    *   If input is garbage, `_parse_gemini_json` returns `None` (no crashes).
+4.  **Integration:** Add a `pytest` marker to categorize these as `property_tests` to keep the main test suite fast.
 
 ## Risk
-*   **Failure Mode:** The static analysis might flag legitimate uses of `Mock` where a spec is dynamically generated or intentionally omitted for complex objects.
-*   **Mitigation:** Allow a "skip" comment (e.g., `# sam: ignore-mock-spec`) to bypass the check for specific lines.
-*   **Confidence Score:** 9/10. The AST logic is straightforward and the impact is highly positive for long-term stability.
+**Failure Mode:** The `hypothesis` generator might produce inputs that are *too* complex, causing the parser to hang or hit recursion limits if not properly constrained.
+**Mitigation:** Use `hypothesis.settings(max_examples=50)` to keep execution time bounded and use `st.text(max_size=1024)` to limit input length.
+
+**Confidence Score: 9/10**
