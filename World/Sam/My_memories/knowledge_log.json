@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 84
+    "review_due_cycle": 99
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 84
+    "review_due_cycle": 99
   },
   {
     "cycle": 51,
@@ -370,5 +370,11 @@
     "topic": "Study Python's threading: Thread, Lock, Event, Condition, Semaphore",
     "summary": "### Technical Summary: Python Concurrency via `threading`\n\nPython\u2019s `threading` module provides a high-level interface for concurrent execution. While the Global Interpreter Lock (GIL) prevents multiple native threads from executing Python bytecodes simultaneously, `threading` remains essential for I/O-bound tasks, allowing the CPU to switch contexts while waiting for network or disk latency.\n\n#### Core Primitives\n*   **`Thread`**: The fundamental unit. Use `daemon=True` for background tasks tha",
     "review_due_cycle": 88
+  },
+  {
+    "cycle": 85,
+    "topic": "Learn Python's multiprocessing: Pool, Queue, Pipe, shared memory",
+    "summary": "### Technical Summary: Python Multiprocessing\n\nPython\u2019s `multiprocessing` module bypasses the Global Interpreter Lock (GIL) by spawning separate memory spaces for each process. Unlike `threading`, which is bound by the GIL and limited to I/O-bound tasks, `multiprocessing` enables true parallel execution for CPU-bound workloads.\n\n**Key Components:**\n*   **`Pool`:** The standard abstraction for data parallelism. It manages a worker process pool, distributing tasks via `map`, `starmap`, or `apply_a",
+    "review_due_cycle": 89
   }
 ]
