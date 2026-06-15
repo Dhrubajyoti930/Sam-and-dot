@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 83
+    "review_due_cycle": 98
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 83
+    "review_due_cycle": 98
   },
   {
     "cycle": 50,
@@ -364,5 +364,11 @@
     "topic": "Understand Python's hypothesis library for property-based testing",
     "summary": "### Technical Summary: Property-Based Testing with `hypothesis`\n\n`hypothesis` shifts the testing paradigm from example-based (asserting specific inputs yield specific outputs) to property-based (asserting that invariants hold across a vast space of generated data).\n\n**Core Concepts:**\n*   **Strategies:** The engine of `hypothesis`. Strategies define the data domain (e.g., `st.integers()`, `st.lists(st.text())`). They are composable; complex domain objects are built by nesting strategies.\n*   **S",
     "review_due_cycle": 87
+  },
+  {
+    "cycle": 84,
+    "topic": "Study Python's threading: Thread, Lock, Event, Condition, Semaphore",
+    "summary": "### Technical Summary: Python Concurrency via `threading`\n\nPython\u2019s `threading` module provides a high-level interface for concurrent execution. While the Global Interpreter Lock (GIL) prevents multiple native threads from executing Python bytecodes simultaneously, `threading` remains essential for I/O-bound tasks, allowing the CPU to switch contexts while waiting for network or disk latency.\n\n#### Core Primitives\n*   **`Thread`**: The fundamental unit. Use `daemon=True` for background tasks tha",
+    "review_due_cycle": 88
   }
 ]

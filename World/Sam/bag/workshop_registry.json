@@ -1,4 +1,4 @@
 {
   "folders": [],
-  "last_target": "tests/regression"
+  "last_target": "infrastructure/core/concurrency"
 }
