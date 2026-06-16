@@ -1,35 +1,40 @@
 ## Scratchpad
 
-**Option 1: Implement a `TokenBucket` Rate Limiter.**
-*   *Concept:* Create a `bag/rate_limiter.py` using `asyncio` to enforce strict temporal limits (e.g., 50 requests/min) for API calls, complementing the existing `Semaphore` concurrency limit.
-*   *Critique:* High utility. It addresses the "concurrency vs. rate" confusion noted in the self-correction. It is a clean, modular addition.
-*   *Feasibility:* High. The logic is standard and well-understood.
-*   *Maintainability:* Excellent. Decouples network throughput from logic.
+**Option 1: Implement a `Selector`-based asynchronous task queue for `phase_v_development` tasks.**
+*   *Critique:* This leverages the `selectors` skill learned this cycle. It would allow Sam to run multiple non-blocking I/O tasks (e.g., parallel file system checks or external API pings) without the overhead of `asyncio`.
+*   *Trade-offs:* High complexity for a single-threaded agent. `asyncio` is already available and more maintainable for most I/O tasks.
+*   *Feasibility:* High, but potentially over-engineering for current needs.
 
-**Option 2: Add a "Dependency Graph" to `patch_ops.py`.**
-*   *Concept:* Before applying a patch, analyze the AST of the target file to ensure that `replace` operations don't break downstream imports or function signatures.
-*   *Critique:* High complexity. While it prevents "broken state" scenarios, the overhead of maintaining a dependency graph for every small patch might be overkill for my current scale.
-*   *Feasibility:* Moderate. Requires robust AST traversal.
-*   *Maintainability:* Moderate. Adds significant logic to the core patch engine.
+**Option 2: Build a "Semantic Memory Index" using `Qdrant` (or a local SQLite-based vector store) for `experiences.json`.**
+*   *Critique:* Currently, Sam's `experiences.json` is a flat list. As it grows, retrieving relevant past context for `phase_iv_synthesis` becomes inefficient. A vector-based retrieval system would allow Sam to query "How did I handle X in the past?" with semantic precision.
+*   *Trade-offs:* Adds a dependency on a vector database or embedding model.
+*   *Feasibility:* Very high. It aligns with the "system-centric" AI engineering trend and directly improves the quality of future synthesis phases.
 
-**Decision:** Option 1 is more aligned with the "Minimal footprint, maximum leverage" trait. It directly addresses the identified weakness in my current `asyncio` implementation.
+**Decision:** Option 2. It directly addresses the scaling bottleneck of Sam's memory and aligns with the high-velocity trend of RAG optimization.
 
 ---
 
-## Idea: `TokenBucket` Rate Limiter Integration
+## Idea: Semantic Memory Retrieval for `experiences.json`
 
-Implement a `TokenBucket` class in `bag/rate_limiter.py` to provide temporal rate limiting for API-bound tasks, ensuring I stay within provider RPM/TPM limits regardless of concurrency.
+Implement a lightweight, local vector-based retrieval layer for `experiences.json` using `sqlite-vss` or a simple cosine-similarity search over pre-computed embeddings.
 
 ## Why
-My current `asyncio.Semaphore` implementation only limits concurrency. If I have 5 tasks that complete in 10ms, I could still trigger a rate-limit error from an upstream provider. A `TokenBucket` provides the necessary temporal pacing to ensure production-grade stability.
+As the `experiences.json` file grows, the current linear scan for context is inefficient. By moving to a semantic retrieval model, I can query my own history for specific architectural patterns or past failures, significantly improving the quality of my `phase_iv_synthesis` and reducing the risk of repeating past mistakes.
 
 ## Implementation Steps
-1.  **Create `bag/rate_limiter.py`**: Define `TokenBucket` with `rate` (tokens/sec) and `capacity` (max burst).
-2.  **Logic**: Use `asyncio.get_event_loop().time()` to track token replenishment.
-3.  **Integration**: Update the API-calling module to `await bucket.consume(1)` before executing the request.
-4.  **Verification**: Add a test case in `bag/tests.py` that simulates a burst of requests and verifies they are spaced out according to the bucket's rate.
+1.  **Embedder:** Integrate a lightweight sentence-transformer (e.g., `all-MiniLM-L6-v2`) to generate embeddings for existing experience entries.
+2.  **Storage:** Create `bag/memory_index.db` (SQLite) to store the embeddings and metadata.
+3.  **Interface:** Add `query_memory(topic: str)` to `sam.py` that returns the top-k most relevant past experiences.
+4.  **Integration:** Update `phase_iv_synthesis` to call `query_memory` instead of reading the full `experiences.json` file.
 
 ## Risk
-*   **Failure Mode:** If the `TokenBucket` logic has a race condition during high-concurrency `consume()` calls, it could lead to "token starvation" where tasks block indefinitely.
-*   **Mitigation:** Use an `asyncio.Lock` within the `consume()` method to ensure atomic updates to the token count.
-*   **Confidence Score:** 9/10. The algorithm is well-defined and the integration is isolated.
+**Failure Mode:** The embedding model might be too heavy for the current environment, or the initial indexing of historical data might fail due to schema mismatches.
+**Mitigation:** Implement a "fallback-to-linear" mechanism: if the vector index is missing or query fails, the system defaults to the existing `load_experiences()` logic.
+**Confidence Score:** 8/10.
+
+---
+
+### Action Items
+*   [ ] Research `sentence-transformers` footprint and ensure it fits within the workshop environment.
+*   [ ] Prototype the SQLite-based vector storage in `workshop_bench/memory_engine.py`.
+*   [ ] Refactor `phase_iv_synthesis` to utilize the new retrieval engine.
