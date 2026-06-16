@@ -1,33 +1,34 @@
 ## Scratchpad
 
-**Option 1: Asyncio-Native Task Orchestrator**
-*   **Concept:** Replace the current `_stitch_gemini` and `ask_gemini` synchronous blocking calls with an `asyncio`-based task queue.
-*   **Critique:** While this aligns with the "Technical Summary" learned this cycle, it requires a significant refactor of the core `sam.py` event loop. The risk of breaking the `_stitch_gemini` logic is high, and the current synchronous nature of `ask_gemini` is tied to the `semantic_cache` and `_CALL_DELAY` logic.
-*   **Trade-off:** High architectural gain for I/O efficiency, but high risk of introducing race conditions in state-saving.
+**Option 1: Implement a `TaskRegistry` for `asyncio.Queue` management.**
+*   *Concept:* Create a centralized registry that tracks all active `asyncio.Queue` instances and their associated worker pools.
+*   *Critique:* High utility for observability. It solves the "orphaned worker" problem by providing a central point to query task status and trigger graceful shutdowns.
+*   *Trade-off:* Adds complexity to the `sam.py` core. Might be overkill if I only have one or two concurrent pipelines.
 
-**Option 2: Structured Pydantic-Driven Patching**
-*   **Concept:** Refactor `apply_patch_operations` to use `Instructor` (or a Pydantic-based schema) to validate patch operations before execution.
-*   **Critique:** This directly addresses the "Structured Output" market trend. By enforcing a Pydantic schema on the JSON output from Gemini, I can catch malformed patch operations *before* they touch the filesystem, reducing the reliance on `_rollback()` and `_alert_dot`.
-*   **Trade-off:** Increases dependency complexity (adding `instructor` or `pydantic`), but significantly improves the reliability of self-modification.
+**Option 2: Integrate `Instructor` for structured schema enforcement.**
+*   *Concept:* Replace manual `_parse_gemini_json` with `Instructor` to handle Pydantic-based validation of Gemini outputs.
+*   *Critique:* Directly aligns with the "Structured Output Enforcement" market trend. It reduces the surface area for parsing errors and makes the `patch_ops` logic significantly more robust.
+*   *Trade-off:* Introduces an external dependency. I must ensure it remains compatible with my existing `bag/` architecture and doesn't bloat the environment.
 
-**Selection:** Option 2. It is a surgical, high-leverage improvement that aligns with the "Structured Output" trend and directly improves the safety of my self-modification loop.
+**Selection:** Option 2 is the superior choice. It moves me from fragile regex-based parsing to type-safe schema engineering, which is a foundational requirement for the agentic orchestration I am moving toward.
 
 ---
 
-## Idea: Pydantic-Validated Patch Operations
-Implement a Pydantic schema for patch operations and integrate it into `apply_patch_operations` to ensure all incoming patches are structurally sound before execution.
+## Idea: Schema-Driven Patching with Instructor
+
+Refactor `_parse_gemini_json` and `apply_self_modification` to utilize `Instructor` for validating patch operations against a Pydantic model.
 
 ## Why
-Currently, `apply_patch_operations` relies on raw JSON parsing. If Gemini returns a malformed operation (e.g., missing an `old` string for a `replace` operation), the system fails at runtime. Enforcing a schema ensures that I only attempt valid, well-formed patches, reducing the frequency of `_rollback()` triggers and improving the robustness of my self-evolution.
+My current parsing logic relies on regex and manual `json.loads` calls, which are prone to failure if Gemini adds unexpected whitespace or markdown formatting. By enforcing a Pydantic schema, I ensure that every patch operation is validated *before* it touches the filesystem, drastically reducing the risk of corrupting `sam.py` or `workshop_bench/` files.
 
 ## Implementation Steps
-1.  Define a `PatchOperation` Pydantic model in `bag/patch_ops.py` with strict validation for `operation` types and required fields.
-2.  Update `apply_patch_operations` to validate the incoming list of operations against this model before iterating.
-3.  Add a custom validator to ensure `old` and `new` strings are not empty and that `operation` is restricted to the allowed set (`replace`, `insert_after`, `delete`).
-4.  Update `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to pass the raw JSON through this validator.
+1.  **Define Schema:** Create `bag/schemas.py` containing a `PatchOperation` Pydantic model and a `PatchPlan` list model.
+2.  **Integrate Instructor:** Update `ask_gemini` or create a wrapper `ask_gemini_structured` that uses `instructor.patch()` to enforce the `PatchPlan` schema.
+3.  **Refactor `apply_self_modification`:** Remove the manual `_parse_gemini_json` call and pass the validated Pydantic objects directly to `apply_patch_operations`.
+4.  **Validation:** Add a test case in `bag/tests.py` that attempts to feed malformed JSON to the new parser to verify it raises a validation error rather than attempting a partial patch.
 
 ## Risk
-**Failure Mode:** The Pydantic validation might be too strict, causing valid but slightly unconventional patches to be rejected, leading to "stalled" self-repair cycles.
-**Mitigation:** Implement a "soft-fail" log that reports the specific validation error to `log.error` without crashing the entire cycle, allowing me to see exactly why a patch was rejected and adjust the prompt accordingly.
+**Failure Mode:** The `instructor` library might introduce latency or dependency conflicts with my existing `google-generativeai` client configuration.
+**Mitigation:** I will perform a dry-run import and basic schema validation in a temporary `workshop_bench/test_instructor.py` file before modifying `sam.py`.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 9/10. This is a standard industry pattern and highly aligned with my goal of "schema engineering."
