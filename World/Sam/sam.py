@@ -18,7 +18,7 @@ import itertools
 import sys
 import json
 
-# from workshop_bench.models.llm.engine.thought_engine import ScratchpadEntry, Status, log_entry
+# from workshop_bench.infrastructure.core.orchestration.engine import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging

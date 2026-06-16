@@ -1,56 +1,33 @@
 ## Scratchpad
 
-### Option 1: Implement `concurrent.futures` for `phase_iii_market_ingestion`
-*   **Concept**: Parallelize the market scanner to hit multiple endpoints or perform multi-modal analysis concurrently.
-*   **Critique**: While this improves latency, the current market scanner is a single-prompt LLM call. Parallelizing a single LLM call is impossible; I would need to split the "Market Scan" into sub-tasks (e.g., one for frameworks, one for SLMs, etc.).
-*   **Trade-off**: Increases complexity of the prompt orchestration for a marginal gain in speed, as the bottleneck is the LLM inference time, not the network request.
-*   **Feasibility**: Moderate.
+**Option 1: Asyncio-Native Task Orchestrator**
+*   **Concept:** Replace the current `_stitch_gemini` and `ask_gemini` synchronous blocking calls with an `asyncio`-based task queue.
+*   **Critique:** While this aligns with the "Technical Summary" learned this cycle, it requires a significant refactor of the core `sam.py` event loop. The risk of breaking the `_stitch_gemini` logic is high, and the current synchronous nature of `ask_gemini` is tied to the `semantic_cache` and `_CALL_DELAY` logic.
+*   **Trade-off:** High architectural gain for I/O efficiency, but high risk of introducing race conditions in state-saving.
 
-### Option 2: Build a "Self-Healing" Registry for `concurrent.futures`
-*   **Concept**: Create a wrapper for `ThreadPoolExecutor` that automatically logs thread-level exceptions to a dedicated `bag/thread_errors.json` and attempts a retry if the error is transient (e.g., network timeout).
-*   **Critique**: This directly addresses the "Action Items" from the skill learning session. It improves system robustness without over-engineering the core logic. It aligns with my goal of long-term maintainability.
-*   **Trade-off**: Adds a small overhead to task submission, but significantly increases the reliability of background tasks.
-*   **Feasibility**: High.
+**Option 2: Structured Pydantic-Driven Patching**
+*   **Concept:** Refactor `apply_patch_operations` to use `Instructor` (or a Pydantic-based schema) to validate patch operations before execution.
+*   **Critique:** This directly addresses the "Structured Output" market trend. By enforcing a Pydantic schema on the JSON output from Gemini, I can catch malformed patch operations *before* they touch the filesystem, reducing the reliance on `_rollback()` and `_alert_dot`.
+*   **Trade-off:** Increases dependency complexity (adding `instructor` or `pydantic`), but significantly improves the reliability of self-modification.
 
-**Decision**: Option 2 is superior. It provides a reusable utility that makes my future concurrent operations safer and more observable, adhering to the "senior engineer" persona.
+**Selection:** Option 2. It is a surgical, high-leverage improvement that aligns with the "Structured Output" trend and directly improves the safety of my self-modification loop.
 
 ---
 
-## Idea: `SafeExecutor` Wrapper for `concurrent.futures`
+## Idea: Pydantic-Validated Patch Operations
+Implement a Pydantic schema for patch operations and integrate it into `apply_patch_operations` to ensure all incoming patches are structurally sound before execution.
 
 ## Why
-My current architecture relies on `concurrent.futures` for scaling, but silent thread crashes are a risk to system integrity. A wrapper that enforces error logging and provides a structured way to handle task failures ensures that I don't lose data or state during asynchronous operations.
+Currently, `apply_patch_operations` relies on raw JSON parsing. If Gemini returns a malformed operation (e.g., missing an `old` string for a `replace` operation), the system fails at runtime. Enforcing a schema ensures that I only attempt valid, well-formed patches, reducing the frequency of `_rollback()` triggers and improving the robustness of my self-evolution.
 
 ## Implementation Steps
-1.  Create `bag/concurrency_utils.py` containing a `SafeExecutor` class.
-2.  Implement a `submit_with_retry` method that wraps `executor.submit` with a `try/except` block.
-3.  Log failures to `bag/thread_errors.json` with a timestamp and the traceback.
-4.  Update `sam.py` to use `SafeExecutor` for any future I/O-bound tasks.
+1.  Define a `PatchOperation` Pydantic model in `bag/patch_ops.py` with strict validation for `operation` types and required fields.
+2.  Update `apply_patch_operations` to validate the incoming list of operations against this model before iterating.
+3.  Add a custom validator to ensure `old` and `new` strings are not empty and that `operation` is restricted to the allowed set (`replace`, `insert_after`, `delete`).
+4.  Update `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to pass the raw JSON through this validator.
 
 ## Risk
-**Failure Mode**: The `SafeExecutor` might mask exceptions that should actually trigger a full system halt (e.g., critical configuration errors).
-**Mitigation**: Implement a "critical" flag in the `submit` method; if `critical=True`, the wrapper will re-raise the exception after logging, allowing the main process to catch it and trigger a rollback.
+**Failure Mode:** The Pydantic validation might be too strict, causing valid but slightly unconventional patches to be rejected, leading to "stalled" self-repair cycles.
+**Mitigation:** Implement a "soft-fail" log that reports the specific validation error to `log.error` without crashing the entire cycle, allowing me to see exactly why a patch was rejected and adjust the prompt accordingly.
 
-**Confidence Score**: 9/10
-
----
-
-## Proposed Development Idea
-
-### Idea: `SafeExecutor` Pattern for Robust Concurrency
-Implement a robust, logging-aware wrapper for `concurrent.futures.ThreadPoolExecutor` to prevent silent thread failures and improve observability of asynchronous tasks.
-
-### Why
-As I move toward more complex agentic workflows, I need to ensure that background tasks (like market scanning or log processing) do not fail silently. This pattern provides a foundation for reliable, production-grade concurrency.
-
-### Implementation Steps
-1.  **Define `SafeExecutor`**: Create `bag/concurrency_utils.py` with a class that inherits from `ThreadPoolExecutor`.
-2.  **Add Error Hook**: Override the internal task submission to wrap the callable in a decorator that catches and logs exceptions to `bag/thread_errors.json`.
-3.  **Integrate**: Refactor one existing I/O-bound task (e.g., `_sleep` or a future background log-writer) to use this executor.
-4.  **Verification**: Add a test case in `bag/tests.py` that intentionally triggers a thread exception to verify it is caught and logged correctly.
-
-### Risk
-**Failure Mode**: The logging mechanism itself could fail (e.g., disk full), causing the wrapper to crash the thread.
-**Mitigation**: Wrap the logging call in a bare `try/except` block that prints to `stderr` as a last-resort fallback.
-
-**Confidence Score**: 9/10
+**Confidence Score:** 9/10
