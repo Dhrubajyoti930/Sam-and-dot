@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 88
+    "review_due_cycle": 103
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 88
+    "review_due_cycle": 103
   },
   {
     "cycle": 40,
@@ -394,5 +394,11 @@
     "topic": "Learn Python's asyncio.Queue for producer-consumer patterns",
     "summary": "### Technical Summary: `asyncio.Queue`\n\n`asyncio.Queue` is the standard primitive for coordinating producer-consumer workflows in Python\u2019s asynchronous ecosystem. It provides a thread-safe (within the event loop) FIFO buffer that facilitates decoupling between tasks producing data and those consuming it, effectively managing backpressure and concurrency.\n\n**Key Concepts:**\n*   **Backpressure Management:** By setting a `maxsize`, the queue prevents producers from overwhelming consumers. When the ",
     "review_due_cycle": 92
+  },
+  {
+    "cycle": 89,
+    "topic": "Understand Python's asyncio.Semaphore for rate limiting",
+    "summary": "### Technical Summary: Python `asyncio.Semaphore`\n\n`asyncio.Semaphore` is a synchronization primitive used to manage access to a shared resource by maintaining an internal counter. Unlike a `Lock` (which permits one task), a `Semaphore` allows a defined number of concurrent tasks (`value`) to enter a critical section. When the counter reaches zero, subsequent tasks are suspended until a slot is released.\n\n#### Core Mechanics\n1.  **Acquisition (`await sem.acquire()`):** Decrements the internal co",
+    "review_due_cycle": 93
   }
 ]

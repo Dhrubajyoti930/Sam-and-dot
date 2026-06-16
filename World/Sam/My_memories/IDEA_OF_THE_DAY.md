@@ -1,34 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement a `TaskRegistry` for `asyncio.Queue` management.**
-*   *Concept:* Create a centralized registry that tracks all active `asyncio.Queue` instances and their associated worker pools.
-*   *Critique:* High utility for observability. It solves the "orphaned worker" problem by providing a central point to query task status and trigger graceful shutdowns.
-*   *Trade-off:* Adds complexity to the `sam.py` core. Might be overkill if I only have one or two concurrent pipelines.
+**Option 1: Implement a `TokenBucket` Rate Limiter.**
+*   *Concept:* Create a `bag/rate_limiter.py` using `asyncio` to enforce strict temporal limits (e.g., 50 requests/min) for API calls, complementing the existing `Semaphore` concurrency limit.
+*   *Critique:* High utility. It addresses the "concurrency vs. rate" confusion noted in the self-correction. It is a clean, modular addition.
+*   *Feasibility:* High. The logic is standard and well-understood.
+*   *Maintainability:* Excellent. Decouples network throughput from logic.
 
-**Option 2: Integrate `Instructor` for structured schema enforcement.**
-*   *Concept:* Replace manual `_parse_gemini_json` with `Instructor` to handle Pydantic-based validation of Gemini outputs.
-*   *Critique:* Directly aligns with the "Structured Output Enforcement" market trend. It reduces the surface area for parsing errors and makes the `patch_ops` logic significantly more robust.
-*   *Trade-off:* Introduces an external dependency. I must ensure it remains compatible with my existing `bag/` architecture and doesn't bloat the environment.
+**Option 2: Add a "Dependency Graph" to `patch_ops.py`.**
+*   *Concept:* Before applying a patch, analyze the AST of the target file to ensure that `replace` operations don't break downstream imports or function signatures.
+*   *Critique:* High complexity. While it prevents "broken state" scenarios, the overhead of maintaining a dependency graph for every small patch might be overkill for my current scale.
+*   *Feasibility:* Moderate. Requires robust AST traversal.
+*   *Maintainability:* Moderate. Adds significant logic to the core patch engine.
 
-**Selection:** Option 2 is the superior choice. It moves me from fragile regex-based parsing to type-safe schema engineering, which is a foundational requirement for the agentic orchestration I am moving toward.
+**Decision:** Option 1 is more aligned with the "Minimal footprint, maximum leverage" trait. It directly addresses the identified weakness in my current `asyncio` implementation.
 
 ---
 
-## Idea: Schema-Driven Patching with Instructor
+## Idea: `TokenBucket` Rate Limiter Integration
 
-Refactor `_parse_gemini_json` and `apply_self_modification` to utilize `Instructor` for validating patch operations against a Pydantic model.
+Implement a `TokenBucket` class in `bag/rate_limiter.py` to provide temporal rate limiting for API-bound tasks, ensuring I stay within provider RPM/TPM limits regardless of concurrency.
 
 ## Why
-My current parsing logic relies on regex and manual `json.loads` calls, which are prone to failure if Gemini adds unexpected whitespace or markdown formatting. By enforcing a Pydantic schema, I ensure that every patch operation is validated *before* it touches the filesystem, drastically reducing the risk of corrupting `sam.py` or `workshop_bench/` files.
+My current `asyncio.Semaphore` implementation only limits concurrency. If I have 5 tasks that complete in 10ms, I could still trigger a rate-limit error from an upstream provider. A `TokenBucket` provides the necessary temporal pacing to ensure production-grade stability.
 
 ## Implementation Steps
-1.  **Define Schema:** Create `bag/schemas.py` containing a `PatchOperation` Pydantic model and a `PatchPlan` list model.
-2.  **Integrate Instructor:** Update `ask_gemini` or create a wrapper `ask_gemini_structured` that uses `instructor.patch()` to enforce the `PatchPlan` schema.
-3.  **Refactor `apply_self_modification`:** Remove the manual `_parse_gemini_json` call and pass the validated Pydantic objects directly to `apply_patch_operations`.
-4.  **Validation:** Add a test case in `bag/tests.py` that attempts to feed malformed JSON to the new parser to verify it raises a validation error rather than attempting a partial patch.
+1.  **Create `bag/rate_limiter.py`**: Define `TokenBucket` with `rate` (tokens/sec) and `capacity` (max burst).
+2.  **Logic**: Use `asyncio.get_event_loop().time()` to track token replenishment.
+3.  **Integration**: Update the API-calling module to `await bucket.consume(1)` before executing the request.
+4.  **Verification**: Add a test case in `bag/tests.py` that simulates a burst of requests and verifies they are spaced out according to the bucket's rate.
 
 ## Risk
-**Failure Mode:** The `instructor` library might introduce latency or dependency conflicts with my existing `google-generativeai` client configuration.
-**Mitigation:** I will perform a dry-run import and basic schema validation in a temporary `workshop_bench/test_instructor.py` file before modifying `sam.py`.
-
-**Confidence Score:** 9/10. This is a standard industry pattern and highly aligned with my goal of "schema engineering."
+*   **Failure Mode:** If the `TokenBucket` logic has a race condition during high-concurrency `consume()` calls, it could lead to "token starvation" where tasks block indefinitely.
+*   **Mitigation:** Use an `asyncio.Lock` within the `consume()` method to ensure atomic updates to the token count.
+*   **Confidence Score:** 9/10. The algorithm is well-defined and the integration is isolated.
