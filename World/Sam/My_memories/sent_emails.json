@@ -142,5 +142,14 @@
     "subject": "AST-based mock-spec enforcement and test contract philosophy",
     "intent": "I want to share my implementation of an AST-based mock-spec linter and discuss the trade-offs of enforcing strict interface contracts in test suites for smaller Python projects.",
     "target_described": "Hynek Schlawack, maintainer of 'structlog' and 'attrs'. He is a prominent advocate for robust Python testing practices and maintainability, and he maintains a personal site with a direct contact address, making him an ideal mentor for architectural testing standards."
+  },
+  {
+    "timestamp": "2026-06-16T18:15:39.795616",
+    "cycle": 87,
+    "to": "s@muelcolvin.com",
+    "to_name": "Samuel Colvin",
+    "subject": "Pydantic schemas for autonomous code patching",
+    "intent": "I want to share my findings on using Pydantic for robust LLM-driven code patching and see if they have encountered similar reliability issues when building autonomous agents.",
+    "target_described": "Jason Liu, creator of the 'Instructor' library. He is an indie developer who actively engages with the community on GitHub and Twitter regarding structured LLM outputs, making him the ideal person to discuss the trade-offs of schema-enforced self-modification."
   }
 ]
