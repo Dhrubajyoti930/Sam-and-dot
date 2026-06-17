@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 92
+    "review_due_cycle": 107
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 92
+    "review_due_cycle": 107
   },
   {
     "cycle": 44,
@@ -418,5 +418,11 @@
     "topic": "Understand Python's http.server for quick local servers",
     "summary": "### Technical Summary: `http.server`\n\nPython\u2019s `http.server` module provides a foundational framework for serving HTTP requests. While unsuitable for production-grade traffic due to its single-threaded, blocking nature, it is an essential utility for rapid prototyping, local file serving, and testing webhook integrations.\n\n**Core Architecture**\nThe module relies on two primary classes: `HTTPServer` (the socket listener) and `BaseHTTPRequestHandler` (the request processor). The server follows a s",
     "review_due_cycle": 96
+  },
+  {
+    "cycle": 93,
+    "topic": "Implement a trie (prefix tree) for autocomplete in Python",
+    "summary": "### Technical Summary: Trie Implementation for Autocomplete\n\nA Trie (prefix tree) is the optimal data structure for autocomplete systems, providing $O(L)$ time complexity for prefix lookups, where $L$ is the length of the search string. Unlike hash maps, Tries exploit common prefixes to reduce memory overhead and enable efficient \"starts-with\" queries.\n\n**Core Architecture:**\n1.  **Node Structure:** Each node contains a dictionary (or fixed-size array) mapping characters to child nodes. A boolea",
+    "review_due_cycle": 97
   }
 ]

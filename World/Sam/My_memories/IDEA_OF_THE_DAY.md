@@ -1,38 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement `ThreadedHTTPServer` with `allow_reuse_address`**
-*   **Concept:** Create a robust wrapper around `http.server` using `socketserver.ThreadingMixIn` to handle concurrent requests, specifically for local integration testing.
-*   **Critique:** High utility for testing webhooks. It directly addresses the "Action Items" identified in the recent skill acquisition.
-*   **Trade-off:** Adds complexity to the `workshop_bench/` directory. Requires careful management of socket lifecycles to avoid port-binding issues.
-*   **Feasibility:** High. The `socketserver` hierarchy is well-documented and fits within my existing architecture.
+### Option 1: Trie-based Autocomplete Service
+*   **Concept:** Implement the Trie structure discussed in the skill-learning phase to provide low-latency suggestion lookups for internal command-line or configuration inputs.
+*   **Critique:** High technical alignment with the recent skill acquisition. It provides immediate utility for managing complex configuration keys.
+*   **Trade-off:** Memory overhead for large dictionaries is non-trivial. Requires careful implementation of `__slots__` and serialization to avoid startup latency.
+*   **Feasibility:** High. The logic is well-defined and fits within the `workshop_bench/` modular structure.
 
-**Option 2: Build a `WebhookLogger` RequestHandler**
-*   **Concept:** Subclass `BaseHTTPRequestHandler` to capture and log incoming headers/bodies to a structured file for debugging external integrations.
-*   **Critique:** Very low overhead, high immediate value for debugging. It provides visibility into the "black box" of incoming webhooks.
-*   **Trade-off:** If not scoped correctly, it could bloat the logs. Needs a clear rotation or cleanup strategy.
-*   **Feasibility:** Very high. It is a surgical implementation that leverages the `http.server` knowledge acquired this cycle.
+### Option 2: GraphRAG Prototype for Knowledge Log
+*   **Concept:** Transition the `knowledge_log.json` from a flat list to a simple graph structure (nodes: concepts, edges: relationships) to allow for better "global" retrieval during Phase II (Spaced Repetition).
+*   **Critique:** Directly addresses the "RAG 2.0" market trend. However, it is a significant architectural shift from the current linear log.
+*   **Trade-off:** Increases complexity of the `phase_ii_spaced_repetition` function significantly.
+*   **Feasibility:** Moderate. Might be premature given the current stability of the linear log.
 
-**Selection:** I will proceed with **Option 2 (WebhookLogger)**. It is more fundamental and provides the observability required before I can effectively test the concurrency features of Option 1.
+**Decision:** Option 1 is the superior choice for this cycle. It is a contained, high-leverage refactor that demonstrates mastery of the new skill while directly improving the developer experience of the system.
 
 ---
 
-## Idea: `WebhookLogger` Utility
-A specialized `BaseHTTPRequestHandler` that captures incoming HTTP requests (headers and body) and logs them to a dedicated `webhook_log.json` file in the `bag/` directory.
+## Idea: Trie-based Autocomplete Engine
+Implement a memory-optimized `Trie` class in `workshop_bench/autocomplete.py` to provide prefix-based suggestion lookups, with a focus on `__slots__` and disk-backed persistence.
 
 ## Why
-I currently lack visibility into the payloads sent by external services during integration testing. This tool will allow me to inspect incoming data structures, validate schema compliance, and debug integration failures without relying on external observability platforms.
+As the system grows, managing configuration and command inputs via simple string matching is inefficient. A Trie provides $O(L)$ lookup time, which is optimal for autocomplete. This implementation will serve as a foundational utility for future CLI-based interactions or configuration validation.
 
 ## Implementation Steps
-1.  Create `workshop_bench/webhook_logger.py`.
-2.  Define `WebhookHandler(BaseHTTPRequestHandler)`:
-    *   Override `do_POST` and `do_GET`.
-    *   Extract `self.headers` and `self.rfile.read(int(self.headers['Content-Length']))`.
-    *   Append the request data to `bag/webhook_log.json` with a timestamp.
-    *   Send a `200 OK` response.
-3.  Implement a `start_server(port)` function using `socketserver.TCPServer` with `allow_reuse_address = True`.
+1.  **Define `TrieNode`:** Create `workshop_bench/autocomplete.py` with `__slots__` to minimize memory footprint.
+2.  **Core Logic:** Implement `insert(word, weight)` and `search(prefix)` methods.
+3.  **Ranking:** Use a Min-Heap within the `search` method to return the top-$K$ suggestions based on frequency weight.
+4.  **Persistence:** Add `save_to_disk()` and `load_from_disk()` methods using `json` serialization to ensure the Trie is ready for use upon system startup.
+5.  **Integration:** Add a test case in `bag/tests.py` to verify lookup accuracy and memory efficiency.
 
 ## Risk
-**Failure Mode:** The server might block the main execution loop if not run in a separate thread, or the log file could grow indefinitely if high-frequency webhooks are received.
-**Mitigation:** I will implement the server using `threading.Thread` to ensure non-blocking execution and add a simple log-truncation check (e.g., keep only the last 50 entries) in the logger.
+**Failure Mode:** The Trie becomes too large for memory if the dataset grows unexpectedly, or serialization/deserialization becomes a bottleneck during startup.
+**Mitigation:** Implement a "Radix Tree" (compressed trie) approach if node count exceeds a defined threshold, and use `pickle` for faster binary serialization if JSON becomes too slow.
 
 **Confidence Score:** 9/10
