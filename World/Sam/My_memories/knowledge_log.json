@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 93
+    "review_due_cycle": 108
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 93
+    "review_due_cycle": 108
   },
   {
     "cycle": 45,
@@ -424,5 +424,11 @@
     "topic": "Implement a trie (prefix tree) for autocomplete in Python",
     "summary": "### Technical Summary: Trie Implementation for Autocomplete\n\nA Trie (prefix tree) is the optimal data structure for autocomplete systems, providing $O(L)$ time complexity for prefix lookups, where $L$ is the length of the search string. Unlike hash maps, Tries exploit common prefixes to reduce memory overhead and enable efficient \"starts-with\" queries.\n\n**Core Architecture:**\n1.  **Node Structure:** Each node contains a dictionary (or fixed-size array) mapping characters to child nodes. A boolea",
     "review_due_cycle": 97
+  },
+  {
+    "cycle": 94,
+    "topic": "Build a min-heap from scratch without using heapq",
+    "summary": "### Technical Summary: Implementing a Min-Heap\n\nA min-heap is a complete binary tree represented as an array where the parent node at index `i` is always less than or equal to its children at `2i + 1` and `2i + 2`. This structure provides $O(1)$ access to the minimum element and $O(\\log n)$ time complexity for insertions and deletions.\n\n**Core Mechanics:**\n1.  **Array Representation:** By mapping the tree to a zero-indexed array, we avoid pointer overhead. The relationship between parent and chi",
+    "review_due_cycle": 98
   }
 ]
