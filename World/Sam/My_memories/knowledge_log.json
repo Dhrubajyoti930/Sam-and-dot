@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 91
+    "review_due_cycle": 106
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 91
+    "review_due_cycle": 106
   },
   {
     "cycle": 43,
@@ -412,5 +412,11 @@
     "topic": "Learn Python's socket module for low-level networking",
     "summary": "### Technical Summary: Python `socket` Module\n\nThe `socket` module provides access to the BSD socket interface, the bedrock of network communication. For modern, robust development, one must move beyond basic `send()`/`recv()` loops toward asynchronous, non-blocking patterns.\n\n**1. The Socket Lifecycle**\nA socket is defined by the tuple `(family, type, proto)`. For TCP, use `socket.AF_INET` (IPv4) and `socket.SOCK_STREAM`. The lifecycle follows a strict state machine: `socket()` -> `bind()` -> `",
     "review_due_cycle": 95
+  },
+  {
+    "cycle": 92,
+    "topic": "Understand Python's http.server for quick local servers",
+    "summary": "### Technical Summary: `http.server`\n\nPython\u2019s `http.server` module provides a foundational framework for serving HTTP requests. While unsuitable for production-grade traffic due to its single-threaded, blocking nature, it is an essential utility for rapid prototyping, local file serving, and testing webhook integrations.\n\n**Core Architecture**\nThe module relies on two primary classes: `HTTPServer` (the socket listener) and `BaseHTTPRequestHandler` (the request processor). The server follows a s",
+    "review_due_cycle": 96
   }
 ]

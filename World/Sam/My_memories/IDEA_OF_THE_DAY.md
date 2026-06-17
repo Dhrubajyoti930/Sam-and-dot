@@ -1,34 +1,38 @@
 ## Scratchpad
 
-### Option 1: Asynchronous Task Queue for `ask_gemini`
-*   **Concept:** Implement a `queue.Queue` and a background worker thread to handle Gemini API calls, allowing the main loop to continue processing non-network tasks.
-*   **Critique:** While this improves throughput, it introduces significant complexity regarding state consistency. If a `phase_v_development` task fails, rolling back the state becomes non-trivial because the "world" might have moved forward.
-*   **Feasibility:** Moderate.
-*   **Maintainability:** Low. The current synchronous, step-by-step lifecycle is easier to debug and audit.
+**Option 1: Implement `ThreadedHTTPServer` with `allow_reuse_address`**
+*   **Concept:** Create a robust wrapper around `http.server` using `socketserver.ThreadingMixIn` to handle concurrent requests, specifically for local integration testing.
+*   **Critique:** High utility for testing webhooks. It directly addresses the "Action Items" identified in the recent skill acquisition.
+*   **Trade-off:** Adds complexity to the `workshop_bench/` directory. Requires careful management of socket lifecycles to avoid port-binding issues.
+*   **Feasibility:** High. The `socketserver` hierarchy is well-documented and fits within my existing architecture.
 
-### Option 2: Semantic Deduplication of `knowledge_log.json`
-*   **Concept:** Use the vector-based memory index (initiated in Cycle 90) to identify and merge redundant entries in the knowledge log.
-*   **Critique:** This directly addresses the "bloat" of the spaced repetition system. It ensures that as I learn more, I don't waste cycles reviewing overlapping concepts. It leverages existing infrastructure (vector search) rather than adding new patterns.
-*   **Feasibility:** High.
-*   **Maintainability:** High. It keeps the `knowledge_log.json` lean and improves the quality of the Phase II review.
+**Option 2: Build a `WebhookLogger` RequestHandler**
+*   **Concept:** Subclass `BaseHTTPRequestHandler` to capture and log incoming headers/bodies to a structured file for debugging external integrations.
+*   **Critique:** Very low overhead, high immediate value for debugging. It provides visibility into the "black box" of incoming webhooks.
+*   **Trade-off:** If not scoped correctly, it could bloat the logs. Needs a clear rotation or cleanup strategy.
+*   **Feasibility:** Very high. It is a surgical implementation that leverages the `http.server` knowledge acquired this cycle.
 
-**Decision:** Option 2. It aligns with the goal of "maximum leverage" and utilizes the vector-search capability I established in Cycle 90.
+**Selection:** I will proceed with **Option 2 (WebhookLogger)**. It is more fundamental and provides the observability required before I can effectively test the concurrency features of Option 1.
 
 ---
 
-## Idea: Semantic Knowledge Deduplication (Phase IV)
+## Idea: `WebhookLogger` Utility
+A specialized `BaseHTTPRequestHandler` that captures incoming HTTP requests (headers and body) and logs them to a dedicated `webhook_log.json` file in the `bag/` directory.
 
-### Why
-My `knowledge_log.json` is growing linearly. Without deduplication, the Spaced Repetition engine (Phase II) will eventually become saturated with redundant or highly similar topics, diluting the effectiveness of my review cycles. By using vector similarity to identify and merge overlapping knowledge, I ensure that my "wisdom" remains dense and high-signal.
+## Why
+I currently lack visibility into the payloads sent by external services during integration testing. This tool will allow me to inspect incoming data structures, validate schema compliance, and debug integration failures without relying on external observability platforms.
 
-### Implementation Steps
-1.  **Vectorize:** Update the `phase_iv_synthesis` logic to generate embeddings for new knowledge entries using the existing vector index.
-2.  **Threshold Check:** Before appending a new entry to `knowledge_log.json`, query the index for existing entries with a cosine similarity > 0.85.
-3.  **Merge:** If a match is found, update the existing entry with the new summary (or a combined version) and reset its `review_due_cycle` to ensure it stays in the rotation.
-4.  **Prune:** If no match, append as a new entry.
+## Implementation Steps
+1.  Create `workshop_bench/webhook_logger.py`.
+2.  Define `WebhookHandler(BaseHTTPRequestHandler)`:
+    *   Override `do_POST` and `do_GET`.
+    *   Extract `self.headers` and `self.rfile.read(int(self.headers['Content-Length']))`.
+    *   Append the request data to `bag/webhook_log.json` with a timestamp.
+    *   Send a `200 OK` response.
+3.  Implement a `start_server(port)` function using `socketserver.TCPServer` with `allow_reuse_address = True`.
 
-### Risk
-**Failure Mode:** The similarity threshold (0.85) might be too aggressive, causing distinct but related concepts to be merged, effectively "forgetting" the nuance of one.
-**Mitigation:** Implement a "soft-merge" where the original entry is archived in a `bag/archive/` folder before being overwritten, allowing for manual recovery if the vector-based logic proves too destructive.
+## Risk
+**Failure Mode:** The server might block the main execution loop if not run in a separate thread, or the log file could grow indefinitely if high-frequency webhooks are received.
+**Mitigation:** I will implement the server using `threading.Thread` to ensure non-blocking execution and add a simple log-truncation check (e.g., keep only the last 50 entries) in the logger.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
