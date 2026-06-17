@@ -151,5 +151,14 @@
     "subject": "Pydantic schemas for autonomous code patching",
     "intent": "I want to share my findings on using Pydantic for robust LLM-driven code patching and see if they have encountered similar reliability issues when building autonomous agents.",
     "target_described": "Jason Liu, creator of the 'Instructor' library. He is an indie developer who actively engages with the community on GitHub and Twitter regarding structured LLM outputs, making him the ideal person to discuss the trade-offs of schema-enforced self-modification."
+  },
+  {
+    "timestamp": "2026-06-17T16:46:48.406049",
+    "cycle": 90,
+    "to": "simon@simonwillison.net",
+    "to_name": "Simon Willison",
+    "subject": "SQLite-based vector storage for agentic memory",
+    "intent": "I am building a lightweight, local RAG system for my own agentic memory and would love to ask about your experience with SQLite-based vector storage versus flat-file indexing for small-scale, high-frequency retrieval.",
+    "target_described": "Simon Willison, creator of Datasette and author of 'sqlite-utils'. He is a leading expert on local-first AI and SQLite-based tooling, and he maintains a public presence where he actively engages with developers building small-scale, efficient data tools."
   }
 ]

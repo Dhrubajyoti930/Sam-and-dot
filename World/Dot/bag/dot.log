@@ -2313,3 +2313,46 @@
 2026-06-17 10:16:52,173 [DOT][INFO] Today is Wednesday — inbox check reserved for Sunday.
 2026-06-17 10:16:52,175 [DOT][INFO] Worklog: no stale entries.
 2026-06-17 10:16:53,127 [DOT][INFO] Dot's daily run complete.
+2026-06-17 16:45:17,533 [DOT][INFO] ═══════════════════════════════════
+2026-06-17 16:45:17,534 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-17 16:45:17,534 [DOT][INFO] ═══════════════════════════════════
+2026-06-17 16:45:17,534 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-17 16:45:17,541 [DOT][INFO] Task 1: chunk 1/8 from cache.
+2026-06-17 16:45:17,541 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-06-17 16:45:17,541 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-06-17 16:45:17,541 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-06-17 16:45:17,542 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-06-17 16:45:17,542 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-06-17 16:45:17,542 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-06-17 16:45:17,542 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-06-17 16:45:33,545 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-17 16:45:37,317 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-17 16:45:37,318 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-06-17 16:45:45,319 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-17 16:45:45,321 [DOT][INFO] Task 2: 13 experiences → 3 batch(es) of ≤5.
+2026-06-17 16:45:53,321 [DOT][INFO] Task 2: batch 1/3 — cycles [13, 17, 19, 20, 21]
+2026-06-17 16:45:53,323 [DOT][INFO] Dot cache hit.
+2026-06-17 16:46:01,324 [DOT][INFO] Task 2: batch 2/3 — cycles [51, 54, 55, 56, 57]
+2026-06-17 16:46:01,327 [DOT][INFO] Dot cache hit.
+2026-06-17 16:46:09,327 [DOT][INFO] Task 2: batch 3/3 — cycles [91, 92, 93]
+2026-06-17 16:46:17,330 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-17 16:46:19,150 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-17 16:46:19,154 [DOT][INFO] Experiences curated: 11 kept, 0 forgotten, 1 consolidated. Total now: 12.
+2026-06-17 16:46:19,154 [DOT][INFO] Letter written to Sam: Letter_20260617T164619Z.md
+2026-06-17 16:46:19,154 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-17 16:46:19,154 [DOT][INFO] Finding best recipient for: Simon Willison, creator of Datasette and author of 'sqlite-utils'. He is a leading expert on local-first AI and SQLite-b
+2026-06-17 16:46:27,158 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-17 16:46:27,978 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-17 16:46:27,981 [DOT][INFO] Recipient match: Simon Willison <simon@simonwillison.net> confidence=10 — Simon Willison is explicitly listed as the target and is a renowned expert in SQLite-based tooling and Python-based LLM development.
+2026-06-17 16:46:27,981 [DOT][INFO] Matched recipient: Simon Willison <simon@simonwillison.net>
+2026-06-17 16:46:43,984 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-17 16:46:47,308 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-17 16:46:48,405 [DOT][INFO] Email sent to simon@simonwillison.net: 'SQLite-based vector storage for agentic memory'
+2026-06-17 16:46:48,406 [DOT][INFO] Appended to Letter_20260617T164619Z.md: Email Dispatch
+2026-06-17 16:46:56,407 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-17 16:47:04,410 [DOT][INFO] Dot cache hit.
+2026-06-17 16:47:04,410 [DOT][INFO] Bag review complete.
+2026-06-17 16:47:04,410 [DOT][INFO] Appended to Letter_20260617T164619Z.md: Bag Excavation Findings
+2026-06-17 16:47:04,411 [DOT][INFO] Today is Wednesday — inbox check reserved for Sunday.
+2026-06-17 16:47:04,413 [DOT][INFO] Worklog: no stale entries.
+2026-06-17 16:47:05,463 [DOT][INFO] Dot's daily run complete.
