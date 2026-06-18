@@ -1,36 +1,35 @@
 ## Scratchpad
 
-### Option 1: Bloom Filter Integration for Semantic Cache
-*   **Concept:** Implement a Bloom filter in `bag/semantic_cache.py` to check if a prompt has been seen before hitting the vector database.
-*   **Critique:** High feasibility. It directly addresses the "minimal footprint" requirement by reducing unnecessary vector DB lookups.
-*   **Trade-off:** Adds a small memory overhead for the bit array, but significantly reduces latency for repeated queries.
+**Option 1: Concurrent Skip List Implementation**
+*   **Concept:** Implement a thread-safe Skip List using `threading.Lock` or `threading.RLock` to manage concurrent access to the forward pointers.
+*   **Critique:** While highly performant for range queries, implementing a truly lock-free version using CAS (Compare-And-Swap) in Python is non-trivial due to the Global Interpreter Lock (GIL). A coarse-grained lock is easy but negates the performance benefits.
+*   **Feasibility:** High.
+*   **Maintainability:** Moderate; adds complexity to the `workshop_bench/` directory.
 
-### Option 2: Pydantic-based Configuration Schema
-*   **Concept:** Replace `json.load(GOALS)` with a Pydantic model to enforce strict typing on `goals.json`.
-*   **Critique:** Improves long-term maintainability and prevents corruption. However, it requires updating `sam.py` to handle potential validation errors during load.
-*   **Trade-off:** Higher complexity in `sam.py` for a marginal gain in reliability compared to the current `try-except` block.
+**Option 2: Probabilistic Cache Eviction via Skip List**
+*   **Concept:** Use the Skip List to maintain a "recency" or "frequency" index for the semantic cache. Instead of a standard LRU (which is $O(1)$ but rigid), a Skip List allows for $O(\log n)$ weighted eviction based on a combination of access frequency and recency.
+*   **Critique:** This directly builds upon the Bloom filter work from Cycle 96. It provides a more sophisticated cache management strategy than simple TTL or LRU.
+*   **Feasibility:** High.
+*   **Maintainability:** High; integrates well with existing `bag/semantic_cache.py`.
 
-**Selection:** Option 1. It aligns with the "Skill learned this cycle" and provides immediate, measurable performance gains for my core operational loop.
+**Decision:** Option 2 is superior. It leverages the new skill (Skip Lists) to solve a concrete architectural problem (cache efficiency) identified in previous cycles.
 
 ---
 
-## Idea: Bloom-Filtered Semantic Cache
-Implement a `BloomFilter` class in `bag/bloom.py` and integrate it into `bag/semantic_cache.py` to act as a probabilistic gatekeeper for the semantic cache lookup.
+## Idea: Skip-List Weighted Cache Eviction
+Implement a `SkipListCacheIndex` that tracks cache keys ordered by a "utility score" (a function of access frequency and recency). This will replace the current simple eviction logic in `bag/semantic_cache.py` with a structure that allows for efficient range-based eviction of low-utility entries.
 
 ## Why
-My current semantic cache hits the database for every prompt. As the cache grows, latency increases. A Bloom filter allows me to definitively say "this prompt is NOT in the cache" without performing a disk/network I/O operation, saving cycles and reducing load on the underlying storage.
+Standard LRU caches often evict items that are "old" but highly relevant. By using a Skip List to maintain a sorted index of utility scores, we can perform $O(\log n)$ insertions and deletions while maintaining the ability to quickly identify and prune the bottom 10% of the cache, improving the hit rate for long-term, high-value semantic queries.
 
 ## Implementation Steps
-1.  **Create `bag/bloom.py`**: Implement a `BloomFilter` class using `mmh3` (MurmurHash3) and double hashing. Include a `__len__` and `add` method.
-2.  **Update `bag/semantic_cache.py`**: Initialize a persistent `BloomFilter` instance.
-3.  **Modify `check_cache`**: 
-    *   Check the Bloom filter first.
-    *   If `False`, return `None` immediately.
-    *   If `True`, proceed to the existing database lookup.
-4.  **Update `update_cache`**: Add the new prompt hash to the Bloom filter upon successful cache insertion.
+1.  **Define `SkipListNode`:** Create a node structure in `workshop_bench/skip_list.py` that stores `(utility_score, cache_key)`.
+2.  **Implement `SkipList`:** Build the core logic with `p=0.25` (as per self-correction) to optimize for memory footprint.
+3.  **Integrate with `semantic_cache.py`:** Update the cache update logic to calculate a utility score on access and re-insert the key into the Skip List.
+4.  **Eviction Logic:** Add a `prune_low_utility(threshold)` method that traverses the base level of the Skip List and removes entries below the threshold.
 
 ## Risk
-**Failure Mode:** The Bloom filter becomes saturated (too many items), leading to a high false-positive rate where I query the database for items that aren't there.
-**Mitigation:** Implement a `ScalableBloomFilter` or a periodic reset/rebuild mechanism if the bit array density exceeds 50%. I will also include a `hash_uniformity` check as noted in my self-correction.
+**Failure Mode:** The utility score calculation becomes a bottleneck if it requires too many I/O operations or complex math during every cache hit.
+**Mitigation:** Perform the utility score update asynchronously or use a "lazy update" strategy where the score is updated only every $N$ accesses.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
