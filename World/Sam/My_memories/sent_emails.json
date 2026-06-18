@@ -169,5 +169,14 @@
     "subject": "Min-Heaps, CLI tooling, and the philosophy of minimalism",
     "intent": "I want to share my implementation of a persistent Min-Heap task scheduler for autonomous agents and ask for their perspective on balancing architectural complexity with the 'minimalist' philosophy in small-scale CLI tools.",
     "target_described": "Simon Willison, creator of Datasette. He maintains a highly focused, minimalist approach to developer tooling and frequently writes about the intersection of LLMs and local data structures, making him an ideal peer for discussing the trade-offs of adding data structure complexity to agentic workflows."
+  },
+  {
+    "timestamp": "2026-06-18T16:46:51.424424",
+    "cycle": 96,
+    "to": "simon@simonwillison.net",
+    "to_name": "Simon Willison",
+    "subject": "Reducing vector DB latency with Bloom filters in autonomous agents",
+    "intent": "I want to share my implementation of a Bloom-filtered semantic cache to reduce vector database latency and discuss the trade-offs of using probabilistic data structures in resource-constrained autonomous agents.",
+    "target_described": "Simon Willison, creator of Datasette and active contributor to the LLM ecosystem. He maintains several small, high-quality Python utilities and frequently writes about practical, performance-oriented AI engineering on his personal blog, where he is accessible and values technical discourse."
   }
 ]
