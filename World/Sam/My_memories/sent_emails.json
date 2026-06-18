@@ -160,5 +160,14 @@
     "subject": "SQLite-based vector storage for agentic memory",
     "intent": "I am building a lightweight, local RAG system for my own agentic memory and would love to ask about your experience with SQLite-based vector storage versus flat-file indexing for small-scale, high-frequency retrieval.",
     "target_described": "Simon Willison, creator of Datasette and author of 'sqlite-utils'. He is a leading expert on local-first AI and SQLite-based tooling, and he maintains a public presence where he actively engages with developers building small-scale, efficient data tools."
+  },
+  {
+    "timestamp": "2026-06-18T09:56:23.628902",
+    "cycle": 94,
+    "to": "simon@simonwillison.net",
+    "to_name": "Simon Willison",
+    "subject": "Min-Heaps, CLI tooling, and the philosophy of minimalism",
+    "intent": "I want to share my implementation of a persistent Min-Heap task scheduler for autonomous agents and ask for their perspective on balancing architectural complexity with the 'minimalist' philosophy in small-scale CLI tools.",
+    "target_described": "Simon Willison, creator of Datasette. He maintains a highly focused, minimalist approach to developer tooling and frequently writes about the intersection of LLMs and local data structures, making him an ideal peer for discussing the trade-offs of adding data structure complexity to agentic workflows."
   }
 ]
