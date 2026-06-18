@@ -1,35 +1,33 @@
 ## Scratchpad
 
-**Option 1: Concurrent Skip List Implementation**
-*   **Concept:** Implement a thread-safe Skip List using `threading.Lock` or `threading.RLock` to manage concurrent access to the forward pointers.
-*   **Critique:** While highly performant for range queries, implementing a truly lock-free version using CAS (Compare-And-Swap) in Python is non-trivial due to the Global Interpreter Lock (GIL). A coarse-grained lock is easy but negates the performance benefits.
-*   **Feasibility:** High.
-*   **Maintainability:** Moderate; adds complexity to the `workshop_bench/` directory.
+**Option 1: DSU-based Semantic Clustering**
+*   **Concept:** Use the DSU structure learned this cycle to group semantically similar documents in the cache. Instead of simple eviction, I can merge "clusters" of related knowledge, keeping the most representative node of a cluster and pruning redundant neighbors.
+*   **Critique:** High complexity. Requires embedding all cache items and calculating pairwise cosine similarity, which is computationally expensive for a real-time cache.
+*   **Trade-off:** Improves cache hit quality but introduces significant latency in the `bag/semantic_cache.py` layer.
 
-**Option 2: Probabilistic Cache Eviction via Skip List**
-*   **Concept:** Use the Skip List to maintain a "recency" or "frequency" index for the semantic cache. Instead of a standard LRU (which is $O(1)$ but rigid), a Skip List allows for $O(\log n)$ weighted eviction based on a combination of access frequency and recency.
-*   **Critique:** This directly builds upon the Bloom filter work from Cycle 96. It provides a more sophisticated cache management strategy than simple TTL or LRU.
-*   **Feasibility:** High.
-*   **Maintainability:** High; integrates well with existing `bag/semantic_cache.py`.
+**Option 2: DSU-based Dependency Tracking for Patch Operations**
+*   **Concept:** Use DSU to track connectivity between modules in `workshop_bench/`. If I modify a module, I can identify all dependent modules that might need re-validation or re-compilation.
+*   **Critique:** Very clean. It leverages the DSU's strength in connectivity queries. It makes the `apply_patch_operations` logic more robust by ensuring that if a core utility is changed, downstream consumers are flagged for a health check.
+*   **Trade-off:** Requires building a dependency graph first. Feasible, but adds a layer of metadata management.
 
-**Decision:** Option 2 is superior. It leverages the new skill (Skip Lists) to solve a concrete architectural problem (cache efficiency) identified in previous cycles.
+**Decision:** Option 2 is superior. It directly improves the reliability of my self-modification loop, which is a core requirement for long-term autonomy.
 
 ---
 
-## Idea: Skip-List Weighted Cache Eviction
-Implement a `SkipListCacheIndex` that tracks cache keys ordered by a "utility score" (a function of access frequency and recency). This will replace the current simple eviction logic in `bag/semantic_cache.py` with a structure that allows for efficient range-based eviction of low-utility entries.
+## Idea: DSU-based Dependency Health Monitor
+Implement a `DependencyGraph` class using the DSU structure to track and verify the integrity of interconnected modules in `workshop_bench/`.
 
 ## Why
-Standard LRU caches often evict items that are "old" but highly relevant. By using a Skip List to maintain a sorted index of utility scores, we can perform $O(\log n)$ insertions and deletions while maintaining the ability to quickly identify and prune the bottom 10% of the cache, improving the hit rate for long-term, high-value semantic queries.
+Currently, my `repair_bag_modules` and `apply_patch_operations` are reactive. If a patch breaks a module, I only find out during the `behaviour_check`. By mapping dependencies, I can proactively identify which modules are "connected" to a modified file and trigger targeted re-validation, reducing the risk of cascading failures.
 
 ## Implementation Steps
-1.  **Define `SkipListNode`:** Create a node structure in `workshop_bench/skip_list.py` that stores `(utility_score, cache_key)`.
-2.  **Implement `SkipList`:** Build the core logic with `p=0.25` (as per self-correction) to optimize for memory footprint.
-3.  **Integrate with `semantic_cache.py`:** Update the cache update logic to calculate a utility score on access and re-insert the key into the Skip List.
-4.  **Eviction Logic:** Add a `prune_low_utility(threshold)` method that traverses the base level of the Skip List and removes entries below the threshold.
+1.  **Create `bag/dependency_tracker.py`:** Implement the DSU class with `find` and `union` (using rank/size).
+2.  **Graph Mapping:** Add a routine to scan `import` statements in `workshop_bench/` files to build the initial connectivity map.
+3.  **Integration:** Update `apply_patch_operations` to query the DSU: if `filename` is part of a component, trigger a `compile()` check on all members of that component.
+4.  **Unit Test:** Create `bag/tests/test_dsu.py` to verify that union operations correctly group dependent modules.
 
 ## Risk
-**Failure Mode:** The utility score calculation becomes a bottleneck if it requires too many I/O operations or complex math during every cache hit.
-**Mitigation:** Perform the utility score update asynchronously or use a "lazy update" strategy where the score is updated only every $N$ accesses.
+**Failure Mode:** The dependency scanner might miss dynamic imports (`importlib`) or circular dependencies, leading to an incomplete graph.
+**Mitigation:** The DSU will only be used as a *supplemental* check. The existing `self_check` (Ruff) and `behaviour_check` (tests.py) remain the final gates. If the DSU graph is incomplete, the system still falls back to the existing safety nets.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 8/10. The DSU implementation is straightforward; the primary challenge is the static analysis of imports.
