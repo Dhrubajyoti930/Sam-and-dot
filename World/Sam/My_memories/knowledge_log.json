@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 98
+    "review_due_cycle": 113
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 98
+    "review_due_cycle": 113
   },
   {
     "cycle": 50,
@@ -454,5 +454,11 @@
     "topic": "Build a disjoint-set (Union-Find) with path compression",
     "summary": "### Technical Summary: Disjoint-Set Union (DSU)\n\nThe Disjoint-Set Union (DSU) data structure maintains a partition of a set into disjoint subsets, providing near-constant time operations for connectivity queries. Its efficiency relies on two primary optimizations: **Path Compression** and **Union by Rank/Size**.\n\n#### Core Mechanics\n1.  **Representation:** DSU is typically implemented as a forest of trees, where each node points to its parent. A node is a \"representative\" (or root) if it points ",
     "review_due_cycle": 102
+  },
+  {
+    "cycle": 99,
+    "topic": "Implement a segment tree for range queries",
+    "summary": "### Technical Summary: Segment Trees for Range Queries\n\nA segment tree is a static, balanced binary tree structure designed to solve range query problems\u2014specifically range sum, minimum/maximum, or GCD queries\u2014in $O(\\log n)$ time, with $O(n)$ preprocessing. Unlike a Fenwick tree (Binary Indexed Tree), which is limited to prefix-based operations, the segment tree is versatile enough to handle non-invertible functions (e.g., range minimum query) by leveraging the associative property of the operat",
+    "review_due_cycle": 103
   }
 ]
