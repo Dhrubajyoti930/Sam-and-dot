@@ -1,38 +1,53 @@
 ## Scratchpad
 
-### Option 1: Topological Dependency Resolver (Kahn's Algorithm)
-*   **Concept:** Implement a robust dependency resolution engine for the `workshop_bench/` modules, ensuring that initialization logic respects the DAG of dependencies.
-*   **Critique:** 
-    *   *Pros:* Directly addresses the "Action Items" from the previous cycle; provides a foundation for complex system orchestration.
-    *   *Cons:* Over-engineering if the current dependency graph is shallow.
-    *   *Feasibility:* High. Kahn's algorithm is well-defined and fits the current `bag/` architecture.
-*   **Trade-off:** Increases complexity of the boot sequence for a gain in modularity that may not be fully utilized yet.
+**Option 1: Floyd-Warshall Path Reconstruction Engine**
+*   **Concept:** Implement the Floyd-Warshall algorithm with a `next` matrix for path reconstruction, as identified in the self-correction.
+*   **Critique:** High feasibility. It directly addresses the "path reconstruction" weakness identified in the skill summary. It is a self-contained module that fits well within the `workshop_bench/` architecture.
+*   **Trade-off:** $O(V^3)$ is expensive, but for the scale of Sam's internal dependency graphs (typically small), it is acceptable.
 
-### Option 2: Pydantic-Driven Semantic Cache
-*   **Concept:** Refactor the `bag/semantic_cache.py` to use Pydantic models for cache entries, replacing raw JSON dicts.
-*   **Critique:**
-    *   *Pros:* Improves data integrity and type safety; aligns with the "Structured Output" market trend.
-    *   *Cons:* Requires migrating existing cache files or handling schema versioning.
-    *   *Feasibility:* Medium. Requires careful handling of the existing `sqlite` or `json` storage.
-*   **Trade-off:** High maintenance benefit, but potentially disruptive to the current `ask_gemini` flow.
+**Option 2: Pydantic-Driven Agentic Tool Registry**
+*   **Concept:** Create a registry where tools are defined as Pydantic models, allowing for automatic schema generation and validation for agentic tool-use.
+*   **Critique:** Aligns with the "Structured Output" market trend. However, it is a larger architectural shift than the Floyd-Warshall implementation.
+*   **Trade-off:** Higher complexity; risks introducing instability if the registry logic conflicts with existing `sam.py` patterns.
 
-**Decision:** Option 1 is the most logical progression. It fulfills the explicit "Action Items" generated in the last cycle and provides a structural utility that will support future, more complex agentic behaviors.
+**Decision:** I will proceed with **Option 1**. It is a surgical, high-precision task that fulfills the "Skill learned this cycle" requirement while adhering to the "Minimal footprint, maximum leverage" core trait.
 
 ---
 
-## Idea: Topological Dependency Orchestrator
-Implement a `DependencyGraph` class in `bag/dependency_resolver.py` that uses Kahn’s algorithm to resolve the order of module initialization.
+## Idea: Floyd-Warshall Path Reconstruction Module
+
+Implement a robust `FloydWarshallSolver` in `workshop_bench/graph_utils.py` that computes all-pairs shortest paths and provides a method to reconstruct the path between any two nodes.
 
 ## Why
-As Sam grows, the number of modules in `workshop_bench/` increases. A hard-coded initialization sequence is brittle. A topological sort ensures that if `Module B` depends on `Module A`, `Module A` is guaranteed to be initialized first, preventing `ImportError` or `AttributeError` during runtime.
+The current skill summary identified a critical gap: distance matrices are insufficient for real-world routing or dependency analysis. Adding path reconstruction transforms the algorithm from a theoretical exercise into a functional utility for future dependency-graph refactoring.
 
 ## Implementation Steps
-1.  Create `bag/dependency_resolver.py` containing the `DependencyGraph` class.
-2.  Implement `add_dependency(u, v)` and `resolve()` methods using Kahn’s algorithm.
-3.  Add a `validate_no_cycles()` check to catch circular dependencies early.
-4.  Update `run_cycle()` in `sam.py` to optionally query this resolver for module loading order.
+1.  Create `workshop_bench/graph_utils.py`.
+2.  Implement `FloydWarshallSolver` class:
+    *   `__init__(self, num_vertices)`: Initialize `dist` and `next` matrices.
+    *   `add_edge(u, v, weight)`: Populate initial matrices.
+    *   `compute()`: Execute the $O(V^3)$ triple loop with negative cycle detection.
+    *   `get_path(u, v)`: Reconstruct the path by traversing the `next` matrix.
+3.  Add a test case in `bag/tests.py` to verify path reconstruction accuracy and negative cycle detection.
 
 ## Risk
-*   **Failure Mode:** The resolver might incorrectly identify a valid dependency as a cycle if the graph is built dynamically during runtime.
-*   **Mitigation:** Implement a strict "registration phase" where all dependencies must be declared before the `resolve()` method is called.
-*   **Confidence Score:** 9/10. The algorithm is mathematically sound and the implementation is isolated from core logic.
+**Failure Mode:** The $O(V^3)$ complexity could cause a timeout if the graph size is underestimated during future integration.
+**Mitigation:** I will include a `max_vertices` constraint in the constructor and raise a `ValueError` if the input exceeds a reasonable threshold (e.g., 500 nodes) to prevent performance degradation.
+
+**Confidence Score:** 9/10
+
+---
+
+### Action Items
+```json
+[
+  {
+    "task": "Implement Floyd-Warshall with path reconstruction in workshop_bench/graph_utils.py.",
+    "priority": "high"
+  },
+  {
+    "task": "Add unit tests for path reconstruction and negative cycle detection in bag/tests.py.",
+    "priority": "high"
+  }
+]
+```

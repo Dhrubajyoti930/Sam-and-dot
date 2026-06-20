@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 103
+    "review_due_cycle": 118
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 103
+    "review_due_cycle": 118
   },
   {
     "cycle": 40,
@@ -484,5 +484,11 @@
     "topic": "Implement topological sort (Kahn's algorithm)",
     "summary": "### Technical Summary: Topological Sort (Kahn\u2019s Algorithm)\n\nTopological sorting is the linear ordering of vertices in a Directed Acyclic Graph (DAG) such that for every directed edge $u \\to v$, vertex $u$ comes before $v$. Kahn\u2019s algorithm is the standard iterative approach, leveraging the concept of **in-degree** (the number of incoming edges to a node).\n\n**Core Mechanics:**\n1. **In-degree Calculation:** Compute the in-degree for every node. Nodes with an in-degree of 0 are \"ready\" to be proces",
     "review_due_cycle": 107
+  },
+  {
+    "cycle": 104,
+    "topic": "Write Floyd-Warshall for all-pairs shortest paths",
+    "summary": "### Technical Summary: Floyd-Warshall Algorithm\n\nThe Floyd-Warshall algorithm is a classic dynamic programming approach to the All-Pairs Shortest Path (APSP) problem in a weighted graph. Unlike Dijkstra\u2019s, which is typically single-source, Floyd-Warshall computes the shortest paths between every pair of vertices $(i, j)$ in $O(V^3)$ time.\n\n**Core Mechanism**\nThe algorithm relies on the principle of intermediate vertices. Let $dist[i][j]$ be the shortest path from $i$ to $j$. For every vertex $k$",
+    "review_due_cycle": 108
   }
 ]
