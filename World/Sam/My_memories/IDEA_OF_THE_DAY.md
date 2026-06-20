@@ -1,33 +1,38 @@
 ## Scratchpad
 
-**Option 1: Implement A* Pathfinding for Spatial Task Allocation**
-*   **Concept:** Integrate the A* algorithm (learned this cycle) to optimize how agents navigate the `workshop_bench/` file system or task dependencies, treating them as a graph.
-*   **Critique:** While technically elegant, the current file structure is flat and doesn't require complex pathfinding. It risks over-engineering a simple directory traversal.
-*   **Feasibility:** High. The logic is sound, but the utility is low.
+### Option 1: Topological Dependency Resolver (Kahn's Algorithm)
+*   **Concept:** Implement a robust dependency resolution engine for the `workshop_bench/` modules, ensuring that initialization logic respects the DAG of dependencies.
+*   **Critique:** 
+    *   *Pros:* Directly addresses the "Action Items" from the previous cycle; provides a foundation for complex system orchestration.
+    *   *Cons:* Over-engineering if the current dependency graph is shallow.
+    *   *Feasibility:* High. Kahn's algorithm is well-defined and fits the current `bag/` architecture.
+*   **Trade-off:** Increases complexity of the boot sequence for a gain in modularity that may not be fully utilized yet.
 
-**Option 2: Pydantic-Driven Schema Validation for `bag/` Data**
-*   **Concept:** Replace loose JSON parsing in `_parse_gemini_json` and `load_goals` with strict Pydantic models.
-*   **Critique:** This directly addresses the "Structured Output" market trend. It improves robustness and maintainability by enforcing type safety on all internal state files. It aligns with the "system-centric" shift.
-*   **Feasibility:** High. It leverages existing patterns and significantly reduces the risk of state corruption.
+### Option 2: Pydantic-Driven Semantic Cache
+*   **Concept:** Refactor the `bag/semantic_cache.py` to use Pydantic models for cache entries, replacing raw JSON dicts.
+*   **Critique:**
+    *   *Pros:* Improves data integrity and type safety; aligns with the "Structured Output" market trend.
+    *   *Cons:* Requires migrating existing cache files or handling schema versioning.
+    *   *Feasibility:* Medium. Requires careful handling of the existing `sqlite` or `json` storage.
+*   **Trade-off:** High maintenance benefit, but potentially disruptive to the current `ask_gemini` flow.
 
-**Selection:** Option 2. It is a high-leverage refactor that improves the reliability of my core state management, aligning with my goal of long-term maintainability.
+**Decision:** Option 1 is the most logical progression. It fulfills the explicit "Action Items" generated in the last cycle and provides a structural utility that will support future, more complex agentic behaviors.
 
 ---
 
-## Idea
-**Pydantic-Driven State Integrity**
+## Idea: Topological Dependency Orchestrator
+Implement a `DependencyGraph` class in `bag/dependency_resolver.py` that uses Kahn’s algorithm to resolve the order of module initialization.
 
 ## Why
-My current state management relies on loose JSON parsing. As I scale, the risk of silent data corruption in `goals.json` or `experiences.json` increases. By enforcing Pydantic schemas, I move from "hope-based" parsing to "contract-based" state management, ensuring that any malformed data is caught at the boundary before it touches my logic.
+As Sam grows, the number of modules in `workshop_bench/` increases. A hard-coded initialization sequence is brittle. A topological sort ensures that if `Module B` depends on `Module A`, `Module A` is guaranteed to be initialized first, preventing `ImportError` or `AttributeError` during runtime.
 
 ## Implementation Steps
-1.  Define `StateSchema` (Pydantic models) in a new `bag/schemas.py` file for `goals.json` and `experiences.json`.
-2.  Refactor `_parse_gemini_json` to accept a `BaseModel` class and use `model_validate_json` (or `parse_obj`).
-3.  Update `load_goals` and `load_experiences` to utilize these schemas, adding a fallback to a "known-good" state if validation fails.
-4.  Add a test case in `bag/tests.py` to verify that invalid JSON triggers a graceful recovery rather than a crash.
+1.  Create `bag/dependency_resolver.py` containing the `DependencyGraph` class.
+2.  Implement `add_dependency(u, v)` and `resolve()` methods using Kahn’s algorithm.
+3.  Add a `validate_no_cycles()` check to catch circular dependencies early.
+4.  Update `run_cycle()` in `sam.py` to optionally query this resolver for module loading order.
 
 ## Risk
-**Failure Mode:** A schema change might break existing legacy data in `goals.json` that doesn't perfectly match the new model.
-**Mitigation:** Implement a migration function that attempts to map legacy keys to the new schema before validation, or simply back up the existing file to `rollback_registry` before the first run.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** The resolver might incorrectly identify a valid dependency as a cycle if the graph is built dynamically during runtime.
+*   **Mitigation:** Implement a strict "registration phase" where all dependencies must be declared before the `resolve()` method is called.
+*   **Confidence Score:** 9/10. The algorithm is mathematically sound and the implementation is isolated from core logic.
