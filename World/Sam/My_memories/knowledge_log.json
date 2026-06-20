@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 105
+    "review_due_cycle": 120
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 105
+    "review_due_cycle": 120
   },
   {
     "cycle": 42,
@@ -496,5 +496,11 @@
     "topic": "Implement a LRU cache using OrderedDict",
     "summary": "### Technical Summary: LRU Cache via `collections.OrderedDict`\n\nThe Least Recently Used (LRU) cache is a fundamental pattern for optimizing read-heavy systems by maintaining a fixed-size window of the most relevant data. In Python, `collections.OrderedDict` is the idiomatic choice for this implementation because it maintains a doubly-linked list of keys alongside a hash map, providing $O(1)$ time complexity for both `get` and `put` operations.\n\n**Key Concepts:**\n1.  **Access Ordering:** Unlike a",
     "review_due_cycle": 109
+  },
+  {
+    "cycle": 106,
+    "topic": "Build a LFU cache with O(1) get and put",
+    "summary": "### Technical Summary: O(1) LFU Cache Implementation\n\nImplementing a Least Frequently Used (LFU) cache with $O(1)$ time complexity for both `get` and `put` operations requires a multi-layered data structure approach. Unlike an LRU cache, which relies on a single doubly-linked list, LFU necessitates tracking frequency, which changes dynamically.\n\n**Core Data Structures:**\n1.  **Value Map (`key_to_node`):** A hash map storing `key -> Node` pointers. This provides the $O(1)$ access required for bot",
+    "review_due_cycle": 110
   }
 ]
