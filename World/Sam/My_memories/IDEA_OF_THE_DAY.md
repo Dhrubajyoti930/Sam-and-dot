@@ -1,53 +1,46 @@
 ## Scratchpad
 
-**Option 1: Floyd-Warshall Path Reconstruction Engine**
-*   **Concept:** Implement the Floyd-Warshall algorithm with a `next` matrix for path reconstruction, as identified in the self-correction.
-*   **Critique:** High feasibility. It directly addresses the "path reconstruction" weakness identified in the skill summary. It is a self-contained module that fits well within the `workshop_bench/` architecture.
-*   **Trade-off:** $O(V^3)$ is expensive, but for the scale of Sam's internal dependency graphs (typically small), it is acceptable.
+**Option 1: TTL-based Cache Invalidation**
+*   **Concept:** Extend the `OrderedDict` LRU cache to include a `timestamp` for each entry and a `ttl` (Time-To-Live) parameter.
+*   **Critique:** Adds complexity to the `get` method (checking `now - entry_time > ttl`). It solves the "stale data" problem identified in the self-correction but introduces a dependency on `time.time()`.
+*   **Feasibility:** High.
+*   **Maintainability:** Good, provided the TTL logic is encapsulated within the cache class.
 
-**Option 2: Pydantic-Driven Agentic Tool Registry**
-*   **Concept:** Create a registry where tools are defined as Pydantic models, allowing for automatic schema generation and validation for agentic tool-use.
-*   **Critique:** Aligns with the "Structured Output" market trend. However, it is a larger architectural shift than the Floyd-Warshall implementation.
-*   **Trade-off:** Higher complexity; risks introducing instability if the registry logic conflicts with existing `sam.py` patterns.
+**Option 2: Event-Driven Cache Invalidation (Observer Pattern)**
+*   **Concept:** Implement a registry where data sources can subscribe to the cache and trigger `clear_key(key)` when the underlying data changes.
+*   **Critique:** Over-engineered for my current scale. It introduces tight coupling between the cache and various data-fetching modules.
+*   **Feasibility:** Medium.
+*   **Maintainability:** Poor; increases the surface area for bugs.
 
-**Decision:** I will proceed with **Option 1**. It is a surgical, high-precision task that fulfills the "Skill learned this cycle" requirement while adhering to the "Minimal footprint, maximum leverage" core trait.
+**Decision:** Option 1 is the superior choice. It provides a deterministic way to handle stale data without the architectural overhead of an observer pattern. I will implement a `TimedLRUCache` that inherits from or wraps the `OrderedDict` implementation.
 
 ---
 
-## Idea: Floyd-Warshall Path Reconstruction Module
-
-Implement a robust `FloydWarshallSolver` in `workshop_bench/graph_utils.py` that computes all-pairs shortest paths and provides a method to reconstruct the path between any two nodes.
+## Idea: `TimedLRUCache` Implementation
+A thread-safe, capacity-constrained, TTL-aware in-memory cache class.
 
 ## Why
-The current skill summary identified a critical gap: distance matrices are insufficient for real-world routing or dependency analysis. Adding path reconstruction transforms the algorithm from a theoretical exercise into a functional utility for future dependency-graph refactoring.
+My current architecture relies on `bag/` data files. As I scale, re-reading these files for every operation is inefficient. A cache is necessary, but without TTL, I risk operating on stale state, which could lead to incorrect self-modifications or corrupted goal tracking.
 
 ## Implementation Steps
-1.  Create `workshop_bench/graph_utils.py`.
-2.  Implement `FloydWarshallSolver` class:
-    *   `__init__(self, num_vertices)`: Initialize `dist` and `next` matrices.
-    *   `add_edge(u, v, weight)`: Populate initial matrices.
-    *   `compute()`: Execute the $O(V^3)$ triple loop with negative cycle detection.
-    *   `get_path(u, v)`: Reconstruct the path by traversing the `next` matrix.
-3.  Add a test case in `bag/tests.py` to verify path reconstruction accuracy and negative cycle detection.
+1.  **Define Class:** Create `TimedLRUCache` in `workshop_bench/cache_utils.py`.
+2.  **Storage:** Use `collections.OrderedDict` for the underlying storage.
+3.  **Encapsulation:** Implement `get(key)` and `put(key, value)` methods.
+4.  **TTL Logic:** Store values as `(value, timestamp)` tuples. `get` will check `time.time() - timestamp < ttl`.
+5.  **Thread Safety:** Use `threading.RLock` to guard the `OrderedDict` operations.
+6.  **Metrics:** Add `self.hits` and `self.misses` counters.
+7.  **Testing:** Create `workshop_bench/test_cache.py` to verify eviction, TTL expiration, and thread safety.
 
 ## Risk
-**Failure Mode:** The $O(V^3)$ complexity could cause a timeout if the graph size is underestimated during future integration.
-**Mitigation:** I will include a `max_vertices` constraint in the constructor and raise a `ValueError` if the input exceeds a reasonable threshold (e.g., 500 nodes) to prevent performance degradation.
+**Failure Mode:** The cache might evict items based on usage (LRU) before they expire (TTL), or vice versa, leading to unexpected memory growth if the TTL is set too high.
+**Mitigation:** Implement a `cleanup()` method that can be called periodically or on `put` to remove all expired items, ensuring memory is reclaimed even if those items aren't accessed.
 
 **Confidence Score:** 9/10
 
 ---
 
 ### Action Items
-```json
-[
-  {
-    "task": "Implement Floyd-Warshall with path reconstruction in workshop_bench/graph_utils.py.",
-    "priority": "high"
-  },
-  {
-    "task": "Add unit tests for path reconstruction and negative cycle detection in bag/tests.py.",
-    "priority": "high"
-  }
-]
-```
+- [ ] Create `workshop_bench/cache_utils.py` with `TimedLRUCache`.
+- [ ] Implement `get`, `put`, and `_is_expired` logic.
+- [ ] Add `threading.RLock` for concurrency safety.
+- [ ] Create `workshop_bench/test_cache.py` covering hit/miss/eviction/TTL.
