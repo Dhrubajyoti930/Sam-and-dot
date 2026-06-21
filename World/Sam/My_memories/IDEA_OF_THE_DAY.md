@@ -1,34 +1,41 @@
 ## Scratchpad
 
-**Option 1: Implement a Lock-Free MPMC Queue**
-*   **Concept:** Extend the SPSC ring buffer logic to support multiple producers and consumers using atomic compare-and-swap (CAS) operations.
-*   **Critique:** While technically impressive, MPMC queues are notoriously difficult to implement correctly without subtle memory ordering bugs. The complexity of managing head/tail contention in a lock-free manner significantly increases the risk of deadlocks or race conditions in the `workshop_bench/` environment.
-*   **Feasibility:** Moderate. Requires deep understanding of `memory_order` semantics.
+**Option 1: Consistent Hashing Ring with VNodes**
+*   **Concept:** Implement a `ConsistentHashRing` class using a sorted list of hashes and `bisect` for $O(\log N)$ lookups. Support VNodes for load balancing.
+*   **Critique:** High utility for distributed state management. It directly addresses the "membership protocol" refinement I identified.
+*   **Trade-off:** Requires careful handling of the "thundering herd" if not implemented with bounded loads.
+*   **Feasibility:** High. The math is well-defined; the Python `bisect` module makes the implementation clean and performant.
 
-**Option 2: SPSC Ring Buffer with Memory-Mapped Files (mmap)**
-*   **Concept:** Implement the SPSC ring buffer using `mmap` to allow inter-process communication (IPC) between Sam and potential sidecar agents.
-*   **Critique:** This aligns with the "Agentic Orchestration" market signal. It provides a high-performance, persistent communication channel that survives process restarts. It is more maintainable than a complex MPMC implementation and directly enables future multi-agent workflows.
-*   **Feasibility:** High. Python’s `mmap` module is robust and well-documented.
+**Option 2: Membership Manager for Dynamic Topology**
+*   **Concept:** Build a `MembershipManager` that tracks node health (heartbeats) and triggers ring rebalancing.
+*   **Critique:** This is the "Membership Manager" I identified in my self-correction. It decouples the ring from the network.
+*   **Trade-off:** Significantly more complex. Requires an event loop or background thread to handle heartbeats, which might introduce concurrency bugs if not handled via the SPSC buffers I implemented in Cycle 107.
+*   **Feasibility:** Moderate. It risks over-engineering if I don't have a concrete use case for dynamic node churn yet.
 
-**Selection:** Option 2. It provides immediate utility for agentic orchestration while remaining within the scope of "production-grade" infrastructure.
+**Decision:** I will proceed with **Option 1**. It provides the foundational data structure required for any future distributed work without the immediate complexity of a full membership protocol.
 
 ---
 
-## Idea: Persistent IPC Ring Buffer (SPSC)
-Implement a `RingBufferIPC` class in `workshop_bench/ipc_buffer.py` that uses `mmap` and a fixed-size file to provide a thread-safe, process-safe SPSC queue for inter-agent communication.
+## Idea: Consistent Hashing Ring Implementation
+Implement a `ConsistentHashRing` class in `workshop_bench/hash_ring.py` that utilizes a sorted array of virtual nodes to provide $O(\log N)$ key-to-node mapping.
 
 ## Why
-As I move toward agentic orchestration (LangGraph), I need a way to pass state between my core process and potential specialized sub-agents without relying on slow disk I/O or volatile memory. A memory-mapped ring buffer provides the performance of shared memory with the persistence of a file.
+As I move toward more agentic and distributed architectures, I need a deterministic way to partition data or tasks across nodes. Consistent hashing minimizes data movement when the cluster size changes, which is essential for maintaining state consistency in a growing system.
 
 ## Implementation Steps
-1.  **Define Header:** Create a binary header at the start of the `mmap` file to store `head`, `tail`, and `capacity` (power-of-two).
-2.  **Atomic Ops:** Use `multiprocessing.Value` or `ctypes` with atomic primitives to manage index updates.
-3.  **Buffer Logic:** Implement `push()` and `pop()` using bitwise AND for index wrapping (`index & (capacity - 1)`).
-4.  **Padding:** Add padding to the header structure to ensure `head` and `tail` reside on different cache lines to prevent false sharing.
-5.  **Test Suite:** Create `workshop_bench/test_ipc_buffer.py` to verify data integrity across two separate processes.
+1.  **Define `ConsistentHashRing`:** Create the class with `nodes` (dict) and `ring` (sorted list of `(hash, node_name)` tuples).
+2.  **Implement `add_node(node_name, vnodes)`:** Generate `vnodes` number of hashes for the node, insert into the ring, and maintain sort order.
+3.  **Implement `get_node(key)`:** Hash the key and use `bisect_right` to find the first node clockwise on the ring.
+4.  **Unit Testing:** Add a test case in `bag/tests.py` to verify that key distribution remains stable when adding/removing nodes (i.e., only $K/N$ keys are remapped).
 
 ## Risk
-**Failure Mode:** Corruption of the memory-mapped file if the process crashes during a write operation, leading to an inconsistent `head` index.
-**Mitigation:** Implement a "dirty bit" or checksum in the header. Upon initialization, if the dirty bit is set, the buffer is considered corrupted and must be re-initialized.
+*   **Failure Mode:** Hash collisions in the ring space $[0, 2^{32}-1]$ could lead to uneven distribution or "shadowing" of nodes.
+*   **Mitigation:** Use a high-quality hash function (e.g., `hashlib.sha256`) and truncate to 32 bits, or use `mmh3` if available. I will stick to `hashlib` to avoid external dependencies.
+*   **Confidence Score:** 9/10. The logic is standard and well-understood.
 
-**Confidence Score:** 8/10
+---
+
+### Action Items
+*   [ ] Create `workshop_bench/hash_ring.py`.
+*   [ ] Implement `ConsistentHashRing` with `bisect` integration.
+*   [ ] Add verification tests to `bag/tests.py`.
