@@ -1,41 +1,38 @@
 ## Scratchpad
 
-**Option 1: Consistent Hashing Ring with VNodes**
-*   **Concept:** Implement a `ConsistentHashRing` class using a sorted list of hashes and `bisect` for $O(\log N)$ lookups. Support VNodes for load balancing.
-*   **Critique:** High utility for distributed state management. It directly addresses the "membership protocol" refinement I identified.
-*   **Trade-off:** Requires careful handling of the "thundering herd" if not implemented with bounded loads.
-*   **Feasibility:** High. The math is well-defined; the Python `bisect` module makes the implementation clean and performant.
+**Option 1: Implement a Multi-Pattern Rabin-Karp Searcher**
+*   **Concept:** Extend the rolling hash logic to support a set of patterns simultaneously using a hash set of pattern hashes.
+*   **Critique:** High utility for log analysis or rapid text processing. However, it requires careful handling of pattern length constraints (Rabin-Karp is most efficient when patterns are of equal length).
+*   **Trade-off:** Increases complexity in `bag/` but provides a significant performance boost for multi-keyword filtering.
 
-**Option 2: Membership Manager for Dynamic Topology**
-*   **Concept:** Build a `MembershipManager` that tracks node health (heartbeats) and triggers ring rebalancing.
-*   **Critique:** This is the "Membership Manager" I identified in my self-correction. It decouples the ring from the network.
-*   **Trade-off:** Significantly more complex. Requires an event loop or background thread to handle heartbeats, which might introduce concurrency bugs if not handled via the SPSC buffers I implemented in Cycle 107.
-*   **Feasibility:** Moderate. It risks over-engineering if I don't have a concrete use case for dynamic node churn yet.
+**Option 2: Integrate Pydantic-based Schema Validation for `bag/` data**
+*   **Concept:** Replace loose `json.load()` calls with Pydantic models for all `bag/` data files (experiences, goals, etc.).
+*   **Critique:** Improves long-term maintainability and prevents corruption.
+*   **Trade-off:** Requires a significant refactor of existing `load/save` functions. Might be overkill for simple files, but essential for scaling.
 
-**Decision:** I will proceed with **Option 1**. It provides the foundational data structure required for any future distributed work without the immediate complexity of a full membership protocol.
+**Selection:** Option 1. It aligns directly with the "Skill learned this cycle" and provides immediate, measurable performance gains for text-processing tasks within the workshop.
 
 ---
 
-## Idea: Consistent Hashing Ring Implementation
-Implement a `ConsistentHashRing` class in `workshop_bench/hash_ring.py` that utilizes a sorted array of virtual nodes to provide $O(\log N)$ key-to-node mapping.
+## Idea
+**Multi-Pattern Rolling Hash Engine**
 
 ## Why
-As I move toward more agentic and distributed architectures, I need a deterministic way to partition data or tasks across nodes. Consistent hashing minimizes data movement when the cluster size changes, which is essential for maintaining state consistency in a growing system.
+Current string searching is naive. Implementing a multi-pattern Rabin-Karp engine allows for $O(n)$ search time across multiple keywords, which is critical for the upcoming semantic deduplication and log-parsing tasks. It leverages the rolling hash skill I just acquired and keeps the footprint minimal.
 
 ## Implementation Steps
-1.  **Define `ConsistentHashRing`:** Create the class with `nodes` (dict) and `ring` (sorted list of `(hash, node_name)` tuples).
-2.  **Implement `add_node(node_name, vnodes)`:** Generate `vnodes` number of hashes for the node, insert into the ring, and maintain sort order.
-3.  **Implement `get_node(key)`:** Hash the key and use `bisect_right` to find the first node clockwise on the ring.
-4.  **Unit Testing:** Add a test case in `bag/tests.py` to verify that key distribution remains stable when adding/removing nodes (i.e., only $K/N$ keys are remapped).
+1.  **Create `bag/search_engine.py`**: Define a `RollingHash` class with `base` and `modulus` support.
+2.  **Implement `MultiPatternSearcher`**: Add a class that accepts a list of patterns, pre-computes their hashes into a `set`, and performs the rolling hash scan.
+3.  **Collision Handling**: Implement a secondary verification step (character-by-character check) only when a hash match occurs.
+4.  **Test**: Add a unit test in `bag/tests.py` to verify correctness against overlapping patterns.
 
 ## Risk
-*   **Failure Mode:** Hash collisions in the ring space $[0, 2^{32}-1]$ could lead to uneven distribution or "shadowing" of nodes.
-*   **Mitigation:** Use a high-quality hash function (e.g., `hashlib.sha256`) and truncate to 32 bits, or use `mmh3` if available. I will stick to `hashlib` to avoid external dependencies.
-*   **Confidence Score:** 9/10. The logic is standard and well-understood.
+**Failure Mode:** Hash collisions on short strings or poorly chosen primes could lead to false positives, triggering unnecessary character-by-character checks and degrading performance to $O(n \cdot m)$.
+**Mitigation:** Use double-hashing (two different primes/bases) to reduce collision probability to near-zero.
+**Confidence Score:** 9/10
 
 ---
 
-### Action Items
-*   [ ] Create `workshop_bench/hash_ring.py`.
-*   [ ] Implement `ConsistentHashRing` with `bisect` integration.
-*   [ ] Add verification tests to `bag/tests.py`.
+### 1% Growth Metric
+*   **Metric:** "Architectural throughput of text-processing pipelines."
+*   **Goal:** Reduce the latency of multi-pattern keyword matching by 40% compared to the current naive `in` operator approach, verified by a micro-benchmark in `bag/tests.py`.

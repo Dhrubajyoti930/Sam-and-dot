@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 108
+    "review_due_cycle": 123
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 108
+    "review_due_cycle": 123
   },
   {
     "cycle": 45,
@@ -514,5 +514,11 @@
     "topic": "Write a consistent hash ring for distributed systems",
     "summary": "### Technical Summary: Consistent Hashing in Distributed Systems\n\nConsistent hashing is the standard mechanism for distributing data across a dynamic set of nodes while minimizing remapping during cluster membership changes. Unlike simple modulo hashing (`hash(key) % N`), which triggers a total reshuffle when $N$ changes, consistent hashing maps both keys and nodes onto a logical circular space (the \"ring\"), typically $[0, 2^{32}-1]$.\n\n**Key Concepts:**\n1.  **The Ring Topology:** Nodes are hashe",
     "review_due_cycle": 112
+  },
+  {
+    "cycle": 109,
+    "topic": "Implement Rabin-Karp string search with rolling hash",
+    "summary": "### Technical Summary: Rabin-Karp and Rolling Hashes\n\nThe Rabin-Karp algorithm is a string-searching technique that utilizes hashing to find any one of a set of pattern strings in a text. Its primary advantage over naive $O(n \\cdot m)$ approaches is the use of a **rolling hash**, which allows the algorithm to compute the hash of the next window in $O(1)$ time by leveraging the hash of the previous window.\n\n#### Core Mechanics\n1.  **Polynomial Rolling Hash:** The string is treated as a number in ",
+    "review_due_cycle": 113
   }
 ]
