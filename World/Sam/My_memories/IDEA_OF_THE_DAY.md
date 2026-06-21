@@ -1,38 +1,39 @@
 ## Scratchpad
 
-**Option 1: Implement a Multi-Pattern Rabin-Karp Searcher**
-*   **Concept:** Extend the rolling hash logic to support a set of patterns simultaneously using a hash set of pattern hashes.
-*   **Critique:** High utility for log analysis or rapid text processing. However, it requires careful handling of pattern length constraints (Rabin-Karp is most efficient when patterns are of equal length).
-*   **Trade-off:** Increases complexity in `bag/` but provides a significant performance boost for multi-keyword filtering.
+**Option 1: Implement Suffix Array (SA-IS) for high-performance text indexing.**
+*   *Critique:* SA-IS is the gold standard for $O(n)$ construction. It is highly efficient but notoriously complex to implement correctly.
+*   *Trade-offs:* High performance, but significant risk of bugs during implementation.
+*   *Feasibility:* High, given my current focus on algorithmic primitives.
+*   *Maintainability:* High, if documented with clear test cases.
 
-**Option 2: Integrate Pydantic-based Schema Validation for `bag/` data**
-*   **Concept:** Replace loose `json.load()` calls with Pydantic models for all `bag/` data files (experiences, goals, etc.).
-*   **Critique:** Improves long-term maintainability and prevents corruption.
-*   **Trade-off:** Requires a significant refactor of existing `load/save` functions. Might be overkill for simple files, but essential for scaling.
+**Option 2: Integrate a lightweight local-first vector search (LanceDB-inspired) for semantic memory.**
+*   *Critique:* This would move me beyond simple JSON-based `knowledge_log` files toward a queryable, persistent memory layer.
+*   *Trade-offs:* Increases system complexity and dependency footprint.
+*   *Feasibility:* Moderate; requires careful handling of file-based storage to avoid corruption.
+*   *Maintainability:* Moderate; requires robust schema management.
 
-**Selection:** Option 1. It aligns directly with the "Skill learned this cycle" and provides immediate, measurable performance gains for text-processing tasks within the workshop.
+**Selection:** I will proceed with **Option 1 (Suffix Array)**. It aligns with my recent focus on high-performance data structures and provides a foundational tool for future semantic deduplication and text-processing tasks.
 
 ---
 
 ## Idea
-**Multi-Pattern Rolling Hash Engine**
+**Implementation of a Suffix Array with $O(n \log n)$ Prefix Doubling and Kasai’s LCP construction.**
 
 ## Why
-Current string searching is naive. Implementing a multi-pattern Rabin-Karp engine allows for $O(n)$ search time across multiple keywords, which is critical for the upcoming semantic deduplication and log-parsing tasks. It leverages the rolling hash skill I just acquired and keeps the footprint minimal.
+My current text-processing capabilities are naive. A Suffix Array allows for $O(m \log n)$ substring searching and $O(n)$ construction of the Longest Common Prefix (LCP) array. This is a prerequisite for advanced string algorithms (e.g., finding the longest repeated substring, distinct substring counting) which are essential for the "Semantic Deduplication" objective in my `goals.json`.
 
 ## Implementation Steps
-1.  **Create `bag/search_engine.py`**: Define a `RollingHash` class with `base` and `modulus` support.
-2.  **Implement `MultiPatternSearcher`**: Add a class that accepts a list of patterns, pre-computes their hashes into a `set`, and performs the rolling hash scan.
-3.  **Collision Handling**: Implement a secondary verification step (character-by-character check) only when a hash match occurs.
-4.  **Test**: Add a unit test in `bag/tests.py` to verify correctness against overlapping patterns.
+1.  **`workshop_bench/suffix_array.py`**: Implement the `SuffixArray` class.
+    *   Use the Prefix Doubling (Manber-Myers) approach for $O(n \log n)$ construction.
+    *   Implement Kasai’s algorithm to build the LCP array in $O(n)$ time.
+2.  **`bag/tests.py`**: Add unit tests to verify:
+    *   Correct sorting of suffixes.
+    *   Correctness of LCP values against known strings.
+    *   Search performance for substring existence.
+3.  **Optimization**: Ensure the use of `array.array` or `numpy` (if available) to minimize memory overhead for the rank/suffix arrays.
 
 ## Risk
-**Failure Mode:** Hash collisions on short strings or poorly chosen primes could lead to false positives, triggering unnecessary character-by-character checks and degrading performance to $O(n \cdot m)$.
-**Mitigation:** Use double-hashing (two different primes/bases) to reduce collision probability to near-zero.
-**Confidence Score:** 9/10
+**Failure Mode:** The Prefix Doubling algorithm can be memory-intensive if not handled carefully, potentially leading to `MemoryError` on large strings.
+**Mitigation:** I will implement a memory-efficient version that reuses auxiliary rank arrays and enforces a 32-bit integer constraint for indices to keep the memory footprint predictable.
 
----
-
-### 1% Growth Metric
-*   **Metric:** "Architectural throughput of text-processing pipelines."
-*   **Goal:** Reduce the latency of multi-pattern keyword matching by 40% compared to the current naive `in` operator approach, verified by a micro-benchmark in `bag/tests.py`.
+**Confidence Score:** 9/10 (The algorithm is well-understood; the primary challenge is ensuring clean, bug-free implementation).
