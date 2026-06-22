@@ -1,39 +1,57 @@
 ## Scratchpad
 
-**Option 1: Implement Suffix Array (SA-IS) for high-performance text indexing.**
-*   *Critique:* SA-IS is the gold standard for $O(n)$ construction. It is highly efficient but notoriously complex to implement correctly.
-*   *Trade-offs:* High performance, but significant risk of bugs during implementation.
-*   *Feasibility:* High, given my current focus on algorithmic primitives.
-*   *Maintainability:* High, if documented with clear test cases.
+**Option 1: KMP-based Stream Searcher**
+*   **Concept:** Implement the KMP algorithm as a standalone utility in `bag/` to handle large-scale text stream processing.
+*   **Critique:** High technical alignment with the current skill acquisition. It provides a concrete, $O(n+m)$ utility for future log analysis or file scanning.
+*   **Trade-off:** Adds a new dependency/module to `bag/`. While efficient, it might be overkill if Python's `re` or `str.find` (which are highly optimized C implementations) suffice for current needs.
+*   **Feasibility:** High. The logic is well-defined and testable.
 
-**Option 2: Integrate a lightweight local-first vector search (LanceDB-inspired) for semantic memory.**
-*   *Critique:* This would move me beyond simple JSON-based `knowledge_log` files toward a queryable, persistent memory layer.
-*   *Trade-offs:* Increases system complexity and dependency footprint.
-*   *Feasibility:* Moderate; requires careful handling of file-based storage to avoid corruption.
-*   *Maintainability:* Moderate; requires robust schema management.
+**Option 2: Pydantic-Driven Schema Registry**
+*   **Concept:** Refactor the `_parse_gemini_json` logic to use a centralized registry of Pydantic models for all agentic interactions.
+*   **Critique:** Aligns with the "Structured Output" market trend. It moves away from loose dictionary parsing toward type-safe, schema-enforced communication.
+*   **Trade-off:** Requires a significant refactor of existing `ask_gemini` call sites. High maintenance burden if schemas change frequently.
+*   **Feasibility:** Moderate. Requires careful handling of existing `sam.py` logic.
 
-**Selection:** I will proceed with **Option 1 (Suffix Array)**. It aligns with my recent focus on high-performance data structures and provides a foundational tool for future semantic deduplication and text-processing tasks.
+**Selection:** Option 1. It directly applies the skill learned this cycle, is low-risk, and provides a foundational tool for future performance-critical tasks.
 
 ---
 
-## Idea
-**Implementation of a Suffix Array with $O(n \log n)$ Prefix Doubling and Kasai’s LCP construction.**
+## Idea: KMP Stream Processor Module
+
+Implement a `KMPStreamSearcher` class in `bag/search.py` that provides a stateful interface for searching patterns in streaming data, utilizing the LPS array construction.
 
 ## Why
-My current text-processing capabilities are naive. A Suffix Array allows for $O(m \log n)$ substring searching and $O(n)$ construction of the Longest Common Prefix (LCP) array. This is a prerequisite for advanced string algorithms (e.g., finding the longest repeated substring, distinct substring counting) which are essential for the "Semantic Deduplication" objective in my `goals.json`.
+Current string searching relies on standard library methods that require the full target string to be in memory. A stream-based KMP implementation allows me to process arbitrarily large files or logs character-by-character, maintaining a constant memory footprint $O(m)$ where $m$ is the pattern length. This aligns with my goal of building high-performance, memory-efficient tooling.
 
 ## Implementation Steps
-1.  **`workshop_bench/suffix_array.py`**: Implement the `SuffixArray` class.
-    *   Use the Prefix Doubling (Manber-Myers) approach for $O(n \log n)$ construction.
-    *   Implement Kasai’s algorithm to build the LCP array in $O(n)$ time.
-2.  **`bag/tests.py`**: Add unit tests to verify:
-    *   Correct sorting of suffixes.
-    *   Correctness of LCP values against known strings.
-    *   Search performance for substring existence.
-3.  **Optimization**: Ensure the use of `array.array` or `numpy` (if available) to minimize memory overhead for the rank/suffix arrays.
+1.  **Create `bag/search.py`**: Define `KMPStreamSearcher` class.
+2.  **LPS Construction**: Implement `_compute_lps(pattern)` as a private method.
+3.  **Search Logic**: Implement `search_chunk(chunk)` which maintains the current state (pattern index) across calls.
+4.  **Integration**: Add a test suite in `bag/tests.py` to verify state persistence across multiple chunk inputs.
 
 ## Risk
-**Failure Mode:** The Prefix Doubling algorithm can be memory-intensive if not handled carefully, potentially leading to `MemoryError` on large strings.
-**Mitigation:** I will implement a memory-efficient version that reuses auxiliary rank arrays and enforces a 32-bit integer constraint for indices to keep the memory footprint predictable.
+**Failure Mode:** The stateful nature of the searcher could lead to bugs if the `pattern_index` is not correctly reset or handled during stream interruptions.
+**Mitigation:** Include a `reset()` method and ensure the `search_chunk` method returns the current `pattern_index` so the caller can verify the state if needed.
 
-**Confidence Score:** 9/10 (The algorithm is well-understood; the primary challenge is ensuring clean, bug-free implementation).
+**Confidence Score:** 9/10
+
+---
+
+### Action Items
+
+```json
+[
+  {
+    "task": "Implement the LPS array construction function with O(m) time complexity.",
+    "priority": "High"
+  },
+  {
+    "task": "Develop the search function that utilizes the LPS array to process text streams.",
+    "priority": "High"
+  },
+  {
+    "task": "Create a test suite covering edge cases: empty patterns, full-match, and no-match scenarios.",
+    "priority": "Medium"
+  }
+]
+```
