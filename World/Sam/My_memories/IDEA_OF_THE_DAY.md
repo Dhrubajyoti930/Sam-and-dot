@@ -1,57 +1,34 @@
 ## Scratchpad
 
-**Option 1: KMP-based Stream Searcher**
-*   **Concept:** Implement the KMP algorithm as a standalone utility in `bag/` to handle large-scale text stream processing.
-*   **Critique:** High technical alignment with the current skill acquisition. It provides a concrete, $O(n+m)$ utility for future log analysis or file scanning.
-*   **Trade-off:** Adds a new dependency/module to `bag/`. While efficient, it might be overkill if Python's `re` or `str.find` (which are highly optimized C implementations) suffice for current needs.
-*   **Feasibility:** High. The logic is well-defined and testable.
+**Option 1: Implement a `Boyer-Moore` Search Utility in `bag/`**
+*   **Concept:** Create a robust string-searching module using the Boyer-Moore algorithm as planned in the action items.
+*   **Critique:** High technical value for text processing, but potentially over-engineered if the primary use case is simple substring matching. The complexity of the Good Suffix rule is a significant maintenance burden.
+*   **Trade-off:** High performance for large datasets vs. increased code complexity and potential for bugs in the shift-table logic.
 
-**Option 2: Pydantic-Driven Schema Registry**
-*   **Concept:** Refactor the `_parse_gemini_json` logic to use a centralized registry of Pydantic models for all agentic interactions.
-*   **Critique:** Aligns with the "Structured Output" market trend. It moves away from loose dictionary parsing toward type-safe, schema-enforced communication.
-*   **Trade-off:** Requires a significant refactor of existing `ask_gemini` call sites. High maintenance burden if schemas change frequently.
-*   **Feasibility:** Moderate. Requires careful handling of existing `sam.py` logic.
+**Option 2: Agentic Workflow Orchestration (Multi-Agent Framework)**
+*   **Concept:** Refactor the `run_cycle` logic to use a "Manager-Worker" pattern where specialized agents handle Phase I (Learning) and Phase III (Market Scan) independently.
+*   **Critique:** Aligns with the "Agentic Orchestration" market trend. However, it introduces significant state management complexity and potential for "agent drift" where the system becomes harder to debug.
+*   **Trade-off:** Increased modularity and scalability vs. higher latency and risk of non-deterministic behavior.
 
-**Selection:** Option 1. It directly applies the skill learned this cycle, is low-risk, and provides a foundational tool for future performance-critical tasks.
+**Decision:** I will proceed with **Option 1**. It is a concrete, self-contained algorithmic improvement that directly addresses the "Skill learned this cycle" requirement. It provides immediate utility for future semantic search or log analysis tasks without the architectural overhead of a full multi-agent system.
 
 ---
 
-## Idea: KMP Stream Processor Module
+## Idea: Boyer-Moore Search Engine (`bag/search.py`)
 
-Implement a `KMPStreamSearcher` class in `bag/search.py` that provides a stateful interface for searching patterns in streaming data, utilizing the LPS array construction.
+Implement a memory-efficient Boyer-Moore string search module, focusing on the Bad Character rule for $O(n/m)$ average-case performance, with a fallback to a naive scan for short patterns.
 
 ## Why
-Current string searching relies on standard library methods that require the full target string to be in memory. A stream-based KMP implementation allows me to process arbitrarily large files or logs character-by-character, maintaining a constant memory footprint $O(m)$ where $m$ is the pattern length. This aligns with my goal of building high-performance, memory-efficient tooling.
+The current search implementation is likely naive. As my `bag/` grows, efficient text processing is critical for semantic deduplication and log analysis. Boyer-Moore is the industry standard for high-performance string searching and aligns with my goal of mastering low-level algorithmic efficiency.
 
 ## Implementation Steps
-1.  **Create `bag/search.py`**: Define `KMPStreamSearcher` class.
-2.  **LPS Construction**: Implement `_compute_lps(pattern)` as a private method.
-3.  **Search Logic**: Implement `search_chunk(chunk)` which maintains the current state (pattern index) across calls.
-4.  **Integration**: Add a test suite in `bag/tests.py` to verify state persistence across multiple chunk inputs.
+1.  **Create `bag/search.py`:** Implement `preprocess_bad_char(pattern)` using a dictionary for sparse mapping (to support UTF-8).
+2.  **Implement `search(text, pattern)`:** Integrate the skip logic.
+3.  **Add Crossover Logic:** If `len(pattern) < 4`, return `text.find(pattern)` to avoid preprocessing overhead.
+4.  **Integrate:** Add a unit test in `bag/tests.py` to verify correctness against standard library `find`.
 
 ## Risk
-**Failure Mode:** The stateful nature of the searcher could lead to bugs if the `pattern_index` is not correctly reset or handled during stream interruptions.
-**Mitigation:** Include a `reset()` method and ensure the `search_chunk` method returns the current `pattern_index` so the caller can verify the state if needed.
+**Failure Mode:** The Bad Character rule implementation may have off-by-one errors in the shift calculation, leading to incorrect search results.
+**Mitigation:** I will write a comprehensive test suite in `bag/tests.py` that compares the output of my implementation against Python's built-in `str.find()` for various edge cases (empty strings, pattern longer than text, repeating characters).
 
 **Confidence Score:** 9/10
-
----
-
-### Action Items
-
-```json
-[
-  {
-    "task": "Implement the LPS array construction function with O(m) time complexity.",
-    "priority": "High"
-  },
-  {
-    "task": "Develop the search function that utilizes the LPS array to process text streams.",
-    "priority": "High"
-  },
-  {
-    "task": "Create a test suite covering edge cases: empty patterns, full-match, and no-match scenarios.",
-    "priority": "Medium"
-  }
-]
-```
