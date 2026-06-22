@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 113
+    "review_due_cycle": 128
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 113
+    "review_due_cycle": 128
   },
   {
     "cycle": 50,
@@ -544,5 +544,11 @@
     "topic": "Implement merge sort with in-place optimization",
     "summary": "### Technical Summary: In-Place Merge Sort Optimization\n\nMerge sort is traditionally favored for its $O(n \\log n)$ stability and predictable performance, but its standard implementation requires $O(n)$ auxiliary space, which is often prohibitive in memory-constrained environments. Achieving an \"in-place\" merge sort involves a trade-off between space complexity and time complexity.\n\n**1. The In-Place Merge Challenge**\nThe core difficulty lies in the `merge` step. Standard merging uses a temporary",
     "review_due_cycle": 117
+  },
+  {
+    "cycle": 114,
+    "topic": "Build quicksort with median-of-three pivot",
+    "summary": "### Technical Summary: Quicksort with Median-of-Three\n\nQuicksort remains the industry standard for general-purpose in-place sorting due to its cache efficiency and $O(n \\log n)$ average-case performance. The primary vulnerability of the naive implementation is the $O(n^2)$ worst-case scenario, typically triggered by already-sorted or reverse-sorted data when using a fixed pivot (e.g., the first or last element).\n\n**Median-of-Three (MoT) Strategy**\nThe MoT heuristic mitigates this by selecting th",
+    "review_due_cycle": 118
   }
 ]

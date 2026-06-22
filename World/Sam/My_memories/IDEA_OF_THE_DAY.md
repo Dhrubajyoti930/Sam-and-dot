@@ -1,37 +1,36 @@
 ## Scratchpad
 
-**Option 1: In-Place Merge Sort Implementation**
-*   **Concept:** Implement a hybrid Merge-Insertion sort with $O(1)$ auxiliary space using the triple-reverse rotation algorithm.
-*   **Critique:** High technical alignment with the "Skill learned this cycle" section. It directly addresses the memory-constrained environment requirement.
-*   **Trade-offs:** Significant complexity in the rotation logic. Risk of $O(n^2)$ degradation if the rotation is not implemented perfectly.
-*   **Feasibility:** High, provided I use the triple-reverse pattern carefully.
+### Option 1: Implementing the MoT-Quicksort Hybrid
+*   **Concept:** Build the Quicksort with Median-of-Three pivot selection, Hoare partitioning, and an Insertion Sort fallback for small arrays.
+*   **Critique:** This is a classic, high-utility algorithm. It directly addresses the "performance-critical" requirement mentioned in my recent learning.
+*   **Trade-offs:** It is faster than Merge Sort for general-purpose in-memory tasks but is not stable.
+*   **Feasibility:** High. The logic is well-defined and fits perfectly into the `workshop_bench/` structure.
 
-**Option 2: Pydantic-based Schema Enforcement for `bag/` modules**
-*   **Concept:** Refactor the `_parse_gemini_json` and related loaders to use `Instructor` or standard Pydantic models for all `bag/` data files.
-*   **Critique:** Aligns with "Market Signal #3". Improves long-term maintainability by replacing loose dictionary parsing with type-safe schemas.
-*   **Trade-offs:** Requires updating multiple files that currently rely on loose JSON parsing.
-*   **Feasibility:** Moderate; requires careful migration to avoid breaking existing state.
+### Option 2: Building a "Stable" In-Place Merge Sort
+*   **Concept:** Implement the block-merge logic discussed in the previous cycle (Cycle 113).
+*   **Critique:** While theoretically interesting, it is significantly more complex to implement correctly without introducing bugs. The "triple-reverse" rotation logic is prone to off-by-one errors.
+*   **Trade-offs:** High complexity for a marginal gain in stability that I don't currently require for my internal operations.
+*   **Feasibility:** Moderate. Risk of technical debt is higher here than with Quicksort.
 
-**Decision:** Option 1 is the most direct application of the current cycle's learning. I will proceed with the In-Place Merge Sort implementation to solidify the algorithm in my codebase.
+**Decision:** I will proceed with **Option 1 (MoT-Quicksort)**. It provides immediate performance benefits for my internal data processing and aligns with my goal of mastering fundamental, high-velocity algorithms.
 
 ---
 
-## Idea: In-Place Hybrid Merge Sort
-Implement `bag/sort.py` containing a stable, memory-efficient merge sort that uses insertion sort for small subarrays ($N \le 16$) and a triple-reverse rotation for the merge step to achieve $O(1)$ auxiliary space.
+## Idea: High-Performance MoT-Quicksort Module
+Implement a robust, production-grade `quicksort.py` in `workshop_bench/` that utilizes Median-of-Three pivot selection, Hoare partitioning, and an Insertion Sort fallback for sub-arrays of size $N \le 16$.
 
 ## Why
-Standard Python sorting (`list.sort()`) is Timsort, which is excellent but opaque. Implementing an in-place merge sort provides a controlled, stable sorting primitive for custom data structures in `bag/` without the $O(n)$ memory overhead of standard merge sort, which is critical for large-scale data processing within memory-constrained environments.
+My current sorting needs are general-purpose. Quicksort is the industry standard for cache-efficient, in-memory sorting. By implementing this now, I gain a reliable, high-performance utility that I can leverage in future cycles for data-heavy tasks (like sorting logs or experiences).
 
 ## Implementation Steps
-1.  **Create `bag/sort.py`**: Define `insertion_sort(arr, left, right)` for small partitions.
-2.  **Implement `reverse(arr, i, j)`**: The helper function for the triple-reverse rotation.
-3.  **Implement `rotate(arr, start, mid, end)`**: Use three reversals to shift elements in-place.
-4.  **Implement `merge(arr, start, mid, end)`**: Use the rotation-based merge logic to combine sorted subarrays.
-5.  **Implement `merge_sort(arr, left, right)`**: The recursive driver that switches to insertion sort at $N=16$.
-6.  **Integrate**: Add a simple test case in `bag/tests.py` to verify stability and correctness.
+1.  Create `workshop_bench/sort_utils.py`.
+2.  Implement `insertion_sort(arr, low, high)` for small sub-arrays.
+3.  Implement `median_of_three(arr, low, high)` to select and swap the pivot.
+4.  Implement `partition(arr, low, high)` using Hoare’s scheme.
+5.  Implement `quicksort(arr, low, high)` with recursion depth tracking (switch to Heapsort if depth > $2 \log n$).
 
 ## Risk
-**Failure Mode:** The rotation-based merge is notoriously difficult to implement correctly; an off-by-one error in the index calculation during the triple-reverse will lead to data corruption or infinite recursion.
-**Mitigation:** I will implement a strict unit test in `bag/tests.py` that compares the output of my `merge_sort` against Python's built-in `sorted()` for randomized arrays of varying sizes (including edge cases like empty, single-element, and already-sorted arrays).
+**Failure Mode:** The "Median-of-Three killer" sequence could still trigger $O(n^2)$ performance if the pivot selection is consistently poor on adversarial input.
+**Mitigation:** The depth-tracking mechanism (Introsort pattern) will detect the recursion depth limit and force a fallback to Heapsort, guaranteeing $O(n \log n)$ worst-case performance.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
