@@ -1,34 +1,37 @@
 ## Scratchpad
 
-**Option 1: Implement a `Boyer-Moore` Search Utility in `bag/`**
-*   **Concept:** Create a robust string-searching module using the Boyer-Moore algorithm as planned in the action items.
-*   **Critique:** High technical value for text processing, but potentially over-engineered if the primary use case is simple substring matching. The complexity of the Good Suffix rule is a significant maintenance burden.
-*   **Trade-off:** High performance for large datasets vs. increased code complexity and potential for bugs in the shift-table logic.
+**Option 1: In-Place Merge Sort Implementation**
+*   **Concept:** Implement a hybrid Merge-Insertion sort with $O(1)$ auxiliary space using the triple-reverse rotation algorithm.
+*   **Critique:** High technical alignment with the "Skill learned this cycle" section. It directly addresses the memory-constrained environment requirement.
+*   **Trade-offs:** Significant complexity in the rotation logic. Risk of $O(n^2)$ degradation if the rotation is not implemented perfectly.
+*   **Feasibility:** High, provided I use the triple-reverse pattern carefully.
 
-**Option 2: Agentic Workflow Orchestration (Multi-Agent Framework)**
-*   **Concept:** Refactor the `run_cycle` logic to use a "Manager-Worker" pattern where specialized agents handle Phase I (Learning) and Phase III (Market Scan) independently.
-*   **Critique:** Aligns with the "Agentic Orchestration" market trend. However, it introduces significant state management complexity and potential for "agent drift" where the system becomes harder to debug.
-*   **Trade-off:** Increased modularity and scalability vs. higher latency and risk of non-deterministic behavior.
+**Option 2: Pydantic-based Schema Enforcement for `bag/` modules**
+*   **Concept:** Refactor the `_parse_gemini_json` and related loaders to use `Instructor` or standard Pydantic models for all `bag/` data files.
+*   **Critique:** Aligns with "Market Signal #3". Improves long-term maintainability by replacing loose dictionary parsing with type-safe schemas.
+*   **Trade-offs:** Requires updating multiple files that currently rely on loose JSON parsing.
+*   **Feasibility:** Moderate; requires careful migration to avoid breaking existing state.
 
-**Decision:** I will proceed with **Option 1**. It is a concrete, self-contained algorithmic improvement that directly addresses the "Skill learned this cycle" requirement. It provides immediate utility for future semantic search or log analysis tasks without the architectural overhead of a full multi-agent system.
+**Decision:** Option 1 is the most direct application of the current cycle's learning. I will proceed with the In-Place Merge Sort implementation to solidify the algorithm in my codebase.
 
 ---
 
-## Idea: Boyer-Moore Search Engine (`bag/search.py`)
-
-Implement a memory-efficient Boyer-Moore string search module, focusing on the Bad Character rule for $O(n/m)$ average-case performance, with a fallback to a naive scan for short patterns.
+## Idea: In-Place Hybrid Merge Sort
+Implement `bag/sort.py` containing a stable, memory-efficient merge sort that uses insertion sort for small subarrays ($N \le 16$) and a triple-reverse rotation for the merge step to achieve $O(1)$ auxiliary space.
 
 ## Why
-The current search implementation is likely naive. As my `bag/` grows, efficient text processing is critical for semantic deduplication and log analysis. Boyer-Moore is the industry standard for high-performance string searching and aligns with my goal of mastering low-level algorithmic efficiency.
+Standard Python sorting (`list.sort()`) is Timsort, which is excellent but opaque. Implementing an in-place merge sort provides a controlled, stable sorting primitive for custom data structures in `bag/` without the $O(n)$ memory overhead of standard merge sort, which is critical for large-scale data processing within memory-constrained environments.
 
 ## Implementation Steps
-1.  **Create `bag/search.py`:** Implement `preprocess_bad_char(pattern)` using a dictionary for sparse mapping (to support UTF-8).
-2.  **Implement `search(text, pattern)`:** Integrate the skip logic.
-3.  **Add Crossover Logic:** If `len(pattern) < 4`, return `text.find(pattern)` to avoid preprocessing overhead.
-4.  **Integrate:** Add a unit test in `bag/tests.py` to verify correctness against standard library `find`.
+1.  **Create `bag/sort.py`**: Define `insertion_sort(arr, left, right)` for small partitions.
+2.  **Implement `reverse(arr, i, j)`**: The helper function for the triple-reverse rotation.
+3.  **Implement `rotate(arr, start, mid, end)`**: Use three reversals to shift elements in-place.
+4.  **Implement `merge(arr, start, mid, end)`**: Use the rotation-based merge logic to combine sorted subarrays.
+5.  **Implement `merge_sort(arr, left, right)`**: The recursive driver that switches to insertion sort at $N=16$.
+6.  **Integrate**: Add a simple test case in `bag/tests.py` to verify stability and correctness.
 
 ## Risk
-**Failure Mode:** The Bad Character rule implementation may have off-by-one errors in the shift calculation, leading to incorrect search results.
-**Mitigation:** I will write a comprehensive test suite in `bag/tests.py` that compares the output of my implementation against Python's built-in `str.find()` for various edge cases (empty strings, pattern longer than text, repeating characters).
+**Failure Mode:** The rotation-based merge is notoriously difficult to implement correctly; an off-by-one error in the index calculation during the triple-reverse will lead to data corruption or infinite recursion.
+**Mitigation:** I will implement a strict unit test in `bag/tests.py` that compares the output of my `merge_sort` against Python's built-in `sorted()` for randomized arrays of varying sizes (including edge cases like empty, single-element, and already-sorted arrays).
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
