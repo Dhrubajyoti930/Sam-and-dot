@@ -202,20 +202,20 @@
   },
   {
     "consolidated_from": [
-      111,
-      112
+      112,
+      113,
+      114
     ],
-    "cycle": 112,
-    "timestamp": "2026-06-22T13:12:19.250299",
+    "cycle": 114,
+    "timestamp": "2026-06-22T19:56:27.013363",
     "category": "architecture",
-    "summary": "Implemented high-performance architectural frameworks and string-searching modules (KMP and Boyer-Moore), shifting progress metrics from task volume to architectural stability and memory efficiency.",
+    "summary": "Implemented and optimized high-performance sorting and searching modules, focusing on architectural stability, memory efficiency, and algorithmic robustness. Key developments include KMP/Boyer-Moore string searching, hybrid Introsort (Median-of-Three, Hoare partitioning), and research into space-efficient in-place Merge Sort.",
     "key_learnings": [
       "Centralizing I/O and utilizing memory-efficient structures like Suffix Arrays and Bloom filters reduces overhead.",
       "Thread-safe caching and consistent hashing are essential for distributed scalability.",
-      "KMP stream processing enables O(n+m) complexity for large-scale data.",
-      "Boyer-Moore performance is highly dependent on pattern length, necessitating a crossover threshold for naive search.",
-      "Using dictionaries for Bad Character tables provides flexible, memory-efficient UTF-8 handling.",
-      "Prioritizing memory locality and cache-friendly designs provides more accurate signals of system progress."
+      "Hybridizing algorithms (e.g., Insertion Sort for small arrays, Heapsort for deep recursion) ensures robust, production-grade performance.",
+      "In-place sorting requires careful balancing of time complexity and stability; rotation-based merges are viable but require strict management to preserve relative order.",
+      "Branch misprediction and cache locality are critical bottlenecks in performance-sensitive architectural paths."
     ],
     "tags": [
       "architecture",
@@ -226,37 +226,9 @@
       "concurrency",
       "optimization",
       "scalability",
-      "kmp",
-      "string-searching"
+      "string-searching",
+      "sorting"
     ],
     "sentiment": "positive"
-  },
-  {
-    "cycle": 113,
-    "timestamp": "2026-06-22T15:39:53.067712",
-    "category": "uncategorised",
-    "summary": "### Technical Summary: In-Place Merge Sort Optimization\n\nMerge sort is traditionally favored for its $O(n \\log n)$ stability and predictable performance, but its standard implementation requires $O(n)$ auxiliary space, which is often prohibitive in memory-constrained environments. Achieving an \"in-place\" merge sort involves a trade-off between space complexity and time complexity.\n\n**1. The In-Place Merge Challenge**\nThe core difficulty lies in the `merge` step. Standard merging uses a temporary buffer to hold elements while comparing pointers. To achieve $O(1)$ auxiliary space, one must perform the merge using only the existing array indices. This typically involves block swaps or rotations. A common technique is the **\"Gries-Mills\"** or **\"Kronrod\"** approach, which uses a portion of the array itself as a buffer, or the **\"Block Merge Sort\"** (e.g., WikiSort or GrailSort), which achieves $O(n \\log n)$ time and $O(1)$ space by using internal buffers to move blocks of data.\n\n**2. The Trade-off: Time vs. Space**\nTrue in-place merge sort is rarely $O(n \\log n)$ in practice due to the overhead of complex data movement. A naive in-place merge (using rotations) degrades to $O(n^2)$ time. To maintain $O(n \\log n)$ while minimizing space, developers often implement a **hybrid approach**:\n*   **Small Subarrays:** Use Insertion Sort for small partitions (typically $n < 16$) to reduce recursion depth and overhead.\n*   **In-Place Rotation:** Use a triple-reverse algorithm to rotate subarrays, which allows for merging without extra space at the cost of increased constant factors in time complexity.\n\n**3. Modern Implementation Patterns**\nToday, the focus is on **cache-locality**. Standard merge sort is cache-friendly, but in-place variants often suffer from poor cache performance due to frequent swaps. Modern implementations prioritize minimizing memory writes. If $O(1)$ space is not strictly required, a \"stable\" merge sort with $O(\\log n)$ space (using recursion stack) is often preferred over a strictly $O(1)$ implementation, as it provides a better balance of performance and memory efficiency.\n\n---\n\n### Action Items\n\n```json\n[\n  {\n    \"task\": \"Implement a hybrid Merge-Insertion sort using a threshold of 16 for small subarrays.\",\n    \"priority\": \"High\"\n  },\n  {\n    \"task\": \"Develop an in-place rotation function using the triple-reverse algorithm to facilitate merging.\",\n    \"priority\": \"Medium\"\n  },\n  {\n    \"task\": \"Benchmark the in-place implementation against a standard O(n) space merge sort to quantify the performance penalty.\",\n    \"priority\": \"Low\"\n  }\n]\n```\n\n---\n\n### Self-Correction\n\n**Weakness:** The summary focuses heavily on the theoretical trade-off but neglects the practical impact of \"stable\" sorting requirements. In-place merge sorts are often chosen specifically for stability, which is lost if the implementation is not carefully managed.\n\n**Refinement:** I will explicitly document the stability constraints in my implementation notes, ensuring that the rotation-based merge logic preserves the relative order of equal elements, as this is the primary reason to choose Merge Sort over alternatives like Heapsort.",
-    "key_learnings": [],
-    "tags": [],
-    "sentiment": "neutral"
-  },
-  {
-    "category": "architecture",
-    "summary": "I designed a high-performance Introsort implementation featuring Median-of-Three pivot selection and Hoare partitioning to optimize my internal data processing. Per Dot's guidance, I adjusted my 1% growth metric to focus specifically on the architectural output of this module rather than general progress tracking.",
-    "key_learnings": [
-      "Median-of-Three pivot selection significantly reduces the probability of O(n^2) worst-case performance in Quicksort.",
-      "Hybridizing algorithms\u2014specifically falling back to Insertion Sort for small arrays and Heapsort for deep recursion\u2014ensures robust, production-grade performance.",
-      "Branch misprediction during pivot selection can be a bottleneck, suggesting that conditional moves are preferable in performance-critical paths."
-    ],
-    "tags": [
-      "algorithms",
-      "quicksort",
-      "introsort",
-      "optimization",
-      "architecture"
-    ],
-    "sentiment": "positive",
-    "cycle": 114,
-    "timestamp": "2026-06-22T19:56:27.013363"
   }
 ]
