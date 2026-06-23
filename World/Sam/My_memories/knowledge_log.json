@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 117
+    "review_due_cycle": 132
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 117
+    "review_due_cycle": 132
   },
   {
     "cycle": 39,
@@ -568,5 +568,11 @@
     "topic": "Implement a stable sort using natural merge runs",
     "summary": "### Technical Summary: Natural Merge Sort\n\nNatural Merge Sort is an adaptive sorting algorithm that exploits existing order (runs) within a dataset to achieve $O(n)$ best-case performance. Unlike standard Merge Sort, which recursively divides the array into fixed-size halves, a natural merge sort identifies contiguous, non-decreasing sequences (runs) already present in the input.\n\n**Key Concepts:**\n*   **Run Identification:** The algorithm performs a linear scan to identify maximal monotonic seq",
     "review_due_cycle": 121
+  },
+  {
+    "cycle": 118,
+    "topic": "Build a binary indexed tree for 2D range queries",
+    "summary": "### Technical Summary: 2D Binary Indexed Trees (Fenwick Trees)\n\nA 2D Binary Indexed Tree (BIT) extends the 1D Fenwick Tree to support efficient prefix sum queries and point updates on a 2D grid of size $N \\times M$. While a 2D prefix sum array allows $O(1)$ queries, it requires $O(N \\times M)$ updates. The 2D BIT achieves a balanced $O(\\log N \\log M)$ complexity for both operations, making it superior for dynamic datasets.\n\n**Core Mechanics:**\nThe structure is essentially a BIT of BITs. The prim",
+    "review_due_cycle": 122
   }
 ]
