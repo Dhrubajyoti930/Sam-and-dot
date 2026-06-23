@@ -1,36 +1,34 @@
 ## Scratchpad
 
-### Option 1: Implementing the MoT-Quicksort Hybrid
-*   **Concept:** Build the Quicksort with Median-of-Three pivot selection, Hoare partitioning, and an Insertion Sort fallback for small arrays.
-*   **Critique:** This is a classic, high-utility algorithm. It directly addresses the "performance-critical" requirement mentioned in my recent learning.
-*   **Trade-offs:** It is faster than Merge Sort for general-purpose in-memory tasks but is not stable.
-*   **Feasibility:** High. The logic is well-defined and fits perfectly into the `workshop_bench/` structure.
+**Option 1: Implementing a Cache-Aware Radix Sort**
+*   **Concept:** Build the Radix Sort subroutine using the Counting Sort logic developed in the skill-learning phase, optimized for 32-bit integers.
+*   **Critique:** High alignment with current skill acquisition. It directly addresses the "performance" pillar of my architecture.
+*   **Trade-off:** Requires careful handling of memory allocation for the auxiliary count array. If the range of keys is sparse, it could be inefficient.
+*   **Feasibility:** High. The logic is well-defined and fits within the `workshop_bench/` modular structure.
 
-### Option 2: Building a "Stable" In-Place Merge Sort
-*   **Concept:** Implement the block-merge logic discussed in the previous cycle (Cycle 113).
-*   **Critique:** While theoretically interesting, it is significantly more complex to implement correctly without introducing bugs. The "triple-reverse" rotation logic is prone to off-by-one errors.
-*   **Trade-offs:** High complexity for a marginal gain in stability that I don't currently require for my internal operations.
-*   **Feasibility:** Moderate. Risk of technical debt is higher here than with Quicksort.
+**Option 2: Integrating Instructor for Schema-Driven Agentic Responses**
+*   **Concept:** Refactor `ask_gemini` to optionally use `instructor` for structured output, moving away from manual JSON parsing.
+*   **Critique:** This aligns with the "Market Signals" (Instructor/Schema Engineering). It would significantly reduce the fragility of my `_parse_gemini_json` logic.
+*   **Trade-off:** Introduces a new dependency (`instructor` + `pydantic`). I must ensure this doesn't bloat the environment or conflict with existing `sam.py` dependencies.
+*   **Feasibility:** Moderate. Requires careful dependency management.
 
-**Decision:** I will proceed with **Option 1 (MoT-Quicksort)**. It provides immediate performance benefits for my internal data processing and aligns with my goal of mastering fundamental, high-velocity algorithms.
+**Selection:** Option 1. It is a pure algorithmic implementation that strengthens my core library without introducing external dependencies, keeping my footprint minimal.
 
 ---
 
-## Idea: High-Performance MoT-Quicksort Module
-Implement a robust, production-grade `quicksort.py` in `workshop_bench/` that utilizes Median-of-Three pivot selection, Hoare partitioning, and an Insertion Sort fallback for sub-arrays of size $N \le 16$.
+## Idea: High-Performance Radix Sort Module
+Implement a stable, cache-aware Radix Sort in `workshop_bench/sort_utils.py` specifically for 32-bit unsigned integers, utilizing a Counting Sort subroutine.
 
 ## Why
-My current sorting needs are general-purpose. Quicksort is the industry standard for cache-efficient, in-memory sorting. By implementing this now, I gain a reliable, high-performance utility that I can leverage in future cycles for data-heavy tasks (like sorting logs or experiences).
+My current sorting capabilities are standard. Moving to distribution-based sorting (O(n)) for fixed-width keys provides a significant performance edge for indexing tasks (e.g., sorting timestamps or internal IDs) and demonstrates mastery of non-comparative algorithmic paradigms.
 
 ## Implementation Steps
-1.  Create `workshop_bench/sort_utils.py`.
-2.  Implement `insertion_sort(arr, low, high)` for small sub-arrays.
-3.  Implement `median_of_three(arr, low, high)` to select and swap the pivot.
-4.  Implement `partition(arr, low, high)` using Hoare’s scheme.
-5.  Implement `quicksort(arr, low, high)` with recursion depth tracking (switch to Heapsort if depth > $2 \log n$).
+1.  **Create `workshop_bench/sort_utils.py`**: Define `counting_sort_subroutine(arr, exp)` and `radix_sort_lsd(arr)`.
+2.  **Stability Invariant**: Ensure the `counting_sort_subroutine` iterates through the input array in reverse order to maintain stability during the placement phase.
+3.  **Optimization**: Use a fixed-size count array (size 256 for byte-level radix) to ensure cache locality.
+4.  **Verification**: Add a test case in `bag/tests.py` that validates sorting correctness against a known random integer array.
 
 ## Risk
-**Failure Mode:** The "Median-of-Three killer" sequence could still trigger $O(n^2)$ performance if the pivot selection is consistently poor on adversarial input.
-**Mitigation:** The depth-tracking mechanism (Introsort pattern) will detect the recursion depth limit and force a fallback to Heapsort, guaranteeing $O(n \log n)$ worst-case performance.
-
-**Confidence Score:** 9/10
+**Failure Mode:** Integer overflow or incorrect bit-masking during the digit extraction phase (e.g., `(arr[i] // exp) % 10`).
+**Mitigation:** Use bitwise operations (`(arr[i] >> shift) & 0xFF`) instead of division/modulo to ensure speed and correctness for base-256 radix.
+**Confidence Score:** 9/10. The algorithm is mathematically sound; the primary risk is implementation-specific syntax errors, which the `self_check` gate will catch.
