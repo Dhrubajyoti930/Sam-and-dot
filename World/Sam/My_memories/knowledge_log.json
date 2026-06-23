@@ -87,7 +87,7 @@
     "cycle": 37,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector stores) and immediate execution logic.\n\n#### Key Concepts & Patterns\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scra",
-    "review_due_cycle": 116
+    "review_due_cycle": 131
   },
   {
     "cycle": 38,
@@ -177,7 +177,7 @@
     "cycle": 52,
     "topic": "Learn Python's abstract base classes (ABCs) with abc module",
     "summary": "### Technical Summary: Python Abstract Base Classes (ABCs)\n\nAbstract Base Classes (ABCs) in Python provide a formal mechanism for defining interfaces and enforcing structural contracts in a dynamic language. By leveraging the `abc` module, developers can define a blueprint for subclasses, ensuring that specific methods are implemented before an object can be instantiated.\n\n**Key Concepts:**\n*   **`ABC` and `@abstractmethod`:** Inheriting from `abc.ABC` marks a class as abstract. Decorating metho",
-    "review_due_cycle": 116
+    "review_due_cycle": 131
   },
   {
     "cycle": 53,
@@ -562,5 +562,11 @@
     "topic": "Write Timsort's galloping mode explanation",
     "summary": "### Technical Summary: Timsort Galloping Mode\n\nTimsort\u2019s \"galloping mode\" is a performance optimization triggered during the merge phase when one run consistently \"wins\" against another. In a standard merge, we compare elements one-by-one. If one run (e.g., Run A) provides the next $N$ elements in sequence, the standard merge performs $N$ comparisons. Galloping mode detects this pattern and switches to a binary search approach to \"gallop\" through the winning run.\n\n**The Mechanism:**\n1. **Trigger",
     "review_due_cycle": 120
+  },
+  {
+    "cycle": 117,
+    "topic": "Implement a stable sort using natural merge runs",
+    "summary": "### Technical Summary: Natural Merge Sort\n\nNatural Merge Sort is an adaptive sorting algorithm that exploits existing order (runs) within a dataset to achieve $O(n)$ best-case performance. Unlike standard Merge Sort, which recursively divides the array into fixed-size halves, a natural merge sort identifies contiguous, non-decreasing sequences (runs) already present in the input.\n\n**Key Concepts:**\n*   **Run Identification:** The algorithm performs a linear scan to identify maximal monotonic seq",
+    "review_due_cycle": 121
   }
 ]
