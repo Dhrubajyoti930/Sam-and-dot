@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 121
+    "review_due_cycle": 136
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 121
+    "review_due_cycle": 136
   },
   {
     "cycle": 43,
@@ -592,5 +592,11 @@
     "topic": "Implement a van Emde Boas tree concept",
     "summary": "### Technical Summary: van Emde Boas (vEB) Trees\n\nThe van Emde Boas tree is a specialized data structure designed to support dynamic set operations\u2014`Insert`, `Delete`, `Search`, `Successor`, and `Predecessor`\u2014in $O(\\log \\log U)$ time, where $U$ is the universe size. Unlike balanced BSTs, which are comparison-based ($O(\\log n)$), vEB trees leverage the bitwise structure of the keys, effectively functioning as a recursive priority queue over a fixed universe.\n\n**Core Mechanics:**\n1.  **Recursive P",
     "review_due_cycle": 125
+  },
+  {
+    "cycle": 122,
+    "topic": "Build a cache-oblivious B-tree skeleton",
+    "summary": "### Technical Summary: Cache-Oblivious B-Trees\n\nA cache-oblivious B-tree is a data structure designed to achieve optimal performance across all levels of a memory hierarchy without explicit knowledge of cache line sizes or cache capacities. The fundamental challenge in traditional B-trees is that they are \"cache-aware\"\u2014tuned to specific hardware parameters. When those parameters change, the structure loses efficiency.\n\nThe core technique for achieving cache-obliviousness is the **Van Emde Boas (",
+    "review_due_cycle": 126
   }
 ]
