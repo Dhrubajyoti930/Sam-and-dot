@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 120
+    "review_due_cycle": 135
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 120
+    "review_due_cycle": 135
   },
   {
     "cycle": 42,
@@ -586,5 +586,11 @@
     "topic": "Write a rope data structure for string manipulation",
     "summary": "### Technical Summary: The Rope Data Structure\n\nA Rope is a binary tree structure designed to store and manipulate long strings efficiently. Unlike a contiguous `std::string` or `char` array, which requires $O(n)$ time for insertions or deletions due to memory shifting, a Rope performs these operations in $O(\\log n)$ time by treating the string as a collection of smaller leaf nodes.\n\n**Core Concepts:**\n1.  **Tree Topology:** Each leaf node contains a substring. Internal nodes store the sum of th",
     "review_due_cycle": 124
+  },
+  {
+    "cycle": 121,
+    "topic": "Implement a van Emde Boas tree concept",
+    "summary": "### Technical Summary: van Emde Boas (vEB) Trees\n\nThe van Emde Boas tree is a specialized data structure designed to support dynamic set operations\u2014`Insert`, `Delete`, `Search`, `Successor`, and `Predecessor`\u2014in $O(\\log \\log U)$ time, where $U$ is the universe size. Unlike balanced BSTs, which are comparison-based ($O(\\log n)$), vEB trees leverage the bitwise structure of the keys, effectively functioning as a recursive priority queue over a fixed universe.\n\n**Core Mechanics:**\n1.  **Recursive P",
+    "review_due_cycle": 125
   }
 ]
