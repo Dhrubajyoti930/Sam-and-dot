@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 118
+    "review_due_cycle": 133
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 118
+    "review_due_cycle": 133
   },
   {
     "cycle": 40,
@@ -574,5 +574,11 @@
     "topic": "Build a binary indexed tree for 2D range queries",
     "summary": "### Technical Summary: 2D Binary Indexed Trees (Fenwick Trees)\n\nA 2D Binary Indexed Tree (BIT) extends the 1D Fenwick Tree to support efficient prefix sum queries and point updates on a 2D grid of size $N \\times M$. While a 2D prefix sum array allows $O(1)$ queries, it requires $O(N \\times M)$ updates. The 2D BIT achieves a balanced $O(\\log N \\log M)$ complexity for both operations, making it superior for dynamic datasets.\n\n**Core Mechanics:**\nThe structure is essentially a BIT of BITs. The prim",
     "review_due_cycle": 122
+  },
+  {
+    "cycle": 119,
+    "topic": "Implement a treap (BST + heap) with priorities",
+    "summary": "### Technical Summary: The Treap Data Structure\n\nA Treap (Tree + Heap) is a randomized binary search tree where each node is assigned a key (following BST ordering) and a randomly generated priority (following Max-Heap ordering). This dual-property structure ensures that, with high probability, the tree remains balanced with $O(\\log n)$ height, effectively mitigating the worst-case $O(n)$ performance of standard BSTs without the complex rebalancing rotations required by AVL or Red-Black trees.\n\n",
+    "review_due_cycle": 123
   }
 ]
