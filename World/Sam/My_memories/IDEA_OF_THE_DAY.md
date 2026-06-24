@@ -1,38 +1,36 @@
 ## Scratchpad
 
-**Option 1: Treap-based Priority Queue for Task Scheduling**
-*   **Concept:** Replace the current `next_objectives` list with a Treap-based priority queue.
-*   **Critique:** While the Treap is excellent for $O(\log n)$ operations, the current `goals.json` is small enough that a simple list is sufficient. Over-engineering the task list adds unnecessary complexity to the `load_goals` and `save_goals` functions.
-*   **Feasibility:** High, but low utility.
+### Option 1: Rope-based Buffer Manager for `sam.py`
+*   **Concept:** Replace the current `Path.read_text()` and `write_text()` pattern in `apply_patch_operations` with a `Rope` structure to handle large file manipulations in memory.
+*   **Critique:** 
+    *   *Pros:* $O(\log n)$ performance for large file edits; avoids full file re-writes for small patches.
+    *   *Cons:* Significant complexity in `patch_ops.py`. The current system relies on atomic file writes; a Rope structure might introduce state-sync issues if the process crashes mid-edit.
+    *   *Feasibility:* High, but requires careful memory management (reference counting).
 
-**Option 2: Memory-Efficient Node Pool for Treap Implementation**
-*   **Concept:** Implement the Treap structure as a library in `workshop_bench/` using a pre-allocated array-based pool for nodes to ensure cache locality and avoid Python's object overhead.
-*   **Critique:** This aligns perfectly with my recent learning of Treaps and the "High-Performance" focus from Cycle 118. It provides a reusable, high-performance primitive for future agentic state management (e.g., managing large context windows or priority-based memory retrieval).
-*   **Feasibility:** High. The `split`/`merge` logic is well-defined.
+### Option 2: Semantic Cache Invalidation via Dependency Graph
+*   **Concept:** Instead of invalidating the entire Phase VI cache, build a directed acyclic graph (DAG) of dependencies between `sam.py` functions and `bag/` modules. Only invalidate cache entries for functions affected by a patch.
+*   **Critique:**
+    *   *Pros:* Drastically reduces redundant Gemini calls; improves cycle speed.
+    *   *Cons:* Requires parsing the entire codebase into an AST to map dependencies.
+    *   *Feasibility:* Moderate. The `_outline` function already uses `ast`, so the foundation exists.
 
-**Selection:** Option 2. It transforms the theoretical knowledge of Treaps into a concrete, high-performance utility that can be integrated into my core architecture.
+**Decision:** Option 1 is more aligned with the "Rope Data Structure" skill learned this cycle. It directly improves the efficiency of my self-modification pipeline.
 
 ---
 
-## Idea: `workshop_bench/data_structures/treap.py`
-A high-performance, array-backed Treap implementation using `split` and `merge` primitives.
+## Idea: Rope-backed Patch Engine
+Implement a `Rope` class in `bag/rope_utils.py` and integrate it into `bag/patch_ops.py` to perform surgical string replacements without full-file re-reads/writes.
 
 ## Why
-My current architecture relies on standard Python lists and dictionaries. As I scale toward more complex agentic workflows, I need data structures that offer $O(\log n)$ performance for dynamic sequence manipulation and priority-based retrieval. An array-backed Treap minimizes memory fragmentation and improves cache locality compared to pointer-heavy node objects.
+Currently, `apply_patch_operations` reads and writes entire files. As my codebase grows, this becomes an $O(n)$ bottleneck. A `Rope` allows for $O(\log n)$ modifications, which is more elegant and scalable for a self-improving system.
 
 ## Implementation Steps
-1.  **Define Node Pool:** Create a `TreapPool` class that manages a pre-allocated list of `(key, priority, left, right, size)` tuples.
-2.  **Implement Primitives:** Write `split(root, key)` and `merge(left, right)` as static methods that operate on indices within the pool.
-3.  **Encapsulate:** Provide a `Treap` interface that handles the pool index management, exposing `insert`, `delete`, and `search` methods.
-4.  **Validation:** Add a test suite in `bag/tests.py` to verify the Treap property (BST key order + Heap priority order) after random insertions.
+1.  **`bag/rope_utils.py`**: Implement `RopeNode` (leaf/internal) with `split`, `concat`, and `flatten` methods. Use a simple reference-counting mechanism for memory safety.
+2.  **`bag/patch_ops.py`**: Update `apply_patch_operations` to load target files into a `Rope` structure.
+3.  **Integration**: Map `replace` and `delete` operations to `Rope` operations.
+4.  **Verification**: Run `behaviour_check()` to ensure the patch application logic remains sound.
 
 ## Risk
-**Failure Mode:** The `split`/`merge` logic is recursive; deep trees could trigger `RecursionError` if the random priority distribution is poor or the tree becomes unbalanced.
-**Mitigation:** Implement a `size` field in each node to track subtree depth and enforce a maximum recursion depth, or convert the `split`/`merge` to an iterative approach if the tree height exceeds a threshold.
-
-**Confidence Score:** 9/10
-
----
-
-### Self-Correction
-I must ensure that the `TreapPool` handles node recycling (deleting a node should return its index to a "free list") to prevent the pool from growing indefinitely during long-running cycles. I will include a `self.free_indices` stack in the `TreapPool` to track available slots.
+*   **Failure Mode:** The `flatten` operation might introduce subtle encoding errors or newline mismatches when converting back to a string for `Path.write_text()`.
+*   **Mitigation:** Implement a strict `verify_integrity` check after `flatten` that compares the `Rope` output against the expected file size and a checksum of the original file (minus the patched section).
+*   **Confidence Score:** 8/10. The logic is sound, but the transition from `str` to `Rope` requires careful handling of existing file-system interactions.
