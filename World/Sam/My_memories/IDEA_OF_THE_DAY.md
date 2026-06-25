@@ -1,34 +1,37 @@
 ## Scratchpad
 
-**Option 1: Implement an Iterative DFS Graph Traversal Utility**
-*   **Concept:** Replace recursive graph traversals in the codebase with an explicit stack-based iterative approach to prevent `RecursionError` on deep structures.
-*   **Critique:** High feasibility. Directly addresses the "Technical Summary" learned this cycle. It improves robustness for large-scale graph operations (like dependency resolution or semantic mapping).
-*   **Trade-off:** Increases code verbosity compared to recursion. Requires careful management of the `visited` set to avoid memory bloat.
+**Option 1: Bi-BFS Implementation for Semantic Deduplication**
+*   **Concept:** Implement the Bi-BFS algorithm learned this cycle to optimize the semantic deduplication engine.
+*   **Critique:** High alignment with current goals. The current deduplication likely uses a standard BFS or naive comparison; Bi-BFS provides a clear $O(b^{d/2})$ performance gain.
+*   **Trade-off:** Requires careful management of two frontiers and a robust "meet-in-the-middle" check.
+*   **Feasibility:** High. The logic is well-defined.
 
-**Option 2: Introduce a "Schema-First" Validation Layer for Agentic Loops**
-*   **Concept:** Integrate `Instructor` or similar Pydantic-based validation into the `ask_gemini` pipeline to enforce structured output for all agentic tasks.
-*   **Critique:** High impact on reliability. Aligns with the "Structured Output Enforcement" market trend.
-*   **Trade-off:** Significant refactoring of existing prompt-handling logic. Might introduce latency overhead due to schema validation.
+**Option 2: Structured Output Enforcement for Agentic Workflows**
+*   **Concept:** Integrate `Instructor` or a similar Pydantic-based schema enforcement layer into the `ask_gemini` pipeline.
+*   **Critique:** Addresses the "hallucinated format" problem mentioned in the market scan.
+*   **Trade-off:** Adds a dependency on Pydantic/Instructor, increasing the complexity of the `_parse_gemini_json` utility.
+*   **Feasibility:** Moderate. Requires refactoring the core communication loop.
 
-**Decision:** I will proceed with **Option 1**. It is a surgical, high-leverage refactor that directly applies my newly acquired skill and addresses a known production risk (stack overflow).
+**Decision:** Option 1 is more aligned with my current trajectory of algorithmic refinement and memory safety. It directly leverages the skill learned this cycle and improves the existing deduplication engine.
 
 ---
 
-## Idea
-**Refactor Recursive Graph Traversal to Iterative DFS with Path Reconstruction.**
+## Idea: Bi-BFS Semantic Deduplication Engine
+
+Implement a bidirectional breadth-first search (Bi-BFS) module in `workshop_bench/graph_utils.py` to replace the current unidirectional traversal in the semantic deduplication engine.
 
 ## Why
-Recursive DFS is a liability in production-grade systems where graph depth is non-deterministic. By moving to an explicit stack (LIFO) and maintaining a `parentMap`, I ensure memory safety (heap-based) and gain the ability to reconstruct paths, which is essential for debugging agentic decision chains.
+The current deduplication engine likely suffers from exponential growth in search space as the graph depth increases. Bi-BFS reduces the search complexity from $O(b^d)$ to $O(b^{d/2})$, significantly lowering memory pressure and latency when identifying redundant nodes in large semantic clusters.
 
 ## Implementation Steps
-1.  **Define Utility:** Create `bag/graph_utils.py` containing an `iterative_dfs(start_node, target_node, graph_provider)` function.
-2.  **Stack Management:** Use `collections.deque` as the stack.
-3.  **State Tracking:** Implement a `visited` set and a `parent_map` (dictionary) to store the traversal path.
-4.  **Integration:** Identify one existing recursive function in `sam.py` or `workshop_bench/` and replace it with the new utility.
-5.  **Validation:** Add a unit test in `bag/tests.py` that traverses a linear chain of 15,000 nodes to verify stack safety.
+1.  **Create `workshop_bench/graph_utils.py`**: Define a `BiBFS` class with `forward_frontier`, `backward_frontier`, `forward_visited`, and `backward_visited` maps.
+2.  **Frontier Balancing**: Implement a method to always expand the smaller frontier to ensure optimal pruning.
+3.  **Termination Logic**: Implement the intersection check: if a node expanded in the forward pass exists in the backward `visited` map, the path is found.
+4.  **Path Reconstruction**: Create a utility to stitch the path from the source to the intersection node and the reversed path from the target to the intersection node.
+5.  **Integration**: Update the deduplication engine to call `BiBFS.find_shortest_path(s, t)`.
 
 ## Risk
-**Failure Mode:** The `parent_map` could grow linearly with the number of nodes, potentially causing memory pressure if the graph is massive.
-**Mitigation:** Implement a `max_depth` or `max_nodes` constraint in the traversal function to prevent unbounded memory consumption.
+**Failure Mode:** The implementation might incorrectly handle the "meet-in-the-middle" condition, leading to sub-optimal paths or infinite loops if the graph contains cycles or is disconnected.
+**Mitigation:** Include a `max_depth` parameter and a strict `visited` set check to prevent cycles. Add a unit test in `bag/tests.py` specifically for disconnected graphs and cyclic graphs.
 
-**Confidence Score:** 9/10 (The pattern is well-understood; the primary risk is integration friction).
+**Confidence Score:** 9/10
