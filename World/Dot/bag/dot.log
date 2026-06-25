@@ -3547,3 +3547,46 @@
 2026-06-25 08:37:31,905 [DOT][INFO] Today is Thursday — inbox check reserved for Sunday.
 2026-06-25 08:37:31,907 [DOT][INFO] Worklog: no stale entries.
 2026-06-25 08:37:33,290 [DOT][INFO] Dot's daily run complete.
+2026-06-25 15:58:32,569 [DOT][INFO] ═══════════════════════════════════
+2026-06-25 15:58:32,569 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-06-25 15:58:32,569 [DOT][INFO] ═══════════════════════════════════
+2026-06-25 15:58:32,570 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-06-25 15:58:32,656 [DOT][INFO] Task 1: chunk 1/8 from cache.
+2026-06-25 15:58:32,657 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-06-25 15:58:32,657 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-06-25 15:58:32,658 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-06-25 15:58:32,658 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-06-25 15:58:32,658 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-06-25 15:58:32,659 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-06-25 15:58:32,659 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-06-25 15:58:48,662 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-25 15:59:07,476 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-25 15:59:07,478 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-06-25 15:59:15,478 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-06-25 15:59:15,480 [DOT][INFO] Task 2: 13 experiences → 3 batch(es) of ≤5.
+2026-06-25 15:59:23,480 [DOT][INFO] Task 2: batch 1/3 — cycles [13, 17, 19, 20, 21]
+2026-06-25 15:59:23,483 [DOT][INFO] Dot cache hit.
+2026-06-25 15:59:31,484 [DOT][INFO] Task 2: batch 2/3 — cycles [51, 54, 55, 56, 57]
+2026-06-25 15:59:31,487 [DOT][INFO] Dot cache hit.
+2026-06-25 15:59:39,488 [DOT][INFO] Task 2: batch 3/3 — cycles [123, 124, 125]
+2026-06-25 15:59:47,491 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-25 15:59:51,210 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-25 15:59:51,213 [DOT][INFO] Experiences curated: 9 kept, 0 forgotten, 2 consolidated. Total now: 11.
+2026-06-25 15:59:51,214 [DOT][INFO] Letter written to Sam: Letter_20260625T155951Z.md
+2026-06-25 15:59:51,214 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-06-25 15:59:51,214 [DOT][INFO] Finding best recipient for: Tiago Henriques, maintainer of 'cachetools'. His project is a standard for Python caching, and he is an active indie mai
+2026-06-25 15:59:59,218 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-25 16:00:04,622 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-25 16:00:04,626 [DOT][INFO] Recipient match:  <> confidence=0 — The provided list does not contain Tiago Henriques, the maintainer of 'cachetools', who is the specific target identified for Sam's outreach.
+2026-06-25 16:00:04,626 [DOT][WARNING] Match confidence 0 below threshold 7 — skipping.
+2026-06-25 16:00:04,626 [DOT][WARNING] No suitable recipient found in emails.json — request preserved.
+2026-06-25 16:00:04,627 [DOT][INFO] Appended to Letter_20260625T155951Z.md: Email Dispatch — No Match
+2026-06-25 16:00:04,627 [DOT][INFO] Appended to Letter_20260625T155951Z.md: Email Dispatch
+2026-06-25 16:00:12,627 [DOT][INFO] ── Task 4: Bag Review ──
+2026-06-25 16:00:28,632 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-06-25 16:00:32,743 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-06-25 16:00:32,747 [DOT][INFO] Bag review complete.
+2026-06-25 16:00:32,747 [DOT][INFO] Appended to Letter_20260625T155951Z.md: Bag Excavation Findings
+2026-06-25 16:00:32,747 [DOT][INFO] Today is Thursday — inbox check reserved for Sunday.
+2026-06-25 16:00:32,749 [DOT][INFO] Worklog: no stale entries.
+2026-06-25 16:00:37,865 [DOT][INFO] Dot's daily run complete.
