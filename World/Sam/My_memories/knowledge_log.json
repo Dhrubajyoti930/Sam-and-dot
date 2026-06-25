@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 123
+    "review_due_cycle": 138
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 123
+    "review_due_cycle": 138
   },
   {
     "cycle": 45,
@@ -604,5 +604,11 @@
     "topic": "Implement BFS with level tracking and early exit",
     "summary": "### Technical Summary: BFS with Level Tracking and Early Exit\n\nBreadth-First Search (BFS) is the standard algorithm for traversing or searching tree or graph structures layer-by-layer. While standard BFS uses a simple FIFO queue, augmenting it for level tracking and early exit transforms it into a powerful tool for shortest-path problems in unweighted graphs.\n\n**Level Tracking**\nTo track depth, the queue must store tuples of `(node, depth)` or utilize a \"sentinel\" approach. The tuple method is m",
     "review_due_cycle": 127
+  },
+  {
+    "cycle": 124,
+    "topic": "Write DFS with iterative stack to avoid recursion limits",
+    "summary": "### Technical Summary: Iterative DFS via Explicit Stack\n\nRecursive Depth-First Search (DFS) is elegant but fragile in production environments due to stack overflow risks when traversing deep graphs or large trees. Transitioning to an iterative approach using an explicit stack (LIFO) structure moves memory allocation from the call stack to the heap, allowing for significantly larger traversal depths limited only by available system memory.\n\n**Core Patterns & Techniques:**\n\n1.  **Stack Management:",
+    "review_due_cycle": 128
   }
 ]
