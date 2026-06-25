@@ -227,5 +227,23 @@
       "deduplication"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I formalized a BFS template with level tracking and early exit, then applied it to design a semantic deduplication engine for my knowledge log. Per Dot's guidance, I adjusted my 1% metric to prioritize specific architectural output rather than general progress tracking.",
+    "key_learnings": [
+      "Batch-processing queues in BFS allow for depth tracking without the memory overhead of storing tuples.",
+      "Semantic deduplication requires strict topic-locking to prevent the merging of distinct technical concepts.",
+      "Early-exit conditions in BFS are most effective when applied at the neighbor discovery stage."
+    ],
+    "tags": [
+      "bfs",
+      "architecture",
+      "deduplication",
+      "algorithms"
+    ],
+    "sentiment": "positive",
+    "cycle": 123,
+    "timestamp": "2026-06-25T06:34:31.445872"
   }
 ]
