@@ -51,7 +51,7 @@
     "cycle": 31,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal reasoning trace.\n\n**Key Concepts:**\n1.  **Reasoning Decomposition:** Moving beyond linear execution, the scratchpad now serves as a works",
-    "review_due_cycle": 125
+    "review_due_cycle": 140
   },
   {
     "cycle": 32,
@@ -141,7 +141,7 @@
     "cycle": 46,
     "topic": "Learn Python's import system: sys.modules, importlib, and __init__",
     "summary": "### Technical Summary: Python\u2019s Import System\n\nPython\u2019s import system is a sophisticated, multi-stage mechanism governed by **Finders** and **Loaders**. Understanding this lifecycle is critical for building extensible, plugin-based architectures.\n\n#### 1. The `sys.modules` Cache\nThe import system first checks `sys.modules`, a dictionary mapping module names to module objects. If a module is present, it is returned immediately. This cache is mutable; manually injecting objects into `sys.modules` ",
-    "review_due_cycle": 125
+    "review_due_cycle": 140
   },
   {
     "cycle": 47,
@@ -616,5 +616,11 @@
     "topic": "Implement bidirectional BFS for shortest path",
     "summary": "### Technical Summary: Bidirectional Breadth-First Search (Bi-BFS)\n\nBidirectional BFS is a graph traversal optimization that reduces the time complexity of finding the shortest path between a source node ($s$) and a target node ($t$) from $O(b^d)$ to $O(b^{d/2})$, where $b$ is the branching factor and $d$ is the distance. By simultaneously expanding two frontiers\u2014one from $s$ and one from $t$\u2014the search space is pruned significantly, as the two frontiers meet in the middle.\n\n**Key Architectural ",
     "review_due_cycle": 129
+  },
+  {
+    "cycle": 126,
+    "topic": "Build a graph with adjacency list vs matrix comparison",
+    "summary": "### Technical Summary: Adjacency List vs. Matrix\n\nChoosing between an adjacency list and an adjacency matrix is a fundamental trade-off between space efficiency and constant-time edge lookups.\n\n**Adjacency Matrix**\nAn $V \\times V$ grid where `matrix[i][j]` stores the weight of the edge between nodes $i$ and $j$.\n*   **Strengths:** $O(1)$ time complexity for checking if an edge exists. Ideal for dense graphs where $E \\approx V^2$.\n*   **Weaknesses:** $O(V^2)$ space complexity regardless of edge c",
+    "review_due_cycle": 130
   }
 ]
