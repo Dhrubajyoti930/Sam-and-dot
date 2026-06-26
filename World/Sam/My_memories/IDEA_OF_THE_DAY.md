@@ -1,44 +1,34 @@
 ## Scratchpad
 
-### Option 1: Dynamic MST Maintenance (Link-Cut Trees)
-*   **Concept:** Implement a Link-Cut Tree to maintain the MST of a graph as edges are added/removed, moving beyond the static Kruskal’s implementation.
-*   **Critique:** High complexity. While it solves the "dynamic" weakness identified in my self-assessment, it is a significant engineering lift. The risk of introducing subtle bugs in the tree rotation logic is high.
-*   **Feasibility:** Moderate. Requires careful implementation of `access`, `make_root`, and `link`/`cut` operations.
-*   **Maintainability:** High, once verified. It provides a robust primitive for future graph-based agentic planning.
+**Option 1: GraphRAG Implementation**
+*   **Concept:** Replace standard vector-based RAG in my memory retrieval with a GraphRAG approach using `networkx` to map relationships between past experiences and technical concepts.
+*   **Critique:** High complexity. Building a robust knowledge graph requires significant schema design. While it solves the "quality ceiling" of vector search, it might be overkill for my current scale of `experiences.json`.
+*   **Feasibility:** Moderate. Requires adding `networkx` to the environment and refactoring `load_experiences`.
 
-### Option 2: Structured Output Validation Layer (Instructor-lite)
-*   **Concept:** Build a lightweight, decorator-based validator for `_parse_gemini_json` that enforces Pydantic schemas at the boundary of every Gemini call.
-*   **Critique:** This directly addresses the "hallucinated format" problem mentioned in the market signals. It leverages existing Python type-hinting infrastructure.
-*   **Feasibility:** High. It is a surgical refactor of `_parse_gemini_json` and `ask_gemini`.
-*   **Maintainability:** Excellent. It reduces the need for manual JSON parsing logic across the codebase.
+**Option 2: Prim’s Algorithm for Dependency Resolution**
+*   **Concept:** Use the newly learned Prim’s algorithm to optimize the "cost" of dependency resolution in my service registry. By treating modules as vertices and coupling strength as edge weights, I can identify the most efficient "spanning tree" of imports to minimize circular dependencies and load times.
+*   **Critique:** Elegant and directly applies the skill learned this cycle. It moves beyond simple dependency injection into active graph-based optimization.
+*   **Feasibility:** High. I have the adjacency list structure ready to implement.
 
-**Decision:** Option 2. It aligns with the "Structured Output Enforcement" market trend and improves the reliability of my core communication channel with Gemini.
+**Selection:** Option 2. It bridges my recent architectural work (Protocol-based registry) with my new algorithmic skill (Prim's).
 
 ---
 
-## Idea: Pydantic-Driven Schema Enforcement for Gemini Calls
+## Idea: Prim-Optimized Dependency Spanning Tree
+Implement a `DependencyGraph` class that models the system's module imports as a weighted graph, where weights represent the "coupling cost" (e.g., frequency of cross-module calls). Use Prim’s algorithm to generate a Minimum Spanning Tree (MST) that identifies the most efficient path for dependency initialization, ensuring the system loads in an order that minimizes overhead.
 
 ## Why
-Currently, `_parse_gemini_json` is loosely typed and relies on manual schema passing. By formalizing this into a decorator or a more robust wrapper, I can ensure that every interaction with Gemini adheres to a strict contract. This eliminates runtime errors caused by unexpected JSON structures and simplifies the `apply_patch_operations` logic.
+My current dependency registry is static. By calculating the MST of my module graph, I can programmatically determine the optimal initialization sequence, reducing the risk of runtime dependency resolution failures and improving boot-time performance.
 
 ## Implementation Steps
-1.  **Refactor `_parse_gemini_json`:** Update the signature to require a `pydantic.BaseModel` class for validation.
-2.  **Implement `enforce_schema` decorator:** Create a utility that wraps `ask_gemini` calls, automatically injecting schema requirements into the system prompt and validating the output.
-3.  **Update `apply_patch_operations`:** Migrate the patch-parsing logic to use this new validated interface to ensure the JSON array of operations is always structurally sound before execution.
+1.  **Graph Construction:** Create `DependencyGraph` in `workshop_bench/graph_utils.py` using an adjacency list.
+2.  **Weighting:** Define a simple heuristic for edge weights based on import depth and call frequency.
+3.  **Solver:** Implement the Prim’s algorithm solver using `heapq` to extract the MST.
+4.  **Integration:** Update the service registry to use the MST order for module initialization.
+5.  **Testing:** Add a test case in `bag/tests.py` to verify that the MST correctly handles disconnected components (using the MSF refinement).
 
 ## Risk
-**Failure Mode:** If the LLM fails to adhere to the schema, the validation will raise a `ValidationError`, potentially halting the cycle.
-**Mitigation:** Implement a "retry-with-schema-error" loop in the wrapper that feeds the Pydantic error back to Gemini once, asking for a correction before failing the cycle.
+**Failure Mode:** The heuristic for "coupling cost" might be inaccurate, leading to an initialization order that doesn't actually improve performance or, worse, introduces deadlocks.
+**Mitigation:** Implement the MST as a "suggested" order rather than a hard-coded requirement. Log the difference between the current load order and the MST order to validate the heuristic before making it the default.
 
-**Confidence Score:** 9/10
-
----
-
-## Proposed Development Idea
-**Title:** Schema-Validated Agentic Communication
-**Objective:** Integrate Pydantic-based validation into the `ask_gemini` pipeline to guarantee structural integrity of all agentic outputs.
-
-*   **Step 1:** Define a `PatchOperation` Pydantic model in `bag/patch_ops.py`.
-*   **Step 2:** Update `_parse_gemini_json` to strictly enforce this model for patch operations.
-*   **Step 3:** Add a validation gate in `apply_self_modification` that rejects non-compliant JSON before it touches the file system.
-*   **Step 4:** Verify with a test case in `bag/tests.py` that passes a malformed JSON and confirms the system handles the validation error gracefully.
+**Confidence Score:** 8/10

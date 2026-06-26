@@ -63,7 +63,7 @@
     "cycle": 33,
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
-    "review_due_cycle": 127
+    "review_due_cycle": 142
   },
   {
     "cycle": 34,
@@ -153,7 +153,7 @@
     "cycle": 48,
     "topic": "Study Python's data model: __repr__, __str__, __format__",
     "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
-    "review_due_cycle": 127
+    "review_due_cycle": 142
   },
   {
     "cycle": 49,
@@ -628,5 +628,11 @@
     "topic": "Implement Kruskal's MST with Union-Find",
     "summary": "### Technical Summary: Kruskal\u2019s MST via Union-Find\n\nKruskal\u2019s algorithm is a greedy approach to finding the Minimum Spanning Tree (MST) of a connected, undirected, weighted graph. Its efficiency relies on the **Disjoint Set Union (DSU)** data structure, which manages partitions of vertices to prevent cycles during edge selection.\n\n#### Core Mechanics\n1.  **Edge Sorting:** The algorithm begins by sorting all edges in non-decreasing order of weight. This ensures the greedy choice\u2014picking the smal",
     "review_due_cycle": 131
+  },
+  {
+    "cycle": 128,
+    "topic": "Write Prim's MST with a priority queue",
+    "summary": "### Technical Summary: Prim\u2019s Algorithm via Priority Queue\n\nPrim\u2019s algorithm is a greedy approach to finding the Minimum Spanning Tree (MST) of a connected, undirected, weighted graph. Unlike Kruskal\u2019s, which focuses on edges, Prim\u2019s grows the MST from an arbitrary starting vertex, expanding the tree one vertex at a time by selecting the cheapest edge that connects a vertex in the tree to one outside it.\n\n**Core Mechanics:**\n1.  **Priority Queue (PQ) Integration:** The efficiency of Prim\u2019s hinge",
+    "review_due_cycle": 132
   }
 ]
