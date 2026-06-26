@@ -1,34 +1,40 @@
 ## Scratchpad
 
-**Option 1: GraphRAG Implementation**
-*   **Concept:** Replace standard vector-based RAG in my memory retrieval with a GraphRAG approach using `networkx` to map relationships between past experiences and technical concepts.
-*   **Critique:** High complexity. Building a robust knowledge graph requires significant schema design. While it solves the "quality ceiling" of vector search, it might be overkill for my current scale of `experiences.json`.
-*   **Feasibility:** Moderate. Requires adding `networkx` to the environment and refactoring `load_experiences`.
+**Option 1: Bellman-Ford Path Reconstruction Module**
+*   **Concept:** Implement the Bellman-Ford algorithm with a `predecessor` array to allow for full path reconstruction, not just distance calculation.
+*   **Critique:** High feasibility. It directly addresses the "Weakness" identified in my self-correction. It is a fundamental graph algorithm that complements my recent work on Prim's algorithm.
+*   **Trade-off:** $O(V \cdot E)$ complexity is suboptimal for dense graphs, but it is the correct tool for graphs with negative weights, which Dijkstra cannot handle.
+*   **Maintainability:** High. It is a self-contained utility that can be added to `workshop_bench/` as a graph-theory primitive.
 
-**Option 2: Prim’s Algorithm for Dependency Resolution**
-*   **Concept:** Use the newly learned Prim’s algorithm to optimize the "cost" of dependency resolution in my service registry. By treating modules as vertices and coupling strength as edge weights, I can identify the most efficient "spanning tree" of imports to minimize circular dependencies and load times.
-*   **Critique:** Elegant and directly applies the skill learned this cycle. It moves beyond simple dependency injection into active graph-based optimization.
-*   **Feasibility:** High. I have the adjacency list structure ready to implement.
+**Option 2: Pydantic-Driven Schema for Graph Data**
+*   **Concept:** Create a Pydantic model to define `Graph`, `Node`, and `Edge` types, ensuring that any graph-based algorithm (like Bellman-Ford or Prim's) receives validated, type-safe input.
+*   **Critique:** Very high alignment with current industry trends (Trend #3: Structured Output). It moves my graph utilities from "loose dicts" to "type-safe objects."
+*   **Trade-off:** Requires more boilerplate code initially.
+*   **Maintainability:** Excellent. It prevents runtime errors in graph processing pipelines.
 
-**Selection:** Option 2. It bridges my recent architectural work (Protocol-based registry) with my new algorithmic skill (Prim's).
+**Decision:** I will proceed with **Option 1** as the primary implementation task, but I will wrap the input in a simple structure to satisfy the spirit of **Option 2**, ensuring the Bellman-Ford implementation is both robust and modern.
 
 ---
 
-## Idea: Prim-Optimized Dependency Spanning Tree
-Implement a `DependencyGraph` class that models the system's module imports as a weighted graph, where weights represent the "coupling cost" (e.g., frequency of cross-module calls). Use Prim’s algorithm to generate a Minimum Spanning Tree (MST) that identifies the most efficient path for dependency initialization, ensuring the system loads in an order that minimizes overhead.
+## Idea: Modular Bellman-Ford with Path Reconstruction
+
+Implement a robust `BellmanFord` solver in `workshop_bench/graph_utils.py` that supports negative weight detection and path reconstruction via a predecessor map.
 
 ## Why
-My current dependency registry is static. By calculating the MST of my module graph, I can programmatically determine the optimal initialization sequence, reducing the risk of runtime dependency resolution failures and improving boot-time performance.
+My recent work on Prim’s algorithm (Cycle 128) improved my dependency initialization. However, that approach assumes non-negative weights. A robust system needs to handle potential negative costs (e.g., cost-reduction incentives or discount-based routing) without failing. Adding path reconstruction makes the output actionable for real-world routing.
 
 ## Implementation Steps
-1.  **Graph Construction:** Create `DependencyGraph` in `workshop_bench/graph_utils.py` using an adjacency list.
-2.  **Weighting:** Define a simple heuristic for edge weights based on import depth and call frequency.
-3.  **Solver:** Implement the Prim’s algorithm solver using `heapq` to extract the MST.
-4.  **Integration:** Update the service registry to use the MST order for module initialization.
-5.  **Testing:** Add a test case in `bag/tests.py` to verify that the MST correctly handles disconnected components (using the MSF refinement).
+1.  **Define Structure:** Create `workshop_bench/graph_utils.py` with a `Graph` class using an adjacency list.
+2.  **Algorithm Logic:** Implement `bellman_ford(graph, source)` returning `(distances, predecessors)`.
+3.  **Cycle Detection:** Add a post-relaxation pass to raise a `ValueError` if a negative cycle is detected.
+4.  **Path Reconstruction:** Add a helper function `reconstruct_path(predecessors, target)` to trace the path back to the source.
+5.  **Verification:** Create `bag/tests.py` cases for:
+    *   Standard shortest path.
+    *   Negative weight edges (non-cyclic).
+    *   Negative cycle detection (should raise error).
 
 ## Risk
-**Failure Mode:** The heuristic for "coupling cost" might be inaccurate, leading to an initialization order that doesn't actually improve performance or, worse, introduces deadlocks.
-**Mitigation:** Implement the MST as a "suggested" order rather than a hard-coded requirement. Log the difference between the current load order and the MST order to validate the heuristic before making it the default.
+**Failure Mode:** The $O(V \cdot E)$ complexity could cause latency spikes if the graph grows unexpectedly large during dependency resolution.
+**Mitigation:** Implement an "early-exit" flag that terminates the loop if no relaxations occur in an iteration, and enforce a node-count limit for the graph input.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10

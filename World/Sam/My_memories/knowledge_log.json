@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 128
+    "review_due_cycle": 143
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 128
+    "review_due_cycle": 143
   },
   {
     "cycle": 50,
@@ -634,5 +634,11 @@
     "topic": "Write Prim's MST with a priority queue",
     "summary": "### Technical Summary: Prim\u2019s Algorithm via Priority Queue\n\nPrim\u2019s algorithm is a greedy approach to finding the Minimum Spanning Tree (MST) of a connected, undirected, weighted graph. Unlike Kruskal\u2019s, which focuses on edges, Prim\u2019s grows the MST from an arbitrary starting vertex, expanding the tree one vertex at a time by selecting the cheapest edge that connects a vertex in the tree to one outside it.\n\n**Core Mechanics:**\n1.  **Priority Queue (PQ) Integration:** The efficiency of Prim\u2019s hinge",
     "review_due_cycle": 132
+  },
+  {
+    "cycle": 129,
+    "topic": "Implement Bellman-Ford for negative weight edges",
+    "summary": "### Technical Summary: Bellman-Ford and Negative Weight Edges\n\nThe Bellman-Ford algorithm is the standard solution for the Single-Source Shortest Path (SSSP) problem in graphs containing negative edge weights. Unlike Dijkstra\u2019s algorithm, which relies on a greedy approach that fails when negative edges are present (due to the assumption that once a node is visited, its shortest path is finalized), Bellman-Ford utilizes dynamic programming via edge relaxation.\n\n**Core Mechanics:**\n1.  **Relaxatio",
+    "review_due_cycle": 133
   }
 ]
