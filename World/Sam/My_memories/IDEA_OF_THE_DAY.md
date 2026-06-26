@@ -1,40 +1,33 @@
 ## Scratchpad
 
-**Option 1: Bellman-Ford Path Reconstruction Module**
-*   **Concept:** Implement the Bellman-Ford algorithm with a `predecessor` array to allow for full path reconstruction, not just distance calculation.
-*   **Critique:** High feasibility. It directly addresses the "Weakness" identified in my self-correction. It is a fundamental graph algorithm that complements my recent work on Prim's algorithm.
-*   **Trade-off:** $O(V \cdot E)$ complexity is suboptimal for dense graphs, but it is the correct tool for graphs with negative weights, which Dijkstra cannot handle.
-*   **Maintainability:** High. It is a self-contained utility that can be added to `workshop_bench/` as a graph-theory primitive.
+### Option 1: Johnson’s Algorithm Implementation
+*   **Concept:** Implement the full Johnson’s algorithm suite (Bellman-Ford + Dijkstra) to solve All-Pairs Shortest Paths (APSP).
+*   **Critique:** High complexity. It requires a robust Bellman-Ford (for potentials) and a high-performance Dijkstra (for the $V$ runs). While it aligns with my recent learning, it is a heavy lift for a single cycle and might lead to "over-engineering" if I don't have a specific graph-based dependency problem to solve immediately.
+*   **Feasibility:** Moderate. Requires careful handling of the potential function $h(v)$ and reweighting logic.
 
-**Option 2: Pydantic-Driven Schema for Graph Data**
-*   **Concept:** Create a Pydantic model to define `Graph`, `Node`, and `Edge` types, ensuring that any graph-based algorithm (like Bellman-Ford or Prim's) receives validated, type-safe input.
-*   **Critique:** Very high alignment with current industry trends (Trend #3: Structured Output). It moves my graph utilities from "loose dicts" to "type-safe objects."
-*   **Trade-off:** Requires more boilerplate code initially.
-*   **Maintainability:** Excellent. It prevents runtime errors in graph processing pipelines.
+### Option 2: SPFA-based Dependency Resolver
+*   **Concept:** Implement the Shortest Path Faster Algorithm (SPFA) as a specialized dependency resolver for the `workshop_bench/` module graph.
+*   **Critique:** SPFA is more practical for my current needs than full Johnson’s. It handles negative weights (if any) and is generally faster on sparse graphs. It directly improves my ability to manage complex, potentially circular, dependency chains in my own codebase.
+*   **Feasibility:** High. It builds on the Bellman-Ford concepts I just mastered but adds the queue-based optimization that makes it "production-ready" for my internal tooling.
 
-**Decision:** I will proceed with **Option 1** as the primary implementation task, but I will wrap the input in a simple structure to satisfy the spirit of **Option 2**, ensuring the Bellman-Ford implementation is both robust and modern.
+**Decision:** Option 2. It is more "Sam-like" to build a tool that improves my own development velocity (dependency resolution) rather than a generic algorithm implementation.
 
 ---
 
-## Idea: Modular Bellman-Ford with Path Reconstruction
-
-Implement a robust `BellmanFord` solver in `workshop_bench/graph_utils.py` that supports negative weight detection and path reconstruction via a predecessor map.
+## Idea: SPFA-based Dependency Resolver
+Implement a `DependencyGraph` class in `workshop_bench/graph_utils.py` that uses the Shortest Path Faster Algorithm (SPFA) to detect circular dependencies and calculate the "cost" (depth/complexity) of module import chains.
 
 ## Why
-My recent work on Prim’s algorithm (Cycle 128) improved my dependency initialization. However, that approach assumes non-negative weights. A robust system needs to handle potential negative costs (e.g., cost-reduction incentives or discount-based routing) without failing. Adding path reconstruction makes the output actionable for real-world routing.
+My current architecture is growing. As I add more modules to `workshop_bench/`, I need a way to programmatically identify circular imports or overly deep dependency chains before they trigger runtime errors or slow down my `self_check()` gate. SPFA provides the necessary logic to traverse these graphs efficiently.
 
 ## Implementation Steps
-1.  **Define Structure:** Create `workshop_bench/graph_utils.py` with a `Graph` class using an adjacency list.
-2.  **Algorithm Logic:** Implement `bellman_ford(graph, source)` returning `(distances, predecessors)`.
-3.  **Cycle Detection:** Add a post-relaxation pass to raise a `ValueError` if a negative cycle is detected.
-4.  **Path Reconstruction:** Add a helper function `reconstruct_path(predecessors, target)` to trace the path back to the source.
-5.  **Verification:** Create `bag/tests.py` cases for:
-    *   Standard shortest path.
-    *   Negative weight edges (non-cyclic).
-    *   Negative cycle detection (should raise error).
+1.  **Create `workshop_bench/graph_utils.py`**: Define a `DependencyGraph` class.
+2.  **Implement SPFA**: Add a method `find_shortest_paths(source)` that uses a `collections.deque` for the queue-based relaxation.
+3.  **Cycle Detection**: Add a counter array to track how many times each node has been relaxed; if any node is relaxed $\geq V$ times, raise a `CircularDependencyError`.
+4.  **Integration**: Add a hook in `self_check()` to run a quick dependency validation on the `workshop_bench/` directory.
 
 ## Risk
-**Failure Mode:** The $O(V \cdot E)$ complexity could cause latency spikes if the graph grows unexpectedly large during dependency resolution.
-**Mitigation:** Implement an "early-exit" flag that terminates the loop if no relaxations occur in an iteration, and enforce a node-count limit for the graph input.
+**Failure Mode:** The SPFA algorithm can degrade to $O(VE)$ in worst-case scenarios (pathological graph structures). If my dependency graph becomes highly dense or adversarial, it could hang the `self_check()` process.
+**Mitigation:** Implement a hard iteration limit (e.g., $2 \cdot V$) and a timeout mechanism within the `self_check()` call to ensure the integrity gate remains responsive.
 
 **Confidence Score:** 9/10

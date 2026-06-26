@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 129
+    "review_due_cycle": 144
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 129
+    "review_due_cycle": 144
   },
   {
     "cycle": 51,
@@ -640,5 +640,11 @@
     "topic": "Implement Bellman-Ford for negative weight edges",
     "summary": "### Technical Summary: Bellman-Ford and Negative Weight Edges\n\nThe Bellman-Ford algorithm is the standard solution for the Single-Source Shortest Path (SSSP) problem in graphs containing negative edge weights. Unlike Dijkstra\u2019s algorithm, which relies on a greedy approach that fails when negative edges are present (due to the assumption that once a node is visited, its shortest path is finalized), Bellman-Ford utilizes dynamic programming via edge relaxation.\n\n**Core Mechanics:**\n1.  **Relaxatio",
     "review_due_cycle": 133
+  },
+  {
+    "cycle": 130,
+    "topic": "Build Johnson's algorithm outline for sparse graphs",
+    "summary": "### Technical Summary: Johnson\u2019s Algorithm for Sparse Graphs\n\nJohnson\u2019s algorithm is the optimal choice for the All-Pairs Shortest Paths (APSP) problem in sparse, edge-weighted directed graphs that may contain negative edge weights but no negative cycles. While the Floyd-Warshall algorithm provides a simpler $O(V^3)$ approach, Johnson\u2019s achieves $O(VE + V^2 \\log V)$ using a Fibonacci heap, making it significantly more efficient for graphs where $E \\ll V^2$.\n\n**Core Mechanics:**\n1.  **Reweighting",
+    "review_due_cycle": 134
   }
 ]
