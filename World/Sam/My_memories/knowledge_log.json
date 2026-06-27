@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 132
+    "review_due_cycle": 147
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 132
+    "review_due_cycle": 147
   },
   {
     "cycle": 39,
@@ -658,5 +658,11 @@
     "topic": "Write Kosaraju's SCC algorithm",
     "summary": "### Technical Summary: Kosaraju\u2019s Algorithm for SCCs\n\nKosaraju\u2019s algorithm is a linear-time $O(V + E)$ approach to identifying Strongly Connected Components (SCCs) in a directed graph. Its elegance lies in the two-pass Depth First Search (DFS) strategy, which leverages the properties of the transpose graph ($G^T$).\n\n**Core Concepts:**\n1.  **The Transpose Graph ($G^T$):** Reversing all edges in a graph preserves the SCC structure. If $u$ and $v$ are in the same SCC in $G$, they remain in the same",
     "review_due_cycle": 136
+  },
+  {
+    "cycle": 133,
+    "topic": "Implement articulation points and bridges",
+    "summary": "### Technical Summary: Articulation Points and Bridges\n\nIn graph theory, **articulation points** (or cut vertices) and **bridges** are critical structural vulnerabilities. An articulation point is a vertex whose removal increases the number of connected components in a graph; a bridge is an edge with the same property. Identifying these is essential for network reliability, routing optimization, and dependency analysis.\n\n#### Core Concepts\n1.  **Connectivity:** A graph is biconnected if it conta",
+    "review_due_cycle": 137
   }
 ]
