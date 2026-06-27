@@ -1,41 +1,41 @@
 ## Scratchpad
 
-**Option 1: Iterative Tarjan’s SCC Solver**
-*   **Concept:** Implement an iterative version of Tarjan’s algorithm using an explicit stack to manage DFS state, avoiding recursion depth limits.
-*   **Critique:** High feasibility given the current skill acquisition. It directly addresses the "modern considerations" noted in the skill summary.
-*   **Trade-off:** More complex to implement than the recursive version; requires careful state management of the DFS traversal (tracking which child is next).
-*   **Maintainability:** High. It provides a robust, production-ready utility for dependency graph analysis.
+**Option 1: Implement a "Graph-Aware" Dependency Resolver**
+*   **Concept:** Use the SCC knowledge (Kosaraju/Tarjan) to detect circular dependencies in the `workshop_bench/` modules before they cause runtime errors.
+*   **Critique:** High value for system stability. However, it requires building a parser to extract imports from all `workshop_bench/` files to build the graph.
+*   **Trade-off:** High complexity in static analysis vs. high reliability in dependency management.
 
-**Option 2: RAG-based Knowledge Retrieval for `knowledge_log.json`**
-*   **Concept:** Replace the simple list-based retrieval in Phase II with a vector-search approach using the learned Tarjan’s SCC logic to cluster related knowledge nodes.
-*   **Critique:** Over-engineering for the current scale. While it aligns with "Market Signal #4," it adds significant complexity to the `bag/` directory.
-*   **Trade-off:** Better long-term scalability vs. immediate implementation risk.
-*   **Maintainability:** Moderate; introduces a dependency on a vector store or embedding model.
+**Option 2: Transition to Pydantic v2 `TypeAdapter` for `_parse_gemini_json`**
+*   **Concept:** Refactor the existing `_parse_gemini_json` to use `pydantic.TypeAdapter` for more robust schema validation, moving away from `parse_obj` (deprecated).
+*   **Critique:** Directly aligns with the "Structured Output & Pydantic-Driven AI" market signal. It improves the robustness of the core communication layer.
+*   **Trade-off:** Low risk, high impact on data integrity.
 
-**Selection:** Option 1. It is a direct application of the cycle's learned skill, improves system robustness, and avoids the "over-engineering" trap.
+**Selection:** Option 2. It is a surgical refactor that improves the foundation of my communication with Gemini, directly addressing the "Structured Output" market trend while maintaining the "Minimal footprint, maximum leverage" principle.
 
 ---
 
-## Idea: Robust Dependency Cycle Detection via Tarjan’s SCC
-
-Implement a production-grade, iterative Tarjan’s SCC solver within `workshop_bench/graph_utils.py` to identify circular dependencies in the module loader.
+## Idea
+**Refactor `_parse_gemini_json` to utilize Pydantic v2 `TypeAdapter`.**
 
 ## Why
-My current dependency resolution (SPFA-based) handles cycle detection, but Tarjan’s provides a more formal, linear-time $O(V+E)$ approach to identifying all strongly connected components. This allows for better diagnostic reporting when circular imports occur, moving from "cycle detected" to "the following modules form a circular dependency: [A, B, C]."
+My current JSON parsing relies on `parse_obj`, which is legacy. By adopting `TypeAdapter`, I gain better support for complex types (unions, generics) and align with modern Pydantic standards. This ensures that the structured outputs I receive from Gemini are validated with the latest performance and safety features, reducing the likelihood of runtime type errors in my orchestration logic.
 
 ## Implementation Steps
-1.  **Create `workshop_bench/graph_utils.py`**: Define a `TarjanSolver` class.
-2.  **Explicit Stack Management**: Use a list as a stack to store the DFS path and a dictionary for `discovery_time` and `low_link` metadata.
-3.  **Normalization**: Add a pre-processing method to strip self-loops and duplicate edges from the input adjacency list.
-4.  **Integration**: Update the existing dependency resolver to use this solver for pre-flight validation of the module graph.
+1.  Modify `_parse_gemini_json` in `sam.py` to import `TypeAdapter` from `pydantic`.
+2.  Update the function signature to accept a `TypeAdapter` instance or a model class.
+3.  Replace `schema.parse_obj(data)` with `TypeAdapter(schema).validate_python(data)`.
+4.  Add a fallback check to ensure compatibility with existing calls that might pass raw classes.
+5.  Run `self_check()` to verify the integrity of the new parsing logic.
 
 ## Risk
-**Failure Mode:** The iterative stack management might incorrectly handle the `low_link` update logic if the "post-visit" step (after a child returns) is not perfectly synchronized with the stack state.
-**Mitigation:** Implement a unit test suite in `bag/tests.py` that specifically targets the "root" node logic (`low_link[u] == discovery_time[u]`) against known graph topologies (e.g., a simple cycle, a line, and a disconnected graph).
+**Failure Mode:** If the `schema` passed to the function is not compatible with `TypeAdapter` (e.g., a non-Pydantic object), the parser will raise a `PydanticUserError`.
+**Mitigation:** Implement a `try-except` block that catches `PydanticUserError` and falls back to standard dictionary return, logging a warning for manual review.
 
 **Confidence Score:** 9/10
 
 ---
 
-### Self-Correction/Refinement
-I must ensure that the `workshop_bench/graph_utils.py` remains lightweight. I will avoid external dependencies (like `networkx`) and stick to standard library structures to keep the footprint minimal and the logic transparent. I will also ensure the `_rollback` mechanism is ready if the integration into the module loader causes a boot-time failure.
+### Action Items
+*   [ ] Refactor `_parse_gemini_json` to use `TypeAdapter`.
+*   [ ] Update `load_goals` and other callers to ensure they pass valid Pydantic models.
+*   [ ] Run `self_check()` to confirm no regression in JSON parsing.
