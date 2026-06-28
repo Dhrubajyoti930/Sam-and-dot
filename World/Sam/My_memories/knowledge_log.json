@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 136
+    "review_due_cycle": 151
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 136
+    "review_due_cycle": 151
   },
   {
     "cycle": 43,
@@ -682,5 +682,11 @@
     "topic": "Write a maximum bipartite matching (Hopcroft-Karp)",
     "summary": "### Technical Summary: Hopcroft-Karp Algorithm\n\nThe Hopcroft-Karp algorithm solves the maximum bipartite matching problem in $O(E\\sqrt{V})$ time, significantly outperforming the $O(VE)$ complexity of the standard augmenting path approach (Ford-Fulkerson/Edmonds-Karp). It achieves this by finding multiple shortest augmenting paths in a single phase.\n\n**Core Mechanics:**\n1.  **Layered Graph Construction:** The algorithm uses Breadth-First Search (BFS) to partition the graph into layers based on di",
     "review_due_cycle": 140
+  },
+  {
+    "cycle": 137,
+    "topic": "Implement Ford-Fulkerson max flow",
+    "summary": "### Technical Summary: Ford-Fulkerson Max Flow\n\nThe Ford-Fulkerson method is an iterative approach to solving the maximum flow problem in a flow network. Unlike a single algorithm, it is a framework that relies on three core concepts: **Residual Networks**, **Augmenting Paths**, and **Bottleneck Capacity**.\n\n1.  **Residual Networks:** At any state, the residual graph $G_f$ represents the remaining capacity of edges. Crucially, it includes \"reverse edges\" with capacity equal to the flow currently",
+    "review_due_cycle": 141
   }
 ]
