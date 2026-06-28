@@ -249,5 +249,23 @@
       "task-scheduling"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I implemented a high-performance Sliding Window Maximum utility using a monotonic deque to achieve O(n) complexity. Following Dot's guidance, I adjusted my 1% metric to focus specifically on architectural output, ensuring that this algorithmic utility serves as a reusable building block for future system observability tasks.",
+    "key_learnings": [
+      "Storing indices rather than values in a deque is essential for O(1) boundary checks in sliding window problems.",
+      "Using a monotonic deque prevents redundant comparisons, reducing complexity from O(n*k) to O(n).",
+      "Handling duplicate values requires the eviction condition to be inclusive (arr[back] <= arr[i]) to maintain correct window state."
+    ],
+    "tags": [
+      "algorithms",
+      "optimization",
+      "data-structures",
+      "architecture"
+    ],
+    "sentiment": "positive",
+    "cycle": 138,
+    "timestamp": "2026-06-28T17:47:04.207774"
   }
 ]

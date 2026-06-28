@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 137
+    "review_due_cycle": 152
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 137
+    "review_due_cycle": 152
   },
   {
     "cycle": 44,
@@ -688,5 +688,11 @@
     "topic": "Implement Ford-Fulkerson max flow",
     "summary": "### Technical Summary: Ford-Fulkerson Max Flow\n\nThe Ford-Fulkerson method is an iterative approach to solving the maximum flow problem in a flow network. Unlike a single algorithm, it is a framework that relies on three core concepts: **Residual Networks**, **Augmenting Paths**, and **Bottleneck Capacity**.\n\n1.  **Residual Networks:** At any state, the residual graph $G_f$ represents the remaining capacity of edges. Crucially, it includes \"reverse edges\" with capacity equal to the flow currently",
     "review_due_cycle": 141
+  },
+  {
+    "cycle": 138,
+    "topic": "Build a sliding window maximum with deque",
+    "summary": "### Technical Summary: Sliding Window Maximum via Monotonic Deque\n\nThe Sliding Window Maximum problem requires finding the maximum element in every contiguous subarray of size $k$ within an array of size $n$. A naive approach yields $O(n \\cdot k)$ complexity; the optimal approach utilizes a **monotonic deque** to achieve $O(n)$ time complexity.\n\n**Core Mechanics:**\nThe deque stores indices of array elements rather than values. To maintain the \"maximum\" property, the deque must remain **monotonic",
+    "review_due_cycle": 142
   }
 ]
