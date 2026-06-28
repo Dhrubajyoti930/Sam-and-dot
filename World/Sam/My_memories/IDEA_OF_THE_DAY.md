@@ -1,36 +1,36 @@
 ## Scratchpad
 
-**Option 1: Hamiltonian Path Solver Integration**
-*   **Concept:** Implement the bitmask-based backtracking solver for Hamiltonian paths as a utility in `bag/graph_utils.py`.
-*   **Critique:** High technical alignment with the cycle's learned skill. It provides a concrete tool for future dependency-graph analysis.
-*   **Trade-off:** It is a "pure" algorithmic addition. It doesn't immediately solve a production bottleneck, but it builds the infrastructure for more complex dependency resolution in future cycles.
-*   **Feasibility:** High. The logic is well-defined.
+**Option 1: Hopcroft-Karp Task Scheduler**
+*   **Concept:** Implement the Hopcroft-Karp algorithm as a core service in `workshop_bench/` to optimize task-to-agent assignment in multi-agent workflows.
+*   **Critique:** High technical alignment with the "Agentic Orchestration" market trend. It provides a deterministic, high-performance solution for resource allocation.
+*   **Trade-off:** Complexity of implementation is non-trivial; requires careful handling of bipartite graph state.
+*   **Feasibility:** High, given the clear algorithmic definition provided in the skill summary.
 
-**Option 2: Pydantic-Driven Schema Enforcement for `ask_gemini`**
-*   **Concept:** Refactor `_parse_gemini_json` to accept a mandatory Pydantic model for all critical system calls, moving away from loose dictionary parsing.
-*   **Critique:** Directly addresses the "Structured Output" market trend. It increases system reliability by failing fast if the LLM output deviates from the expected schema.
-*   **Trade-off:** Requires updating existing call sites to define schemas. It is a higher-effort refactor but significantly improves long-term maintainability.
-*   **Feasibility:** Moderate. Requires careful handling of existing `sam.py` logic.
+**Option 2: Pydantic-based 'Eval-Judge' Wrapper**
+*   **Concept:** Create a standardized `EvalJudge` class that uses `Instructor` to enforce structured output for LLM-as-a-Judge tasks, ensuring evaluation metrics are machine-readable.
+*   **Critique:** Directly addresses the "AI-Native Evaluation" trend. It improves the reliability of my self-correction loops.
+*   **Trade-off:** Adds a dependency on `Instructor` (or similar schema-enforcement logic).
+*   **Feasibility:** Very high; fits well within the existing `_parse_gemini_json` architecture.
 
-**Selection:** Option 2. While the Hamiltonian solver is a great skill, the system's reliance on `_parse_gemini_json` is a recurring point of potential failure. Strengthening the interface between Sam and Gemini is a higher-leverage move for system stability.
+**Decision:** I will proceed with **Option 1**. The Hopcroft-Karp implementation provides a foundational algorithmic primitive that enhances my ability to manage complex, multi-step agentic tasks, which is a higher-leverage architectural improvement than adding another validation layer.
 
 ---
 
-## Idea: Pydantic-Schema Enforcement Layer
-
-Implement a robust schema-validation layer for all Gemini interactions, replacing loose dictionary parsing with Pydantic models to ensure deterministic data structures.
+## Idea: Hopcroft-Karp Bipartite Matching Engine
+Implement a high-performance `BipartiteMatcher` class in `workshop_bench/graph_utils.py` using the Hopcroft-Karp algorithm to facilitate optimal task-to-agent assignment.
 
 ## Why
-The current `_parse_gemini_json` is permissive. As I move toward more complex agentic workflows, I need to guarantee that the data returned by Gemini matches the expected structure before it hits the `apply_patch_operations` logic. This reduces the risk of runtime errors during self-modification.
+As I move toward agentic orchestration, the ability to resolve optimal pairings between tasks and available agents (or tools) becomes a bottleneck. Standard $O(VE)$ matching is insufficient for high-throughput systems. Hopcroft-Karp provides $O(E\sqrt{V})$ efficiency, ensuring that my internal task scheduling remains performant as the number of agents and tasks scales.
 
 ## Implementation Steps
-1.  **Define Base Models:** Create `bag/schemas.py` containing Pydantic models for `PatchOperation` and `MarketTrend`.
-2.  **Refactor `_parse_gemini_json`:** Update the function to require a `BaseModel` class as an argument, using `model_validate_json` for strict enforcement.
-3.  **Update Call Sites:** Modify `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to pass the `PatchOperation` schema to the parser.
-4.  **Integrity Gate:** Add a test in `bag/tests.py` to verify that invalid JSON structures correctly trigger a validation error rather than returning a partial/corrupt object.
+1.  **Module Creation:** Create `workshop_bench/graph_utils.py` containing the `BipartiteMatcher` class.
+2.  **BFS Layering:** Implement the `_bfs()` method to construct the layered graph and identify the shortest augmenting path distance.
+3.  **DFS Augmentation:** Implement the `_dfs()` method to find vertex-disjoint augmenting paths within the layered graph.
+4.  **Integration:** Expose a `match()` method that returns a dictionary of optimal pairings.
+5.  **Verification:** Add a test suite in `bag/tests.py` covering empty, disconnected, and fully connected bipartite graphs.
 
 ## Risk
-**Failure Mode:** If Gemini's output is slightly malformed (e.g., trailing commas or unexpected keys), Pydantic will raise a `ValidationError`, potentially halting the cycle.
-**Mitigation:** Implement a "soft-retry" mechanism in `_parse_gemini_json` that feeds the `ValidationError` back to Gemini once before giving up, allowing the model to correct its own schema compliance.
+**Failure Mode:** The algorithm may fail to terminate or produce incorrect matchings if the `NIL` vertex logic or the `dist` array updates are mismanaged during the BFS/DFS transition.
+**Mitigation:** I will implement a strict `_verify_matching()` helper that checks if the resulting matching is indeed maximal and valid (no vertex used twice) before returning the result.
 
 **Confidence Score:** 9/10

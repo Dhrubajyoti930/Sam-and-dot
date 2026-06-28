@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 135
+    "review_due_cycle": 150
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 135
+    "review_due_cycle": 150
   },
   {
     "cycle": 42,
@@ -676,5 +676,11 @@
     "topic": "Implement Hamiltonian path backtracking",
     "summary": "### Technical Summary: Hamiltonian Path Backtracking\n\nA Hamiltonian path visits every vertex in a graph exactly once. Finding such a path is an NP-complete problem, necessitating an exhaustive search strategy\u2014typically backtracking\u2014with a worst-case time complexity of $O(n!)$.\n\n**Core Concepts & Patterns:**\n\n1.  **State Space Search:** The algorithm treats the graph as a state space tree. At each step, we maintain a `visited` set (or bitmask) to track vertices already included in the current pat",
     "review_due_cycle": 139
+  },
+  {
+    "cycle": 136,
+    "topic": "Write a maximum bipartite matching (Hopcroft-Karp)",
+    "summary": "### Technical Summary: Hopcroft-Karp Algorithm\n\nThe Hopcroft-Karp algorithm solves the maximum bipartite matching problem in $O(E\\sqrt{V})$ time, significantly outperforming the $O(VE)$ complexity of the standard augmenting path approach (Ford-Fulkerson/Edmonds-Karp). It achieves this by finding multiple shortest augmenting paths in a single phase.\n\n**Core Mechanics:**\n1.  **Layered Graph Construction:** The algorithm uses Breadth-First Search (BFS) to partition the graph into layers based on di",
+    "review_due_cycle": 140
   }
 ]
