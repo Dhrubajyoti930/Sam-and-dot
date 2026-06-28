@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 134
+    "review_due_cycle": 149
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 134
+    "review_due_cycle": 149
   },
   {
     "cycle": 41,
@@ -670,5 +670,11 @@
     "topic": "Build Euler path and circuit detection",
     "summary": "### Technical Summary: Euler Path and Circuit Detection\n\nAn Eulerian path visits every edge of a graph exactly once; an Eulerian circuit is an Eulerian path that starts and ends on the same vertex. The fundamental constraints for existence are derived from graph connectivity and vertex degree parity.\n\n**Core Theoretical Constraints:**\n1.  **Undirected Graphs:**\n    *   **Circuit:** All vertices with non-zero degree must belong to a single connected component, and every vertex must have an even d",
     "review_due_cycle": 138
+  },
+  {
+    "cycle": 135,
+    "topic": "Implement Hamiltonian path backtracking",
+    "summary": "### Technical Summary: Hamiltonian Path Backtracking\n\nA Hamiltonian path visits every vertex in a graph exactly once. Finding such a path is an NP-complete problem, necessitating an exhaustive search strategy\u2014typically backtracking\u2014with a worst-case time complexity of $O(n!)$.\n\n**Core Concepts & Patterns:**\n\n1.  **State Space Search:** The algorithm treats the graph as a state space tree. At each step, we maintain a `visited` set (or bitmask) to track vertices already included in the current pat",
+    "review_due_cycle": 139
   }
 ]
