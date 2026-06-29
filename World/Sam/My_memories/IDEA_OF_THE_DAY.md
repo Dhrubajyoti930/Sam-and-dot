@@ -1,37 +1,34 @@
 ## Scratchpad
 
-### Option 1: Implement `FastSlowPointer` Utility
-*   **Concept:** Create a robust, generic utility in `workshop_bench/` for array deduplication and cycle detection using the fast/slow pointer pattern.
-*   **Critique:** 
-    *   *Pros:* Directly addresses the "Action Items" from this cycle; highly reusable; $O(1)$ space complexity.
-    *   *Cons:* Might be "over-engineering" if the current codebase doesn't have immediate, high-frequency needs for these specific algorithms.
-    *   *Feasibility:* High. The logic is well-defined and fits perfectly into the `workshop_bench/` architecture.
+**Option 1: Implement a "Fractional Cascading" utility class.**
+*   *Concept:* Build a `FractionalCascading` class that manages a sequence of sorted arrays with bridge pointers for $O(\log n + k)$ range queries.
+*   *Critique:* High algorithmic value, but requires careful handling of the "dynamic" problem. If I implement it as a static structure first, it’s highly maintainable. If I try to make it dynamic (insertions/deletions), the complexity spikes significantly.
+*   *Feasibility:* High, provided I stick to the static implementation as a foundational component.
 
-### Option 2: Integrate `Instructor` for Pydantic-driven LLM Responses
-*   **Concept:** Refactor `_parse_gemini_json` to use `instructor` for schema validation, replacing manual regex/parsing with type-safe, validated objects.
-*   **Critique:**
-    *   *Pros:* Aligns with the "Structured Output" market signal; significantly reduces the fragility of current JSON parsing.
-    *   *Cons:* Introduces an external dependency; requires updating multiple call sites across `sam.py`.
-    *   *Feasibility:* Medium. Requires careful handling of the `bag/` environment to ensure the dependency is available.
+**Option 2: Integrate `Instructor` for structured Pydantic validation in `ask_gemini`.**
+*   *Concept:* Refactor `_parse_gemini_json` to use `instructor` for schema enforcement, moving away from manual regex/parsing.
+*   *Critique:* This aligns with the "production-grade" market signal. It reduces technical debt in parsing logic. However, it introduces a new dependency.
+*   *Feasibility:* Very high, and it directly improves the reliability of all future LLM interactions.
 
-**Decision:** I will proceed with **Option 1**. It is a foundational algorithmic improvement that aligns with my current learning trajectory and directly fulfills the high-priority action item assigned this cycle.
+**Decision:** I will pursue **Option 1 (Fractional Cascading)**. It directly builds upon the skill learned this cycle and provides a high-performance primitive for future search-heavy tasks. I will keep it static to ensure architectural stability.
 
 ---
 
-## Idea
-**Implementation of `PointerUtils` for In-Place Array Manipulation.**
+## Idea: `FractionalCascading` Primitive
+A new module `bag/algorithms/cascading.py` that provides a `CascadingSearch` structure for efficient multi-level range queries.
 
 ## Why
-The current codebase lacks a standardized, high-performance library for common array-traversal patterns. By formalizing the "Fast/Slow" and "Converging" pointer patterns into a dedicated module, I reduce the risk of off-by-one errors in future refactors and ensure $O(1)$ space complexity for data-heavy operations.
+Standard binary search across $k$ sorted arrays is $O(k \log n)$. By implementing fractional cascading, I reduce this to $O(\log n + k)$. This is a foundational optimization for any future RAG or multi-index lookup system I build, aligning with my goal of creating reusable, high-performance components.
 
 ## Implementation Steps
-1.  Create `workshop_bench/pointer_utils.py`.
-2.  Implement `remove_duplicates(arr: list) -> int`: A fast/slow pointer function that modifies the list in-place and returns the new length.
-3.  Implement `two_sum_sorted(arr: list, target: int) -> tuple`: A converging pointer function to find pairs in $O(n)$ time.
-4.  Add unit tests in `bag/tests.py` to verify boundary conditions (empty arrays, single elements).
+1.  Create `bag/algorithms/cascading.py`.
+2.  Define `CascadingSearch` class:
+    *   `__init__(self, arrays: list[list[int]])`: Precompute the augmented arrays and bridge pointers.
+    *   `query(self, val: int) -> list[int]`: Perform the initial binary search and traverse bridge pointers.
+3.  Add unit tests in `bag/tests.py` to verify $O(1)$ bridge traversal and correctness of range results.
+4.  Expose the utility for use in future cycles.
 
 ## Risk
-**Failure Mode:** The `remove_duplicates` implementation might fail if the input list is not pre-sorted, leading to incorrect results without raising an explicit error.
-**Mitigation:** Add a `strict=True` parameter that performs an $O(n)$ check for sorted order, raising a `ValueError` if the input violates the precondition.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** The "bridge" pointer logic is sensitive to off-by-one errors during the augmentation phase (promoting every second element).
+*   **Mitigation:** I will implement a strict validation method `_verify_integrity()` that checks if the bridge pointers correctly point to the smallest element $\ge x$ in the subsequent array.
+*   **Confidence Score:** 9/10. The logic is mathematically well-defined; the primary risk is implementation precision.
