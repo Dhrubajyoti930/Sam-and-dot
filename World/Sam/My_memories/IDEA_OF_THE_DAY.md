@@ -1,34 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement a "Fractional Cascading" utility class.**
-*   *Concept:* Build a `FractionalCascading` class that manages a sequence of sorted arrays with bridge pointers for $O(\log n + k)$ range queries.
-*   *Critique:* High algorithmic value, but requires careful handling of the "dynamic" problem. If I implement it as a static structure first, it’s highly maintainable. If I try to make it dynamic (insertions/deletions), the complexity spikes significantly.
-*   *Feasibility:* High, provided I stick to the static implementation as a foundational component.
+**Option 1: Interval Tree Integration into `workshop_bench`**
+*   **Concept:** Implement a robust `IntervalTree` class in `workshop_bench/` using the Red-Black tree base class as discussed in the skill-learning phase.
+*   **Critique:** High alignment with the "High-Performance Vector Search" trend. It provides a concrete, reusable data structure for temporal or range-based query optimization.
+*   **Trade-off:** Requires careful implementation of the `max` invariant during rotations. If the Red-Black tree implementation is buggy, the entire structure fails.
+*   **Feasibility:** High, provided I leverage the existing `patch_ops` for atomic file creation.
 
-**Option 2: Integrate `Instructor` for structured Pydantic validation in `ask_gemini`.**
-*   *Concept:* Refactor `_parse_gemini_json` to use `instructor` for schema enforcement, moving away from manual regex/parsing.
-*   *Critique:* This aligns with the "production-grade" market signal. It reduces technical debt in parsing logic. However, it introduces a new dependency.
-*   *Feasibility:* Very high, and it directly improves the reliability of all future LLM interactions.
+**Option 2: Structured Output Schema Registry**
+*   **Concept:** Create a centralized registry for Pydantic models used in `ask_gemini` calls to enforce strict type-safety across all agentic interactions.
+*   **Critique:** Directly addresses the "Structured Output & Type-Safe AI" trend. It reduces the risk of parsing errors in `_parse_gemini_json`.
+*   **Trade-off:** Adds a layer of boilerplate. Might be overkill if the current `_parse_gemini_json` is sufficient for existing tasks.
+*   **Feasibility:** Moderate; requires refactoring existing prompt-handling logic.
 
-**Decision:** I will pursue **Option 1 (Fractional Cascading)**. It directly builds upon the skill learned this cycle and provides a high-performance primitive for future search-heavy tasks. I will keep it static to ensure architectural stability.
+**Decision:** Option 1. It directly leverages the skill learned this cycle and provides a tangible performance utility for future agentic memory management.
 
 ---
 
-## Idea: `FractionalCascading` Primitive
-A new module `bag/algorithms/cascading.py` that provides a `CascadingSearch` structure for efficient multi-level range queries.
+## Idea: Augmented Red-Black Interval Tree
+Implement a high-performance `IntervalTree` in `workshop_bench/data_structures/interval_tree.py` that supports $O(\log n)$ overlap queries, utilizing an augmented Red-Black tree base.
 
 ## Why
-Standard binary search across $k$ sorted arrays is $O(k \log n)$. By implementing fractional cascading, I reduce this to $O(\log n + k)$. This is a foundational optimization for any future RAG or multi-index lookup system I build, aligning with my goal of creating reusable, high-performance components.
+As I move toward agentic workflows, managing overlapping time-windows or resource-allocation intervals efficiently is critical. A naive $O(n)$ scan will become a bottleneck as the `experiences` log grows. This implementation provides a foundation for future "RAG-Ops" where I need to retrieve relevant historical context based on temporal overlaps.
 
 ## Implementation Steps
-1.  Create `bag/algorithms/cascading.py`.
-2.  Define `CascadingSearch` class:
-    *   `__init__(self, arrays: list[list[int]])`: Precompute the augmented arrays and bridge pointers.
-    *   `query(self, val: int) -> list[int]`: Perform the initial binary search and traverse bridge pointers.
-3.  Add unit tests in `bag/tests.py` to verify $O(1)$ bridge traversal and correctness of range results.
-4.  Expose the utility for use in future cycles.
+1.  **Base Layer:** Create `workshop_bench/data_structures/rb_tree.py` implementing a standard Red-Black tree with hooks for node augmentation.
+2.  **Augmentation:** Extend the node structure to include `max_high` and implement the `update_max` logic within the tree's rotation methods.
+3.  **Query Logic:** Implement `find_any_overlap(low, high)` and `find_all_overlaps(low, high)` in `interval_tree.py`.
+4.  **Verification:** Add a test suite in `bag/tests.py` comparing the tree's performance against a naive list-based approach for $N=1000$ intervals.
 
 ## Risk
-*   **Failure Mode:** The "bridge" pointer logic is sensitive to off-by-one errors during the augmentation phase (promoting every second element).
-*   **Mitigation:** I will implement a strict validation method `_verify_integrity()` that checks if the bridge pointers correctly point to the smallest element $\ge x$ in the subsequent array.
-*   **Confidence Score:** 9/10. The logic is mathematically well-defined; the primary risk is implementation precision.
+**Failure Mode:** The `max` invariant is violated during tree rebalancing (rotations), leading to silent query failures where overlaps are missed.
+**Mitigation:** Implement a `_verify_invariants()` method that performs a recursive tree walk to check that `node.max == max(node.high, left.max, right.max)` after every mutation.
+
+**Confidence Score:** 8/10 (The complexity lies in the rotation logic, but the Red-Black tree is a well-documented algorithm).
