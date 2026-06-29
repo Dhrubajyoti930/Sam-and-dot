@@ -1,32 +1,34 @@
 ## Scratchpad
 
-**Option 1: Sliding Window Maximum Utility (Algorithm-focused)**
-*   **Concept:** Implement the monotonic deque algorithm as a standalone utility in `bag/utils/algorithms.py`.
-*   **Critique:** High feasibility. It directly addresses the "Sliding Window Maximum" skill learned this cycle. It is a low-risk, high-utility addition that fits the "minimal footprint" philosophy.
-*   **Trade-off:** It is a pure algorithmic utility; it doesn't immediately solve a system-level architectural problem, but it provides a building block for future performance-critical tasks (e.g., time-series analysis or log windowing).
+**Option 1: Adaptive Rate-Limiting Middleware**
+*   **Concept:** Implement a token-bucket algorithm in `sam.py` that dynamically adjusts `_CALL_DELAY` based on Gemini API response headers (e.g., `X-RateLimit-Remaining`).
+*   **Critique:** High feasibility. It moves Sam from static sleep intervals to reactive flow control.
+*   **Trade-off:** Increases complexity in `ask_gemini`. Requires parsing headers from the `google-generativeai` response object.
+*   **Maintainability:** High. Reduces "429 Too Many Requests" errors, making the system more resilient.
 
-**Option 2: Pydantic-Driven Agentic State Manager (Architecture-focused)**
-*   **Concept:** Create a `StateGraph` wrapper using Pydantic models to enforce schema validation on agentic state transitions, building on the "Sentinel" layer from Cycle 135.
-*   **Critique:** Higher complexity. It aligns with the "Agentic Orchestration" market signal. However, it risks "feature creep" if not scoped strictly to a single module.
-*   **Trade-off:** High leverage for long-term maintainability, but requires more testing surface area than the algorithm utility.
+**Option 2: Monotonic Stack Utility Module**
+*   **Concept:** Create `bag/algorithms/stack.py` containing a generic `MonotonicStack` class as per the cycle's learned skill.
+*   **Critique:** High feasibility. It encapsulates the $O(n)$ logic into a reusable, testable module.
+*   **Trade-off:** Minimal. It adds a file to `bag/`, but follows the "modular, not monolithic" philosophy.
+*   **Maintainability:** Excellent. Provides a clean API for future performance-critical tasks.
 
-**Decision:** I will proceed with **Option 1**. It is a clean, discrete implementation that demonstrates mastery of the learned skill while keeping the codebase lean. I will structure it as a reusable class to satisfy the "reusable utility" action item.
+**Selection:** Option 2. It directly applies the learned skill into a reusable component, adhering to the "minimal footprint, maximum leverage" core trait.
 
 ---
 
-## Idea: Monotonic Deque Utility for Sliding Window Queries
+## Idea: `MonotonicStack` Utility Module
 
 ## Why
-The Sliding Window Maximum is a foundational pattern for processing streaming data or time-series logs. By implementing this as a robust, $O(n)$ utility, I provide the system with a high-performance tool for future observability tasks (e.g., identifying spikes in latency or error rates within a moving window) without the overhead of naive $O(n \cdot k)$ approaches.
+The monotonic stack pattern is a high-leverage tool for $O(n)$ optimization in data processing. By formalizing this into a dedicated module, I reduce the risk of implementing buggy, ad-hoc loops in future cycles and provide a clean, tested interface for solving "next greater/smaller" problems.
 
 ## Implementation Steps
-1.  **Create `bag/utils/algorithms.py`**: Define a `SlidingWindowMax` class.
-2.  **Logic**: Use `collections.deque` to store indices. Implement `push(index, value)` and `get_max()` methods.
-3.  **Validation**: Ensure the `evict` logic handles the `arr[back] <= arr[i]` condition to correctly manage duplicate values.
-4.  **Testing**: Create `bag/tests/test_algorithms.py` covering $k=1$, $k=n$, and edge cases (strictly increasing/decreasing).
-5.  **Integration**: Expose the utility for future use in observability or data processing pipelines.
+1.  Create `bag/algorithms/stack.py`.
+2.  Implement `MonotonicStack` class with a `push(value, index)` method and a `get_nge()` (Next Greater Element) method.
+3.  Use a custom comparator function (defaulting to `operator.gt`) to support both "greater" and "smaller" logic.
+4.  Add a unit test in `bag/tests.py` to verify $O(n)$ performance and correctness against edge cases (empty, circular, monotonic).
 
 ## Risk
-*   **Failure Mode:** Off-by-one errors in index management or incorrect window boundary checks leading to stale data in the deque.
-*   **Mitigation:** The test suite will explicitly verify the deque state after each insertion for a variety of window sizes. I will use `collections.deque` to ensure $O(1)$ operations at both ends.
-*   **Confidence Score:** 9/10. The algorithm is well-defined and the implementation surface is small.
+**Failure Mode:** The stack logic might be misused for non-linear data structures, leading to incorrect results if the user assumes a standard array input.
+**Mitigation:** Add clear docstrings specifying the input requirements (indexable, linear sequence) and include a `validate_input` method that checks for indexability.
+
+**Confidence Score:** 9/10. The logic is well-understood and the implementation is isolated.

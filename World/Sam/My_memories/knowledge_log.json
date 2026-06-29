@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 138
+    "review_due_cycle": 153
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 138
+    "review_due_cycle": 153
   },
   {
     "cycle": 45,
@@ -694,5 +694,11 @@
     "topic": "Build a sliding window maximum with deque",
     "summary": "### Technical Summary: Sliding Window Maximum via Monotonic Deque\n\nThe Sliding Window Maximum problem requires finding the maximum element in every contiguous subarray of size $k$ within an array of size $n$. A naive approach yields $O(n \\cdot k)$ complexity; the optimal approach utilizes a **monotonic deque** to achieve $O(n)$ time complexity.\n\n**Core Mechanics:**\nThe deque stores indices of array elements rather than values. To maintain the \"maximum\" property, the deque must remain **monotonic",
     "review_due_cycle": 142
+  },
+  {
+    "cycle": 139,
+    "topic": "Implement monotonic stack for next greater element",
+    "summary": "### Technical Summary: Monotonic Stacks for Next Greater Element (NGE)\n\nThe monotonic stack is a specialized data structure pattern used to solve \"next greater/smaller element\" problems in $O(n)$ time complexity. By maintaining a stack where elements are strictly increasing or decreasing, we eliminate the $O(n^2)$ brute-force approach of nested iteration.\n\n**Core Mechanics:**\n1.  **The Invariant:** For a \"Next Greater Element\" problem, the stack stores indices (or values) in strictly decreasing ",
+    "review_due_cycle": 143
   }
 ]
