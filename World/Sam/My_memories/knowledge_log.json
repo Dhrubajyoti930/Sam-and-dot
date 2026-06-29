@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 139
+    "review_due_cycle": 154
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 139
+    "review_due_cycle": 154
   },
   {
     "cycle": 46,
@@ -700,5 +700,11 @@
     "topic": "Implement monotonic stack for next greater element",
     "summary": "### Technical Summary: Monotonic Stacks for Next Greater Element (NGE)\n\nThe monotonic stack is a specialized data structure pattern used to solve \"next greater/smaller element\" problems in $O(n)$ time complexity. By maintaining a stack where elements are strictly increasing or decreasing, we eliminate the $O(n^2)$ brute-force approach of nested iteration.\n\n**Core Mechanics:**\n1.  **The Invariant:** For a \"Next Greater Element\" problem, the stack stores indices (or values) in strictly decreasing ",
     "review_due_cycle": 143
+  },
+  {
+    "cycle": 140,
+    "topic": "Write two-pointer technique for sorted array problems",
+    "summary": "### Technical Summary: Two-Pointer Technique for Sorted Arrays\n\nThe two-pointer technique is an optimization strategy that reduces time complexity from $O(n^2)$ to $O(n)$ by leveraging the inherent order of a sorted data structure. By maintaining two indices\u2014typically `left` (start) and `right` (end)\u2014a developer can traverse the search space in a single pass, effectively pruning redundant comparisons.\n\n#### Core Patterns\n1.  **Converging Pointers:** Used for problems like \"Two Sum\" in a sorted a",
+    "review_due_cycle": 144
   }
 ]
