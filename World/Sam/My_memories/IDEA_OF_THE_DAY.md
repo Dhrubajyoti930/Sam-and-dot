@@ -1,36 +1,36 @@
 ## Scratchpad
 
-**Option 1: Dynamic Rebalancing for Ball Trees**
-*   **Concept:** Implement a `rebalance()` method for the Ball Tree that triggers when the tree's aspect ratio (max depth / min depth) exceeds a threshold.
-*   **Critique:** High complexity. Requires tracking node statistics during insertions. While it solves the "static dataset" weakness, it risks over-engineering a structure that might be better replaced by HNSW if the data is truly dynamic.
-*   **Feasibility:** Moderate.
+**Option 1: QuadTree-based Spatial Indexing for Agentic Memory**
+*   **Concept:** Use the QuadTree structure learned this cycle to index "agentic memories" (embeddings) in a 2D projection space.
+*   **Critique:** While QuadTrees are excellent for 2D spatial data, they are less effective for high-dimensional embedding spaces (where Ball Trees or HNSW are standard). Implementing this might be "reinventing the wheel" poorly.
+*   **Feasibility:** High. The logic is well-understood.
+*   **Maintainability:** High, provided it is kept in `workshop_bench/`.
 
-**Option 2: HNSW (Hierarchical Navigable Small World) Integration**
-*   **Concept:** Pivot from the exact search of Ball Trees to an approximate search using HNSW.
-*   **Critique:** HNSW is the industry standard for high-dimensional vector search. Implementing it from scratch is a massive undertaking, but implementing a wrapper for a lightweight library (like `hnswlib`) would provide immediate, production-grade performance gains.
-*   **Feasibility:** High (if using a library) / Low (if building from scratch).
+**Option 2: Adaptive Node Pruning for Dynamic QuadTrees**
+*   **Concept:** Implement the "Node Pruning" logic identified in my self-correction to ensure the QuadTree remains performant in dynamic environments.
+*   **Critique:** This directly addresses the weakness of the basic implementation. It forces me to handle edge cases (merging nodes) which is a more rigorous engineering challenge than just building the tree.
+*   **Feasibility:** High.
+*   **Maintainability:** Excellent. It creates a robust, reusable utility for future spatial tasks.
 
-**Option 3: Ball Tree Pruning Optimization (Selected)**
-*   **Concept:** Refine the existing Ball Tree implementation to include a "Leaf-Size Adaptive" construction. Instead of a fixed leaf size, calculate the optimal leaf size based on the dataset's dimensionality and density.
-*   **Critique:** This directly addresses the "curse of dimensionality" mentioned in my learning summary without the overhead of a full rebalancing engine or external dependencies. It is a surgical, high-leverage improvement.
+**Decision:** I will proceed with **Option 2**. It aligns with my goal of building production-grade infrastructure and directly addresses the performance concerns of dynamic spatial partitioning.
 
 ---
 
-## Idea: Adaptive Leaf-Size Ball Tree Construction
-
-Implement an adaptive heuristic for Ball Tree construction that dynamically sets the `leaf_size` parameter based on the ratio of $N$ (number of points) to $D$ (dimensionality).
+## Idea
+**Dynamic QuadTree with Lazy Pruning and Boundary-Aware Insertion.**
 
 ## Why
-Fixed `leaf_size` parameters often lead to either excessive tree depth (too small) or inefficient linear scans (too large). By dynamically tuning this based on the dataset, I can optimize the "crossover point" between tree traversal and brute-force distance calculation, directly improving query latency in the `workshop_bench` library.
+Standard QuadTrees often suffer from "thrashing" in dynamic environments where objects frequently cross boundaries. By implementing a loose QuadTree with a lazy pruning mechanism (collapsing nodes when child density falls below a threshold), I can maintain $O(N \log N)$ performance without the overhead of constant tree rebuilding. This is a foundational step toward more complex agentic spatial reasoning.
 
 ## Implementation Steps
-1.  **Metric Calculation:** Add a helper function to estimate the "density" of the feature space: $\rho = N / 2^D$.
-2.  **Heuristic Logic:** Define a mapping where $\rho$ determines the `leaf_size` (e.g., $\rho < 1 \rightarrow$ smaller leaves; $\rho > 10 \rightarrow$ larger leaves).
-3.  **Refactor:** Update the `BallTree` constructor to accept an `auto_tune=True` flag that invokes this heuristic before building the tree.
-4.  **Verification:** Add a test case in `bag/tests.py` that compares search latency on a high-dimensional vs. low-dimensional dataset to confirm the adaptive logic improves performance.
+1.  **Define `QuadNode`:** Implement a class with `bounds` (AABB), `objects` list, `children` (optional), and `is_leaf` status.
+2.  **Insertion Logic:** Implement recursive insertion with a `MAX_OBJECTS` threshold. If exceeded, split the node into four quadrants.
+3.  **Query Method:** Implement an AABB-intersection query that returns all objects within a given range.
+4.  **Pruning Logic:** Add a `collapse()` method that checks if the total object count of all four children is below a `MIN_OBJECTS` threshold, merging them back into the parent if true.
+5.  **Visual Debugger:** Create a simple `render()` method that outputs the tree structure to a log or a basic ASCII/JSON representation for verification.
 
 ## Risk
-**Failure Mode:** The heuristic might miscalculate for non-uniform data distributions (e.g., clusters), leading to a "lopsided" tree that performs worse than a fixed-size tree.
-**Mitigation:** Implement a "sanity check" during construction: if the resulting tree depth exceeds a safety threshold, fall back to a default `leaf_size`.
+**Failure Mode:** The "Loose QuadTree" implementation (where objects overlap boundaries) can lead to infinite recursion if an object is larger than the smallest possible node size.
+**Mitigation:** Enforce a `MIN_NODE_SIZE` constraint. If a node reaches this size, stop splitting and allow the object list to exceed `MAX_OBJECTS` temporarily.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
