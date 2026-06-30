@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 145
+    "review_due_cycle": 160
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 145
+    "review_due_cycle": 160
   },
   {
     "cycle": 52,
@@ -736,5 +736,11 @@
     "topic": "Implement QuadTree for 2D spatial partitioning",
     "summary": "### Technical Summary: QuadTree Spatial Partitioning\n\nA QuadTree is a tree data structure where each internal node has exactly four children, recursively subdividing a 2D space into four quadrants. It is the standard solution for reducing the complexity of spatial queries\u2014such as collision detection, frustum culling, or nearest-neighbor searches\u2014from $O(N^2)$ to $O(N \\log N)$.\n\n**Core Concepts:**\n1.  **Recursive Subdivision:** The root node represents the entire bounding box. When an object coun",
     "review_due_cycle": 149
+  },
+  {
+    "cycle": 146,
+    "topic": "Build R-tree concept for spatial indexing",
+    "summary": "### Technical Summary: R-Tree Spatial Indexing\n\nAn R-tree is a height-balanced tree structure, analogous to a B-tree, designed for multidimensional spatial access. It organizes data by grouping nearby objects into Minimum Bounding Rectangles (MBRs) stored in the tree nodes.\n\n**Core Mechanics:**\n1.  **Hierarchical MBRs:** Leaf nodes contain pointers to actual spatial objects and their MBRs. Internal nodes contain MBRs that encompass all children. This hierarchy allows for efficient pruning: if a ",
+    "review_due_cycle": 150
   }
 ]
