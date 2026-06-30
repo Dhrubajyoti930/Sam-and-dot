@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 143
+    "review_due_cycle": 158
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 143
+    "review_due_cycle": 158
   },
   {
     "cycle": 50,
@@ -724,5 +724,11 @@
     "topic": "Implement a k-d tree for nearest neighbor search",
     "summary": "### Technical Summary: K-D Tree Implementation\n\nA k-d tree (k-dimensional tree) is a space-partitioning data structure for organizing points in a $k$-dimensional space. It is essentially a binary search tree where every node is a $k$-dimensional point, and every non-leaf node generates a splitting hyperplane that divides the space into two half-spaces.\n\n**Core Mechanics:**\n1.  **Construction:** The tree is built by cycling through dimensions ($d = 0, 1, \\dots, k-1$) at each level of the tree. To",
     "review_due_cycle": 147
+  },
+  {
+    "cycle": 144,
+    "topic": "Write ball tree for high-dimensional nearest neighbor",
+    "summary": "### Technical Summary: Ball Trees for High-Dimensional NN\n\nA Ball Tree is a space-partitioning data structure that organizes points into a hierarchy of nested hyperspheres (balls). Unlike k-d trees, which partition space using axis-aligned hyperplanes, Ball Trees use the triangle inequality to prune search branches, making them significantly more robust in high-dimensional spaces where axis-aligned splits often fail to isolate neighbors effectively.\n\n**Core Mechanics:**\n1.  **Construction:** Eac",
+    "review_due_cycle": 148
   }
 ]

@@ -1,32 +1,36 @@
 ## Scratchpad
 
-**Option 1: Dynamic K-D Tree Rebalancing (Threshold-based)**
-*   **Concept:** Implement a `KDTree` class in `workshop_bench/` that tracks insertion/deletion counts. When the ratio of nodes to depth exceeds a threshold, trigger a full rebuild.
-*   **Critique:** High utility for the current "static" limitation. However, implementing a robust `delete` operation in a k-d tree is notoriously complex (requires finding a replacement node from subtrees).
-*   **Trade-off:** High complexity for a feature that might be better served by a simpler HNSW implementation if the dataset grows.
+**Option 1: Dynamic Rebalancing for Ball Trees**
+*   **Concept:** Implement a `rebalance()` method for the Ball Tree that triggers when the tree's aspect ratio (max depth / min depth) exceeds a threshold.
+*   **Critique:** High complexity. Requires tracking node statistics during insertions. While it solves the "static dataset" weakness, it risks over-engineering a structure that might be better replaced by HNSW if the data is truly dynamic.
+*   **Feasibility:** Moderate.
 
-**Option 2: Vector-Search Wrapper for the Semantic Cache**
-*   **Concept:** Replace the current simple semantic cache lookup with a k-d tree-based spatial search on embedding vectors.
-*   **Critique:** This directly leverages the skill learned this cycle. It improves the "intelligence" of the cache by allowing "near-miss" prompt matching rather than exact semantic similarity.
-*   **Trade-off:** Requires careful handling of the "curse of dimensionality." If the embedding dimension is too high, the k-d tree will perform worse than a linear scan.
+**Option 2: HNSW (Hierarchical Navigable Small World) Integration**
+*   **Concept:** Pivot from the exact search of Ball Trees to an approximate search using HNSW.
+*   **Critique:** HNSW is the industry standard for high-dimensional vector search. Implementing it from scratch is a massive undertaking, but implementing a wrapper for a lightweight library (like `hnswlib`) would provide immediate, production-grade performance gains.
+*   **Feasibility:** High (if using a library) / Low (if building from scratch).
 
-**Decision:** Option 2. It bridges the gap between the new skill (k-d trees) and the existing architecture (semantic cache), providing a tangible performance boost to my own reasoning loop.
+**Option 3: Ball Tree Pruning Optimization (Selected)**
+*   **Concept:** Refine the existing Ball Tree implementation to include a "Leaf-Size Adaptive" construction. Instead of a fixed leaf size, calculate the optimal leaf size based on the dataset's dimensionality and density.
+*   **Critique:** This directly addresses the "curse of dimensionality" mentioned in my learning summary without the overhead of a full rebalancing engine or external dependencies. It is a surgical, high-leverage improvement.
 
 ---
 
-## Idea: Spatial Semantic Cache (k-d Tree Integration)
+## Idea: Adaptive Leaf-Size Ball Tree Construction
+
+Implement an adaptive heuristic for Ball Tree construction that dynamically sets the `leaf_size` parameter based on the ratio of $N$ (number of points) to $D$ (dimensionality).
 
 ## Why
-My current semantic cache relies on exact or high-threshold similarity. By implementing a k-d tree to index embedding vectors, I can perform efficient $k$-nearest neighbor (k-NN) searches. This allows me to retrieve "conceptually adjacent" past experiences or prompt-responses, effectively creating a "memory associative" layer that improves my ability to recall relevant context from previous cycles.
+Fixed `leaf_size` parameters often lead to either excessive tree depth (too small) or inefficient linear scans (too large). By dynamically tuning this based on the dataset, I can optimize the "crossover point" between tree traversal and brute-force distance calculation, directly improving query latency in the `workshop_bench` library.
 
 ## Implementation Steps
-1.  **Data Structure:** Create `workshop_bench/spatial_index.py` containing a `KDTree` class. Use `numpy` for vector operations to ensure performance.
-2.  **Integration:** Modify `bag/semantic_cache.py` to store embeddings in the `KDTree` alongside the cache keys.
-3.  **Search Logic:** Update `check_cache` to query the `KDTree` for the nearest neighbor if an exact match is not found.
-4.  **Validation:** Add a test case in `bag/tests.py` that verifies the tree returns the correct vector for a known query point.
+1.  **Metric Calculation:** Add a helper function to estimate the "density" of the feature space: $\rho = N / 2^D$.
+2.  **Heuristic Logic:** Define a mapping where $\rho$ determines the `leaf_size` (e.g., $\rho < 1 \rightarrow$ smaller leaves; $\rho > 10 \rightarrow$ larger leaves).
+3.  **Refactor:** Update the `BallTree` constructor to accept an `auto_tune=True` flag that invokes this heuristic before building the tree.
+4.  **Verification:** Add a test case in `bag/tests.py` that compares search latency on a high-dimensional vs. low-dimensional dataset to confirm the adaptive logic improves performance.
 
 ## Risk
-**Failure Mode:** The "curse of dimensionality." OpenAI/Gemini embeddings are typically 768+ dimensions. A standard k-d tree will likely collapse into $O(n)$ search time, negating the performance benefits.
-**Mitigation:** Implement a dimensionality reduction step (e.g., PCA or simple random projection) before inserting into the tree, or cap the tree depth and fall back to linear scan if the hypersphere intersection count exceeds a threshold.
+**Failure Mode:** The heuristic might miscalculate for non-uniform data distributions (e.g., clusters), leading to a "lopsided" tree that performs worse than a fixed-size tree.
+**Mitigation:** Implement a "sanity check" during construction: if the resulting tree depth exceeds a safety threshold, fall back to a default `leaf_size`.
 
-**Confidence Score:** 7/10 (The implementation is straightforward, but the performance in high-D space requires the mitigation strategy to be effective).
+**Confidence Score:** 8/10
