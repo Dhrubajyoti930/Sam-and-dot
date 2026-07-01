@@ -1,33 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement a Vector-Native Cache Layer**
-*   **Concept:** Integrate a local Qdrant-lite or simple FAISS index into `bag/semantic_cache.py` to replace the current string-matching cache.
-*   **Critique:** High impact on retrieval speed and relevance. However, it introduces a heavy dependency (FAISS/Qdrant) into the core `bag/` directory, which might complicate the `self_check` integrity gate if dependencies break.
-*   **Feasibility:** Moderate. Requires careful handling of embedding generation within the existing `ask_gemini` flow.
+### Option 1: LSH-based Semantic Deduplication for `knowledge_log.json`
+*   **Concept:** Use the MinHash/LSH implementation (from the skill learned this cycle) to identify and merge redundant entries in the `knowledge_log.json` as it grows.
+*   **Critique:** 
+    *   *Pros:* Directly applies the new skill; prevents memory bloat in the Spaced Repetition engine.
+    *   *Cons:* Over-engineering for a small JSON file; LSH is probabilistic and might merge distinct concepts if the threshold is too loose.
+*   **Feasibility:** High. The data is already structured.
 
-**Option 2: Product Quantization (PQ) for Memory-Efficient Embeddings**
-*   **Concept:** Implement the PQ encoder learned this cycle to compress the `semantic_cache` vectors.
-*   **Critique:** Directly addresses the "memory footprint" bottleneck identified in the market scan. It is a pure algorithmic implementation, keeping dependencies low (standard `numpy`/`scipy`). It aligns perfectly with the "system-centric" shift.
-*   **Feasibility:** High. The logic is self-contained and can be tested in isolation via `bag/tests.py`.
+### Option 2: Dynamic Bucket Balancing for the Semantic Cache
+*   **Concept:** Implement the "rebuild trigger" mentioned in the self-correction section of the LSH skill summary. Monitor the variance in bucket occupancy and trigger a re-hash if the index becomes skewed.
+*   **Critique:**
+    *   *Pros:* Improves the long-term performance of the semantic cache; addresses the "static dataset" weakness identified in my previous cycle.
+    *   *Cons:* Requires careful handling of the `semantic_cache` database to avoid downtime or data loss during re-hashing.
+*   **Feasibility:** Moderate. Requires modifying `bag/semantic_cache.py`.
 
-**Decision:** Option 2. It leverages the new skill, improves system performance, and maintains the "minimal footprint" requirement.
+**Decision:** Option 2 is more aligned with my goal of maintaining a robust, production-grade architecture. It moves beyond simple implementation into lifecycle management of the data structures I rely on.
 
 ---
 
-## Idea: PQ-Compressed Semantic Cache
-Implement a `ProductQuantizer` class in `bag/vector_utils.py` to compress embedding vectors used by the semantic cache, enabling larger context windows without increasing RAM usage.
+## Idea: Dynamic Bucket Balancing for LSH-based Semantic Cache
 
 ## Why
-As the `semantic_cache` grows, storing full `float32` vectors for every interaction becomes inefficient. PQ allows for a 4x-8x reduction in memory usage while maintaining sufficient recall for cache hits, ensuring the system remains performant as the history of interactions expands.
+My current LSH implementation assumes a static distribution of vectors. As the semantic cache grows, "bucket skew" (where some buckets become disproportionately large) will degrade query latency and recall. Implementing a density-based rebuild trigger ensures the index remains performant as my knowledge base evolves.
 
 ## Implementation Steps
-1.  **Create `bag/vector_utils.py`:** Implement `ProductQuantizer` with `fit` (k-means) and `transform` (quantization) methods.
-2.  **Update `bag/semantic_cache.py`:** Integrate the quantizer into the cache storage flow.
-3.  **Validation:** Add a test case in `bag/tests.py` to verify that the distance approximation error remains below a 5% threshold for a sample set of 1k vectors.
-4.  **Integration:** Modify `check_cache` to perform Asymmetric Distance Computation (ADC) against the compressed codebook.
+1.  **Monitor:** Add a `get_bucket_stats()` method to `bag/semantic_cache.py` to calculate the variance of bucket occupancy.
+2.  **Threshold:** Define a `MAX_VARIANCE` constant. If `variance > MAX_VARIANCE`, flag the index as "stale."
+3.  **Rebuild:** Create a `rebuild_index()` function that re-initializes the hash tables with a new random projection matrix, ensuring a more uniform distribution.
+4.  **Integrity:** Integrate the rebuild trigger into the `update_cache` flow, ensuring it only triggers during low-activity windows (e.g., at the end of a cycle).
 
 ## Risk
-**Failure Mode:** The quantization error might lead to "false negatives" where the cache fails to retrieve a relevant previous interaction because the distance approximation is too coarse.
-**Mitigation:** Implement a "residual check" or a hybrid search where the top-K candidates from the PQ search are re-ranked using the original uncompressed vectors if the cache hit confidence is borderline.
-
-**Confidence Score:** 8/10
+*   **Failure Mode:** The `rebuild_index` process could be interrupted, leaving the cache in a partially initialized or corrupted state.
+*   **Mitigation:** Use an atomic "swap" pattern: build the new index in a temporary file/object, then replace the active index reference only after successful validation.
+*   **Confidence Score:** 8/10. The logic is sound, but the atomic swap requires careful file-system handling to avoid race conditions.
