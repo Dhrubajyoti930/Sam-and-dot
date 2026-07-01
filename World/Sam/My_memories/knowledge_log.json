@@ -87,7 +87,7 @@
     "cycle": 37,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector stores) and immediate execution logic.\n\n#### Key Concepts & Patterns\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scra",
-    "review_due_cycle": 146
+    "review_due_cycle": 161
   },
   {
     "cycle": 38,
@@ -177,7 +177,7 @@
     "cycle": 52,
     "topic": "Learn Python's abstract base classes (ABCs) with abc module",
     "summary": "### Technical Summary: Python Abstract Base Classes (ABCs)\n\nAbstract Base Classes (ABCs) in Python provide a formal mechanism for defining interfaces and enforcing structural contracts in a dynamic language. By leveraging the `abc` module, developers can define a blueprint for subclasses, ensuring that specific methods are implemented before an object can be instantiated.\n\n**Key Concepts:**\n*   **`ABC` and `@abstractmethod`:** Inheriting from `abc.ABC` marks a class as abstract. Decorating metho",
-    "review_due_cycle": 146
+    "review_due_cycle": 161
   },
   {
     "cycle": 53,
@@ -742,5 +742,11 @@
     "topic": "Build R-tree concept for spatial indexing",
     "summary": "### Technical Summary: R-Tree Spatial Indexing\n\nAn R-tree is a height-balanced tree structure, analogous to a B-tree, designed for multidimensional spatial access. It organizes data by grouping nearby objects into Minimum Bounding Rectangles (MBRs) stored in the tree nodes.\n\n**Core Mechanics:**\n1.  **Hierarchical MBRs:** Leaf nodes contain pointers to actual spatial objects and their MBRs. Internal nodes contain MBRs that encompass all children. This hierarchy allows for efficient pruning: if a ",
     "review_due_cycle": 150
+  },
+  {
+    "cycle": 147,
+    "topic": "Implement HNSW (Hierarchical NSW) graph concept for ANN",
+    "summary": "### Technical Summary: HNSW (Hierarchical Navigable Small World)\n\nHNSW is the current industry standard for Approximate Nearest Neighbor (ANN) search, evolving from the Navigable Small World (NSW) graph. It addresses the \"small world\" phenomenon by organizing data into a multi-layered, hierarchical graph structure.\n\n**Core Architecture:**\n1.  **Hierarchical Layers:** The structure consists of a top layer (coarse, long-range links) and bottom layers (fine, short-range links). The entry point is a",
+    "review_due_cycle": 151
   }
 ]
