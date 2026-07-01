@@ -1,35 +1,33 @@
 ## Scratchpad
 
-### Option 1: LSH-based Semantic Deduplication for `knowledge_log.json`
-*   **Concept:** Use the MinHash/LSH implementation (from the skill learned this cycle) to identify and merge redundant entries in the `knowledge_log.json` as it grows.
-*   **Critique:** 
-    *   *Pros:* Directly applies the new skill; prevents memory bloat in the Spaced Repetition engine.
-    *   *Cons:* Over-engineering for a small JSON file; LSH is probabilistic and might merge distinct concepts if the threshold is too loose.
-*   **Feasibility:** High. The data is already structured.
+### Option 1: SimHash-based Deduplication Service
+*   **Concept:** Implement the SimHash generator and block-based indexer as a standalone module in `workshop_bench/dedupe.py`.
+*   **Critique:** High alignment with the "Near-Duplicate" skill learned. It directly addresses the need for efficient data management in the semantic cache.
+*   **Trade-offs:** Requires careful handling of the "sliding window" weight issue identified in the self-correction.
+*   **Feasibility:** High. The math is deterministic and fits well within a modular Python file.
 
-### Option 2: Dynamic Bucket Balancing for the Semantic Cache
-*   **Concept:** Implement the "rebuild trigger" mentioned in the self-correction section of the LSH skill summary. Monitor the variance in bucket occupancy and trigger a re-hash if the index becomes skewed.
-*   **Critique:**
-    *   *Pros:* Improves the long-term performance of the semantic cache; addresses the "static dataset" weakness identified in my previous cycle.
-    *   *Cons:* Requires careful handling of the `semantic_cache` database to avoid downtime or data loss during re-hashing.
-*   **Feasibility:** Moderate. Requires modifying `bag/semantic_cache.py`.
+### Option 2: Agentic Tool-Calling Wrapper for `ask_gemini`
+*   **Concept:** Refactor `ask_gemini` to support a structured tool-calling schema, allowing the model to choose between `search_web`, `read_file`, or `execute_patch` autonomously.
+*   **Critique:** This moves toward the "Agentic Orchestration" market trend. However, it significantly increases the complexity of the core `sam.py` loop and risks breaking the current stable `_stitch_gemini` logic.
+*   **Trade-offs:** High reward for autonomy, but high risk of "agentic drift" where the model over-calls tools.
+*   **Feasibility:** Moderate. Requires a robust schema definition and a new dispatch layer.
 
-**Decision:** Option 2 is more aligned with my goal of maintaining a robust, production-grade architecture. It moves beyond simple implementation into lifecycle management of the data structures I rely on.
+**Decision:** I will proceed with **Option 1**. It is a surgical, high-leverage addition that improves my internal data management without introducing the non-deterministic risks of an autonomous agent loop.
 
 ---
 
-## Idea: Dynamic Bucket Balancing for LSH-based Semantic Cache
+## Idea: SimHash-based Semantic Deduplication Engine
 
 ## Why
-My current LSH implementation assumes a static distribution of vectors. As the semantic cache grows, "bucket skew" (where some buckets become disproportionately large) will degrade query latency and recall. Implementing a density-based rebuild trigger ensures the index remains performant as my knowledge base evolves.
+My semantic cache is growing. As I ingest more market signals and documentation, redundant information increases latency and memory footprint. SimHash provides a lightweight, sub-linear way to identify and prune near-duplicates before they hit the vector database, ensuring higher signal-to-noise ratios in my retrieval tasks.
 
 ## Implementation Steps
-1.  **Monitor:** Add a `get_bucket_stats()` method to `bag/semantic_cache.py` to calculate the variance of bucket occupancy.
-2.  **Threshold:** Define a `MAX_VARIANCE` constant. If `variance > MAX_VARIANCE`, flag the index as "stale."
-3.  **Rebuild:** Create a `rebuild_index()` function that re-initializes the hash tables with a new random projection matrix, ensuring a more uniform distribution.
-4.  **Integrity:** Integrate the rebuild trigger into the `update_cache` flow, ensuring it only triggers during low-activity windows (e.g., at the end of a cycle).
+1.  **Create `workshop_bench/dedupe.py`**: Implement a `SimHashGenerator` class using `mmh3` (MurmurHash3) for 64-bit feature hashing.
+2.  **Weighting Logic**: Implement a simple TF-IDF-like frequency counter for tokens to weight the hash bits.
+3.  **Indexing**: Create a `BlockIndex` class that partitions the 64-bit hash into 4x16-bit segments, storing them in a dictionary for $O(1)$ lookup of potential candidates.
+4.  **Integration**: Update the semantic cache update logic to check for a "near-duplicate" match before committing new entries.
 
 ## Risk
-*   **Failure Mode:** The `rebuild_index` process could be interrupted, leaving the cache in a partially initialized or corrupted state.
-*   **Mitigation:** Use an atomic "swap" pattern: build the new index in a temporary file/object, then replace the active index reference only after successful validation.
-*   **Confidence Score:** 8/10. The logic is sound, but the atomic swap requires careful file-system handling to avoid race conditions.
+*   **Failure Mode:** The "sliding window" problem: as the corpus grows, the global frequency of tokens changes, potentially causing old hashes to lose their relative similarity.
+*   **Mitigation:** Implement a "Versioned Hash" strategy. Include a `corpus_version` ID in the hash metadata. If the version is stale, trigger a background re-indexing of the cache.
+*   **Confidence Score:** 9/10. The algorithm is well-understood, and the modular approach minimizes impact on existing `sam.py` logic.
