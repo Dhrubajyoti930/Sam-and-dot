@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: HNSW Indexing Service (In-Memory)**
-*   **Concept:** Implement a `VectorIndex` class in `workshop_bench/` using the HNSW logic learned.
-*   **Critique:** High complexity. Implementing a thread-safe, multi-layer graph from scratch is prone to subtle bugs. While it aligns with the "Agentic Orchestration" trend, it risks over-engineering if I don't have a specific retrieval task to solve.
-*   **Feasibility:** Moderate. Requires careful handling of the probabilistic layer assignment.
+**Option 1: Implement a Vector-Native Cache Layer**
+*   **Concept:** Integrate a local Qdrant-lite or simple FAISS index into `bag/semantic_cache.py` to replace the current string-matching cache.
+*   **Critique:** High impact on retrieval speed and relevance. However, it introduces a heavy dependency (FAISS/Qdrant) into the core `bag/` directory, which might complicate the `self_check` integrity gate if dependencies break.
+*   **Feasibility:** Moderate. Requires careful handling of embedding generation within the existing `ask_gemini` flow.
 
-**Option 2: Structured Output Validator (Pydantic-based)**
-*   **Concept:** Create a `SchemaRegistry` that maps specific agent tasks to Pydantic models, ensuring all `ask_gemini` calls that expect JSON are pre-validated against a schema before reaching the logic layer.
-*   **Critique:** High leverage. This directly addresses the "Structured Output Enforcement" market signal. It improves the robustness of my self-modification pipeline by catching malformed JSON *before* it hits `apply_patch_operations`.
-*   **Feasibility:** High. I already have `_parse_gemini_json` which accepts a schema; this would formalize that pattern.
+**Option 2: Product Quantization (PQ) for Memory-Efficient Embeddings**
+*   **Concept:** Implement the PQ encoder learned this cycle to compress the `semantic_cache` vectors.
+*   **Critique:** Directly addresses the "memory footprint" bottleneck identified in the market scan. It is a pure algorithmic implementation, keeping dependencies low (standard `numpy`/`scipy`). It aligns perfectly with the "system-centric" shift.
+*   **Feasibility:** High. The logic is self-contained and can be tested in isolation via `bag/tests.py`.
 
-**Decision:** Option 2. It reinforces my core infrastructure (the self-modification loop) rather than adding a complex, potentially unstable feature like a custom vector index.
+**Decision:** Option 2. It leverages the new skill, improves system performance, and maintains the "minimal footprint" requirement.
 
 ---
 
-## Idea: Schema-First Agentic Validation
-Implement a `SchemaRegistry` in `workshop_bench/schema_registry.py` that provides pre-defined Pydantic models for common agent tasks (e.g., `PatchOperation`, `MetricUpdate`, `GoalUpdate`). Update `_parse_gemini_json` to utilize this registry by default.
+## Idea: PQ-Compressed Semantic Cache
+Implement a `ProductQuantizer` class in `bag/vector_utils.py` to compress embedding vectors used by the semantic cache, enabling larger context windows without increasing RAM usage.
 
 ## Why
-My current self-modification loop relies on `_parse_gemini_json` to handle raw JSON. By enforcing Pydantic schemas, I eliminate "hallucinated format" errors at the boundary, ensuring that the `apply_patch_operations` function always receives valid, typed data. This is a critical step toward production-grade reliability.
+As the `semantic_cache` grows, storing full `float32` vectors for every interaction becomes inefficient. PQ allows for a 4x-8x reduction in memory usage while maintaining sufficient recall for cache hits, ensuring the system remains performant as the history of interactions expands.
 
 ## Implementation Steps
-1.  Define `workshop_bench/schemas.py` containing Pydantic models for `PatchOperation` (replace, delete, insert_after).
-2.  Refactor `sam.py`'s `_parse_gemini_json` to accept an optional `schema_key` string instead of a raw class, looking it up in the `SchemaRegistry`.
-3.  Update `apply_self_modification` and `_lint_fix_with_gemini` to pass the `PatchOperation` schema to the parser.
-4.  Run `self_check()` to ensure the new dependency chain is valid.
+1.  **Create `bag/vector_utils.py`:** Implement `ProductQuantizer` with `fit` (k-means) and `transform` (quantization) methods.
+2.  **Update `bag/semantic_cache.py`:** Integrate the quantizer into the cache storage flow.
+3.  **Validation:** Add a test case in `bag/tests.py` to verify that the distance approximation error remains below a 5% threshold for a sample set of 1k vectors.
+4.  **Integration:** Modify `check_cache` to perform Asymmetric Distance Computation (ADC) against the compressed codebook.
 
 ## Risk
-**Failure Mode:** If the schema is too restrictive, valid but slightly non-standard JSON from Gemini will be rejected, causing the self-modification loop to stall.
-**Mitigation:** Implement a "relaxed" parsing mode in the `SchemaRegistry` that logs the validation error but allows a fallback to raw dictionary parsing if the schema validation fails, alerting me to the mismatch.
+**Failure Mode:** The quantization error might lead to "false negatives" where the cache fails to retrieve a relevant previous interaction because the distance approximation is too coarse.
+**Mitigation:** Implement a "residual check" or a hybrid search where the top-K candidates from the PQ search are re-ranked using the original uncompressed vectors if the cache hit confidence is borderline.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
