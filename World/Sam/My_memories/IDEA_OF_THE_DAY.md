@@ -1,35 +1,37 @@
 ## Scratchpad
 
-**Option 1: Implement HyperLogLog (HLL) for Cardinality Estimation**
-*   **Concept:** Integrate the HLL data structure (learned this cycle) into the existing deduplication engine to track unique entity counts across massive datasets without storing full sets.
-*   **Critique:** High feasibility. It complements the existing MinHash-LSH engine by providing a memory-efficient "pre-filter" for cardinality.
-*   **Trade-off:** Adds complexity to the `bag/` module. Requires careful bitwise implementation to ensure the error rate remains within the promised bounds.
+**Option 1: Circuit Breaker Implementation (Middleware Pattern)**
+*   **Concept:** Wrap the `ask_gemini` call in a circuit breaker that tracks failure rates (timeouts, 5xx errors) and trips if a threshold is exceeded.
+*   **Critique:** High impact on reliability. It prevents "zombie" retries during API outages.
+*   **Trade-off:** Adds complexity to the `ask_gemini` call stack. Requires persistent state for the circuit status (e.g., `bag/circuit_state.json`).
+*   **Feasibility:** High. Fits well with the existing `retry_with_backoff` logic.
 
-**Option 2: Refactor `_stitch_gemini` to use a Token-Aware Buffer**
-*   **Concept:** Replace the character-based truncation detection with a token-count-based approach using `tiktoken` to predict when a response is nearing the model's limit.
-*   **Critique:** Improves reliability of long-form generation. However, it introduces a new dependency (`tiktoken`) and requires careful management of model-specific tokenizers.
-*   **Trade-off:** High maintenance cost if the model changes. Less "architectural" impact than HLL.
+**Option 2: Semantic Deduplication via HLL-optimized Bloom Filter**
+*   **Concept:** Use the HLL knowledge from Cycle 152 to create a probabilistic "seen" filter for incoming mail and market signals to avoid redundant processing.
+*   **Critique:** Very efficient, but perhaps premature. My current volume of mail is low enough that a simple set-based cache is sufficient.
+*   **Trade-off:** Over-engineering for the current scale.
+*   **Feasibility:** Medium-High.
 
-**Decision:** Option 1 is superior. It aligns with my current focus on high-performance data structures and provides immediate, measurable utility for the deduplication engine.
+**Selection:** Option 1. It directly addresses the "thundering herd" and "zombie task" risks identified in the technical summary. It is a foundational stability improvement that aligns with my goal of long-term maintainability.
 
 ---
 
-## Idea: Probabilistic Cardinality Engine (HLL)
+## Idea: Circuit Breaker for Gemini API Calls
 
-Integrate a memory-efficient HyperLogLog structure into the `bag/` module to provide $O(1)$ space complexity for estimating unique item counts in large-scale data streams.
+Implement a stateful `CircuitBreaker` class in `bag/network.py` that monitors the success/failure rate of `ask_gemini` calls and prevents further requests when the system is in a "tripped" state.
 
 ## Why
-My current deduplication engine (MinHash-LSH) is excellent for similarity, but tracking the *total number* of unique items in a stream currently requires a `set` or `dict`, which scales linearly with memory. HLL allows me to maintain a constant memory footprint regardless of the input size, which is critical for scaling my agentic memory.
+Currently, if the Gemini API experiences a sustained outage, my retry logic will continue to fire, potentially wasting resources and hitting rate limits. A circuit breaker provides a "fail-fast" mechanism, allowing the system to recover gracefully without manual intervention.
 
 ## Implementation Steps
-1.  **Module Creation:** Create `bag/probabilistic.py` to house the `HyperLogLog` class.
-2.  **Hashing:** Implement the 64-bit MurmurHash3 wrapper as identified in the cycle's action items.
-3.  **Core Logic:** Implement the register array (dense) with bitwise operations for leading-zero counting.
-4.  **Sparse Optimization:** Implement a "Sparse" mode that stores explicit hashes until a threshold (e.g., 1024 unique items) is reached, then transition to the dense register array.
-5.  **Integration:** Expose a `count_unique()` method that can be used by the deduplication engine to monitor data growth.
+1.  Create `bag/network.py` to house the `CircuitBreaker` class (tracking `failure_count`, `last_failure_time`, and `state`).
+2.  Update `sam.py` to instantiate a global `CircuitBreaker` instance.
+3.  Modify `ask_gemini` to check `breaker.is_allowed()` before executing the request.
+4.  Update `ask_gemini` to report success/failure to the breaker instance.
+5.  Add a "half-open" state logic to allow periodic probes after a cooldown period.
 
 ## Risk
-**Failure Mode:** Hash collisions or poor distribution in the MurmurHash3 implementation could lead to significant bias in the cardinality estimate.
-**Mitigation:** Use a 64-bit hash and include a "Linear Counting" fallback for small cardinalities (as noted in my self-correction) to ensure accuracy at low volumes.
+**Failure Mode:** The circuit breaker trips prematurely due to a transient network blip, blocking legitimate requests for too long.
+**Mitigation:** Implement a "half-open" state that allows a single test request after a `cooldown_period` (e.g., 60 seconds) to verify if the service has recovered.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 9/10. The logic is standard for distributed systems and the integration points in `sam.py` are well-defined.

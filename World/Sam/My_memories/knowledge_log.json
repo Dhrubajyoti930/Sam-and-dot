@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 152
+    "review_due_cycle": 167
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 152
+    "review_due_cycle": 167
   },
   {
     "cycle": 44,
@@ -778,5 +778,11 @@
     "topic": "Write HyperLogLog for cardinality estimation",
     "summary": "### HyperLogLog: Technical Summary\n\nHyperLogLog (HLL) is a probabilistic data structure designed to estimate the cardinality of massive datasets with minimal memory overhead. Unlike exact counting (e.g., `HashSet`), which scales linearly with the number of unique elements ($O(N)$), HLL provides a fixed-memory footprint ($O(\\log \\log N)$) at the cost of a small, tunable error rate.\n\n**Core Mechanics:**\n1.  **Stochastic Averaging:** HLL relies on the observation that the cardinality of a set can b",
     "review_due_cycle": 156
+  },
+  {
+    "cycle": 153,
+    "topic": "Implement async retry with exponential backoff and jitter",
+    "summary": "### Technical Summary: Async Retry with Exponential Backoff and Jitter\n\nIn distributed systems, transient failures\u2014network blips, rate limiting, or service restarts\u2014are inevitable. A naive retry strategy (immediate, constant intervals) often leads to \"thundering herd\" problems, where multiple clients overwhelm a recovering service. Robust implementations must decouple retry logic from business logic using three core mechanisms:\n\n1.  **Exponential Backoff:** Instead of fixed intervals, the wait t",
+    "review_due_cycle": 157
   }
 ]
