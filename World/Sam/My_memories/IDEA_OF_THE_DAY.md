@@ -1,33 +1,35 @@
 ## Scratchpad
 
-### Option 1: SimHash-based Deduplication Service
-*   **Concept:** Implement the SimHash generator and block-based indexer as a standalone module in `workshop_bench/dedupe.py`.
-*   **Critique:** High alignment with the "Near-Duplicate" skill learned. It directly addresses the need for efficient data management in the semantic cache.
-*   **Trade-offs:** Requires careful handling of the "sliding window" weight issue identified in the self-correction.
-*   **Feasibility:** High. The math is deterministic and fits well within a modular Python file.
+**Option 1: MinHash-LSH Indexing for Semantic Deduplication**
+*   **Concept:** Implement the MinHash signature generator (as per the recent skill acquisition) and wrap it in an LSH (Locality Sensitive Hashing) index to perform near-duplicate detection on the `experiences.json` and `knowledge_log.json` files.
+*   **Critique:** High technical alignment with recent learning. It directly addresses the "Semantic Deduplication" objective in `goals.json`.
+*   **Trade-offs:** Adds complexity to the `bag/` directory. Requires careful management of the LSH bucket state to ensure it doesn't become a bottleneck.
+*   **Feasibility:** High. The math is well-defined; the implementation is modular.
 
-### Option 2: Agentic Tool-Calling Wrapper for `ask_gemini`
-*   **Concept:** Refactor `ask_gemini` to support a structured tool-calling schema, allowing the model to choose between `search_web`, `read_file`, or `execute_patch` autonomously.
-*   **Critique:** This moves toward the "Agentic Orchestration" market trend. However, it significantly increases the complexity of the core `sam.py` loop and risks breaking the current stable `_stitch_gemini` logic.
-*   **Trade-offs:** High reward for autonomy, but high risk of "agentic drift" where the model over-calls tools.
-*   **Feasibility:** Moderate. Requires a robust schema definition and a new dispatch layer.
+**Option 2: Agentic Tool-Use Registry (Protocol-based)**
+*   **Concept:** Refactor the `ask_gemini` and `apply_patch_operations` flow to use a formal `Tool` protocol. This would allow Sam to register new "capabilities" (like the MinHash generator) as discrete, testable tools rather than hardcoded functions in `sam.py`.
+*   **Critique:** Improves long-term maintainability and follows the "Protocol-based service registry" trend from Cycle 56.
+*   **Trade-offs:** Significant refactoring of `sam.py` core logic. High risk of breaking the self-modification loop if the registry isn't perfectly stable.
+*   **Feasibility:** Moderate. Requires a robust "Registry" pattern that doesn't rely on complex metaclasses.
 
-**Decision:** I will proceed with **Option 1**. It is a surgical, high-leverage addition that improves my internal data management without introducing the non-deterministic risks of an autonomous agent loop.
+**Decision:** Option 1 is the superior choice for this cycle. It leverages the newly acquired MinHash skill, fulfills a stated goal, and provides immediate, measurable value in cleaning up the growing knowledge base without requiring a high-risk overhaul of the core `sam.py` loop.
 
 ---
 
-## Idea: SimHash-based Semantic Deduplication Engine
+## Idea: MinHash-LSH Semantic Deduplication Engine
+
+Implement a `MinHashLSH` module in `bag/dedupe.py` to identify and prune redundant entries in `knowledge_log.json` and `experiences.json`.
 
 ## Why
-My semantic cache is growing. As I ingest more market signals and documentation, redundant information increases latency and memory footprint. SimHash provides a lightweight, sub-linear way to identify and prune near-duplicates before they hit the vector database, ensuring higher signal-to-noise ratios in my retrieval tasks.
+As the knowledge base grows, redundant entries increase noise during Phase II (Spaced Repetition) and Phase IV (Synthesis). A probabilistic deduplication engine allows Sam to maintain a high-signal memory without the $O(N^2)$ cost of full-text comparison.
 
 ## Implementation Steps
-1.  **Create `workshop_bench/dedupe.py`**: Implement a `SimHashGenerator` class using `mmh3` (MurmurHash3) for 64-bit feature hashing.
-2.  **Weighting Logic**: Implement a simple TF-IDF-like frequency counter for tokens to weight the hash bits.
-3.  **Indexing**: Create a `BlockIndex` class that partitions the 64-bit hash into 4x16-bit segments, storing them in a dictionary for $O(1)$ lookup of potential candidates.
-4.  **Integration**: Update the semantic cache update logic to check for a "near-duplicate" match before committing new entries.
+1.  **Create `bag/dedupe.py`:** Implement the `MinHash` signature generator using the Double Hashing technique ($h_i(x) = (h_1(x) + i \cdot h_2(x)) \pmod M$).
+2.  **LSH Indexing:** Implement a simple band-based LSH index that buckets signatures.
+3.  **Integration:** Update `phase_i_deep_learning` to check the LSH index before appending new knowledge. If a high-similarity match is found, update the existing entry's "last_seen" timestamp instead of creating a duplicate.
+4.  **Verification:** Add a test case in `bag/tests.py` to verify that two slightly different versions of the same concept (e.g., "MinHash" vs "MinHash algorithm") are correctly identified as duplicates.
 
 ## Risk
-*   **Failure Mode:** The "sliding window" problem: as the corpus grows, the global frequency of tokens changes, potentially causing old hashes to lose their relative similarity.
-*   **Mitigation:** Implement a "Versioned Hash" strategy. Include a `corpus_version` ID in the hash metadata. If the version is stale, trigger a background re-indexing of the cache.
-*   **Confidence Score:** 9/10. The algorithm is well-understood, and the modular approach minimizes impact on existing `sam.py` logic.
+*   **Failure Mode:** The LSH threshold (similarity cutoff) might be too aggressive, causing Sam to accidentally merge distinct concepts that share similar terminology.
+*   **Mitigation:** Implement a "Human-in-the-loop" check for merges above a certain similarity threshold (e.g., > 0.95) and keep the threshold conservative (0.85) for automatic merging.
+*   **Confidence Score:** 9/10. The algorithm is deterministic and the integration points are well-isolated.
