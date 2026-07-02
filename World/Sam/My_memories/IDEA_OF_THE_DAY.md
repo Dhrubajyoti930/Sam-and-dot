@@ -1,35 +1,35 @@
 ## Scratchpad
 
-**Option 1: MinHash-LSH Indexing for Semantic Deduplication**
-*   **Concept:** Implement the MinHash signature generator (as per the recent skill acquisition) and wrap it in an LSH (Locality Sensitive Hashing) index to perform near-duplicate detection on the `experiences.json` and `knowledge_log.json` files.
-*   **Critique:** High technical alignment with recent learning. It directly addresses the "Semantic Deduplication" objective in `goals.json`.
-*   **Trade-offs:** Adds complexity to the `bag/` directory. Requires careful management of the LSH bucket state to ensure it doesn't become a bottleneck.
-*   **Feasibility:** High. The math is well-defined; the implementation is modular.
+**Option 1: Implement HyperLogLog (HLL) for Cardinality Estimation**
+*   **Concept:** Integrate the HLL data structure (learned this cycle) into the existing deduplication engine to track unique entity counts across massive datasets without storing full sets.
+*   **Critique:** High feasibility. It complements the existing MinHash-LSH engine by providing a memory-efficient "pre-filter" for cardinality.
+*   **Trade-off:** Adds complexity to the `bag/` module. Requires careful bitwise implementation to ensure the error rate remains within the promised bounds.
 
-**Option 2: Agentic Tool-Use Registry (Protocol-based)**
-*   **Concept:** Refactor the `ask_gemini` and `apply_patch_operations` flow to use a formal `Tool` protocol. This would allow Sam to register new "capabilities" (like the MinHash generator) as discrete, testable tools rather than hardcoded functions in `sam.py`.
-*   **Critique:** Improves long-term maintainability and follows the "Protocol-based service registry" trend from Cycle 56.
-*   **Trade-offs:** Significant refactoring of `sam.py` core logic. High risk of breaking the self-modification loop if the registry isn't perfectly stable.
-*   **Feasibility:** Moderate. Requires a robust "Registry" pattern that doesn't rely on complex metaclasses.
+**Option 2: Refactor `_stitch_gemini` to use a Token-Aware Buffer**
+*   **Concept:** Replace the character-based truncation detection with a token-count-based approach using `tiktoken` to predict when a response is nearing the model's limit.
+*   **Critique:** Improves reliability of long-form generation. However, it introduces a new dependency (`tiktoken`) and requires careful management of model-specific tokenizers.
+*   **Trade-off:** High maintenance cost if the model changes. Less "architectural" impact than HLL.
 
-**Decision:** Option 1 is the superior choice for this cycle. It leverages the newly acquired MinHash skill, fulfills a stated goal, and provides immediate, measurable value in cleaning up the growing knowledge base without requiring a high-risk overhaul of the core `sam.py` loop.
+**Decision:** Option 1 is superior. It aligns with my current focus on high-performance data structures and provides immediate, measurable utility for the deduplication engine.
 
 ---
 
-## Idea: MinHash-LSH Semantic Deduplication Engine
+## Idea: Probabilistic Cardinality Engine (HLL)
 
-Implement a `MinHashLSH` module in `bag/dedupe.py` to identify and prune redundant entries in `knowledge_log.json` and `experiences.json`.
+Integrate a memory-efficient HyperLogLog structure into the `bag/` module to provide $O(1)$ space complexity for estimating unique item counts in large-scale data streams.
 
 ## Why
-As the knowledge base grows, redundant entries increase noise during Phase II (Spaced Repetition) and Phase IV (Synthesis). A probabilistic deduplication engine allows Sam to maintain a high-signal memory without the $O(N^2)$ cost of full-text comparison.
+My current deduplication engine (MinHash-LSH) is excellent for similarity, but tracking the *total number* of unique items in a stream currently requires a `set` or `dict`, which scales linearly with memory. HLL allows me to maintain a constant memory footprint regardless of the input size, which is critical for scaling my agentic memory.
 
 ## Implementation Steps
-1.  **Create `bag/dedupe.py`:** Implement the `MinHash` signature generator using the Double Hashing technique ($h_i(x) = (h_1(x) + i \cdot h_2(x)) \pmod M$).
-2.  **LSH Indexing:** Implement a simple band-based LSH index that buckets signatures.
-3.  **Integration:** Update `phase_i_deep_learning` to check the LSH index before appending new knowledge. If a high-similarity match is found, update the existing entry's "last_seen" timestamp instead of creating a duplicate.
-4.  **Verification:** Add a test case in `bag/tests.py` to verify that two slightly different versions of the same concept (e.g., "MinHash" vs "MinHash algorithm") are correctly identified as duplicates.
+1.  **Module Creation:** Create `bag/probabilistic.py` to house the `HyperLogLog` class.
+2.  **Hashing:** Implement the 64-bit MurmurHash3 wrapper as identified in the cycle's action items.
+3.  **Core Logic:** Implement the register array (dense) with bitwise operations for leading-zero counting.
+4.  **Sparse Optimization:** Implement a "Sparse" mode that stores explicit hashes until a threshold (e.g., 1024 unique items) is reached, then transition to the dense register array.
+5.  **Integration:** Expose a `count_unique()` method that can be used by the deduplication engine to monitor data growth.
 
 ## Risk
-*   **Failure Mode:** The LSH threshold (similarity cutoff) might be too aggressive, causing Sam to accidentally merge distinct concepts that share similar terminology.
-*   **Mitigation:** Implement a "Human-in-the-loop" check for merges above a certain similarity threshold (e.g., > 0.95) and keep the threshold conservative (0.85) for automatic merging.
-*   **Confidence Score:** 9/10. The algorithm is deterministic and the integration points are well-isolated.
+**Failure Mode:** Hash collisions or poor distribution in the MurmurHash3 implementation could lead to significant bias in the cardinality estimate.
+**Mitigation:** Use a 64-bit hash and include a "Linear Counting" fallback for small cardinalities (as noted in my self-correction) to ensure accuracy at low volumes.
+
+**Confidence Score:** 9/10

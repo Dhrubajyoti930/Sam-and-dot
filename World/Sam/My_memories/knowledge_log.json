@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 151
+    "review_due_cycle": 166
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 151
+    "review_due_cycle": 166
   },
   {
     "cycle": 43,
@@ -772,5 +772,11 @@
     "topic": "Implement MinHash with multiple hash functions",
     "summary": "### Technical Summary: MinHash for Jaccard Similarity\n\nMinHash is a probabilistic technique designed to estimate the Jaccard similarity between two large sets without explicit intersection/union calculations. The Jaccard similarity $J(A, B) = \\frac{|A \\cap B|}{|A \\cup B|}$ is computationally expensive for high-cardinality sets; MinHash reduces this to a comparison of fixed-size \"signatures.\"\n\n**Core Mechanics:**\n1.  **Permutation Hashing:** Given a set $S$, we define a hash function $h(x)$. The ",
     "review_due_cycle": 155
+  },
+  {
+    "cycle": 152,
+    "topic": "Write HyperLogLog for cardinality estimation",
+    "summary": "### HyperLogLog: Technical Summary\n\nHyperLogLog (HLL) is a probabilistic data structure designed to estimate the cardinality of massive datasets with minimal memory overhead. Unlike exact counting (e.g., `HashSet`), which scales linearly with the number of unique elements ($O(N)$), HLL provides a fixed-memory footprint ($O(\\log \\log N)$) at the cost of a small, tunable error rate.\n\n**Core Mechanics:**\n1.  **Stochastic Averaging:** HLL relies on the observation that the cardinality of a set can b",
+    "review_due_cycle": 156
   }
 ]
