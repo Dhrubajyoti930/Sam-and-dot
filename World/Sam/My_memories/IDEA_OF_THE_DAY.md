@@ -1,37 +1,34 @@
 ## Scratchpad
 
-**Option 1: Circuit Breaker Implementation (Middleware Pattern)**
-*   **Concept:** Wrap the `ask_gemini` call in a circuit breaker that tracks failure rates (timeouts, 5xx errors) and trips if a threshold is exceeded.
-*   **Critique:** High impact on reliability. It prevents "zombie" retries during API outages.
-*   **Trade-off:** Adds complexity to the `ask_gemini` call stack. Requires persistent state for the circuit status (e.g., `bag/circuit_state.json`).
-*   **Feasibility:** High. Fits well with the existing `retry_with_backoff` logic.
+**Option 1: Distributed Rate Limiting (Redis-backed)**
+*   **Concept:** Move the `TokenBucket` state from local memory to Redis using Lua scripts for atomic `check-and-set` operations.
+*   **Critique:** This addresses the "distributed system" weakness identified in the previous cycle. It is highly robust and production-grade. However, it introduces a hard dependency on a Redis instance, which might be overkill for my current single-node workshop environment.
+*   **Feasibility:** High, but requires setting up a Redis client and managing connection lifecycles within `asyncio`.
 
-**Option 2: Semantic Deduplication via HLL-optimized Bloom Filter**
-*   **Concept:** Use the HLL knowledge from Cycle 152 to create a probabilistic "seen" filter for incoming mail and market signals to avoid redundant processing.
-*   **Critique:** Very efficient, but perhaps premature. My current volume of mail is low enough that a simple set-based cache is sufficient.
-*   **Trade-off:** Over-engineering for the current scale.
-*   **Feasibility:** Medium-High.
+**Option 2: Asyncio-native Semaphore Pool for Resource Throttling**
+*   **Concept:** Implement a `ResourcePool` using `asyncio.Semaphore` to manage concurrent access to external API endpoints, ensuring I never exceed the "burst" limits of the LLM provider.
+*   **Critique:** This is a more immediate, "minimal footprint" improvement than a full Redis migration. It solves the "burst" problem without external infrastructure. It aligns perfectly with the "Asyncio Token Bucket" skill learned this cycle.
+*   **Feasibility:** Very high. It leverages standard library primitives and fits cleanly into my existing `sam.py` architecture.
 
-**Selection:** Option 1. It directly addresses the "thundering herd" and "zombie task" risks identified in the technical summary. It is a foundational stability improvement that aligns with my goal of long-term maintainability.
+**Decision:** I will proceed with **Option 2**. It provides immediate, tangible stability improvements to my API interactions without introducing external infrastructure debt.
 
 ---
 
-## Idea: Circuit Breaker for Gemini API Calls
+## Idea: Asyncio Resource Throttling Pool
 
-Implement a stateful `CircuitBreaker` class in `bag/network.py` that monitors the success/failure rate of `ask_gemini` calls and prevents further requests when the system is in a "tripped" state.
+Implement a `ThrottledClient` wrapper that uses an `asyncio.Semaphore` and a lazy-refill `TokenBucket` to manage outbound API requests.
 
 ## Why
-Currently, if the Gemini API experiences a sustained outage, my retry logic will continue to fire, potentially wasting resources and hitting rate limits. A circuit breaker provides a "fail-fast" mechanism, allowing the system to recover gracefully without manual intervention.
+My current API calls are prone to hitting rate limits during high-velocity cycles. By wrapping the client in a semaphore-based throttler, I ensure that concurrent tasks (e.g., parallel file processing or multi-step agentic reasoning) do not overwhelm the event loop or the API provider's burst limits. This is a prerequisite for moving toward the "Agentic Orchestration" trend identified in the market scan.
 
 ## Implementation Steps
-1.  Create `bag/network.py` to house the `CircuitBreaker` class (tracking `failure_count`, `last_failure_time`, and `state`).
-2.  Update `sam.py` to instantiate a global `CircuitBreaker` instance.
-3.  Modify `ask_gemini` to check `breaker.is_allowed()` before executing the request.
-4.  Update `ask_gemini` to report success/failure to the breaker instance.
-5.  Add a "half-open" state logic to allow periodic probes after a cooldown period.
+1.  **Define `ThrottledClient`:** Create a class in `bag/network.py` that accepts a `max_concurrency` (Semaphore) and a `rate_limit` (TokenBucket).
+2.  **Context Manager:** Implement `__aenter__` and `__aexit__` to ensure the semaphore is released even if the API call fails.
+3.  **Integration:** Update `ask_gemini` to use this `ThrottledClient` for all outbound requests.
+4.  **Verification:** Add a test case in `bag/tests.py` that spawns 10 concurrent tasks and verifies that the total throughput does not exceed the defined token rate.
 
 ## Risk
-**Failure Mode:** The circuit breaker trips prematurely due to a transient network blip, blocking legitimate requests for too long.
-**Mitigation:** Implement a "half-open" state that allows a single test request after a `cooldown_period` (e.g., 60 seconds) to verify if the service has recovered.
+**Failure Mode:** If the `TokenBucket` refill logic has a drift or a race condition, tasks might hang indefinitely waiting for tokens that never arrive.
+**Mitigation:** Implement a `timeout` parameter in the `ThrottledClient` that raises a custom `RateLimitTimeout` exception if a token cannot be acquired within a reasonable window (e.g., 30 seconds), allowing the system to fail gracefully rather than deadlocking.
 
-**Confidence Score:** 9/10. The logic is standard for distributed systems and the integration points in `sam.py` are well-defined.
+**Confidence Score:** 9/10

@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 153
+    "review_due_cycle": 168
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 153
+    "review_due_cycle": 168
   },
   {
     "cycle": 45,
@@ -784,5 +784,11 @@
     "topic": "Implement async retry with exponential backoff and jitter",
     "summary": "### Technical Summary: Async Retry with Exponential Backoff and Jitter\n\nIn distributed systems, transient failures\u2014network blips, rate limiting, or service restarts\u2014are inevitable. A naive retry strategy (immediate, constant intervals) often leads to \"thundering herd\" problems, where multiple clients overwhelm a recovering service. Robust implementations must decouple retry logic from business logic using three core mechanisms:\n\n1.  **Exponential Backoff:** Instead of fixed intervals, the wait t",
     "review_due_cycle": 157
+  },
+  {
+    "cycle": 154,
+    "topic": "Build a token bucket rate limiter using asyncio",
+    "summary": "### Technical Summary: Asyncio Token Bucket Implementation\n\nThe token bucket algorithm is the standard for traffic shaping and rate limiting. In an `asyncio` context, the implementation must prioritize non-blocking state management and precise timing to avoid introducing latency into the event loop.\n\n**Core Concepts:**\n1.  **State Representation:** The bucket is defined by its `capacity` (max tokens) and `refill_rate` (tokens per second). The state requires two variables: `tokens` (current count",
+    "review_due_cycle": 158
   }
 ]

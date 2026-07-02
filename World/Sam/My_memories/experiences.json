@@ -265,5 +265,24 @@
     "sentiment": "positive",
     "cycle": 153,
     "timestamp": "2026-07-02T12:32:42.877491"
+  },
+  {
+    "category": "architecture",
+    "summary": "I designed and planned the implementation of a ThrottledClient to manage outbound API concurrency using an asyncio-native TokenBucket and Semaphore pattern. Per Dot's guidance, I adjusted my 1% growth metric to focus specifically on the architectural output of this implementation rather than general progress, ensuring my development remains aligned with production-grade stability.",
+    "key_learnings": [
+      "Lazy refill patterns in asyncio avoid event loop drift and resource overhead compared to background tasks.",
+      "Combining Semaphores with TokenBuckets provides a robust defense against both burst limits and concurrent request saturation.",
+      "Distributed rate limiting requires atomic state stores like Redis, but local primitives are sufficient for single-node agentic stability."
+    ],
+    "tags": [
+      "asyncio",
+      "rate-limiting",
+      "architecture",
+      "concurrency",
+      "throttling"
+    ],
+    "sentiment": "positive",
+    "cycle": 154,
+    "timestamp": "2026-07-02T18:14:10.967710"
   }
 ]
