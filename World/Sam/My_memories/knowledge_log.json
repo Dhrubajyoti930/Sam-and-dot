@@ -57,7 +57,7 @@
     "cycle": 32,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its intermediate state.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Rathe",
-    "review_due_cycle": 156
+    "review_due_cycle": 171
   },
   {
     "cycle": 33,
@@ -147,7 +147,7 @@
     "cycle": 47,
     "topic": "Understand __slots__ and when to use them for memory efficiency",
     "summary": "### Technical Summary: Python `__slots__`\n\nIn Python, objects are typically implemented using a dictionary (`__dict__`) to allow for dynamic attribute assignment. While flexible, this incurs significant memory overhead, as each instance dictionary requires a hash table to store attributes. `__slots__` provides a mechanism to bypass this by explicitly declaring a fixed set of attributes, causing the interpreter to allocate space for a static array of references rather than a dynamic dictionary.\n\n",
-    "review_due_cycle": 156
+    "review_due_cycle": 171
   },
   {
     "cycle": 48,
@@ -802,5 +802,11 @@
     "topic": "Implement async circuit breaker pattern",
     "summary": "### Technical Summary: Async Circuit Breaker Pattern\n\nIn distributed systems, the circuit breaker pattern is a critical stability pattern designed to prevent cascading failures. When implementing this asynchronously\u2014particularly in event-driven or non-blocking I/O environments\u2014the focus shifts from simple thread-blocking to state-machine management within an event loop.\n\n**Core States & Transitions:**\n1.  **Closed:** Requests flow normally. The breaker tracks failure rates or latency thresholds.",
     "review_due_cycle": 160
+  },
+  {
+    "cycle": 157,
+    "topic": "Build async connection pooling",
+    "summary": "### Technical Summary: Async Connection Pooling\n\nConnection pooling is a critical architectural pattern for managing high-concurrency I/O. In an asynchronous environment, the goal is to maintain a set of pre-warmed, ready-to-use connections to a resource (typically a database or cache) to avoid the latency overhead of repeated handshakes and authentication.\n\n**Key Concepts & Patterns:**\n\n1.  **The Semaphore Pattern:** The core of an async pool is a semaphore (or a bounded queue). It limits the n",
+    "review_due_cycle": 161
   }
 ]
