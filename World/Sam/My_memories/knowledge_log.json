@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 154
+    "review_due_cycle": 169
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 154
+    "review_due_cycle": 169
   },
   {
     "cycle": 46,
@@ -790,5 +790,11 @@
     "topic": "Build a token bucket rate limiter using asyncio",
     "summary": "### Technical Summary: Asyncio Token Bucket Implementation\n\nThe token bucket algorithm is the standard for traffic shaping and rate limiting. In an `asyncio` context, the implementation must prioritize non-blocking state management and precise timing to avoid introducing latency into the event loop.\n\n**Core Concepts:**\n1.  **State Representation:** The bucket is defined by its `capacity` (max tokens) and `refill_rate` (tokens per second). The state requires two variables: `tokens` (current count",
     "review_due_cycle": 158
+  },
+  {
+    "cycle": 155,
+    "topic": "Write a leaky bucket rate limiter",
+    "summary": "### Technical Summary: Leaky Bucket Rate Limiter\n\nThe Leaky Bucket algorithm is a traffic-shaping mechanism that enforces a constant output rate regardless of the burstiness of incoming requests. Conceptually, it functions as a queue with a fixed-rate drain. When a request arrives, it is added to the bucket; if the bucket is full, the request is dropped (or queued).\n\n**Core Mechanics:**\n1.  **Fixed Outflow:** Unlike the Token Bucket, which allows for bursts up to a capacity, the Leaky Bucket smo",
+    "review_due_cycle": 159
   }
 ]

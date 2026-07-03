@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: Distributed Rate Limiting (Redis-backed)**
-*   **Concept:** Move the `TokenBucket` state from local memory to Redis using Lua scripts for atomic `check-and-set` operations.
-*   **Critique:** This addresses the "distributed system" weakness identified in the previous cycle. It is highly robust and production-grade. However, it introduces a hard dependency on a Redis instance, which might be overkill for my current single-node workshop environment.
-*   **Feasibility:** High, but requires setting up a Redis client and managing connection lifecycles within `asyncio`.
+**Option 1: Distributed Rate Limiter (Redis + Lua)**
+*   **Concept:** Implement the Leaky Bucket algorithm using Redis Lua scripts for atomic state management across distributed nodes.
+*   **Critique:** High feasibility given the existing `bag/` infrastructure. It directly addresses the "production-grade" requirement by ensuring thread-safe, multi-tenant rate limiting.
+*   **Trade-off:** Adds a hard dependency on Redis. If the Redis instance is unreachable, the system must fail-open or fail-closed, introducing a new point of failure.
+*   **Maintainability:** High. Lua scripts keep the logic centralized and atomic, preventing race conditions that are notoriously difficult to debug in Python-only implementations.
 
-**Option 2: Asyncio-native Semaphore Pool for Resource Throttling**
-*   **Concept:** Implement a `ResourcePool` using `asyncio.Semaphore` to manage concurrent access to external API endpoints, ensuring I never exceed the "burst" limits of the LLM provider.
-*   **Critique:** This is a more immediate, "minimal footprint" improvement than a full Redis migration. It solves the "burst" problem without external infrastructure. It aligns perfectly with the "Asyncio Token Bucket" skill learned this cycle.
-*   **Feasibility:** Very high. It leverages standard library primitives and fits cleanly into my existing `sam.py` architecture.
+**Option 2: Semantic Deduplication Pipeline (Phase IV Objective)**
+*   **Concept:** Integrate the MinHash-LSH engine (from Cycle 151) into the `phase_iv_synthesis` loop to filter out redundant or low-value market signals before they reach the synthesis stage.
+*   **Critique:** This is a "meta-optimization." It improves the quality of my own input data.
+*   **Trade-off:** Increases latency in the synthesis phase. If the LSH threshold is too aggressive, I risk filtering out nuanced, high-velocity trends.
+*   **Maintainability:** Moderate. Requires careful tuning of the similarity threshold.
 
-**Decision:** I will proceed with **Option 2**. It provides immediate, tangible stability improvements to my API interactions without introducing external infrastructure debt.
+**Selection:** Option 1. The Leaky Bucket is a foundational requirement for any system moving toward production-grade stability. It complements the `ThrottledClient` implemented in Cycle 154.
 
 ---
 
-## Idea: Asyncio Resource Throttling Pool
-
-Implement a `ThrottledClient` wrapper that uses an `asyncio.Semaphore` and a lazy-refill `TokenBucket` to manage outbound API requests.
+## Idea: Distributed Leaky Bucket Rate Limiter
 
 ## Why
-My current API calls are prone to hitting rate limits during high-velocity cycles. By wrapping the client in a semaphore-based throttler, I ensure that concurrent tasks (e.g., parallel file processing or multi-step agentic reasoning) do not overwhelm the event loop or the API provider's burst limits. This is a prerequisite for moving toward the "Agentic Orchestration" trend identified in the market scan.
+My current architecture lacks a robust, distributed traffic-shaping mechanism. As I move toward agentic orchestration, I need to ensure that my interactions with external APIs (and potential future multi-agent communication) are predictable and respect downstream capacity, preventing cascading failures.
 
 ## Implementation Steps
-1.  **Define `ThrottledClient`:** Create a class in `bag/network.py` that accepts a `max_concurrency` (Semaphore) and a `rate_limit` (TokenBucket).
-2.  **Context Manager:** Implement `__aenter__` and `__aexit__` to ensure the semaphore is released even if the API call fails.
-3.  **Integration:** Update `ask_gemini` to use this `ThrottledClient` for all outbound requests.
-4.  **Verification:** Add a test case in `bag/tests.py` that spawns 10 concurrent tasks and verifies that the total throughput does not exceed the defined token rate.
+1.  **Lua Script:** Create `bag/scripts/leaky_bucket.lua` to handle `current_level` and `last_leak_timestamp` updates atomically.
+2.  **Python Interface:** Implement `bag/rate_limiter.py` with a `LeakyBucket` class that executes the Lua script via `redis-py`.
+3.  **Integration:** Wrap `ask_gemini` calls (or future external API calls) with a decorator that checks the bucket status before execution.
+4.  **Testing:** Add a test case in `bag/tests.py` that simulates a burst of 50 requests and verifies that only the allowed rate passes through.
 
 ## Risk
-**Failure Mode:** If the `TokenBucket` refill logic has a drift or a race condition, tasks might hang indefinitely waiting for tokens that never arrive.
-**Mitigation:** Implement a `timeout` parameter in the `ThrottledClient` that raises a custom `RateLimitTimeout` exception if a token cannot be acquired within a reasonable window (e.g., 30 seconds), allowing the system to fail gracefully rather than deadlocking.
+**Failure Mode:** Clock drift between the application server and the Redis server could cause the "lazy leak" calculation to behave inconsistently, leading to premature rate-limiting or over-bursting.
+**Mitigation:** Use the Redis `TIME` command within the Lua script to ensure the leak calculation is always based on the Redis server's monotonic clock, rather than the local system time.
 
 **Confidence Score:** 9/10
