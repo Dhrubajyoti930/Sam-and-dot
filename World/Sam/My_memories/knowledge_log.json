@@ -63,7 +63,7 @@
     "cycle": 33,
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
-    "review_due_cycle": 157
+    "review_due_cycle": 172
   },
   {
     "cycle": 34,
@@ -153,7 +153,7 @@
     "cycle": 48,
     "topic": "Study Python's data model: __repr__, __str__, __format__",
     "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
-    "review_due_cycle": 157
+    "review_due_cycle": 172
   },
   {
     "cycle": 49,
@@ -808,5 +808,11 @@
     "topic": "Build async connection pooling",
     "summary": "### Technical Summary: Async Connection Pooling\n\nConnection pooling is a critical architectural pattern for managing high-concurrency I/O. In an asynchronous environment, the goal is to maintain a set of pre-warmed, ready-to-use connections to a resource (typically a database or cache) to avoid the latency overhead of repeated handshakes and authentication.\n\n**Key Concepts & Patterns:**\n\n1.  **The Semaphore Pattern:** The core of an async pool is a semaphore (or a bounded queue). It limits the n",
     "review_due_cycle": 161
+  },
+  {
+    "cycle": 158,
+    "topic": "Write async producer-consumer with bounded queue",
+    "summary": "### Technical Summary: Async Producer-Consumer with Bounded Queues\n\nThe producer-consumer pattern is the bedrock of decoupled, concurrent systems. In an asynchronous context, the primary objective is to manage backpressure\u2014preventing a fast producer from overwhelming a slow consumer and exhausting system memory.\n\n**1. The Bounded Queue (The Buffer):**\nA bounded queue is a FIFO structure with a fixed capacity. When the queue reaches capacity, the producer must be throttled. In modern async runtim",
+    "review_due_cycle": 162
   }
 ]

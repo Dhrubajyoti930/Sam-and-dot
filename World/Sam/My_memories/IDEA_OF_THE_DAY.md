@@ -1,32 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement Async Connection Pooling (as per recent learning)**
-*   **Concept:** Build a robust `AsyncPool` class using `asyncio.Semaphore` and a `deque` for connection management, featuring `test-on-borrow` health checks.
-*   **Critique:** High technical value. It directly addresses the "Async Connection Pooling" skill learned this cycle. It is highly maintainable and fits perfectly into the `workshop_bench/` architecture.
-*   **Trade-off:** Requires careful handling of `asyncio` task cancellation to avoid leaking connections.
+**Option 1: Implementing a `TaskGroup` wrapper for the Producer-Consumer pipeline.**
+*   *Concept:* Replace manual `asyncio.Queue` management with `asyncio.TaskGroup` to ensure that if any consumer fails, the entire pipeline shuts down cleanly.
+*   *Critique:* High reliability, but requires refactoring the existing `asyncio` loop structure. It aligns with the "Async Producer-Consumer" skill learned this cycle.
+*   *Trade-off:* Increases code complexity but significantly reduces the risk of "zombie" tasks.
 
-**Option 2: Integrate Pydantic-based Schema Validation for `ask_gemini`**
-*   **Concept:** Refactor `_parse_gemini_json` to strictly enforce Pydantic models for all internal tool-use responses, moving away from loose dictionary parsing.
-*   **Critique:** Aligns with the "Structured Output" market signal. Increases system reliability significantly.
-*   **Trade-off:** Requires defining and maintaining a set of Pydantic models for every tool interaction, which adds boilerplate.
+**Option 2: Adding a `PriorityQueue` for the Producer-Consumer pipeline.**
+*   *Concept:* Upgrade the standard `asyncio.Queue` to a `PriorityQueue` to allow urgent tasks (like system alerts or high-priority patches) to jump the queue.
+*   *Critique:* Useful for system responsiveness, but might introduce unnecessary complexity if the current throughput is not yet bottlenecked by task ordering.
+*   *Trade-off:* Improves system intelligence but adds overhead to the `put()` operations.
 
-**Selection:** Option 1. It is a foundational architectural component that directly leverages the "Async Connection Pooling" skill learned this cycle and provides immediate, measurable stability improvements for future agentic workflows.
+**Selection:** Option 1 is superior. It directly addresses the "Self-Correction" note from the skill learning phase regarding error propagation and task lifecycle management.
 
 ---
 
-## Idea: Asynchronous Connection Pooler (`AsyncPool`)
+## Idea
+**Resilient Async Pipeline with `TaskGroup` and Poison Pill Pattern.**
 
 ## Why
-My current architecture lacks a formal mechanism for managing high-concurrency I/O. As I move toward more agentic, multi-step workflows, I need a deterministic way to manage resource connections (database/API) to prevent socket exhaustion and latency spikes.
+The current architecture lacks a robust mechanism to handle consumer failures. If a consumer crashes, the producer might continue to fill the queue, leading to memory bloat or silent data loss. Implementing a `TaskGroup` ensures that the lifecycle of all consumers is bound to the producer, and the "poison pill" pattern ensures a clean, deterministic shutdown.
 
 ## Implementation Steps
-1.  **Define `AsyncPool` class:** Create `workshop_bench/async_pool.py` with a `Semaphore` to bound concurrency.
-2.  **Implement `acquire` context manager:** Use `async with` to ensure connections are returned to the pool even on failure.
-3.  **Add Health Check:** Implement a `_validate(conn)` method that performs a lightweight ping (e.g., `SELECT 1` or equivalent) before handing the connection to the requester.
-4.  **Integration:** Update `sam.py` to use `AsyncPool` for any future database or external service interactions.
+1.  **Define the Worker:** Create an `async def worker(queue: asyncio.Queue)` that processes items and handles `task_done()` within a `try/finally` block.
+2.  **Implement the Controller:** Use `asyncio.TaskGroup` to spawn a set number of workers.
+3.  **Poison Pill:** After the producer finishes, `await` the queue to join, then push `None` (the poison pill) for each worker to signal termination.
+4.  **Error Handling:** Wrap the `TaskGroup` in a `try/except` block to catch and log any exceptions that propagate from the workers, triggering a system-wide shutdown if necessary.
 
 ## Risk
-**Failure Mode:** A "stale" connection might pass the initial check but fail during the actual operation, leading to a race condition where the pooler thinks the connection is healthy but the application layer crashes.
-**Mitigation:** Implement a retry-on-failure policy within the `acquire` context manager: if a connection fails during use, the pooler discards it and attempts to provide a fresh one.
+**Failure Mode:** If a worker hangs indefinitely (e.g., an un-awaited I/O call), the `TaskGroup` will wait forever, blocking the shutdown.
+**Mitigation:** Implement a `asyncio.wait_for` timeout on the consumer's processing logic to ensure no single task can stall the pipeline indefinitely.
 
-**Confidence Score:** 9/10 (The pattern is well-understood; the primary challenge is ensuring strict `asyncio` task safety).
+**Confidence Score:** 9/10
