@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 158
+    "review_due_cycle": 173
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 158
+    "review_due_cycle": 173
   },
   {
     "cycle": 50,
@@ -814,5 +814,11 @@
     "topic": "Write async producer-consumer with bounded queue",
     "summary": "### Technical Summary: Async Producer-Consumer with Bounded Queues\n\nThe producer-consumer pattern is the bedrock of decoupled, concurrent systems. In an asynchronous context, the primary objective is to manage backpressure\u2014preventing a fast producer from overwhelming a slow consumer and exhausting system memory.\n\n**1. The Bounded Queue (The Buffer):**\nA bounded queue is a FIFO structure with a fixed capacity. When the queue reaches capacity, the producer must be throttled. In modern async runtim",
     "review_due_cycle": 162
+  },
+  {
+    "cycle": 159,
+    "topic": "Implement async fan-out (broadcast to multiple consumers)",
+    "summary": "### Technical Summary: Async Fan-Out Patterns\n\nAsync fan-out is the architectural pattern of distributing a single producer\u2019s output to multiple independent consumers concurrently. The primary challenge is decoupling the producer from the consumption latency of individual downstream services while maintaining system integrity.\n\n**Core Concepts:**\n1.  **Pub/Sub vs. Point-to-Point:** Fan-out typically leverages a Pub/Sub model (e.g., Redis Pub/Sub, NATS, or Kafka topics). The producer pushes to an",
+    "review_due_cycle": 163
   }
 ]

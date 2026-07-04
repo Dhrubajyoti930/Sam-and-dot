@@ -1,33 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implementing a `TaskGroup` wrapper for the Producer-Consumer pipeline.**
-*   *Concept:* Replace manual `asyncio.Queue` management with `asyncio.TaskGroup` to ensure that if any consumer fails, the entire pipeline shuts down cleanly.
-*   *Critique:* High reliability, but requires refactoring the existing `asyncio` loop structure. It aligns with the "Async Producer-Consumer" skill learned this cycle.
-*   *Trade-off:* Increases code complexity but significantly reduces the risk of "zombie" tasks.
+### Option 1: NATS-based Async Fan-Out Prototype
+*   **Concept:** Introduce a lightweight NATS client to `workshop_bench/` to handle event broadcasting.
+*   **Critique:** High architectural value for decoupling, but introduces a hard dependency on an external broker. If the broker is unavailable, the system halts.
+*   **Feasibility:** Moderate. Requires setting up a local NATS server and writing a robust client wrapper.
+*   **Maintainability:** High, provided the wrapper handles connection retries and circuit breaking.
 
-**Option 2: Adding a `PriorityQueue` for the Producer-Consumer pipeline.**
-*   *Concept:* Upgrade the standard `asyncio.Queue` to a `PriorityQueue` to allow urgent tasks (like system alerts or high-priority patches) to jump the queue.
-*   *Critique:* Useful for system responsiveness, but might introduce unnecessary complexity if the current throughput is not yet bottlenecked by task ordering.
-*   *Trade-off:* Improves system intelligence but adds overhead to the `put()` operations.
+### Option 2: Idempotency Middleware for Consumer Logic
+*   **Concept:** Implement a decorator-based middleware that checks a Redis-backed cache for `message_id` before processing.
+*   **Critique:** Essential for the "at-least-once" delivery guarantee mentioned in my learning summary. It is a lower-risk, high-impact utility that can be tested in isolation.
+*   **Feasibility:** High. Can be implemented as a standalone module in `workshop_bench/`.
+*   **Maintainability:** Excellent. It is a pure utility function with no side effects.
 
-**Selection:** Option 1 is superior. It directly addresses the "Self-Correction" note from the skill learning phase regarding error propagation and task lifecycle management.
+**Decision:** I will proceed with **Option 2**. It provides the necessary safety foundation for the fan-out pattern without requiring the immediate infrastructure overhead of a full message broker. It aligns with my goal of building resilient, production-grade systems.
 
 ---
 
-## Idea
-**Resilient Async Pipeline with `TaskGroup` and Poison Pill Pattern.**
+## Idea: Idempotency Middleware for Async Consumers
 
 ## Why
-The current architecture lacks a robust mechanism to handle consumer failures. If a consumer crashes, the producer might continue to fill the queue, leading to memory bloat or silent data loss. Implementing a `TaskGroup` ensures that the lifecycle of all consumers is bound to the producer, and the "poison pill" pattern ensures a clean, deterministic shutdown.
+In distributed systems, network partitions or consumer crashes often lead to duplicate message delivery. Without idempotency, processing the same event multiple times can corrupt state (e.g., double-counting metrics or triggering redundant API calls). This middleware ensures that each event is processed exactly once, regardless of delivery count.
 
 ## Implementation Steps
-1.  **Define the Worker:** Create an `async def worker(queue: asyncio.Queue)` that processes items and handles `task_done()` within a `try/finally` block.
-2.  **Implement the Controller:** Use `asyncio.TaskGroup` to spawn a set number of workers.
-3.  **Poison Pill:** After the producer finishes, `await` the queue to join, then push `None` (the poison pill) for each worker to signal termination.
-4.  **Error Handling:** Wrap the `TaskGroup` in a `try/except` block to catch and log any exceptions that propagate from the workers, triggering a system-wide shutdown if necessary.
+1.  **Create `workshop_bench/middleware.py`**: Define a `require_idempotency` decorator.
+2.  **State Storage**: Use a simple TTL-based cache (or a local file-based store if Redis is unavailable) to track `message_id` hashes.
+3.  **Logic**: 
+    *   Check if `message_id` exists in the store.
+    *   If yes, log a warning and skip execution.
+    *   If no, proceed with the decorated function and mark the `message_id` as processed upon success.
+4.  **Integration**: Apply the decorator to existing consumer functions in the workshop.
 
 ## Risk
-**Failure Mode:** If a worker hangs indefinitely (e.g., an un-awaited I/O call), the `TaskGroup` will wait forever, blocking the shutdown.
-**Mitigation:** Implement a `asyncio.wait_for` timeout on the consumer's processing logic to ensure no single task can stall the pipeline indefinitely.
-
-**Confidence Score:** 9/10
+**Failure Mode:** The "stale cache" problem. If the cache grows indefinitely or the TTL is too short, we either run out of memory or allow duplicate processing.
+**Mitigation:** Implement a sliding-window TTL (e.g., 24 hours) and a maximum size for the cache store.
+**Confidence Score:** 9/10. The logic is deterministic and easily testable via `bag/tests.py`.
