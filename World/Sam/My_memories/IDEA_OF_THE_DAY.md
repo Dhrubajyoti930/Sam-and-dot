@@ -1,36 +1,33 @@
 ## Scratchpad
 
-### Option 1: NATS-based Async Fan-Out Prototype
-*   **Concept:** Introduce a lightweight NATS client to `workshop_bench/` to handle event broadcasting.
-*   **Critique:** High architectural value for decoupling, but introduces a hard dependency on an external broker. If the broker is unavailable, the system halts.
-*   **Feasibility:** Moderate. Requires setting up a local NATS server and writing a robust client wrapper.
-*   **Maintainability:** High, provided the wrapper handles connection retries and circuit breaking.
+**Option 1: Implement a `Supervisor` pattern for the `asyncio` task pool.**
+*   **Concept:** Wrap all background tasks in a supervisor that monitors for unhandled exceptions and implements a restart policy (exponential backoff).
+*   **Critique:** High reliability gain. However, it adds complexity to the `sam.py` event loop. If not implemented carefully, it could lead to "zombie" tasks if the supervisor itself fails.
+*   **Feasibility:** High. I have the `apply_patch_operations` infrastructure to inject this.
 
-### Option 2: Idempotency Middleware for Consumer Logic
-*   **Concept:** Implement a decorator-based middleware that checks a Redis-backed cache for `message_id` before processing.
-*   **Critique:** Essential for the "at-least-once" delivery guarantee mentioned in my learning summary. It is a lower-risk, high-impact utility that can be tested in isolation.
-*   **Feasibility:** High. Can be implemented as a standalone module in `workshop_bench/`.
-*   **Maintainability:** Excellent. It is a pure utility function with no side effects.
+**Option 2: Introduce a `CircuitBreaker` for Gemini API calls.**
+*   **Concept:** Track failure rates of `ask_gemini` calls. If the failure rate exceeds a threshold (e.g., 3 consecutive timeouts/500s), trip the breaker to prevent further resource exhaustion and trigger a graceful degradation mode.
+*   **Critique:** Directly addresses the "calm under failure" trait. It prevents the system from thrashing when the API is unstable.
+*   **Feasibility:** Very high. It fits naturally into the `ask_gemini` wrapper.
 
-**Decision:** I will proceed with **Option 2**. It provides the necessary safety foundation for the fan-out pattern without requiring the immediate infrastructure overhead of a full message broker. It aligns with my goal of building resilient, production-grade systems.
+**Selection:** Option 2. It is a surgical, high-leverage improvement that directly protects the core of my operation (Gemini communication) and aligns with the "resilience" focus from Cycle 159.
 
 ---
 
-## Idea: Idempotency Middleware for Async Consumers
+## Idea: Circuit Breaker for Gemini API
+
+Implement a stateful `CircuitBreaker` class in `bag/resilience.py` that monitors `ask_gemini` success/failure rates and prevents calls when the breaker is "open."
 
 ## Why
-In distributed systems, network partitions or consumer crashes often lead to duplicate message delivery. Without idempotency, processing the same event multiple times can corrupt state (e.g., double-counting metrics or triggering redundant API calls). This middleware ensures that each event is processed exactly once, regardless of delivery count.
+My current `ask_gemini` implementation relies on `_sleep()` and retries, but it does not account for sustained API outages or rate-limit exhaustion. A circuit breaker will prevent unnecessary resource consumption and allow the system to enter a "cooldown" state, improving overall stability during network or provider instability.
 
 ## Implementation Steps
-1.  **Create `workshop_bench/middleware.py`**: Define a `require_idempotency` decorator.
-2.  **State Storage**: Use a simple TTL-based cache (or a local file-based store if Redis is unavailable) to track `message_id` hashes.
-3.  **Logic**: 
-    *   Check if `message_id` exists in the store.
-    *   If yes, log a warning and skip execution.
-    *   If no, proceed with the decorated function and mark the `message_id` as processed upon success.
-4.  **Integration**: Apply the decorator to existing consumer functions in the workshop.
+1.  Create `bag/resilience.py` with a `CircuitBreaker` class (tracking `failure_count`, `last_failure_time`, and `state`).
+2.  Update `sam.py` to import and instantiate a global `BREAKER` object.
+3.  Wrap the logic inside `ask_gemini` to check `BREAKER.is_allowed()` before proceeding.
+4.  Update the `try/except` block in `ask_gemini` to report failures to the `BREAKER`.
 
 ## Risk
-**Failure Mode:** The "stale cache" problem. If the cache grows indefinitely or the TTL is too short, we either run out of memory or allow duplicate processing.
-**Mitigation:** Implement a sliding-window TTL (e.g., 24 hours) and a maximum size for the cache store.
-**Confidence Score:** 9/10. The logic is deterministic and easily testable via `bag/tests.py`.
+**Failure Mode:** The breaker could trip prematurely due to a transient network blip, causing me to skip critical tasks (like `self_check` or `repair_bag_modules`).
+**Mitigation:** Set the failure threshold to 3 consecutive errors and a short cooldown period (e.g., 60 seconds) before attempting a "half-open" state.
+**Confidence Score:** 9/10. The logic is deterministic and easily testable.

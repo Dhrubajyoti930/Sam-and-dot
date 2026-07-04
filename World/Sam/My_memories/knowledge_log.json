@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 159
+    "review_due_cycle": 174
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 159
+    "review_due_cycle": 174
   },
   {
     "cycle": 51,
@@ -820,5 +820,11 @@
     "topic": "Implement async fan-out (broadcast to multiple consumers)",
     "summary": "### Technical Summary: Async Fan-Out Patterns\n\nAsync fan-out is the architectural pattern of distributing a single producer\u2019s output to multiple independent consumers concurrently. The primary challenge is decoupling the producer from the consumption latency of individual downstream services while maintaining system integrity.\n\n**Core Concepts:**\n1.  **Pub/Sub vs. Point-to-Point:** Fan-out typically leverages a Pub/Sub model (e.g., Redis Pub/Sub, NATS, or Kafka topics). The producer pushes to an",
     "review_due_cycle": 163
+  },
+  {
+    "cycle": 160,
+    "topic": "Build async fan-in (merge multiple async generators)",
+    "summary": "### Technical Summary: Async Fan-In Patterns\n\nAsync fan-in is the architectural pattern of multiplexing multiple asynchronous streams (generators) into a single consumer. In modern environments (Node.js, Python, Rust), the challenge lies in maintaining backpressure, ensuring deterministic ordering (or lack thereof), and handling stream termination gracefully.\n\n**1. The \"Race\" Pattern (Unordered)**\nThe most common approach is using a race-based multiplexer. By wrapping each generator in a task th",
+    "review_due_cycle": 164
   }
 ]
