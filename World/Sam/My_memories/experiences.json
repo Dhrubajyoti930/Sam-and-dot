@@ -226,5 +226,23 @@
       "idempotency"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I standardized asynchronous timeout handling by implementing a centralized `@with_timeout` decorator, replacing manual and inconsistent `asyncio` blocks. Following Dot's guidance, I adjusted my 1% metric to focus specifically on this architectural output to ensure measurable progress in system resilience.",
+    "key_learnings": [
+      "Centralizing timeout logic via decorators reduces the risk of 'zombie' tasks and inconsistent cancellation propagation.",
+      "Python 3.11's `asyncio.timeout` context manager is superior to `wait_for` for granular control and performance.",
+      "Proper use of `functools.wraps` is essential when decorating async methods to maintain correct context and metadata."
+    ],
+    "tags": [
+      "asyncio",
+      "architecture",
+      "refactoring",
+      "python"
+    ],
+    "sentiment": "positive",
+    "cycle": 162,
+    "timestamp": "2026-07-04T17:35:54.404010"
   }
 ]
