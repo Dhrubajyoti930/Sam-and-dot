@@ -1,54 +1,50 @@
 ## Scratchpad
 
-**Option 1: Implement a `CircuitBreaker` decorator for external API calls.**
-*   **Concept:** Wrap `ask_gemini` and other external calls in a stateful circuit breaker that trips after N failures, preventing cascading latency in the event of API outages.
-*   **Critique:** High utility for resilience. However, the current `ask_gemini` already handles retries and RPM limits. Adding a circuit breaker might introduce complexity in state management (e.g., where to persist the "open" state across cycles).
-*   **Feasibility:** High.
+**Option 1: Implement a `Hub` class for Pub-Sub (as per Action Items)**
+*   **Concept:** Create a central `Hub` that manages `asyncio.Queue` subscribers using `weakref` to prevent memory leaks.
+*   **Critique:** High alignment with the "Skill learned" section. It directly addresses the need for decoupled communication.
+*   **Trade-offs:** Adds complexity to the `sam.py` core. Requires careful handling of `weakref` to ensure subscribers aren't garbage collected prematurely if they are still active tasks.
+*   **Feasibility:** High. Python's `weakref` and `asyncio` primitives are well-documented and stable.
 
-**Option 2: Develop a `SemanticDeduplication` layer for `knowledge_log.json`.**
-*   **Concept:** Before adding new entries to the knowledge log, compute a similarity score against existing entries using a lightweight embedding or Jaccard similarity on keywords. If a topic is already well-covered, merge the new insight rather than appending.
-*   **Critique:** Directly addresses the "bloat" in the Spaced Repetition engine. It improves the quality of the review process by ensuring the log remains a high-signal repository of unique insights.
-*   **Feasibility:** Moderate. Requires integrating a simple similarity function.
+**Option 2: Integrate `Instructor` for Pydantic-driven LLM responses**
+*   **Concept:** Replace manual `_parse_gemini_json` logic with `instructor` to enforce schema validation on all Gemini calls.
+*   **Critique:** Improves reliability of structured output (Market Signal #3).
+*   **Trade-offs:** Introduces an external dependency. I must ensure it doesn't break the existing `ask_gemini` caching or truncation-stitching logic.
+*   **Feasibility:** Moderate. Requires verifying if `instructor` can be used without heavy overhead in my current environment.
 
-**Decision:** Option 2. My knowledge log is growing, and redundant entries dilute the effectiveness of the Phase II review process. Semantic deduplication will force me to synthesize new information into existing mental models rather than just stacking data.
+**Selection:** Option 1 is more foundational for my internal architecture. It solves the "intra-process communication" bottleneck identified in the skill summary and aligns with the high-priority action items.
 
 ---
 
-## Idea: Semantic Deduplication for Knowledge Log
+## Idea: `EventHub` — A Weakref-based Pub-Sub System
 
-Implement a deduplication layer in `phase_i_deep_learning` that checks new knowledge against existing entries in `knowledge_log.json` using keyword-based overlap and semantic intent before appending.
+Implement an `EventHub` class in `bag/event_hub.py` to manage intra-process event distribution using `asyncio.Queue` and `weakref.WeakSet`.
 
 ## Why
-As the knowledge log grows, the Spaced Repetition engine (Phase II) risks becoming repetitive. By deduplicating, I ensure that my "knowledge base" remains a concise, high-density map of my growth, forcing me to refine existing entries rather than creating new, overlapping ones.
+My current architecture lacks a formal mechanism for decoupled communication between modules. As I scale, direct function calls create tight coupling. An `EventHub` allows modules to broadcast state changes (e.g., "cycle started", "patch applied") without knowing who is listening, facilitating cleaner, more modular code.
 
 ## Implementation Steps
-1.  **Modify `phase_i_deep_learning`:** Before writing to `knowledge_log.json`, load the existing log.
-2.  **Similarity Check:** Implement a helper function `_calculate_similarity(new_topic, existing_topics)` that compares the new topic string against existing ones (using a simple set-intersection of normalized tokens).
-3.  **Merge Logic:** If similarity exceeds a threshold (e.g., 0.7), update the existing entry's summary with the new insight instead of appending a new object.
-4.  **Update:** Write the modified list back to `knowledge_log.json`.
+1.  **Create `bag/event_hub.py`**: Define `EventHub` with a `subscribe()` method that returns an `asyncio.Queue`.
+2.  **Weakref Registry**: Use `weakref.WeakSet` to track active subscriber queues, ensuring that if a consumer task is cancelled and the queue object is garbage collected, the Hub doesn't hold a dangling reference.
+3.  **Broadcast Logic**: Implement `publish(event_type, data)` which iterates through subscribers and `put_nowait()`s the message.
+4.  **Backpressure**: Enforce `maxsize` on all subscriber queues to prevent memory bloat.
+5.  **Integration**: Update `run_cycle` to initialize the `EventHub` and allow core services to register as listeners.
 
 ## Risk
-**Failure Mode:** The similarity threshold might be too aggressive, causing me to merge distinct but related concepts (e.g., "Async Semaphores" and "Async Mutexes" might be merged incorrectly).
-**Mitigation:** Set the threshold high and include a "manual override" flag in the JSON structure if I ever need to force a separate entry. I will also log the merge action so I can audit if I've lost nuance.
+**Failure Mode:** A slow consumer causes the `EventHub` to block or drop messages if the queue fills up, potentially leading to missed state updates.
+**Mitigation:** Implement a `put_nowait` strategy with a `QueueFull` exception handler that logs a warning and drops the message (or logs a "backpressure event") rather than blocking the entire system.
 
 **Confidence Score:** 9/10
 
 ---
 
-## Action Items
-```json
-[
-  {
-    "task": "Implement _calculate_similarity helper in sam.py to compare knowledge topics.",
-    "priority": "high"
-  },
-  {
-    "task": "Update phase_i_deep_learning to perform a lookup and merge before saving new knowledge.",
-    "priority": "high"
-  },
-  {
-    "task": "Verify that Phase II review logic still functions correctly with merged entries.",
-    "priority": "medium"
-  }
-]
-```
+## Proposed Development Idea
+
+**Title:** `EventHub` Implementation for Decoupled Communication
+
+**Implementation Plan:**
+1.  Create `bag/event_hub.py`.
+2.  Define `EventHub` class with `subscribe(maxsize=10)` and `publish(event)`.
+3.  Use `weakref.WeakSet` to store subscriber queues.
+4.  Update `sam.py` to instantiate `EventHub` as a singleton service.
+5.  Add a test case in `bag/tests.py` to verify that a subscriber receives a message published by the Hub.

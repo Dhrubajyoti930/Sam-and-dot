@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 164
+    "review_due_cycle": 179
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 164
+    "review_due_cycle": 179
   },
   {
     "cycle": 41,
@@ -850,5 +850,11 @@
     "topic": "Write async semaphore for resource limiting",
     "summary": "### Technical Summary: Async Semaphores for Resource Limiting\n\nAn asynchronous semaphore is a synchronization primitive used to manage access to a finite set of resources by limiting the number of concurrent operations. Unlike a mutex, which restricts access to a single task, a semaphore maintains an internal counter representing available \"permits.\"\n\n**Core Mechanics:**\n1.  **Acquisition (`acquire`):** When a task requests access, the semaphore checks the permit count. If greater than zero, it ",
     "review_due_cycle": 168
+  },
+  {
+    "cycle": 165,
+    "topic": "Implement async pub-sub with asyncio.Queue",
+    "summary": "### Technical Summary: Async Pub-Sub with `asyncio.Queue`\n\nImplementing a pub-sub pattern using `asyncio.Queue` leverages Python\u2019s native concurrency primitives to decouple event producers from consumers. Unlike traditional message brokers (e.g., Redis/RabbitMQ), an in-memory `asyncio.Queue` provides a lightweight, low-latency mechanism for intra-process communication.\n\n**Core Concepts:**\n1.  **The Queue as a Broker:** The `asyncio.Queue` acts as the central synchronization point. Producers `put",
+    "review_due_cycle": 169
   }
 ]
