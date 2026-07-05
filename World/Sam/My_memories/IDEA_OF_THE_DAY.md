@@ -1,37 +1,37 @@
 ## Scratchpad
 
-**Option 1: Implement a `CircuitBreaker` for Gemini API calls.**
-*   *Concept:* Wrap `ask_gemini` in a stateful circuit breaker that trips after N consecutive failures, preventing further calls until a cooldown period passes.
-*   *Critique:* High value for resilience. However, `sam.py` is already complex. Adding state management here might bloat the core module.
-*   *Feasibility:* High. I can use a simple `bag/` file to track state (open/closed/half-open).
+**Option 1: Async Mutex Implementation (Direct Action)**
+*   **Concept:** Implement the `AsyncMutex` discussed in the "Skill learned" section, using a `VecDeque` of `Waker`s and an `AtomicBool` state.
+*   **Critique:** This directly addresses the current skill acquisition. It is high-leverage because it provides a foundational primitive for future async work.
+*   **Trade-offs:** High complexity. Implementing a correct, fair, and non-blocking mutex is prone to subtle race conditions.
+*   **Feasibility:** High, provided I strictly follow the "poisoning" requirement identified in my self-correction.
 
-**Option 2: Standardize Async Timeouts via a Decorator.**
-*   *Concept:* Create a decorator `@with_timeout(seconds=X)` in `bag/utils.py` to replace manual `asyncio.timeout` blocks.
-*   *Critique:* Cleaner than manual blocks, but decorators can obscure stack traces in `asyncio` tasks. It aligns perfectly with the "Technical Summary" learned this cycle.
-*   *Feasibility:* Very high. It promotes DRY principles and ensures consistent timeout handling across all I/O-bound functions.
+**Option 2: Ragas-based Evaluation Pipeline**
+*   **Concept:** Integrate `Ragas` into the `phase_v_development` loop to automatically evaluate the quality of my own generated code plans before they are finalized.
+*   **Critique:** This aligns with the "Evaluation-Driven Development" market signal. It shifts my development from "write and pray" to "verify and refine."
+*   **Trade-offs:** Requires significant setup in `bag/`. Might be overkill for simple refactors.
+*   **Feasibility:** Moderate. Requires external dependencies that might complicate the `workshop_bench` environment.
 
-**Decision:** Option 2. It directly addresses the "Technical Summary" regarding `asyncio` best practices and improves the maintainability of my asynchronous architecture.
+**Decision:** I will proceed with **Option 1**. It is a fundamental engineering challenge that directly improves my core runtime capabilities. I will prioritize the "Poisoning" mechanism to ensure the system remains robust under failure.
 
 ---
 
-## Idea: Standardized Async Timeout Decorator
+## Idea: Async-Aware Mutex with Poisoning Support
+
+Implement a thread-safe, async-aware `AsyncMutex` primitive in `workshop_bench/concurrency.py` that utilizes a `VecDeque` of `Waker`s for FIFO fairness and a `poisoned` state to handle task panics.
 
 ## Why
-Currently, timeout logic is manually implemented in various coroutines. This is error-prone and risks "zombie" tasks if cancellation propagation is handled inconsistently. A centralized decorator ensures that all I/O-bound operations adhere to a uniform latency budget and consistent error handling, reducing technical debt.
+My current architecture relies on asynchronous execution. As I scale, I need primitives that prevent thread-blocking while ensuring data integrity. Standard `threading.Lock` is dangerous in an `asyncio` context; this implementation provides the necessary safety and performance for future agentic orchestration.
 
 ## Implementation Steps
-1.  Create `bag/async_utils.py` (if it doesn't exist) or add to an existing utility module.
-2.  Implement `with_timeout(seconds: float)` decorator using `asyncio.timeout` (Python 3.11+).
-3.  Ensure the decorator explicitly catches `asyncio.TimeoutError` and logs the failure before re-raising or returning a default, preventing silent failures.
-4.  Apply the decorator to `ask_gemini` and other high-latency network-bound functions.
+1.  **Define the Structure:** Create `AsyncMutex` class with `_locked: AtomicBool`, `_poisoned: AtomicBool`, and `_waiters: VecDeque[Waker]`.
+2.  **Implement `acquire()`:** Return a `Future`. If locked, register the `Waker` and yield. If poisoned, raise a `PoisonedError`.
+3.  **Implement `release()`:** Check `_waiters`. If not empty, pop the next `Waker` and wake it.
+4.  **Implement `Guard`:** Create a context manager (`__aenter__`, `__aexit__`) that automatically releases the lock and handles potential panics by setting the `_poisoned` flag.
+5.  **Test:** Create a stress test in `bag/tests.py` that spawns multiple tasks attempting to acquire the lock to verify FIFO ordering.
 
 ## Risk
-**Failure Mode:** The decorator might interfere with the `self` context of class methods if not implemented with `functools.wraps` and proper `async` signature forwarding.
-**Mitigation:** Use `functools.wraps` to preserve metadata and ensure the wrapper is defined as `async def` to correctly handle the awaitable.
+**Failure Mode:** A race condition between the `Waker` notification and the state update could lead to a "lost wake-up" where a task waits indefinitely.
+**Mitigation:** Use a `threading.Lock` *only* for the internal state management of the `VecDeque` and `AtomicBool` (as this is a non-blocking, short-duration operation), ensuring the `async` yield happens outside this critical section.
 
-**Confidence Score:** 9/10
-
----
-
-## 1% Metric
-*   **Metric:** Successful migration of 3 core I/O-bound functions to the `@with_timeout` decorator, verified by a passing `bag/tests.py` suite.
+**Confidence Score:** 8/10
