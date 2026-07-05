@@ -1,50 +1,42 @@
 ## Scratchpad
 
-**Option 1: Implement a `Hub` class for Pub-Sub (as per Action Items)**
-*   **Concept:** Create a central `Hub` that manages `asyncio.Queue` subscribers using `weakref` to prevent memory leaks.
-*   **Critique:** High alignment with the "Skill learned" section. It directly addresses the need for decoupled communication.
-*   **Trade-offs:** Adds complexity to the `sam.py` core. Requires careful handling of `weakref` to ensure subscribers aren't garbage collected prematurely if they are still active tasks.
-*   **Feasibility:** High. Python's `weakref` and `asyncio` primitives are well-documented and stable.
+**Option 1: Distributed Event Bus Adapter (Redis/PubSub)**
+*   **Concept:** Extend the current in-memory `EventBus` to support a distributed backend using Redis.
+*   **Critique:** High complexity. Requires handling serialization/deserialization of Pydantic models and managing connection state. While it solves the "distributed" weakness identified in my self-correction, it introduces a hard dependency on an external service.
+*   **Feasibility:** Moderate.
+*   **Maintainability:** High, if abstracted correctly behind the existing `EventBus` interface.
 
-**Option 2: Integrate `Instructor` for Pydantic-driven LLM responses**
-*   **Concept:** Replace manual `_parse_gemini_json` logic with `instructor` to enforce schema validation on all Gemini calls.
-*   **Critique:** Improves reliability of structured output (Market Signal #3).
-*   **Trade-offs:** Introduces an external dependency. I must ensure it doesn't break the existing `ask_gemini` caching or truncation-stitching logic.
-*   **Feasibility:** Moderate. Requires verifying if `instructor` can be used without heavy overhead in my current environment.
+**Option 2: Schema-Driven Event Registry (Zod/Pydantic)**
+*   **Concept:** Implement a central registry that validates all event payloads against Pydantic models *before* they hit the bus, using a decorator-based subscription system.
+*   **Critique:** Directly addresses the "type safety" and "backpressure" concerns mentioned in my recent learning. It keeps the system in-memory (low overhead) while hardening the interface.
+*   **Feasibility:** High.
+*   **Maintainability:** Excellent. It makes the system self-documenting and prevents "garbage-in" errors at the source.
 
-**Selection:** Option 1 is more foundational for my internal architecture. It solves the "intra-process communication" bottleneck identified in the skill summary and aligns with the high-priority action items.
+**Selection:** Option 2. It aligns with the "Minimal footprint, maximum leverage" core trait. I will build a `ValidatedEventBus` that uses Pydantic models to enforce strict contracts, ensuring that even if the system grows, the event payloads remain predictable.
 
 ---
 
-## Idea: `EventHub` — A Weakref-based Pub-Sub System
+## Idea: Pydantic-Validated Event Registry
 
-Implement an `EventHub` class in `bag/event_hub.py` to manage intra-process event distribution using `asyncio.Queue` and `weakref.WeakSet`.
+Implement a `ValidatedEventBus` that requires all event payloads to be defined as Pydantic models, enforcing schema validation at the `emit` boundary.
 
 ## Why
-My current architecture lacks a formal mechanism for decoupled communication between modules. As I scale, direct function calls create tight coupling. An `EventHub` allows modules to broadcast state changes (e.g., "cycle started", "patch applied") without knowing who is listening, facilitating cleaner, more modular code.
+Currently, the `EventBus` relies on loose typing. As the system grows, debugging payload mismatches becomes a primary source of technical debt. By forcing Pydantic validation, I move error detection from runtime logic to the event emission point, ensuring that subscribers always receive data in the expected format.
 
 ## Implementation Steps
-1.  **Create `bag/event_hub.py`**: Define `EventHub` with a `subscribe()` method that returns an `asyncio.Queue`.
-2.  **Weakref Registry**: Use `weakref.WeakSet` to track active subscriber queues, ensuring that if a consumer task is cancelled and the queue object is garbage collected, the Hub doesn't hold a dangling reference.
-3.  **Broadcast Logic**: Implement `publish(event_type, data)` which iterates through subscribers and `put_nowait()`s the message.
-4.  **Backpressure**: Enforce `maxsize` on all subscriber queues to prevent memory bloat.
-5.  **Integration**: Update `run_cycle` to initialize the `EventHub` and allow core services to register as listeners.
+1.  **Define Base Event:** Create a `BaseEvent(BaseModel)` class in `bag/events.py`.
+2.  **Registry Pattern:** Create a `Registry` that maps event types to their respective Pydantic models.
+3.  **Validation Wrapper:** Update the `emit` method in the `EventBus` to perform `model_validate()` on the payload before dispatching.
+4.  **Type-Safe Subscription:** Update the `on` method to accept the model class, allowing for type-hinted handlers.
 
 ## Risk
-**Failure Mode:** A slow consumer causes the `EventHub` to block or drop messages if the queue fills up, potentially leading to missed state updates.
-**Mitigation:** Implement a `put_nowait` strategy with a `QueueFull` exception handler that logs a warning and drops the message (or logs a "backpressure event") rather than blocking the entire system.
-
-**Confidence Score:** 9/10
+**Failure Mode:** Performance overhead. Validating every event payload via Pydantic could introduce latency in high-throughput scenarios.
+**Mitigation:** Use `model_validate_json` if data is already serialized, or implement a "fast-path" for internal events that bypasses deep validation if the producer is trusted.
+**Confidence Score:** 9/10.
 
 ---
 
-## Proposed Development Idea
-
-**Title:** `EventHub` Implementation for Decoupled Communication
-
-**Implementation Plan:**
-1.  Create `bag/event_hub.py`.
-2.  Define `EventHub` class with `subscribe(maxsize=10)` and `publish(event)`.
-3.  Use `weakref.WeakSet` to store subscriber queues.
-4.  Update `sam.py` to instantiate `EventHub` as a singleton service.
-5.  Add a test case in `bag/tests.py` to verify that a subscriber receives a message published by the Hub.
+### Action Items
+*   [ ] Create `bag/events.py` with `BaseEvent` and `EventRegistry`.
+*   [ ] Refactor `EventBus.emit` to include schema validation.
+*   [ ] Update existing subscribers to use the new type-safe registration.
