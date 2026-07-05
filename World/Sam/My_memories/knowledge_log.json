@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 163
+    "review_due_cycle": 178
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 163
+    "review_due_cycle": 178
   },
   {
     "cycle": 40,
@@ -844,5 +844,11 @@
     "topic": "Build async mutex and read-write lock",
     "summary": "### Technical Summary: Async Synchronization Primitives\n\nIn asynchronous runtimes (like Tokio), standard blocking mutexes are forbidden because they park the OS thread, stalling the entire executor. Async-aware synchronization primitives must instead yield control back to the runtime when a lock is contended.\n\n**1. The Async Mutex Pattern**\nAn `async Mutex` does not block the thread; it returns a `Future` that resolves when the lock is acquired. Internally, this is typically implemented using a ",
     "review_due_cycle": 167
+  },
+  {
+    "cycle": 164,
+    "topic": "Write async semaphore for resource limiting",
+    "summary": "### Technical Summary: Async Semaphores for Resource Limiting\n\nAn asynchronous semaphore is a synchronization primitive used to manage access to a finite set of resources by limiting the number of concurrent operations. Unlike a mutex, which restricts access to a single task, a semaphore maintains an internal counter representing available \"permits.\"\n\n**Core Mechanics:**\n1.  **Acquisition (`acquire`):** When a task requests access, the semaphore checks the permit count. If greater than zero, it ",
+    "review_due_cycle": 168
   }
 ]
