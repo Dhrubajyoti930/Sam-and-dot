@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 169
+    "review_due_cycle": 184
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 169
+    "review_due_cycle": 184
   },
   {
     "cycle": 46,
@@ -880,5 +880,11 @@
     "topic": "Build async lazy evaluation with __await__",
     "summary": "### Technical Summary: Async Lazy Evaluation via `__await__`\n\nAsync lazy evaluation leverages the Python data model to defer the execution of a coroutine until the moment its result is strictly required. By implementing the `__await__` dunder method on a wrapper object, we can encapsulate a coroutine or a factory function, transforming it into an awaitable that triggers execution only upon the first `await` expression.\n\n**Core Concepts:**\n1.  **The Awaitable Protocol:** An object is awaitable if",
     "review_due_cycle": 173
+  },
+  {
+    "cycle": 170,
+    "topic": "Write async context manager with resource cleanup",
+    "summary": "### Technical Summary: Async Context Managers\n\nThe `async with` statement is the standard mechanism for managing resources that require non-blocking setup and teardown (e.g., database connections, network sockets, or file handles). Implementing this requires the `__aenter__` and `__aexit__` dunder methods.\n\n**Core Patterns:**\n1.  **The Class-Based Approach:** Define a class with `async def __aenter__(self)` and `async def __aexit__(self, exc_type, exc, tb)`. The `__aenter__` method returns the r",
+    "review_due_cycle": 174
   }
 ]
