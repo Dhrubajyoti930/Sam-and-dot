@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 167
+    "review_due_cycle": 182
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 167
+    "review_due_cycle": 182
   },
   {
     "cycle": 44,
@@ -868,5 +868,11 @@
     "topic": "Write async worker pool with task stealing",
     "summary": "### Technical Summary: Async Worker Pools with Task Stealing\n\nAn efficient async worker pool with task stealing is designed to maximize CPU utilization by minimizing thread contention and idle time. Unlike a standard fixed-queue pool, where threads may block waiting for a global lock, a work-stealing architecture assigns each worker a local double-ended queue (deque).\n\n**Core Concepts:**\n1.  **Local Deques:** Each worker thread owns a private deque. Producers push tasks to the \"bottom,\" and the ",
     "review_due_cycle": 171
+  },
+  {
+    "cycle": 168,
+    "topic": "Implement async batch processor with flush intervals",
+    "summary": "### Technical Summary: Async Batch Processing with Flush Intervals\n\nAsync batch processing is a critical pattern for decoupling high-throughput event ingestion from downstream persistence or external API calls. The primary objective is to optimize I/O efficiency by amortizing the cost of network round-trips or database transactions across multiple items.\n\n**Core Concepts:**\n1.  **Buffer Management:** The system maintains an in-memory queue (typically a thread-safe channel or a bounded buffer). P",
+    "review_due_cycle": 172
   }
 ]
