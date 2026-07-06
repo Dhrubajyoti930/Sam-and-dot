@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 168
+    "review_due_cycle": 183
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 168
+    "review_due_cycle": 183
   },
   {
     "cycle": 45,
@@ -874,5 +874,11 @@
     "topic": "Implement async batch processor with flush intervals",
     "summary": "### Technical Summary: Async Batch Processing with Flush Intervals\n\nAsync batch processing is a critical pattern for decoupling high-throughput event ingestion from downstream persistence or external API calls. The primary objective is to optimize I/O efficiency by amortizing the cost of network round-trips or database transactions across multiple items.\n\n**Core Concepts:**\n1.  **Buffer Management:** The system maintains an in-memory queue (typically a thread-safe channel or a bounded buffer). P",
     "review_due_cycle": 172
+  },
+  {
+    "cycle": 169,
+    "topic": "Build async lazy evaluation with __await__",
+    "summary": "### Technical Summary: Async Lazy Evaluation via `__await__`\n\nAsync lazy evaluation leverages the Python data model to defer the execution of a coroutine until the moment its result is strictly required. By implementing the `__await__` dunder method on a wrapper object, we can encapsulate a coroutine or a factory function, transforming it into an awaitable that triggers execution only upon the first `await` expression.\n\n**Core Concepts:**\n1.  **The Awaitable Protocol:** An object is awaitable if",
+    "review_due_cycle": 173
   }
 ]

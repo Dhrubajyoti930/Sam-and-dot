@@ -1,35 +1,57 @@
 ## Scratchpad
 
-**Option 1: Implement a "Worker Pool" for Async Batch Processing**
-*   **Concept:** Decouple the `flush` mechanism from the `I/O` execution by introducing a `TaskQueue` and a pool of worker tasks.
-*   **Critique:** Addresses the bottleneck identified in the "Self-Correction" section of the prompt. It improves throughput for high-latency I/O.
-*   **Trade-off:** Increases complexity in state management (need to track worker health and handle partial failures).
-*   **Feasibility:** High, given the existing `asyncio` foundation.
+**Option 1: Implement `LazyAsync` wrapper for dependency injection.**
+*   *Concept:* Create a class that wraps a coroutine factory, implementing `__await__` to trigger execution only when accessed.
+*   *Critique:* High alignment with the "Async Lazy Evaluation" skill learned. It reduces startup latency for complex dependency graphs.
+*   *Feasibility:* High. The Python data model for `__await__` is well-defined.
+*   *Maintainability:* Excellent. It encapsulates complexity within a single utility, keeping the main `run_cycle` logic cleaner.
 
-**Option 2: Schema-Driven "EvalOps" Integration**
-*   **Concept:** Create a `eval_bench.py` module that uses Pydantic models to define "Golden Datasets" for testing LLM-generated patches.
-*   **Critique:** Directly addresses the "EvalOps" market signal. It moves testing from simple `subprocess` calls to semantic validation.
-*   **Trade-off:** Requires building a small evaluation harness; might be overkill for current scale.
-*   **Feasibility:** Moderate; requires careful prompt engineering for the "LLM-as-a-judge" component.
+**Option 2: Integrate `pgvector` for semantic memory retrieval.**
+*   *Concept:* Replace the current file-based semantic cache with a `pgvector` implementation.
+*   *Critique:* While highly "production-grade," it introduces a heavy external dependency (Postgres) that may exceed the current scope of Sam's local workshop environment.
+*   *Feasibility:* Moderate. Requires setting up and managing a database service, which might be overkill for a single-agent architecture.
+*   *Maintainability:* Mixed. Simplifies data management long-term but increases operational complexity.
 
-**Selection:** Option 1 is more aligned with the "Async Batch Processing" skill learned this cycle. It provides immediate, measurable performance gains for the system's internal event handling.
+**Decision:** Option 1 is the superior choice for this cycle. It directly leverages the newly acquired skill, improves system performance, and maintains the "minimal footprint" philosophy.
 
 ---
 
-## Idea: Async Worker Pool for Batch I/O
-Implement a `WorkerPool` class within `bag/batch_processor.py` that manages a set of concurrent workers consuming from a `asyncio.Queue`. This will decouple the buffer-flush trigger from the actual network/disk I/O, allowing multiple batches to be processed in parallel.
+## Idea: `LazyAsync` Wrapper for Deferred Execution
+
+Implement a `LazyAsync` utility class in `bag/utils.py` that encapsulates coroutine execution, providing memoized, lazy-evaluated results for expensive async operations.
 
 ## Why
-The current single-threaded consumer model is a bottleneck for high-latency operations. By parallelizing the I/O, I can maintain low latency for the buffer-flush trigger while ensuring the system doesn't block on slow downstream services. This aligns with the "Worker Pool" pattern identified in my self-correction.
+Currently, some initialization tasks in `run_cycle` are executed eagerly, even if they aren't required for every branch of the logic. By deferring these, I can reduce the overhead of the event loop and improve the responsiveness of the system, especially when dealing with complex dependency chains.
 
 ## Implementation Steps
-1.  **Define `WorkerPool`:** Create a class that accepts a `worker_func` and `concurrency_limit`.
-2.  **Queue Integration:** Update the buffer-flush logic to push batches into the `WorkerPool` queue instead of awaiting them directly.
-3.  **Graceful Shutdown:** Implement `asyncio.gather` with `cancel()` on the worker tasks to ensure pending I/O is handled during shutdown.
-4.  **Backpressure:** Use `asyncio.Queue(maxsize=N)` to naturally throttle producers if workers cannot keep up.
+1.  **Define `LazyAsync`:** Create a class that accepts a `callable` (the coroutine factory) and `*args`/`**kwargs`.
+2.  **Implement `__await__`:** Use an internal `_task` reference to track state (`PENDING`, `RUNNING`, `COMPLETED`).
+3.  **Memoization:** Ensure the first `await` triggers the coroutine and caches the result; subsequent calls return the cached value.
+4.  **Cancellation Handling:** Add a `cancel()` method that propagates to the underlying `_task` if it exists.
+5.  **Integration:** Refactor one non-critical initialization step in `run_cycle` to use `LazyAsync`.
 
 ## Risk
-**Failure Mode:** A "poison pill" batch (one that causes an unhandled exception) could crash the worker task, leading to silent data loss if not properly caught.
-**Mitigation:** Wrap the worker execution in a `try/except` block that logs the error and moves the failed batch to a `dead_letter_queue` (a simple list or file) for later inspection.
+**Failure Mode:** If the `LazyAsync` object is awaited from multiple concurrent tasks before the first one completes, it could trigger redundant executions if the state-tracking logic is not perfectly atomic.
+**Mitigation:** Use an `asyncio.Lock` within the `__await__` method to ensure that only the first caller triggers the coroutine, while others wait for the result.
 
 **Confidence Score:** 9/10
+
+---
+
+### Action Items
+```json
+[
+  {
+    "task": "Create bag/utils.py and implement the LazyAsync class with thread-safe locking.",
+    "priority": "high"
+  },
+  {
+    "task": "Update run_cycle to use LazyAsync for non-critical service initialization.",
+    "priority": "medium"
+  },
+  {
+    "task": "Add unit tests in bag/tests.py to verify memoization and concurrent await safety.",
+    "priority": "medium"
+  }
+]
+```
