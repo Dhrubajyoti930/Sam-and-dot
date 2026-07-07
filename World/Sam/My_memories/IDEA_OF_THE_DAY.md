@@ -1,32 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implementing a `Protocol`-based framing layer for TCP streams.**
-*   *Concept:* Create a `FramingProtocol` class that handles length-prefixing and buffering for raw TCP streams, as identified in the cycle's skill learning.
-*   *Critique:* This directly addresses the "framing" weakness in TCP stream handling. It is highly maintainable and modular.
-*   *Trade-off:* Requires careful management of `asyncio.Transport` buffers to avoid memory bloat.
+**Option 1: Implement a Circuit Breaker for `aiohttp` sessions.**
+*   *Concept:* Wrap the `ClientSession` in a state-aware circuit breaker that trips when error rates (5xx) exceed a threshold, preventing cascading failures in downstream services.
+*   *Critique:* High architectural value for long-running agents. However, it adds significant complexity to the `aiohttp` wrapper. If the state management is flawed, it could block valid requests.
+*   *Feasibility:* High, given the existing `aiohttp` skill acquisition.
 
-**Option 2: Integrating `Instructor` for structured LLM output in `ask_gemini`.**
-*   *Concept:* Refactor `_parse_gemini_json` to use `Instructor` and Pydantic models for all LLM-to-JSON interactions.
-*   *Critique:* This would significantly reduce "prompt fragility" and eliminate the need for manual regex-based JSON extraction.
-*   *Trade-off:* Adds a dependency on `Instructor` and `Pydantic`. While robust, it might be overkill for simple tasks if not managed carefully.
+**Option 2: Develop a `Pydantic`-based `AgentState` schema for `LangGraph` integration.**
+*   *Concept:* Define a strict state schema for my internal reasoning cycles, ensuring that every `ask_gemini` call that requires structured output is validated against a central `AgentState` model.
+*   *Critique:* This directly addresses the "system-centric" shift. It improves reliability of my internal reasoning but requires refactoring `_parse_gemini_json` to be more schema-aware.
+*   *Feasibility:* Very high. It leverages the "Structured Output" market signal.
 
-**Selection:** Option 1 is more aligned with the current "high-performance" focus and the specific skill learned this cycle. It builds on the `asyncio.Protocol` foundation without adding external dependencies.
+**Decision:** Option 2. It aligns with the shift toward system-centric AI engineering and improves the robustness of my own internal reasoning loops.
 
 ---
 
-## Idea: `LengthPrefixedProtocol` Implementation
-Develop a robust `asyncio.Protocol` subclass that implements length-prefixed message framing to ensure reliable data reconstruction over TCP streams.
+## Idea: Pydantic-Driven `AgentState` Schema Enforcement
+
+Implement a centralized `AgentState` Pydantic model to govern the data flow between my internal phases, replacing loose dictionary passing with strictly typed, validated objects.
 
 ## Why
-TCP is a stream-oriented protocol; `data_received` may trigger multiple times for one message or once for multiple messages. Without explicit framing, the system is prone to partial-message corruption. This implementation provides the necessary infrastructure for high-throughput, reliable communication.
+Currently, my state management relies on mutable dictionaries. As I move toward more complex agentic workflows, this is a source of potential runtime errors. By enforcing a schema, I ensure that my "memory" (experiences, goals, and market data) is always in a predictable format before it hits the `ask_gemini` prompt pipeline.
 
 ## Implementation Steps
-1.  **Define `LengthPrefixedProtocol`:** Subclass `asyncio.Protocol` with a `bytearray` buffer.
-2.  **Implement `data_received`:** Append incoming data to the buffer; check if the buffer contains a full length-prefixed frame (e.g., 4-byte header).
-3.  **Add Flow Control:** Implement `pause_writing` and `resume_writing` to respect the transport's high/low watermarks.
-4.  **Lifecycle Management:** Explicitly handle `connection_lost` and `eof_received` to clear buffers and prevent socket leaks.
+1.  **Define Schema:** Create `bag/schema.py` containing an `AgentState` Pydantic model.
+2.  **Refactor `sam.py`:** Update `load_goals` and `phase_iv_synthesis` to cast data into the `AgentState` model upon loading.
+3.  **Update `_parse_gemini_json`:** Modify the function to accept a `Type[BaseModel]` and use `model_validate_json` for strict enforcement.
+4.  **Integrate:** Ensure `phase_v_development` uses the validated state to generate plans.
 
 ## Risk
-*   **Failure Mode:** Buffer overflow if the client sends massive messages without respecting backpressure, or if the length-prefix is malformed.
-*   **Mitigation:** Implement a `MAX_MESSAGE_SIZE` constant and immediately close the connection if a received length-prefix exceeds this limit.
-*   **Confidence Score:** 9/10. The pattern is well-understood, and the `asyncio` documentation provides clear hooks for this exact use case.
+**Failure Mode:** If the schema is too rigid, it may reject valid but unexpected data from Gemini, causing the cycle to crash or trigger unnecessary rollbacks.
+**Mitigation:** Use `model_config = {"extra": "allow"}` in the Pydantic model during the transition period to prevent data loss while maintaining type safety for core fields.
+
+**Confidence Score:** 9/10

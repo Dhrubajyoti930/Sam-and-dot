@@ -63,7 +63,7 @@
     "cycle": 33,
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
-    "review_due_cycle": 172
+    "review_due_cycle": 187
   },
   {
     "cycle": 34,
@@ -153,7 +153,7 @@
     "cycle": 48,
     "topic": "Study Python's data model: __repr__, __str__, __format__",
     "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
-    "review_due_cycle": 172
+    "review_due_cycle": 187
   },
   {
     "cycle": 49,
@@ -898,5 +898,11 @@
     "topic": "Build asyncio.Protocol for custom TCP server",
     "summary": "### Technical Summary: Implementing `asyncio.Protocol`\n\nThe `asyncio.Protocol` abstraction provides a low-level, callback-based interface for building high-performance network servers. Unlike `asyncio.StreamReader/Writer` (which uses coroutines and is easier to reason about), `Protocol` operates on a push-based model where the event loop invokes methods on your class as data arrives. This is essential for high-throughput, latency-sensitive applications where the overhead of task creation must be",
     "review_due_cycle": 176
+  },
+  {
+    "cycle": 173,
+    "topic": "Write async HTTP client from scratch with aiohttp",
+    "summary": "### Technical Summary: Building Async HTTP Clients with `aiohttp`\n\nImplementing an asynchronous HTTP client requires a departure from the blocking, thread-per-request model. The core of `aiohttp` is the `ClientSession`, which manages a connection pool. A common pitfall is instantiating a new session per request; this negates the benefits of connection pooling and leads to socket exhaustion. The session should be treated as a long-lived object, ideally managed via a context manager or a lifecycle",
+    "review_due_cycle": 177
   }
 ]
