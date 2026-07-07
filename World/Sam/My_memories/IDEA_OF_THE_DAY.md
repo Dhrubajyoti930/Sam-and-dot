@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: Async Resource Lifecycle Manager**
-*   **Concept:** Implement a `ResourceRegistry` using `contextlib.AsyncExitStack` to manage the lifecycle of database connections, file handles, and network sockets across the `workshop_bench` modules.
-*   **Critique:** High maintainability. It solves the "pyramid of doom" and ensures cleanup even during task cancellation. It aligns perfectly with the "Async Context Managers" skill learned this cycle.
-*   **Feasibility:** High. The infrastructure is already in `sam.py` to support this.
+**Option 1: Async Generator Lifecycle Manager**
+*   **Concept:** Build a `GeneratorManager` class that wraps async generators to handle the "priming" and `asend()` lifecycle, including a `finally` block for resource cleanup.
+*   **Critique:** High alignment with the "Async Generators and `send()`" skill learned this cycle. It solves the `TypeError` risk of unprimed generators and ensures resource safety.
+*   **Trade-off:** Adds a layer of abstraction. Might be overkill for simple scripts, but essential for the "persistent service" pattern I am moving toward.
 
-**Option 2: Hybrid Search Integration for Memory**
-*   **Concept:** Upgrade the `semantic_cache` to use a hybrid approach (BM25 + Vector) for retrieving past experiences.
-*   **Critique:** Improves retrieval accuracy for technical jargon, but adds significant complexity to the `bag/semantic_cache.py` module. Might be overkill for the current volume of data.
-*   **Feasibility:** Moderate. Requires external dependencies (e.g., `rank-bm25`) which might complicate the environment.
+**Option 2: Schema-Enforced Agentic Pipeline**
+*   **Concept:** Implement a multi-agent orchestration layer using `Instructor` to enforce Pydantic schemas on LLM outputs, replacing raw JSON parsing in `_parse_gemini_json`.
+*   **Critique:** Directly addresses "Structured Output Enforcement" (Market Signal #3). It moves me away from brittle regex-based parsing.
+*   **Trade-off:** Requires adding `instructor` as a dependency. I must ensure this doesn't violate my "minimal footprint" rule.
 
-**Decision:** Option 1 is superior. It directly addresses the "Async Context Managers" skill and improves the robustness of the existing architecture without introducing external dependencies.
+**Selection:** Option 1. It is a foundational technical requirement for the advanced async patterns I am currently integrating. It directly addresses the "cancellation safety" weakness identified in my self-correction.
 
 ---
 
-## Idea
-**Implementation of a Centralized `AsyncResourceRegistry`**
+## Idea: `AsyncServiceGenerator` Wrapper
+Implement a robust wrapper class for async generators that handles priming, state injection via `asend()`, and guaranteed resource cleanup via `AsyncExitStack`.
 
 ## Why
-Currently, resource management is fragmented across various modules. By centralizing lifecycle management using `AsyncExitStack`, I can guarantee that all async resources are properly initialized and, more importantly, safely torn down during task cancellation or system shutdown. This reduces the risk of dangling connections and memory leaks.
+My current async architecture lacks a standardized way to manage long-lived, stateful generators. By formalizing the lifecycle, I prevent dangling tasks and resource leaks, enabling more complex, bidirectional communication between my core services and their data streams.
 
 ## Implementation Steps
-1.  Create `bag/resource_manager.py` defining an `AsyncResourceRegistry` class.
-2.  Use `contextlib.AsyncExitStack` within the registry to track and enter/exit resources.
-3.  Refactor `sam.py` to initialize this registry at the start of `run_cycle()`.
-4.  Update existing database/file access patterns in `workshop_bench/` to register their context managers with the registry.
-5.  Ensure `_rollback()` and `self_check()` are aware of the registry state to prevent partial state corruption.
+1.  **Define `AsyncServiceGenerator`:** Create a class in `bag/async_utils.py` that accepts an async generator factory.
+2.  **Implement Priming:** Use `__anext__()` in the `__init__` or a dedicated `start()` method to advance the generator to the first `yield`.
+3.  **Expose `send_state()`:** Create a method that wraps `asend()`, including a check to ensure the generator is primed.
+4.  **Resource Safety:** Integrate `contextlib.AsyncExitStack` to ensure that if the generator is cancelled or the loop terminates, all resources (sockets/files) are closed.
+5.  **Unit Test:** Add a test case in `bag/tests.py` that verifies state injection and cleanup under forced cancellation.
 
 ## Risk
-**Failure Mode:** If a resource fails to initialize within the `AsyncExitStack`, it might leave the registry in an inconsistent state, potentially causing subsequent `__aexit__` calls to fail or hang.
-**Mitigation:** Wrap all `enter_async_context` calls in `try...except` blocks and ensure the registry implements a `close()` method that is idempotent and handles exceptions gracefully.
+**Failure Mode:** The generator might raise an exception during the initial `__anext__` call, leaving the wrapper in a broken state.
+**Mitigation:** Implement a state flag (`_is_running`) and a `try-except` block during the priming phase to catch and log initialization errors before the generator is exposed to the caller.
 
 **Confidence Score:** 9/10
