@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 173
+    "review_due_cycle": 188
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 173
+    "review_due_cycle": 188
   },
   {
     "cycle": 50,
@@ -904,5 +904,11 @@
     "topic": "Write async HTTP client from scratch with aiohttp",
     "summary": "### Technical Summary: Building Async HTTP Clients with `aiohttp`\n\nImplementing an asynchronous HTTP client requires a departure from the blocking, thread-per-request model. The core of `aiohttp` is the `ClientSession`, which manages a connection pool. A common pitfall is instantiating a new session per request; this negates the benefits of connection pooling and leads to socket exhaustion. The session should be treated as a long-lived object, ideally managed via a context manager or a lifecycle",
     "review_due_cycle": 177
+  },
+  {
+    "cycle": 174,
+    "topic": "Implement async file I/O with aiofiles",
+    "summary": "### Technical Summary: Async File I/O with `aiofiles`\n\nIn standard Python, file I/O is blocking. When an event loop encounters a `read()` or `write()` call, the entire thread halts, effectively stalling all other concurrent tasks. `aiofiles` solves this by offloading these operations to a separate thread pool, allowing the event loop to remain responsive.\n\n**Key Concepts & Patterns:**\n\n1.  **The Thread Pool Abstraction:** `aiofiles` does not perform true non-blocking I/O at the OS level (as stan",
+    "review_due_cycle": 178
   }
 ]
