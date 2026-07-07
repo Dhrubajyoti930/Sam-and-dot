@@ -1,34 +1,32 @@
 ## Scratchpad
 
-**Option 1: Async Generator Lifecycle Manager**
-*   **Concept:** Build a `GeneratorManager` class that wraps async generators to handle the "priming" and `asend()` lifecycle, including a `finally` block for resource cleanup.
-*   **Critique:** High alignment with the "Async Generators and `send()`" skill learned this cycle. It solves the `TypeError` risk of unprimed generators and ensures resource safety.
-*   **Trade-off:** Adds a layer of abstraction. Might be overkill for simple scripts, but essential for the "persistent service" pattern I am moving toward.
+**Option 1: Implementing a `Protocol`-based framing layer for TCP streams.**
+*   *Concept:* Create a `FramingProtocol` class that handles length-prefixing and buffering for raw TCP streams, as identified in the cycle's skill learning.
+*   *Critique:* This directly addresses the "framing" weakness in TCP stream handling. It is highly maintainable and modular.
+*   *Trade-off:* Requires careful management of `asyncio.Transport` buffers to avoid memory bloat.
 
-**Option 2: Schema-Enforced Agentic Pipeline**
-*   **Concept:** Implement a multi-agent orchestration layer using `Instructor` to enforce Pydantic schemas on LLM outputs, replacing raw JSON parsing in `_parse_gemini_json`.
-*   **Critique:** Directly addresses "Structured Output Enforcement" (Market Signal #3). It moves me away from brittle regex-based parsing.
-*   **Trade-off:** Requires adding `instructor` as a dependency. I must ensure this doesn't violate my "minimal footprint" rule.
+**Option 2: Integrating `Instructor` for structured LLM output in `ask_gemini`.**
+*   *Concept:* Refactor `_parse_gemini_json` to use `Instructor` and Pydantic models for all LLM-to-JSON interactions.
+*   *Critique:* This would significantly reduce "prompt fragility" and eliminate the need for manual regex-based JSON extraction.
+*   *Trade-off:* Adds a dependency on `Instructor` and `Pydantic`. While robust, it might be overkill for simple tasks if not managed carefully.
 
-**Selection:** Option 1. It is a foundational technical requirement for the advanced async patterns I am currently integrating. It directly addresses the "cancellation safety" weakness identified in my self-correction.
+**Selection:** Option 1 is more aligned with the current "high-performance" focus and the specific skill learned this cycle. It builds on the `asyncio.Protocol` foundation without adding external dependencies.
 
 ---
 
-## Idea: `AsyncServiceGenerator` Wrapper
-Implement a robust wrapper class for async generators that handles priming, state injection via `asend()`, and guaranteed resource cleanup via `AsyncExitStack`.
+## Idea: `LengthPrefixedProtocol` Implementation
+Develop a robust `asyncio.Protocol` subclass that implements length-prefixed message framing to ensure reliable data reconstruction over TCP streams.
 
 ## Why
-My current async architecture lacks a standardized way to manage long-lived, stateful generators. By formalizing the lifecycle, I prevent dangling tasks and resource leaks, enabling more complex, bidirectional communication between my core services and their data streams.
+TCP is a stream-oriented protocol; `data_received` may trigger multiple times for one message or once for multiple messages. Without explicit framing, the system is prone to partial-message corruption. This implementation provides the necessary infrastructure for high-throughput, reliable communication.
 
 ## Implementation Steps
-1.  **Define `AsyncServiceGenerator`:** Create a class in `bag/async_utils.py` that accepts an async generator factory.
-2.  **Implement Priming:** Use `__anext__()` in the `__init__` or a dedicated `start()` method to advance the generator to the first `yield`.
-3.  **Expose `send_state()`:** Create a method that wraps `asend()`, including a check to ensure the generator is primed.
-4.  **Resource Safety:** Integrate `contextlib.AsyncExitStack` to ensure that if the generator is cancelled or the loop terminates, all resources (sockets/files) are closed.
-5.  **Unit Test:** Add a test case in `bag/tests.py` that verifies state injection and cleanup under forced cancellation.
+1.  **Define `LengthPrefixedProtocol`:** Subclass `asyncio.Protocol` with a `bytearray` buffer.
+2.  **Implement `data_received`:** Append incoming data to the buffer; check if the buffer contains a full length-prefixed frame (e.g., 4-byte header).
+3.  **Add Flow Control:** Implement `pause_writing` and `resume_writing` to respect the transport's high/low watermarks.
+4.  **Lifecycle Management:** Explicitly handle `connection_lost` and `eof_received` to clear buffers and prevent socket leaks.
 
 ## Risk
-**Failure Mode:** The generator might raise an exception during the initial `__anext__` call, leaving the wrapper in a broken state.
-**Mitigation:** Implement a state flag (`_is_running`) and a `try-except` block during the priming phase to catch and log initialization errors before the generator is exposed to the caller.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** Buffer overflow if the client sends massive messages without respecting backpressure, or if the length-prefix is malformed.
+*   **Mitigation:** Implement a `MAX_MESSAGE_SIZE` constant and immediately close the connection if a received length-prefix exceeds this limit.
+*   **Confidence Score:** 9/10. The pattern is well-understood, and the `asyncio` documentation provides clear hooks for this exact use case.
