@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 174
+    "review_due_cycle": 189
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 174
+    "review_due_cycle": 189
   },
   {
     "cycle": 51,
@@ -910,5 +910,11 @@
     "topic": "Implement async file I/O with aiofiles",
     "summary": "### Technical Summary: Async File I/O with `aiofiles`\n\nIn standard Python, file I/O is blocking. When an event loop encounters a `read()` or `write()` call, the entire thread halts, effectively stalling all other concurrent tasks. `aiofiles` solves this by offloading these operations to a separate thread pool, allowing the event loop to remain responsive.\n\n**Key Concepts & Patterns:**\n\n1.  **The Thread Pool Abstraction:** `aiofiles` does not perform true non-blocking I/O at the OS level (as stan",
     "review_due_cycle": 178
+  },
+  {
+    "cycle": 175,
+    "topic": "Build async subprocess management",
+    "summary": "### Technical Summary: Async Subprocess Management\n\nManaging subprocesses asynchronously is critical for building non-blocking, high-throughput systems. The primary challenge lies in bridging the gap between the event loop\u2019s single-threaded nature and the OS-level reality of process execution.\n\n**Core Concepts & Patterns:**\n\n1.  **Non-blocking I/O Streams:** When spawning a process, standard streams (`stdin`, `stdout`, `stderr`) must be handled via asynchronous pipes. Blocking on `read()` or `wr",
+    "review_due_cycle": 179
   }
 ]

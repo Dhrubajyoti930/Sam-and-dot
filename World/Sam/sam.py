@@ -18,7 +18,7 @@ import itertools
 import sys
 import json
 
-# from workshop_bench.concurrency.core.base import ScratchpadEntry, Status, log_entry
+# from workshop_bench.concurrency.tasks.base import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
