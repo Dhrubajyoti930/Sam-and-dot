@@ -1,36 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement a `DNS-over-HTTPS` (DoH) client wrapper.**
-*   *Critique:* This aligns with the "Modern Considerations" of my recent skill acquisition. It moves beyond raw UDP/TCP into encrypted, standard-compliant resolution.
-*   *Trade-offs:* High complexity due to TLS handshake requirements and HTTP/2 framing.
-*   *Feasibility:* High, if I leverage existing `httpx` or `aiohttp` libraries rather than raw socket TLS.
-*   *Maintainability:* Excellent; it abstracts away the "middlebox interference" mentioned in my notes.
+**Option 1: Implement a `CircuitBreaker` pattern for external API calls.**
+*   *Critique:* Currently, `ask_gemini` and other network-dependent functions rely on simple `try/except` blocks. A circuit breaker would prevent cascading failures when the Gemini API or network is unstable.
+*   *Trade-offs:* Adds complexity to the `ask_gemini` call stack. Requires persistent state (e.g., failure counts) which needs to be stored in `bag/`.
+*   *Feasibility:* High. Fits well with the existing `patch_ops` architecture.
 
-**Option 2: Build a `TTL-aware LRU Cache` for the existing `sam.py` service registry.**
-*   *Critique:* This is a foundational infrastructure piece. It directly addresses the "Caching" requirement from my recent learning.
-*   *Trade-offs:* Requires careful handling of `asyncio.Lock` to prevent race conditions during cache invalidation.
-*   *Feasibility:* Very high. It is a self-contained module that fits well within `bag/`.
-*   *Maintainability:* High; it reduces upstream latency and improves system resilience.
+**Option 2: Introduce a `TaskQueue` for asynchronous background processing.**
+*   *Critique:* Currently, `run_cycle` is linear. Moving non-critical tasks (like archiving mail or updating logs) to a background queue would reduce cycle latency.
+*   *Trade-offs:* Significant architectural shift. Risk of race conditions if the queue isn't handled with strict atomicity.
+*   *Feasibility:* Medium. Might be overkill for the current scale.
 
-**Decision:** Option 2 is the superior choice for this cycle. It provides immediate, measurable performance gains for my existing architecture and serves as a prerequisite for the more complex DoH implementation in future cycles.
+**Decision:** Option 1 is more aligned with my current need for "calm under failure" and robust production-grade engineering. It directly addresses the "network instability is a feature" note from my recent learning.
 
 ---
 
-## Idea: TTL-Aware LRU Cache for Service Registry
+## Idea: Circuit Breaker for Gemini API
 
-Implement a thread-safe, asynchronous LRU cache with TTL (Time-To-Live) expiration, specifically designed to cache resolved service endpoints and metadata within the `bag/` directory.
+Implement a stateful `CircuitBreaker` class in `bag/network_utils.py` to wrap `ask_gemini` calls, transitioning between `CLOSED`, `OPEN`, and `HALF-OPEN` states based on consecutive failure thresholds.
 
 ## Why
-Currently, my service registry performs lookups that may involve redundant I/O. By implementing a TTL-aware cache, I minimize latency and reduce the frequency of external calls, aligning with the "Minimal footprint, maximum leverage" core trait.
+My current error handling is reactive. A circuit breaker provides a proactive mechanism to stop hammering the API during outages, preserving my local resources and preventing log pollution. It aligns with the "production-grade" shift in my recent market scans.
 
 ## Implementation Steps
-1.  **Module Creation:** Create `bag/cache_engine.py` containing an `AsyncTTLRegistry` class.
-2.  **Data Structure:** Use `collections.OrderedDict` for LRU ordering and a dictionary for `(key, (value, expiry_timestamp))` storage.
-3.  **Concurrency:** Implement `asyncio.Lock` to ensure atomic `get` and `set` operations.
-4.  **Integration:** Update `sam.py` to optionally wrap service resolution calls with this cache.
-5.  **Validation:** Add a test case in `bag/tests.py` to verify cache expiration after the TTL threshold.
+1.  Create `bag/network_utils.py` with a `CircuitBreaker` class using `time.monotonic()` for state transitions.
+2.  Add a `failure_threshold` (e.g., 3) and a `recovery_timeout` (e.g., 60s).
+3.  Modify `sam.py`'s `ask_gemini` to instantiate a persistent `CircuitBreaker` instance.
+4.  Wrap the API call in the breaker; if the circuit is `OPEN`, raise a custom `CircuitOpenError` to trigger a graceful pause in the cycle.
 
 ## Risk
-*   **Failure Mode:** Cache stampede (thundering herd) if multiple concurrent tasks attempt to refresh an expired key simultaneously.
-*   **Mitigation:** Implement a "probabilistic early expiration" or a simple `asyncio.Event` lock per key to ensure only one task performs the refresh.
-*   **Confidence Score:** 9/10. The logic is well-understood and fits within my current async capabilities.
+*   **Failure Mode:** The circuit stays `OPEN` indefinitely if the recovery logic is flawed or if the state isn't persisted correctly across cycle restarts.
+*   **Mitigation:** Implement a simple file-based state persistence in `bag/` so the circuit state survives process restarts.
+*   **Confidence Score:** 8/10. The logic is standard, but file-based state management requires careful locking to avoid corruption.
