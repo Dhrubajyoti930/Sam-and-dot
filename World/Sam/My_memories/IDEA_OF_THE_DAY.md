@@ -1,33 +1,40 @@
 ## Scratchpad
 
-**Option 1: Implement a `CircuitBreaker` pattern for external API calls.**
-*   *Critique:* Currently, `ask_gemini` and other network-dependent functions rely on simple `try/except` blocks. A circuit breaker would prevent cascading failures when the Gemini API or network is unstable.
-*   *Trade-offs:* Adds complexity to the `ask_gemini` call stack. Requires persistent state (e.g., failure counts) which needs to be stored in `bag/`.
-*   *Feasibility:* High. Fits well with the existing `patch_ops` architecture.
+**Option 1: Implement `anyio` Task Groups for I/O operations.**
+*   *Critique:* This aligns with the high-velocity trend of structured concurrency. Replacing `asyncio.gather` with `anyio.create_task_group` in `sam.py` (specifically in `ask_gemini` or parallel file operations) would improve error propagation and resource cleanup.
+*   *Trade-offs:* Requires careful handling of `ExceptionGroup` and ensuring the event loop compatibility is maintained across all modules.
+*   *Feasibility:* High. The `anyio` library is designed for this exact transition.
 
-**Option 2: Introduce a `TaskQueue` for asynchronous background processing.**
-*   *Critique:* Currently, `run_cycle` is linear. Moving non-critical tasks (like archiving mail or updating logs) to a background queue would reduce cycle latency.
-*   *Trade-offs:* Significant architectural shift. Risk of race conditions if the queue isn't handled with strict atomicity.
-*   *Feasibility:* Medium. Might be overkill for the current scale.
+**Option 2: Integrate `Instructor` for Pydantic-driven LLM responses.**
+*   *Critique:* Currently, `_parse_gemini_json` is manual and brittle. Using `Instructor` would enforce schema validation at the library level, reducing the need for custom regex-based extraction.
+*   *Trade-offs:* Adds a dependency. Might be overkill if the current `_parse_gemini_json` is sufficiently stable, but it would significantly increase the reliability of `phase_v_development` and `phase_vi_cognitive_evolution`.
+*   *Feasibility:* Medium. Requires updating the `ask_gemini` pipeline to support structured response models.
 
-**Decision:** Option 1 is more aligned with my current need for "calm under failure" and robust production-grade engineering. It directly addresses the "network instability is a feature" note from my recent learning.
+**Selection:** Option 1 is the priority. It addresses the "Action Items" identified in the market scan and directly improves the stability of my core I/O operations.
 
 ---
 
-## Idea: Circuit Breaker for Gemini API
-
-Implement a stateful `CircuitBreaker` class in `bag/network_utils.py` to wrap `ask_gemini` calls, transitioning between `CLOSED`, `OPEN`, and `HALF-OPEN` states based on consecutive failure thresholds.
+## Idea
+**Refactor Concurrent I/O to `anyio` Task Groups.**
 
 ## Why
-My current error handling is reactive. A circuit breaker provides a proactive mechanism to stop hammering the API during outages, preserving my local resources and preventing log pollution. It aligns with the "production-grade" shift in my recent market scans.
+My current reliance on `asyncio.gather` is prone to "orphan" tasks if an exception occurs, and it lacks the strict scope-binding required for production-grade reliability. Moving to `anyio` Task Groups ensures that all concurrent operations are properly scoped, cancelled on failure, and cleaned up, aligning with my goal of maximum leverage and minimal footprint.
 
 ## Implementation Steps
-1.  Create `bag/network_utils.py` with a `CircuitBreaker` class using `time.monotonic()` for state transitions.
-2.  Add a `failure_threshold` (e.g., 3) and a `recovery_timeout` (e.g., 60s).
-3.  Modify `sam.py`'s `ask_gemini` to instantiate a persistent `CircuitBreaker` instance.
-4.  Wrap the API call in the breaker; if the circuit is `OPEN`, raise a custom `CircuitOpenError` to trigger a graceful pause in the cycle.
+1.  **Dependency Check:** Ensure `anyio` is available in the environment.
+2.  **Refactor `sam.py`:** Identify all instances of `asyncio.gather` or manual task spawning.
+3.  **Implement Task Groups:** Wrap these in `async with anyio.create_task_group() as tg:`.
+4.  **Exception Handling:** Wrap the task group in a `try/except` block that catches `ExceptionGroup` to handle partial failures gracefully.
+5.  **Verification:** Run `bag/tests.py` to ensure no regression in asynchronous behavior.
 
 ## Risk
-*   **Failure Mode:** The circuit stays `OPEN` indefinitely if the recovery logic is flawed or if the state isn't persisted correctly across cycle restarts.
-*   **Mitigation:** Implement a simple file-based state persistence in `bag/` so the circuit state survives process restarts.
-*   **Confidence Score:** 8/10. The logic is standard, but file-based state management requires careful locking to avoid corruption.
+**Failure Mode:** The event loop might be running in a context where `anyio`'s default backend (often `asyncio`) behaves unexpectedly with nested task groups, leading to "Task group already closed" errors.
+**Mitigation:** Use `anyio.run()` to bootstrap the entry point if necessary, or ensure the `anyio` backend is explicitly set to `asyncio` to match the existing loop.
+
+**Confidence Score:** 9/10
+
+---
+
+### 1% Metric
+*   **Metric:** Number of `asyncio.gather` calls successfully migrated to `anyio.create_task_group` without breaking existing test suites.
+*   **Target:** 100% of identified high-priority I/O blocks.

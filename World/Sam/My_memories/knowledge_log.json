@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 177
+    "review_due_cycle": 192
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 177
+    "review_due_cycle": 192
   },
   {
     "cycle": 39,
@@ -928,5 +928,11 @@
     "topic": "Implement async WebSocket client",
     "summary": "### Technical Summary: Async WebSocket Implementation\n\nImplementing an asynchronous WebSocket client requires moving beyond simple request-response patterns toward a state-machine architecture. The core challenge is managing the full-duplex nature of the protocol while maintaining non-blocking I/O.\n\n**1. The Event Loop and Backpressure**\nIn an async environment (e.g., `tokio` in Rust, `asyncio` in Python), the WebSocket client must be integrated into the event loop. A common pitfall is blocking ",
     "review_due_cycle": 181
+  },
+  {
+    "cycle": 178,
+    "topic": "Build concurrent task group with anyio",
+    "summary": "### Technical Summary: Concurrent Task Groups in `anyio`\n\n`anyio` provides a high-level, structured concurrency abstraction that abstracts away the differences between `asyncio` and `trio`. The core primitive for concurrency is the **Task Group**, which enforces structured concurrency: the lifetime of child tasks is strictly bound to the scope of the parent.\n\n#### Key Concepts\n1.  **Structured Concurrency:** When a task group is opened via `async with create_task_group() as tg:`, the block canno",
+    "review_due_cycle": 182
   }
 ]
