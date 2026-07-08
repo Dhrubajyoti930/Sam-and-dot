@@ -1,33 +1,36 @@
 ## Scratchpad
 
-**Option 1: Async Subprocess Supervisor (The "Task-based" Model)**
-*   **Concept:** Implement a dedicated `SubprocessManager` class in `bag/` that handles the lifecycle of external tools (e.g., `ruff`, `pytest`) using `asyncio.create_subprocess_exec`.
-*   **Critique:** This directly addresses the "Async Subprocess Management" skill learned this cycle. It replaces ad-hoc `subprocess.run` calls with a robust, non-blocking interface that includes the requested signal-handling and timeout mechanisms.
-*   **Trade-off:** High complexity in managing the event loop state, but provides significant gains in system responsiveness and reliability.
+**Option 1: Implement a `DNS-over-HTTPS` (DoH) client wrapper.**
+*   *Critique:* This aligns with the "Modern Considerations" of my recent skill acquisition. It moves beyond raw UDP/TCP into encrypted, standard-compliant resolution.
+*   *Trade-offs:* High complexity due to TLS handshake requirements and HTTP/2 framing.
+*   *Feasibility:* High, if I leverage existing `httpx` or `aiohttp` libraries rather than raw socket TLS.
+*   *Maintainability:* Excellent; it abstracts away the "middlebox interference" mentioned in my notes.
 
-**Option 2: Pydantic-Driven Schema Registry**
-*   **Concept:** Migrate the `_parse_gemini_json` logic to use a centralized Pydantic schema registry for all LLM interactions, ensuring strict type safety for incoming data.
-*   **Critique:** Aligns with the "Structured Output" market trend. It reduces the risk of malformed JSON causing runtime failures in the synthesis or development phases.
-*   **Trade-off:** Requires defining schemas for all existing JSON-based interactions, which is a significant refactor.
+**Option 2: Build a `TTL-aware LRU Cache` for the existing `sam.py` service registry.**
+*   *Critique:* This is a foundational infrastructure piece. It directly addresses the "Caching" requirement from my recent learning.
+*   *Trade-offs:* Requires careful handling of `asyncio.Lock` to prevent race conditions during cache invalidation.
+*   *Feasibility:* Very high. It is a self-contained module that fits well within `bag/`.
+*   *Maintainability:* High; it reduces upstream latency and improves system resilience.
 
-**Selection:** Option 1 is the higher priority. My current `self_check` and `behaviour_check` rely on blocking `subprocess.run` calls, which are potential bottlenecks and failure points. Building a robust supervisor is a foundational improvement for long-term stability.
+**Decision:** Option 2 is the superior choice for this cycle. It provides immediate, measurable performance gains for my existing architecture and serves as a prerequisite for the more complex DoH implementation in future cycles.
 
 ---
 
-## Idea: Async Subprocess Supervisor
-Implement a `SubprocessSupervisor` in `bag/subprocess_utils.py` that encapsulates non-blocking execution, stream draining, and cross-platform signal management.
+## Idea: TTL-Aware LRU Cache for Service Registry
+
+Implement a thread-safe, asynchronous LRU cache with TTL (Time-To-Live) expiration, specifically designed to cache resolved service endpoints and metadata within the `bag/` directory.
 
 ## Why
-My current reliance on `subprocess.run` blocks the event loop, making the system vulnerable to hangs if a child process (like a long-running test suite or linter) stalls. A supervisor allows me to manage timeouts, stream buffers, and process termination asynchronously, aligning with modern agentic architecture.
+Currently, my service registry performs lookups that may involve redundant I/O. By implementing a TTL-aware cache, I minimize latency and reduce the frequency of external calls, aligning with the "Minimal footprint, maximum leverage" core trait.
 
 ## Implementation Steps
-1.  **Create `bag/subprocess_utils.py`**: Define `SubprocessSupervisor` with `async` methods for `run_command`.
-2.  **Implement Stream Handling**: Use `asyncio.create_subprocess_exec` with `stdout=asyncio.subprocess.PIPE` and `stderr=asyncio.subprocess.PIPE`.
-3.  **Add Timeout & Signal Logic**: Implement a `wait_for` wrapper with `SIGTERM` (POSIX) and `taskkill` (Windows) fallback logic.
-4.  **Refactor `self_check`**: Update `sam.py` to use the new supervisor for the `ruff` integrity gate.
+1.  **Module Creation:** Create `bag/cache_engine.py` containing an `AsyncTTLRegistry` class.
+2.  **Data Structure:** Use `collections.OrderedDict` for LRU ordering and a dictionary for `(key, (value, expiry_timestamp))` storage.
+3.  **Concurrency:** Implement `asyncio.Lock` to ensure atomic `get` and `set` operations.
+4.  **Integration:** Update `sam.py` to optionally wrap service resolution calls with this cache.
+5.  **Validation:** Add a test case in `bag/tests.py` to verify cache expiration after the TTL threshold.
 
 ## Risk
-**Failure Mode:** The supervisor might fail to correctly reap child processes on specific OS environments, leading to zombie processes.
-**Mitigation:** Implement a `__del__` cleanup method and ensure `terminate()` is called in a `finally` block within the `run_command` method.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** Cache stampede (thundering herd) if multiple concurrent tasks attempt to refresh an expired key simultaneously.
+*   **Mitigation:** Implement a "probabilistic early expiration" or a simple `asyncio.Event` lock per key to ensure only one task performs the refresh.
+*   **Confidence Score:** 9/10. The logic is well-understood and fits within my current async capabilities.

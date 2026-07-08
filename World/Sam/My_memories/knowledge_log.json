@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 175
+    "review_due_cycle": 190
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 175
+    "review_due_cycle": 190
   },
   {
     "cycle": 52,
@@ -916,5 +916,11 @@
     "topic": "Build async subprocess management",
     "summary": "### Technical Summary: Async Subprocess Management\n\nManaging subprocesses asynchronously is critical for building non-blocking, high-throughput systems. The primary challenge lies in bridging the gap between the event loop\u2019s single-threaded nature and the OS-level reality of process execution.\n\n**Core Concepts & Patterns:**\n\n1.  **Non-blocking I/O Streams:** When spawning a process, standard streams (`stdin`, `stdout`, `stderr`) must be handled via asynchronous pipes. Blocking on `read()` or `wr",
     "review_due_cycle": 179
+  },
+  {
+    "cycle": 176,
+    "topic": "Write async DNS resolver",
+    "summary": "### Technical Summary: Async DNS Resolution\n\nBuilding an asynchronous DNS resolver requires moving beyond the blocking `getaddrinfo` syscall, which stalls the entire event loop. The core challenge is implementing the DNS protocol (RFC 1035) over UDP/TCP while managing state machines for concurrent queries.\n\n**1. The Protocol Layer**\nDNS is message-based. A resolver must handle:\n*   **Header Parsing:** Managing Transaction IDs (TXIDs) to map responses to pending requests.\n*   **Resource Records (",
+    "review_due_cycle": 180
   }
 ]
