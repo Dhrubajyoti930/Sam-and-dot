@@ -1,34 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implementing a Trio-based Nursery Manager for `ask_gemini`**
-*   **Concept:** Refactor `ask_gemini` and its associated network-bound calls to use `trio` nurseries. This would allow concurrent pre-fetching of cache data and parallelized validation checks.
-*   **Critique:** High architectural alignment with the "Structured Concurrency" skill learned. However, `ask_gemini` is currently synchronous and relies on a global `_CALL_DELAY` for rate limiting. Moving to `trio` requires an `async` refactor of the entire call chain, which is a high-risk, high-reward change.
-*   **Trade-off:** Increases reliability and performance but introduces significant complexity in the `sam.py` event loop.
+### Option 1: Async State Machine Integration (The "Formalizer")
+*   **Concept:** Replace the current `_bag_data("cycle_status")` and implicit state transitions in `run_cycle()` with a formal `AsyncStateMachine` class.
+*   **Critique:** 
+    *   *Pros:* Eliminates "impossible states" (e.g., being in Phase V while Phase III data is missing). Provides a clear audit trail for debugging.
+    *   *Cons:* High complexity for a single cycle. Requires refactoring the entry point of `run_cycle()`.
+    *   *Feasibility:* High, given the recent skill acquisition on Async State Machines.
 
-**Option 2: Semantic Deduplication of Knowledge Logs**
-*   **Concept:** Use the existing `bag/semantic_cache` to identify and merge redundant entries in `knowledge_log.json` during Phase II.
-*   **Critique:** Directly addresses the "Semantic Deduplication" objective. It is a surgical, low-risk refactor that improves the quality of the Spaced Repetition engine without requiring a full async overhaul.
-*   **Trade-off:** Lower architectural impact than Option 1, but higher immediate utility for long-term memory management.
+### Option 2: Observability Middleware (The "Auditor")
+*   **Concept:** Implement a decorator-based `trace_transition` utility that wraps all `phase_X` functions, logging `(State, Timestamp, MemoryUsage)` to a structured `audit.jsonl` file.
+*   **Critique:**
+    *   *Pros:* Low risk, non-invasive, provides immediate visibility into performance bottlenecks.
+    *   *Cons:* Doesn't solve the underlying state management issues, just monitors them.
+    *   *Feasibility:* Very high.
 
-**Decision:** I will proceed with **Option 2**. It aligns with my current objectives and respects the "minimal footprint, maximum leverage" principle.
+**Decision:** I will pursue **Option 1**. The market signals emphasize agentic orchestration and stateful applications. My current `run_cycle()` is too imperative; moving to a state-machine architecture aligns with my goal of long-term maintainability and provides the "State Transition Logger" I identified in my self-correction.
 
 ---
 
-## Idea: Semantic Deduplication of Knowledge Logs
-
-Implement a deduplication pass in `phase_ii_spaced_repetition` that uses vector similarity to identify and merge overlapping knowledge entries before they are reviewed.
+## Idea: Formal Async State Machine for Cycle Orchestration
 
 ## Why
-As the `knowledge_log.json` grows, redundant entries dilute the efficacy of the Spaced Repetition engine. By merging semantically similar entries, I ensure that my review cycles are focused on distinct concepts rather than fragmented, repetitive summaries.
+My current cycle execution is a linear sequence of function calls. If a phase fails or hangs, the system state becomes ambiguous. By formalizing the cycle as a state machine, I can ensure atomicity, handle retries at the state level, and provide a clear audit trail for every transition, directly addressing the "observability" weakness I identified.
 
 ## Implementation Steps
-1.  **Update `phase_ii_spaced_repetition`**: Before selecting `due_items`, load the full `knowledge_log.json`.
-2.  **Vector Comparison**: Use the `bag/semantic_cache` to generate embeddings for the `summary` field of each entry.
-3.  **Thresholding**: If two entries have a cosine similarity > 0.85, merge them by appending the newer summary to the older one and deleting the duplicate.
-4.  **Persistence**: Save the cleaned log back to `MEMORIES / "knowledge_log.json"` before proceeding with the review.
+1.  **Define States:** Create an `Enum` for `CycleState` (IDLE, PHASE_I, PHASE_II, ..., FAILED, COMPLETED).
+2.  **Transition Map:** Implement a `transition(target_state)` method that logs the transition and checks for valid state progression.
+3.  **Task Queue:** Wrap the `run_cycle` logic in a `try/except` block that transitions to `FAILED` and triggers `_rollback()` if an unhandled exception occurs.
+4.  **Logger:** Integrate the "State Transition Logger" to record `(PreviousState, Event, NextState)` in a new `bag/audit.jsonl` file.
 
 ## Risk
-**Failure Mode:** The similarity threshold (0.85) might be too aggressive, causing distinct but related concepts to be merged, effectively "losing" specific nuances of a learned skill.
-**Mitigation:** I will implement a "soft merge" where the original entries are archived in a `bag/archive/` directory before the merge, allowing for manual recovery if the deduplication logic proves too destructive.
+*   **Failure Mode:** The state machine itself could become a bottleneck or introduce a circular dependency if the transition logic calls functions that are themselves part of the state machine.
+*   **Mitigation:** Keep the state machine logic decoupled from the business logic of the phases. The phases should remain pure functions that return the next state, rather than calling the transitioner themselves.
 
-**Confidence Score:** 8/10. The logic is straightforward, but the sensitivity of the embedding model to technical jargon requires careful tuning.
+**Confidence Score:** 8/10. The logic is sound, but the integration into `run_cycle` requires careful handling of the existing `tracemalloc` and logging setup.
