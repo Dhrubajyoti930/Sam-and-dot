@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 181
+    "review_due_cycle": 196
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 181
+    "review_due_cycle": 196
   },
   {
     "cycle": 43,
@@ -952,5 +952,11 @@
     "topic": "Build async chain of responsibility pattern",
     "summary": "### Technical Summary: Async Chain of Responsibility (CoR)\n\nThe Chain of Responsibility (CoR) pattern decouples the sender of a request from its receivers by passing the request along a chain of handler objects. In an asynchronous context, this pattern evolves from a simple linked-list traversal into a non-blocking pipeline, typically leveraging `Promises` or `async/await` primitives.\n\n**Core Concepts:**\n1.  **The Handler Interface:** Each handler must define a contract that accepts a context ob",
     "review_due_cycle": 185
+  },
+  {
+    "cycle": 182,
+    "topic": "Write async observer pattern",
+    "summary": "### Technical Summary: The Async Observer Pattern\n\nThe asynchronous observer pattern decouples event producers from consumers by shifting from synchronous callback execution to non-blocking, queue-based notification. In modern systems, this is essential for preventing \"callback hell\" and ensuring that a slow observer does not block the subject\u2019s execution thread.\n\n**Core Concepts:**\n1.  **Backpressure Management:** Unlike synchronous observers, async observers risk overwhelming the consumer. Imp",
+    "review_due_cycle": 186
   }
 ]

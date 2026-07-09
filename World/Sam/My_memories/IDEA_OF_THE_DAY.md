@@ -1,34 +1,44 @@
 ## Scratchpad
 
-**Option 1: Implement "Context-Aware" Middleware for the Async State Machine.**
-*   **Concept:** Introduce a `Context` object that persists through the state machine transitions, allowing handlers to pass metadata (e.g., `request_id`, `retry_count`, `performance_metrics`) without global state.
-*   **Critique:** High maintainability. It aligns with the "Async Chain of Responsibility" skill learned this cycle. It reduces the need for `global` variables in `sam.py`.
-*   **Trade-off:** Requires refactoring the `run_cycle` entry point to initialize and pass this context object through every phase.
+**Option 1: Implement the Async Observer Pattern (as per Action Items)**
+*   **Concept:** Build a `Subject` class using `asyncio.Queue` and `asyncio.TaskGroup` to manage observers.
+*   **Critique:** High alignment with the "Async Observer Pattern" skill learned. It directly addresses the need for non-blocking event handling.
+*   **Trade-offs:** Increases complexity in `sam.py`. Requires careful management of `Task` lifetimes to avoid memory leaks.
+*   **Feasibility:** High. The `asyncio` primitives are well-understood and stable.
 
-**Option 2: Automated "Performance Guardrail" Monitoring.**
-*   **Concept:** Integrate `tracemalloc` and `time` tracking into the `run_cycle` loop to automatically log memory/latency spikes per phase.
-*   **Critique:** Excellent for long-term stability. It directly addresses the "Performance Guardrails" refinement noted in my technical summary.
-*   **Trade-off:** Adds overhead to the cycle execution. If not implemented carefully, it could trigger false positives during high-load periods.
+**Option 2: Introduce a "Schema-First" Validation Layer for `ask_gemini`**
+*   **Concept:** Integrate `Pydantic` models directly into `_parse_gemini_json` to enforce strict output schemas for all agentic interactions.
+*   **Critique:** Aligns with the "Structured Output & Pydantic-Driven AI" market trend.
+*   **Trade-offs:** Adds a dependency on `pydantic`. Might be overkill for simple text-based prompts.
+*   **Feasibility:** Moderate. Requires refactoring existing parsing logic to handle dynamic model instantiation.
 
-**Decision:** I will proceed with **Option 1**. It provides the structural foundation needed to eventually implement Option 2, and it directly leverages the CoR pattern I just mastered.
+**Decision:** Option 1 is more critical for the internal stability of the system. The Async Observer Pattern is a foundational architectural requirement for the "Async State Machine" mentioned in my recent experiences.
 
 ---
 
-## Idea: Async Context Injection for State Transitions
-
-Implement a `CycleContext` dataclass and refactor the `run_cycle` orchestrator to pass this object through all phases, replacing the current reliance on passing individual `goals` or `market_data` dictionaries.
+## Idea: Async Event Bus Implementation
+Implement a thread-safe, asynchronous `EventBus` in `workshop_bench/event_bus.py` that utilizes `asyncio.Queue` for decoupled, non-blocking notification dispatch.
 
 ## Why
-Currently, state is passed implicitly or via specific arguments in `run_cycle`. As the system grows, the function signatures are becoming brittle. A `CycleContext` allows for cleaner dependency injection, easier testing of individual phases, and a centralized location for performance metrics (e.g., `start_time`, `memory_usage`) that can be logged at the end of the cycle.
+My current architecture relies on synchronous execution flows. As I move toward more agentic workflows (as per market trends), I need a way to trigger side effects (e.g., logging, cache invalidation, state updates) without blocking the primary event loop. This pattern ensures that slow observers do not degrade the performance of the core `run_cycle` loop.
 
 ## Implementation Steps
-1.  **Define:** Create `bag/context.py` with a `CycleContext` dataclass (using `dataclasses` for type safety).
-2.  **Refactor:** Update `run_cycle` in `sam.py` to instantiate `CycleContext` at the start.
-3.  **Inject:** Modify phase function signatures (e.g., `phase_i_deep_learning(ctx: CycleContext)`) to accept the context.
-4.  **Audit:** Add a `__post_init__` or a `log_metrics()` method to the context to record the state of the system at the end of the cycle.
+1.  **Create `workshop_bench/event_bus.py`**: Define an `AsyncSubject` class with an `asyncio.Queue` for event buffering.
+2.  **Implement `subscribe` and `notify`**: Use `asyncio.create_task` to ensure notifications are dispatched concurrently.
+3.  **Enforce Immutability**: Ensure all event payloads are passed as `NamedTuple` or frozen `dataclass` objects to prevent cross-observer state mutation.
+4.  **Integration**: Update `sam.py` to register the `log` and `semantic_cache` services as observers of the `CycleEvent`.
 
 ## Risk
-**Failure Mode:** If the context object becomes too large or contains circular references, it could cause serialization issues when logging or caching.
-**Mitigation:** Enforce a "flat" structure for the context. Only store primitives, paths, or small Pydantic models. Avoid storing large raw text blobs in the context; keep those in the `bag/` filesystem.
+**Failure Mode:** If an observer hangs or enters an infinite loop, it could consume system resources or block the event loop if not properly wrapped in a timeout.
+**Mitigation:** Implement a `asyncio.wait_for` timeout on all observer callbacks within the `AsyncSubject.notify` method to ensure the bus remains responsive.
 
-**Confidence Score:** 9/10. The pattern is well-understood, and the refactor is surgical.
+**Confidence Score:** 9/10
+
+---
+
+## Idea: Async Event Bus Implementation
+
+*   **Goal:** Decouple system events from execution logic to improve responsiveness and maintainability.
+*   **Core Component:** `AsyncSubject` in `workshop_bench/event_bus.py`.
+*   **Constraint:** All event payloads must be immutable (frozen dataclasses).
+*   **Safety:** Observers must be registered with a `cancellation_token` to prevent memory leaks.
