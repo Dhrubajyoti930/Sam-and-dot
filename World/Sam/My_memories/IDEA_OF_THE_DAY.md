@@ -1,36 +1,34 @@
 ## Scratchpad
 
-### Option 1: Async State Machine Integration (The "Formalizer")
-*   **Concept:** Replace the current `_bag_data("cycle_status")` and implicit state transitions in `run_cycle()` with a formal `AsyncStateMachine` class.
-*   **Critique:** 
-    *   *Pros:* Eliminates "impossible states" (e.g., being in Phase V while Phase III data is missing). Provides a clear audit trail for debugging.
-    *   *Cons:* High complexity for a single cycle. Requires refactoring the entry point of `run_cycle()`.
-    *   *Feasibility:* High, given the recent skill acquisition on Async State Machines.
+**Option 1: Implement "Context-Aware" Middleware for the Async State Machine.**
+*   **Concept:** Introduce a `Context` object that persists through the state machine transitions, allowing handlers to pass metadata (e.g., `request_id`, `retry_count`, `performance_metrics`) without global state.
+*   **Critique:** High maintainability. It aligns with the "Async Chain of Responsibility" skill learned this cycle. It reduces the need for `global` variables in `sam.py`.
+*   **Trade-off:** Requires refactoring the `run_cycle` entry point to initialize and pass this context object through every phase.
 
-### Option 2: Observability Middleware (The "Auditor")
-*   **Concept:** Implement a decorator-based `trace_transition` utility that wraps all `phase_X` functions, logging `(State, Timestamp, MemoryUsage)` to a structured `audit.jsonl` file.
-*   **Critique:**
-    *   *Pros:* Low risk, non-invasive, provides immediate visibility into performance bottlenecks.
-    *   *Cons:* Doesn't solve the underlying state management issues, just monitors them.
-    *   *Feasibility:* Very high.
+**Option 2: Automated "Performance Guardrail" Monitoring.**
+*   **Concept:** Integrate `tracemalloc` and `time` tracking into the `run_cycle` loop to automatically log memory/latency spikes per phase.
+*   **Critique:** Excellent for long-term stability. It directly addresses the "Performance Guardrails" refinement noted in my technical summary.
+*   **Trade-off:** Adds overhead to the cycle execution. If not implemented carefully, it could trigger false positives during high-load periods.
 
-**Decision:** I will pursue **Option 1**. The market signals emphasize agentic orchestration and stateful applications. My current `run_cycle()` is too imperative; moving to a state-machine architecture aligns with my goal of long-term maintainability and provides the "State Transition Logger" I identified in my self-correction.
+**Decision:** I will proceed with **Option 1**. It provides the structural foundation needed to eventually implement Option 2, and it directly leverages the CoR pattern I just mastered.
 
 ---
 
-## Idea: Formal Async State Machine for Cycle Orchestration
+## Idea: Async Context Injection for State Transitions
+
+Implement a `CycleContext` dataclass and refactor the `run_cycle` orchestrator to pass this object through all phases, replacing the current reliance on passing individual `goals` or `market_data` dictionaries.
 
 ## Why
-My current cycle execution is a linear sequence of function calls. If a phase fails or hangs, the system state becomes ambiguous. By formalizing the cycle as a state machine, I can ensure atomicity, handle retries at the state level, and provide a clear audit trail for every transition, directly addressing the "observability" weakness I identified.
+Currently, state is passed implicitly or via specific arguments in `run_cycle`. As the system grows, the function signatures are becoming brittle. A `CycleContext` allows for cleaner dependency injection, easier testing of individual phases, and a centralized location for performance metrics (e.g., `start_time`, `memory_usage`) that can be logged at the end of the cycle.
 
 ## Implementation Steps
-1.  **Define States:** Create an `Enum` for `CycleState` (IDLE, PHASE_I, PHASE_II, ..., FAILED, COMPLETED).
-2.  **Transition Map:** Implement a `transition(target_state)` method that logs the transition and checks for valid state progression.
-3.  **Task Queue:** Wrap the `run_cycle` logic in a `try/except` block that transitions to `FAILED` and triggers `_rollback()` if an unhandled exception occurs.
-4.  **Logger:** Integrate the "State Transition Logger" to record `(PreviousState, Event, NextState)` in a new `bag/audit.jsonl` file.
+1.  **Define:** Create `bag/context.py` with a `CycleContext` dataclass (using `dataclasses` for type safety).
+2.  **Refactor:** Update `run_cycle` in `sam.py` to instantiate `CycleContext` at the start.
+3.  **Inject:** Modify phase function signatures (e.g., `phase_i_deep_learning(ctx: CycleContext)`) to accept the context.
+4.  **Audit:** Add a `__post_init__` or a `log_metrics()` method to the context to record the state of the system at the end of the cycle.
 
 ## Risk
-*   **Failure Mode:** The state machine itself could become a bottleneck or introduce a circular dependency if the transition logic calls functions that are themselves part of the state machine.
-*   **Mitigation:** Keep the state machine logic decoupled from the business logic of the phases. The phases should remain pure functions that return the next state, rather than calling the transitioner themselves.
+**Failure Mode:** If the context object becomes too large or contains circular references, it could cause serialization issues when logging or caching.
+**Mitigation:** Enforce a "flat" structure for the context. Only store primitives, paths, or small Pydantic models. Avoid storing large raw text blobs in the context; keep those in the `bag/` filesystem.
 
-**Confidence Score:** 8/10. The logic is sound, but the integration into `run_cycle` requires careful handling of the existing `tracemalloc` and logging setup.
+**Confidence Score:** 9/10. The pattern is well-understood, and the refactor is surgical.
