@@ -1,40 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement `anyio` Task Groups for I/O operations.**
-*   *Critique:* This aligns with the high-velocity trend of structured concurrency. Replacing `asyncio.gather` with `anyio.create_task_group` in `sam.py` (specifically in `ask_gemini` or parallel file operations) would improve error propagation and resource cleanup.
-*   *Trade-offs:* Requires careful handling of `ExceptionGroup` and ensuring the event loop compatibility is maintained across all modules.
-*   *Feasibility:* High. The `anyio` library is designed for this exact transition.
+**Option 1: Implementing a Trio-based Nursery Manager for `ask_gemini`**
+*   **Concept:** Refactor `ask_gemini` and its associated network-bound calls to use `trio` nurseries. This would allow concurrent pre-fetching of cache data and parallelized validation checks.
+*   **Critique:** High architectural alignment with the "Structured Concurrency" skill learned. However, `ask_gemini` is currently synchronous and relies on a global `_CALL_DELAY` for rate limiting. Moving to `trio` requires an `async` refactor of the entire call chain, which is a high-risk, high-reward change.
+*   **Trade-off:** Increases reliability and performance but introduces significant complexity in the `sam.py` event loop.
 
-**Option 2: Integrate `Instructor` for Pydantic-driven LLM responses.**
-*   *Critique:* Currently, `_parse_gemini_json` is manual and brittle. Using `Instructor` would enforce schema validation at the library level, reducing the need for custom regex-based extraction.
-*   *Trade-offs:* Adds a dependency. Might be overkill if the current `_parse_gemini_json` is sufficiently stable, but it would significantly increase the reliability of `phase_v_development` and `phase_vi_cognitive_evolution`.
-*   *Feasibility:* Medium. Requires updating the `ask_gemini` pipeline to support structured response models.
+**Option 2: Semantic Deduplication of Knowledge Logs**
+*   **Concept:** Use the existing `bag/semantic_cache` to identify and merge redundant entries in `knowledge_log.json` during Phase II.
+*   **Critique:** Directly addresses the "Semantic Deduplication" objective. It is a surgical, low-risk refactor that improves the quality of the Spaced Repetition engine without requiring a full async overhaul.
+*   **Trade-off:** Lower architectural impact than Option 1, but higher immediate utility for long-term memory management.
 
-**Selection:** Option 1 is the priority. It addresses the "Action Items" identified in the market scan and directly improves the stability of my core I/O operations.
+**Decision:** I will proceed with **Option 2**. It aligns with my current objectives and respects the "minimal footprint, maximum leverage" principle.
 
 ---
 
-## Idea
-**Refactor Concurrent I/O to `anyio` Task Groups.**
+## Idea: Semantic Deduplication of Knowledge Logs
+
+Implement a deduplication pass in `phase_ii_spaced_repetition` that uses vector similarity to identify and merge overlapping knowledge entries before they are reviewed.
 
 ## Why
-My current reliance on `asyncio.gather` is prone to "orphan" tasks if an exception occurs, and it lacks the strict scope-binding required for production-grade reliability. Moving to `anyio` Task Groups ensures that all concurrent operations are properly scoped, cancelled on failure, and cleaned up, aligning with my goal of maximum leverage and minimal footprint.
+As the `knowledge_log.json` grows, redundant entries dilute the efficacy of the Spaced Repetition engine. By merging semantically similar entries, I ensure that my review cycles are focused on distinct concepts rather than fragmented, repetitive summaries.
 
 ## Implementation Steps
-1.  **Dependency Check:** Ensure `anyio` is available in the environment.
-2.  **Refactor `sam.py`:** Identify all instances of `asyncio.gather` or manual task spawning.
-3.  **Implement Task Groups:** Wrap these in `async with anyio.create_task_group() as tg:`.
-4.  **Exception Handling:** Wrap the task group in a `try/except` block that catches `ExceptionGroup` to handle partial failures gracefully.
-5.  **Verification:** Run `bag/tests.py` to ensure no regression in asynchronous behavior.
+1.  **Update `phase_ii_spaced_repetition`**: Before selecting `due_items`, load the full `knowledge_log.json`.
+2.  **Vector Comparison**: Use the `bag/semantic_cache` to generate embeddings for the `summary` field of each entry.
+3.  **Thresholding**: If two entries have a cosine similarity > 0.85, merge them by appending the newer summary to the older one and deleting the duplicate.
+4.  **Persistence**: Save the cleaned log back to `MEMORIES / "knowledge_log.json"` before proceeding with the review.
 
 ## Risk
-**Failure Mode:** The event loop might be running in a context where `anyio`'s default backend (often `asyncio`) behaves unexpectedly with nested task groups, leading to "Task group already closed" errors.
-**Mitigation:** Use `anyio.run()` to bootstrap the entry point if necessary, or ensure the `anyio` backend is explicitly set to `asyncio` to match the existing loop.
+**Failure Mode:** The similarity threshold (0.85) might be too aggressive, causing distinct but related concepts to be merged, effectively "losing" specific nuances of a learned skill.
+**Mitigation:** I will implement a "soft merge" where the original entries are archived in a `bag/archive/` directory before the merge, allowing for manual recovery if the deduplication logic proves too destructive.
 
-**Confidence Score:** 9/10
-
----
-
-### 1% Metric
-*   **Metric:** Number of `asyncio.gather` calls successfully migrated to `anyio.create_task_group` without breaking existing test suites.
-*   **Target:** 100% of identified high-priority I/O blocks.
+**Confidence Score:** 8/10. The logic is straightforward, but the sensitivity of the embedding model to technical jargon requires careful tuning.

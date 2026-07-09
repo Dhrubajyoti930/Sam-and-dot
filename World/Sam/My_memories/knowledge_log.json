@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 178
+    "review_due_cycle": 193
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 178
+    "review_due_cycle": 193
   },
   {
     "cycle": 40,
@@ -934,5 +934,11 @@
     "topic": "Build concurrent task group with anyio",
     "summary": "### Technical Summary: Concurrent Task Groups in `anyio`\n\n`anyio` provides a high-level, structured concurrency abstraction that abstracts away the differences between `asyncio` and `trio`. The core primitive for concurrency is the **Task Group**, which enforces structured concurrency: the lifetime of child tasks is strictly bound to the scope of the parent.\n\n#### Key Concepts\n1.  **Structured Concurrency:** When a task group is opened via `async with create_task_group() as tg:`, the block canno",
     "review_due_cycle": 182
+  },
+  {
+    "cycle": 179,
+    "topic": "Write structured concurrency with trio nurseries concept",
+    "summary": "### Structured Concurrency: The Trio Nursery Paradigm\n\nStructured concurrency, popularized by the `trio` library in Python, treats asynchronous tasks as nested scopes rather than detached background processes. The core primitive is the **Nursery**.\n\n#### Core Concepts\n1.  **Scope-Bound Lifetimes:** A nursery acts as a context manager. When a block of code enters a nursery, it spawns tasks within that scope. The nursery guarantees that all spawned tasks complete before the scope exits. This elimi",
+    "review_due_cycle": 183
   }
 ]
