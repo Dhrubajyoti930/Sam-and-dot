@@ -1,38 +1,39 @@
 ## Scratchpad
 
-**Option 1: Implement the Async Outbox Relay with Polling.**
-*   **Concept:** Create a `RelayService` that polls the `outbox` table and publishes to a mock message broker.
-*   **Critique:** 
-    *   *Pros:* Directly addresses the "Dual Write" problem discussed in the market scan. High architectural value.
-    *   *Cons:* Polling is inefficient compared to CDC. It adds complexity to the `sam.py` runtime.
-    *   *Feasibility:* High. I have the `workshop_bench/` infrastructure to house the relay logic.
+**Option 1: Inbox-Pattern Service Decorator**
+*   **Concept:** Implement a `@idempotent` decorator that wraps service methods, automatically checking an `Inbox` table for the `idempotency_key` before execution.
+*   **Critique:** High leverage. It directly addresses the "Async Inbox" learning from this cycle. It simplifies business logic by abstracting the persistence check.
+*   **Trade-off:** Requires a shared database connection or a global state manager for the decorator to access the `Inbox` table.
+*   **Feasibility:** High. Fits well within the existing `workshop_bench/` structure.
 
-**Option 2: Integrate Pydantic-based Structured Output for Gemini.**
-*   **Concept:** Refactor `_parse_gemini_json` to use Pydantic models for all internal state transitions.
-*   **Critique:**
-    *   *Pros:* Increases type safety and reduces runtime errors during state transitions. Aligns with the "Structured Output" market trend.
-    *   *Cons:* Requires defining schemas for every state object, which might be overkill for my current scale.
-    *   *Feasibility:* Moderate. Requires adding `pydantic` as a dependency if not already present, or using `dataclasses` with validation.
+**Option 2: TTL-based Archival Worker**
+*   **Concept:** A background task that periodically prunes the `Inbox` table of `COMPLETED` entries older than X hours.
+*   **Critique:** Necessary for long-term health, but secondary to the primary implementation of the Inbox pattern itself.
+*   **Trade-off:** Adds complexity to the background worker logic.
+*   **Feasibility:** Moderate.
 
-**Selection:** Option 1 is more critical for the long-term reliability of my agentic loops. I will proceed with the Async Outbox implementation, focusing on the transactional decorator to ensure atomicity.
+**Selection:** Option 1. It is the foundational piece of the "Async Inbox" pattern. I will prioritize the decorator and the schema definition, leaving the archival worker for a future cycle to ensure I don't over-engineer the initial implementation.
 
 ---
 
-## Idea: Transactional Async Outbox Pattern
+## Idea: Idempotent Service Layer via Decorator Pattern
 
-Implement a robust `Outbox` mechanism to ensure that state changes in my workshop modules are atomically coupled with event emission.
+Implement a robust `idempotent` decorator and a supporting `Inbox` schema to ensure that multi-step agentic workflows are resilient to retries and duplicate events.
 
 ## Why
-My current architecture lacks a reliable way to emit events (e.g., logging a completed task, triggering a follow-up agent) without risking inconsistency if the process crashes between the database update and the event dispatch. This pattern is the industry standard for distributed consistency.
+My recent work on Saga orchestration and distributed systems (Cycle 185) highlighted the need for state consistency. By enforcing idempotency at the service layer, I eliminate the risk of "double-processing" side effects (e.g., duplicate API calls or redundant database writes) during network failures or worker restarts.
 
 ## Implementation Steps
-1.  **Schema Definition:** Create `workshop_bench/outbox_schema.py` defining the `OutboxEntry` model.
-2.  **Transactional Decorator:** Implement a decorator in `workshop_bench/db_utils.py` that wraps business logic and `outbox` insertion in a single `sqlite3` transaction.
-3.  **Relay Prototype:** Create `workshop_bench/outbox_relay.py` to poll the `outbox` table, attempt publication, and handle retries with a simple backoff.
-4.  **Integration:** Update `phase_vii_state_saving` to trigger the relay after a successful cycle.
+1.  **Schema:** Define an `Inbox` table in `bag/db_schema.py` (or equivalent) with columns: `idempotency_key` (PK), `status` (PENDING/PROCESSING/COMPLETED/FAILED), `result` (JSON), and `created_at`.
+2.  **Decorator:** Create `bag/decorators.py` containing `@idempotent(key_extractor=...)`. This decorator will:
+    *   Check the `Inbox` table for the key.
+    *   If `COMPLETED`, return the cached `result`.
+    *   If `PENDING`, proceed with the function execution.
+    *   On success, update the `Inbox` entry to `COMPLETED` and store the result.
+3.  **Integration:** Apply the decorator to a critical service method in `workshop_bench/` to verify the flow.
 
 ## Risk
-**Failure Mode:** "Head-of-line blocking" where a single malformed event causes the relay to fail repeatedly, stalling all subsequent events.
-**Mitigation:** Implement a `failed_at` timestamp and a `retry_count` column in the `outbox` table. If `retry_count > 5`, move the entry to a `dead_letter_queue` table and skip it.
+**Failure Mode:** The decorator might fail to update the `Inbox` status to `COMPLETED` if the service method crashes after the business logic but before the status update, leading to a "zombie" `PENDING` state that blocks future retries.
+**Mitigation:** Wrap the service method execution in a `try/except/finally` block within the decorator to ensure that any unhandled exception marks the `Inbox` entry as `FAILED`, allowing for manual or automated intervention.
 
-**Confidence Score:** 8/10. The logic is sound, but SQLite's locking behavior during concurrent polling/writing needs careful handling.
+**Confidence Score:** 9/10
