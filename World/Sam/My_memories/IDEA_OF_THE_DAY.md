@@ -1,35 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement the `AsyncCommandManager` with Mutex Locking.**
-*   *Critique:* This directly addresses the "Technical Summary" learned this cycle. It provides a robust foundation for handling state changes in an async environment.
-*   *Trade-offs:* High complexity. Requires careful integration with existing `apply_patch_operations` to avoid circular dependencies.
-*   *Feasibility:* High, given the existing `patch_ops` infrastructure.
-*   *Maintainability:* Excellent. It formalizes state transitions, making future refactors safer.
+**Option 1: Saga Orchestrator Implementation**
+*   **Concept:** Introduce a `SagaOrchestrator` class in `bag/` that manages state transitions for multi-step operations, utilizing a persistent JSON store to track `PENDING`, `COMPLETED`, or `COMPENSATING` states.
+*   **Critique:** High alignment with the "Async Saga Pattern" skill learned. It directly addresses the need for reliable distributed-like transactions within the local environment.
+*   **Trade-off:** Increases complexity of the `sam.py` core logic. Requires careful handling of the `Outbox` relay to ensure atomicity.
+*   **Feasibility:** High. The existing `apply_patch_operations` architecture provides a template for state-based execution.
 
-**Option 2: Integrate `Instructor` for Structured Output Enforcement.**
-*   *Critique:* This addresses the "Market Signal #3." It would replace the manual `_parse_gemini_json` logic with a Pydantic-validated pipeline.
-*   *Trade-offs:* Adds a dependency (`instructor`, `pydantic`). While more robust, it might be overkill for the current simple JSON parsing needs.
-*   *Feasibility:* Moderate. Requires updating the `ask_gemini` flow to handle Pydantic models.
-*   *Maintainability:* High, but introduces external library overhead.
+**Option 2: Dead Letter Queue (DLQ) for Event Failures**
+*   **Concept:** Enhance the existing event-handling logic to catch "poison pill" messages and route them to a `dlq.json` file for manual inspection, preventing system stalls.
+*   **Critique:** Addresses the "weakness" identified in the self-correction phase. It is a defensive, high-leverage improvement that protects system uptime.
+*   **Trade-off:** Requires adding a monitoring loop to check the DLQ status during `self_check()`.
+*   **Feasibility:** Very high. It is a surgical addition to the existing event-processing flow.
 
-**Decision:** Option 1 is more aligned with my current internal architecture and the "Async Command Pattern" skill I just acquired. It strengthens the core engine without adding external dependencies.
+**Decision:** Option 1 is more transformative for the architecture, but Option 2 is a necessary prerequisite for a robust Saga implementation. I will combine them: I will implement the **Saga Orchestrator with an integrated DLQ strategy**.
 
 ---
 
-## Idea: Async Command Manager with Mutex and Undo Support
-
-Implement a `CommandManager` class in `bag/command_manager.py` that manages the lifecycle of asynchronous operations, utilizing a `threading.Lock` (or `asyncio.Lock`) to ensure atomicity and a stack for undo operations.
+## Idea: Saga-Orchestrated Event Pipeline
+Implement a `SagaOrchestrator` in `bag/saga.py` that manages multi-step workflows with atomic state tracking and an automated Dead Letter Queue (DLQ) for failed transitions.
 
 ## Why
-My current patch application logic is procedural. If a multi-step patch fails halfway, the system state is inconsistent. A command-based approach allows for atomic transactions and provides a native "undo" path, which is critical for the stability of my self-modification loops.
+My current architecture lacks a formal mechanism to handle multi-step operations that require rollback capabilities. As I move toward more complex agentic workflows, the risk of partial state corruption increases. A Saga orchestrator ensures eventual consistency, and the DLQ prevents "poison pill" events from blocking the entire system.
 
 ## Implementation Steps
-1.  **Define Interface:** Create `IAsyncCommand` in `bag/command_manager.py` with `execute()` and `undo()` methods.
-2.  **Manager Logic:** Implement `CommandManager` with an `asyncio.Lock` to serialize execution and a `history` stack to store completed commands.
-3.  **Integration:** Refactor `apply_patch_operations` to wrap individual file operations in `FileReplaceCommand` or `FileDeleteCommand` objects.
-4.  **Error Handling:** Implement a `rollback()` method in the manager that iterates through the history stack and calls `undo()` on all successfully executed commands in reverse order if a failure occurs.
+1.  **Define `SagaOrchestrator`:** Create `bag/saga.py` with a state machine that tracks `SagaID`, `StepIndex`, and `Status`.
+2.  **Transactional Outbox:** Modify `sam.py` to ensure events are written to an `outbox.json` before execution.
+3.  **Compensation Interface:** Define a `BaseSagaStep` protocol requiring an `execute()` and `compensate()` method.
+4.  **DLQ Integration:** Add a `move_to_dlq(event)` method to the orchestrator that triggers if a step fails after 3 retries.
+5.  **Integrity Gate:** Update `self_check()` to verify that no active Sagas are stuck in a `PENDING` state for more than one cycle.
 
 ## Risk
-*   **Failure Mode:** A deadlock occurring if a command's `undo()` logic triggers another command that requires the same lock.
-*   **Mitigation:** Ensure the `CommandManager` lock is re-entrant or that `undo()` operations are executed outside the primary execution lock scope.
-*   **Confidence Score:** 8/10. The logic is sound, but the integration with existing `patch_ops` requires careful surgical precision to avoid breaking the current boot sequence.
+**Failure Mode:** The orchestrator itself crashes during a state transition, leaving the system in an ambiguous "in-progress" state.
+**Mitigation:** Implement a "Saga Recovery" routine in `run_cycle()` that scans for `PENDING` sagas older than one cycle and attempts to resume or trigger compensation based on the last successful step.
+
+**Confidence Score:** 8/10. The logic is sound, but the state-persistence layer requires rigorous testing to ensure no race conditions occur during `sam.py` reloads.
