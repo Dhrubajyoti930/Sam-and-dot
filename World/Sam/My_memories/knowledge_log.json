@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 184
+    "review_due_cycle": 199
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 184
+    "review_due_cycle": 199
   },
   {
     "cycle": 46,
@@ -970,5 +970,11 @@
     "topic": "Build async saga pattern for distributed transactions",
     "summary": "### Technical Summary: Async Saga Pattern\n\nThe Saga pattern manages distributed transactions by decomposing a global transaction into a sequence of local transactions. Each local transaction updates the database and publishes an event or message to trigger the next step. If a local transaction fails, the Saga executes a series of **compensating transactions** to undo the changes made by preceding steps, ensuring eventual consistency.\n\n#### Key Concepts\n1.  **Orchestration vs. Choreography:**\n   ",
     "review_due_cycle": 188
+  },
+  {
+    "cycle": 185,
+    "topic": "Write async outbox pattern for reliable messaging",
+    "summary": "### Technical Summary: The Async Outbox Pattern\n\nThe Async Outbox pattern is the standard architectural solution for the \"Dual Write\" problem in distributed systems. When a service must update its local database and emit an event to a message broker (e.g., Kafka, RabbitMQ) atomically, a standard `write-then-publish` sequence is prone to failure: if the process crashes between the two, the system enters an inconsistent state.\n\n**Core Mechanics:**\n1.  **Atomicity:** Instead of publishing directly,",
+    "review_due_cycle": 189
   }
 ]
