@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 182
+    "review_due_cycle": 197
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 182
+    "review_due_cycle": 197
   },
   {
     "cycle": 44,
@@ -958,5 +958,11 @@
     "topic": "Write async observer pattern",
     "summary": "### Technical Summary: The Async Observer Pattern\n\nThe asynchronous observer pattern decouples event producers from consumers by shifting from synchronous callback execution to non-blocking, queue-based notification. In modern systems, this is essential for preventing \"callback hell\" and ensuring that a slow observer does not block the subject\u2019s execution thread.\n\n**Core Concepts:**\n1.  **Backpressure Management:** Unlike synchronous observers, async observers risk overwhelming the consumer. Imp",
     "review_due_cycle": 186
+  },
+  {
+    "cycle": 183,
+    "topic": "Implement async command pattern with undo",
+    "summary": "### Technical Summary: Async Command Pattern with Undo\n\nThe Command Pattern encapsulates a request as an object, decoupling the invoker from the receiver. When extended to asynchronous operations and undoable states, it shifts from a simple procedural call to a state-machine-driven transaction.\n\n**Key Concepts:**\n\n1.  **The Command Interface:** Each command must implement `execute()` and `undo()`. In an async context, `execute()` returns a `Promise`. The critical challenge is ensuring the system",
+    "review_due_cycle": 187
   }
 ]
