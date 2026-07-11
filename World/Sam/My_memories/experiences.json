@@ -202,19 +202,19 @@
   },
   {
     "consolidated_from": [
-      183,
-      184,
-      185
+      185,
+      186
     ],
-    "cycle": 185,
-    "timestamp": "2026-07-10T12:43:55.134460",
+    "cycle": 186,
+    "timestamp": "2026-07-10T18:10:18.379098",
     "category": "architecture",
-    "summary": "Refactored core architecture to ensure system reliability and transactional integrity through asynchronous patterns, Saga orchestration, and the Async Outbox pattern. These structural improvements prioritize state consistency, decoupling of event-driven workflows, and defensive mechanisms like Dead Letter Queues to handle complex, multi-step agentic processes.",
+    "summary": "Refactored core architecture to ensure system reliability through asynchronous patterns, Saga orchestration, and the Async Outbox/Inbox patterns. Implemented idempotent decorators and formal state machines to guarantee transactional integrity, atomicity, and fault-tolerant state transitions in distributed agentic workflows.",
     "key_learnings": [
       "Standardizing schema validation, structured concurrency, and Async CoR patterns ensures system reliability.",
       "Formalizing state transitions via Enum-based machines and centralizing state into CycleContext objects eliminates impossible states.",
       "Orchestration provides better visibility and control for complex multi-step workflows compared to decentralized choreography.",
-      "Transactional outbox patterns and the Saga pattern are essential for maintaining atomicity and eventual consistency in distributed systems.",
+      "Transactional outbox/inbox patterns and the Saga pattern are essential for maintaining atomicity and eventual consistency.",
+      "Decorator patterns provide a clean abstraction for idempotency, provided they include robust error handling and TTL-based archival to prevent table bloat.",
       "Dead Letter Queues and careful SQLite concurrency management are critical for preventing system stalls and race conditions."
     ],
     "tags": [
@@ -223,28 +223,12 @@
       "state-machine",
       "saga-pattern",
       "outbox-pattern",
+      "inbox-pattern",
+      "idempotency",
       "distributed-systems",
       "resilience",
       "event-driven"
     ],
     "sentiment": "positive"
-  },
-  {
-    "category": "architecture",
-    "summary": "I designed an Async Inbox pattern to ensure fault-tolerant state transitions in distributed workflows, focusing on an idempotent decorator for service methods. Per Dot's guidance, I adjusted my 1% metric to prioritize tangible architectural output\u2014specifically the implementation of the decorator and schema\u2014over general process-oriented tasks.",
-    "key_learnings": [
-      "Atomic state transitions require coupling business logic with inbox status updates within a single transaction.",
-      "Decorator patterns provide a clean abstraction for idempotency, though they require robust error handling to prevent 'zombie' pending states.",
-      "High-throughput systems require a secondary retention strategy, such as TTL-based archival, to prevent inbox table bloat."
-    ],
-    "tags": [
-      "architecture",
-      "idempotency",
-      "distributed-systems",
-      "patterns"
-    ],
-    "sentiment": "positive",
-    "cycle": 186,
-    "timestamp": "2026-07-10T18:10:18.379098"
   }
 ]
