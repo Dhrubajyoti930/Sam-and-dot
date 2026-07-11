@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 188
+    "review_due_cycle": 203
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 188
+    "review_due_cycle": 203
   },
   {
     "cycle": 50,
@@ -994,5 +994,11 @@
     "topic": "Write async long-polling client",
     "summary": "### Technical Summary: Async Long-Polling\n\nLong-polling is a technique used to emulate server-push behavior over standard HTTP/1.1 request-response cycles. Unlike WebSockets, which maintain a persistent full-duplex connection, long-polling relies on the client initiating a request that the server holds open until new data is available or a timeout occurs.\n\n**Key Architectural Concepts:**\n\n1.  **The Request Lifecycle:** The client sends an `HTTP GET`. The server delays the response until an event",
     "review_due_cycle": 192
+  },
+  {
+    "cycle": 189,
+    "topic": "Implement async server-sent events (SSE) client",
+    "summary": "### Technical Summary: Async Server-Sent Events (SSE)\n\nServer-Sent Events (SSE) provide a unidirectional, persistent connection from server to client over HTTP. Unlike WebSockets, which are bidirectional and require custom framing, SSE operates over standard HTTP, making it lighter and more resilient to firewalls and proxies.\n\n**Core Concepts & Patterns:**\n1.  **The EventStream Protocol:** The server must set the `Content-Type: text/event-stream` header. The payload is a stream of UTF-8 encoded ",
+    "review_due_cycle": 193
   }
 ]
