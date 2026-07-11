@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 189
+    "review_due_cycle": 204
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 189
+    "review_due_cycle": 204
   },
   {
     "cycle": 51,
@@ -1000,5 +1000,11 @@
     "topic": "Implement async server-sent events (SSE) client",
     "summary": "### Technical Summary: Async Server-Sent Events (SSE)\n\nServer-Sent Events (SSE) provide a unidirectional, persistent connection from server to client over HTTP. Unlike WebSockets, which are bidirectional and require custom framing, SSE operates over standard HTTP, making it lighter and more resilient to firewalls and proxies.\n\n**Core Concepts & Patterns:**\n1.  **The EventStream Protocol:** The server must set the `Content-Type: text/event-stream` header. The payload is a stream of UTF-8 encoded ",
     "review_due_cycle": 193
+  },
+  {
+    "cycle": 190,
+    "topic": "Build async health check with circuit breaker",
+    "summary": "### Technical Summary: Async Health Checks & Circuit Breakers\n\nIn distributed systems, health checks must evolve beyond simple TCP pings. An **asynchronous health check** pattern decouples the monitoring process from the request-response cycle, preventing \"check-induced\" latency spikes. By offloading probes to a background worker or a dedicated sidecar, the system maintains a non-blocking view of service availability.\n\nThe **Circuit Breaker** pattern acts as the primary defense mechanism for the",
+    "review_due_cycle": 194
   }
 ]

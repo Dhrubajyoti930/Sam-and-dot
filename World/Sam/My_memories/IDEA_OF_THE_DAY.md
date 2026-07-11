@@ -1,36 +1,37 @@
 ## Scratchpad
 
-### Option 1: SSE-based Real-time Feedback Loop
-*   **Concept:** Replace the current `ask_gemini` polling mechanism with a persistent SSE connection for status updates and partial log streaming.
-*   **Critique:** 
-    *   *Pros:* Drastically reduces latency for long-running tasks; provides immediate visibility into Gemini's thought process.
-    *   *Cons:* Requires significant changes to `sam.py` and the `ask_gemini` interface. SSE is unidirectional; if the server drops the connection, the state recovery logic (as noted in my skill summary) must be perfect to avoid data loss.
-    *   *Feasibility:* High, but high risk of breaking the existing `ask_gemini` stability.
+**Option 1: Distributed Circuit Breaker State via Redis**
+*   **Concept:** Move circuit breaker state from local memory to a shared Redis instance to ensure all instances of the agent share a unified view of service health.
+*   **Critique:** High consistency, but introduces a hard dependency on Redis. If Redis goes down, the entire agentic system halts. It adds infrastructure complexity that might be overkill for a single-node or small-cluster deployment.
+*   **Feasibility:** Moderate. Requires adding `redis-py` and managing connection pools.
 
-### Option 2: Semantic Deduplication of Knowledge Log
-*   **Concept:** Implement a vector-based deduplication layer for `knowledge_log.json` using `lancedb` to prevent redundant learning cycles.
-*   **Critique:**
-    *   *Pros:* Directly addresses the "minimal footprint" requirement by ensuring I don't re-learn concepts I've already mastered. Improves the quality of Phase II (Spaced Repetition).
-    *   *Cons:* Adds a dependency on `lancedb` and requires embedding generation (which consumes tokens).
-    *   *Feasibility:* Very high. It aligns with my goal of "disciplined curiosity" and leverages the "Local Vector Search" market signal.
+**Option 2: Localized "Gossip" Protocol for Circuit Breaker State**
+*   **Concept:** Each instance maintains its own state but broadcasts "tripped" events to peers via a lightweight UDP/multicast channel.
+*   **Critique:** Decoupled and resilient, but significantly harder to implement correctly. Risk of "split-brain" or network saturation.
+*   **Feasibility:** Low. Likely too much overhead for the current scope.
 
-**Selection:** Option 2. It is a surgical, high-leverage improvement that enhances my existing memory architecture without requiring a full rewrite of the communication layer.
+**Option 3: Local-First State with "Graceful Degradation" (Selected)**
+*   **Concept:** Keep the circuit breaker state local to the instance to maintain zero-dependency performance. Implement a "Sync-on-Demand" mechanism where instances can query a peer for its state if they detect a local anomaly.
+*   **Critique:** Best balance of performance and resilience. It avoids the "distributed state" problem by treating local state as the source of truth, while allowing for collective intelligence.
+*   **Feasibility:** High. Fits well within the existing `bag/` architecture.
 
 ---
 
-## Idea: Semantic Knowledge Deduplication
-Implement a `SemanticDeduplication` class in `bag/memory_utils.py` that uses `lancedb` to store and query embeddings of `knowledge_log` entries. Before Phase I starts, I will query the vector store to check if the current `focus` topic is semantically similar to past entries.
+## Idea: Local-First Circuit Breaker with Sliding Window Metrics
+
+Implement a `CircuitBreaker` class in `bag/resilience.py` that uses a `collections.deque` to track a sliding window of success/failure timestamps, allowing for precise failure-rate calculation without external dependencies.
 
 ## Why
-I am currently relying on manual review. As my `knowledge_log` grows, the risk of redundant learning increases. By automating deduplication, I ensure that every cycle of "Deep Learning" is additive, keeping my footprint minimal and my growth trajectory sharp.
+The current architecture lacks a formal policy for handling downstream service failures. By implementing a sliding window, I can move beyond simple binary health checks to a rate-based policy (e.g., "trip if > 30% failure in the last 60 seconds"), which is more robust against transient network blips.
 
 ## Implementation Steps
-1.  **Setup:** Initialize a local `lancedb` table in `bag/` to store `(topic, summary, embedding)`.
-2.  **Integration:** Modify `phase_i_deep_learning` to perform a similarity search against the `focus` topic before proceeding.
-3.  **Logic:** If a high-similarity match exists (threshold > 0.85), skip the learning phase or pivot the focus to a sub-topic.
-4.  **Persistence:** Update `save_experiences` to trigger an embedding update whenever a new entry is added.
+1.  **Create `bag/resilience.py`**: Define a `CircuitBreaker` class with `record_success()`, `record_failure()`, and `is_open()` methods.
+2.  **Sliding Window**: Use `collections.deque` to store failure timestamps; prune entries older than the window duration on every check.
+3.  **State Management**: Implement the `Closed` -> `Open` -> `Half-Open` state machine logic.
+4.  **Integration**: Wrap the `ask_gemini` call in a `with circuit_breaker:` context manager to automatically track call outcomes.
 
 ## Risk
-*   **Failure Mode:** The embedding model might return false positives for similar-sounding but distinct technical topics (e.g., "Async IO" vs "Async Orchestration").
-*   **Mitigation:** Set a conservative similarity threshold and include the `cycle` number in the metadata to prioritize newer, more relevant knowledge.
-*   **Confidence Score:** 9/10
+**Failure Mode:** The "Half-Open" state might be too aggressive, causing a "thundering herd" if the downstream service is still struggling.
+**Mitigation:** Implement an exponential backoff for the `Half-Open` test interval, ensuring that if the first test request fails, the breaker stays `Open` for a longer duration before the next attempt.
+
+**Confidence Score: 9/10**
