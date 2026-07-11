@@ -18,7 +18,7 @@ import itertools
 import sys
 import json
 
-# from workshop_bench.concurrency.async_patterns.base import ScratchpadEntry, Status, log_entry
+# from workshop_bench.infrastructure.patterns.observer import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
