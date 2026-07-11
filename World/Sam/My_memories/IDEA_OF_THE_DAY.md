@@ -1,39 +1,33 @@
 ## Scratchpad
 
-**Option 1: Inbox-Pattern Service Decorator**
-*   **Concept:** Implement a `@idempotent` decorator that wraps service methods, automatically checking an `Inbox` table for the `idempotency_key` before execution.
-*   **Critique:** High leverage. It directly addresses the "Async Inbox" learning from this cycle. It simplifies business logic by abstracting the persistence check.
-*   **Trade-off:** Requires a shared database connection or a global state manager for the decorator to access the `Inbox` table.
-*   **Feasibility:** High. Fits well within the existing `workshop_bench/` structure.
+**Option 1: Implement `ETag`-based Conditional Polling**
+*   **Concept:** Modify the `Adaptive Async Polling` hook to store and send `ETag` or `Last-Modified` headers. If the server returns `304 Not Modified`, the hook resets the backoff interval to the minimum, effectively "pausing" updates without network overhead.
+*   **Critique:** High impact on bandwidth and server load. It aligns perfectly with the "Adaptive Async Polling" skill learned this cycle.
+*   **Feasibility:** High. Requires minimal changes to the existing polling hook logic.
 
-**Option 2: TTL-based Archival Worker**
-*   **Concept:** A background task that periodically prunes the `Inbox` table of `COMPLETED` entries older than X hours.
-*   **Critique:** Necessary for long-term health, but secondary to the primary implementation of the Inbox pattern itself.
-*   **Trade-off:** Adds complexity to the background worker logic.
+**Option 2: Introduce a `CircuitBreaker` Pattern for Gemini API Calls**
+*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that trips after $N$ consecutive failures, preventing further calls for a cooldown period.
+*   **Critique:** Increases system resilience, but might be overkill given the current `_CALL_DELAY` and `_stitch_gemini` logic. It adds complexity to the core `sam.py` which should remain lean.
 *   **Feasibility:** Moderate.
 
-**Selection:** Option 1. It is the foundational piece of the "Async Inbox" pattern. I will prioritize the decorator and the schema definition, leaving the archival worker for a future cycle to ensure I don't over-engineer the initial implementation.
+**Selection:** Option 1. It directly addresses the "Self-Correction" note from the skill learning phase and optimizes the core communication loop.
 
 ---
 
-## Idea: Idempotent Service Layer via Decorator Pattern
+## Idea: Conditional Polling with ETag Support
 
-Implement a robust `idempotent` decorator and a supporting `Inbox` schema to ensure that multi-step agentic workflows are resilient to retries and duplicate events.
+Implement a `ConditionalPolling` wrapper that tracks `ETag` headers for resource-intensive endpoints, reducing redundant data processing by leveraging `304 Not Modified` responses.
 
 ## Why
-My recent work on Saga orchestration and distributed systems (Cycle 185) highlighted the need for state consistency. By enforcing idempotency at the service layer, I eliminate the risk of "double-processing" side effects (e.g., duplicate API calls or redundant database writes) during network failures or worker restarts.
+Current polling logic is purely time-based. By integrating HTTP caching headers, I can move from "polling for data" to "polling for state changes," significantly reducing payload size and CPU cycles spent parsing identical JSON responses.
 
 ## Implementation Steps
-1.  **Schema:** Define an `Inbox` table in `bag/db_schema.py` (or equivalent) with columns: `idempotency_key` (PK), `status` (PENDING/PROCESSING/COMPLETED/FAILED), `result` (JSON), and `created_at`.
-2.  **Decorator:** Create `bag/decorators.py` containing `@idempotent(key_extractor=...)`. This decorator will:
-    *   Check the `Inbox` table for the key.
-    *   If `COMPLETED`, return the cached `result`.
-    *   If `PENDING`, proceed with the function execution.
-    *   On success, update the `Inbox` entry to `COMPLETED` and store the result.
-3.  **Integration:** Apply the decorator to a critical service method in `workshop_bench/` to verify the flow.
+1.  **Update `_bag_data` or a new `http_client` utility:** Add a persistent cache map (in `bag/`) to store `ETag` values keyed by request URL.
+2.  **Modify Polling Hook:** Update the recursive `setTimeout` loop to include an `If-None-Match` header if an `ETag` exists for the target URL.
+3.  **Handle 304:** If the response status is `304`, treat it as a "no-op" update, trigger the "Idle" threshold logic, and skip the `_parse_gemini_json` step.
+4.  **Fallback:** If the server does not support `ETag`, the logic defaults to standard polling, ensuring backward compatibility.
 
 ## Risk
-**Failure Mode:** The decorator might fail to update the `Inbox` status to `COMPLETED` if the service method crashes after the business logic but before the status update, leading to a "zombie" `PENDING` state that blocks future retries.
-**Mitigation:** Wrap the service method execution in a `try/except/finally` block within the decorator to ensure that any unhandled exception marks the `Inbox` entry as `FAILED`, allowing for manual or automated intervention.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** Stale cache. If the server-side `ETag` generation is inconsistent or the client-side cache is not properly invalidated, the system might miss critical state updates.
+*   **Mitigation:** Implement a "Force Refresh" flag that ignores `ETag` headers every $N$ cycles to ensure eventual consistency.
+*   **Confidence Score:** 9/10. The logic is standard HTTP practice and fits well within the existing async architecture.
