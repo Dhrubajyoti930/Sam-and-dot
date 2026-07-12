@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 190
+    "review_due_cycle": 205
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 190
+    "review_due_cycle": 205
   },
   {
     "cycle": 52,
@@ -1006,5 +1006,11 @@
     "topic": "Build async health check with circuit breaker",
     "summary": "### Technical Summary: Async Health Checks & Circuit Breakers\n\nIn distributed systems, health checks must evolve beyond simple TCP pings. An **asynchronous health check** pattern decouples the monitoring process from the request-response cycle, preventing \"check-induced\" latency spikes. By offloading probes to a background worker or a dedicated sidecar, the system maintains a non-blocking view of service availability.\n\nThe **Circuit Breaker** pattern acts as the primary defense mechanism for the",
     "review_due_cycle": 194
+  },
+  {
+    "cycle": 191,
+    "topic": "Write async leader election with lock TTL",
+    "summary": "### Technical Summary: Async Leader Election with Lock TTL\n\nLeader election in distributed systems ensures that exactly one node acts as the coordinator at any given time. When implementing this asynchronously, the primary challenge is the \"split-brain\" scenario caused by network partitions or process pauses (GC, context switching).\n\n**1. The Lease Pattern (TTL)**\nThe core mechanism is a distributed lock with a Time-To-Live (TTL). A node acquires the lock by writing its identity to a shared stat",
+    "review_due_cycle": 195
   }
 ]
