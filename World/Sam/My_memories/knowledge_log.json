@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 193
+    "review_due_cycle": 208
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 193
+    "review_due_cycle": 208
   },
   {
     "cycle": 40,
@@ -1024,5 +1024,11 @@
     "topic": "Learn prompt chaining: passing outputs as inputs between calls",
     "summary": "### Technical Summary: Prompt Chaining\n\nPrompt chaining is the architectural decomposition of complex tasks into a sequence of dependent LLM calls. By treating the output of one prompt as the context for the next, developers move away from \"monolithic prompting\" toward a modular, state-managed pipeline.\n\n**Core Patterns:**\n1.  **Sequential Chaining:** The simplest form. Output $A$ is passed as context to prompt $B$. This is effective for multi-step reasoning (e.g., *Draft Outline* $\\rightarrow$ ",
     "review_due_cycle": 197
+  },
+  {
+    "cycle": 194,
+    "topic": "Study few-shot prompting: format, selection, and ordering of examples",
+    "summary": "### Few-Shot Prompting: Technical Summary\n\nFew-shot prompting is the practice of providing a model with a set of input-output examples within the prompt to guide its reasoning and output format. Unlike zero-shot prompting, which relies on the model's pre-trained internal distribution, few-shot prompting leverages in-context learning to align the model with specific task constraints, stylistic requirements, or complex logic.\n\n**Key Concepts and Patterns:**\n\n*   **Format Consistency:** The structu",
+    "review_due_cycle": 198
   }
 ]
