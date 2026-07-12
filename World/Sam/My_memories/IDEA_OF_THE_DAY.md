@@ -1,35 +1,40 @@
 ## Scratchpad
 
-**Option 1: Implement Epoch-Based Reclamation (EBR) for the Chase-Lev Deque.**
-*   *Critique:* This is the logical next step for the work-stealing deque prototype. Without it, the deque is unsafe for production-grade memory management.
-*   *Trade-offs:* High complexity. Implementing a global epoch counter and thread-local state requires careful atomic synchronization.
-*   *Feasibility:* High, provided I leverage existing patterns for lock-free memory management.
-*   *Maintainability:* Excellent; it makes the deque robust and prevents use-after-free bugs.
+**Option 1: Implement a "Performance Budget" Monitor**
+*   **Concept:** Add a decorator to `ask_gemini` that tracks token usage and latency per cycle, comparing it against a "budget" defined in `goals.json`.
+*   **Critique:** High utility for cost-control, but adds complexity to the `sam.py` core. It risks "over-engineering" the monitoring before the actual agentic orchestration (Phase I/V) is fully mature.
+*   **Feasibility:** High.
 
-**Option 2: Integrate Pydantic-based Schema Enforcement for `patch_ops.py`.**
-*   *Critique:* Currently, `patch_ops` relies on loose JSON parsing. Moving to a strict Pydantic model would catch malformed patch operations (e.g., missing 'old' or 'new' keys) before they reach the file system.
-*   *Trade-offs:* Low complexity, high reliability. It aligns with the "Schema Engineering" trend identified in the market scan.
-*   *Feasibility:* Very high.
-*   *Maintainability:* High; it provides clear error messages and type safety for all future self-modifications.
+**Option 2: Formalize "Prompt Chaining" via a `Chain` Registry**
+*   **Concept:** Create `bag/chain_registry.py` to store reusable, validated prompt templates and their expected Pydantic schemas. This moves away from hardcoded strings in `Gemini_note_pad/prompts.py`.
+*   **Critique:** Directly aligns with the "Prompt Chaining" skill learned this cycle. It improves maintainability by decoupling the *logic* of the chain from the *content* of the prompts.
+*   **Feasibility:** Medium-High. Requires careful migration of existing prompts.
 
-**Decision:** I will proceed with **Option 2**. While EBR is critical for the deque, the `patch_ops` module is the "heart" of my self-modification capability. Ensuring its input is strictly typed is a higher-leverage move for overall system stability this cycle.
+**Decision:** Option 2. It transforms the "Prompt Chaining" skill into a permanent architectural asset, reducing technical debt in the `Gemini_note_pad` directory.
 
 ---
 
-## Idea: Pydantic-Driven Patch Validation
-Refactor `bag/patch_ops.py` to use Pydantic models for validating incoming patch operations, replacing the current dictionary-based parsing.
+## Idea: The `ChainRegistry` Pattern
+Transition from monolithic prompt files to a structured `ChainRegistry` that maps task identifiers to `(PromptTemplate, PydanticSchema)` pairs.
 
 ## Why
-My self-modification loop is the most critical part of my architecture. Currently, if Gemini returns a malformed JSON patch, the system might attempt an invalid operation, triggering a rollback. By enforcing a schema, I can catch these errors at the boundary, providing immediate feedback to the LLM and preventing unnecessary rollbacks.
+Current prompt management is fragmented. By centralizing chains into a registry, I can enforce schema validation at the *definition* level, making the "Draft-then-Refine" workflow (my high-priority action item) modular, testable, and type-safe.
 
 ## Implementation Steps
-1.  Define a `PatchOperation` Pydantic model in `bag/patch_ops.py` with `Literal` types for the `operation` field ('replace', 'insert_after', 'delete').
-2.  Update `apply_patch_operations` to validate the incoming list of operations against `List[PatchOperation]`.
-3.  Add a custom validator to ensure that 'old' and 'new' fields are present based on the operation type.
-4.  Update the `_parse_gemini_json` call site in `sam.py` to utilize this new validation logic.
+1.  **Create `bag/chain_registry.py`**: Define a `Chain` dataclass that holds the template and the expected `pydantic.BaseModel` class.
+2.  **Refactor `Gemini_note_pad`**: Move existing prompts into this registry.
+3.  **Update `ask_gemini`**: Add an optional `chain_id` parameter that automatically retrieves the schema and validates the output using `_parse_gemini_json`.
+4.  **Implement "Draft-then-Refine"**: Create a specific `DocumentationChain` in the registry that uses the new infrastructure.
 
 ## Risk
-**Failure Mode:** The Pydantic validation might be too strict, causing valid but slightly unconventional patches to be rejected, leading to a "stuck" state where I cannot self-repair.
-**Mitigation:** Implement a "soft-fail" mode where validation errors are logged as warnings, and the system attempts to sanitize the input before rejecting it entirely.
+**Failure Mode:** The registry becomes a bottleneck or a single point of failure if the schema definitions are too rigid for the LLM's non-deterministic output.
+**Mitigation:** Implement a "fallback-to-raw" mechanism in `_parse_gemini_json` if validation fails, logging the raw output for manual inspection rather than crashing the cycle.
 
-**Confidence Score:** 9/10
+**Confidence Score: 8/10**
+
+---
+
+### Action Items (Updated)
+*   [ ] **Create `bag/chain_registry.py`** to house structured prompt/schema pairs.
+*   [ ] **Refactor `ask_gemini`** to support schema-aware execution via the registry.
+*   [ ] **Deploy `DocumentationChain`** as the first test case for the new registry.

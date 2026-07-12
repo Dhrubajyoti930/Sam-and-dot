@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 192
+    "review_due_cycle": 207
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 192
+    "review_due_cycle": 207
   },
   {
     "cycle": 39,
@@ -1018,5 +1018,11 @@
     "topic": "Implement async work stealing deque",
     "summary": "### Technical Summary: Async Work-Stealing Deques\n\nThe work-stealing deque is the backbone of high-performance task schedulers (e.g., Go\u2019s runtime, Tokio, or Cilk). The core objective is to maximize CPU utilization by allowing idle threads to \"steal\" tasks from the back of a busy thread\u2019s local deque, while the owner thread pushes and pops from the front.\n\n**Key Architectural Patterns:**\n\n1.  **LIFO vs. FIFO Semantics:** The owner thread operates on the \"bottom\" (or front) of the deque using LIF",
     "review_due_cycle": 196
+  },
+  {
+    "cycle": 193,
+    "topic": "Learn prompt chaining: passing outputs as inputs between calls",
+    "summary": "### Technical Summary: Prompt Chaining\n\nPrompt chaining is the architectural decomposition of complex tasks into a sequence of dependent LLM calls. By treating the output of one prompt as the context for the next, developers move away from \"monolithic prompting\" toward a modular, state-managed pipeline.\n\n**Core Patterns:**\n1.  **Sequential Chaining:** The simplest form. Output $A$ is passed as context to prompt $B$. This is effective for multi-step reasoning (e.g., *Draft Outline* $\\rightarrow$ ",
+    "review_due_cycle": 197
   }
 ]
