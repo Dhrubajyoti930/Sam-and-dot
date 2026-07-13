@@ -1048,3 +1048,64 @@
 2026-07-12 14:41:31,744 [DOT][INFO] Appended to Letter_20260712T144030Z.md: Sunday Special
 2026-07-12 14:41:31,746 [DOT][INFO] Worklog: no stale entries.
 2026-07-12 14:41:32,802 [DOT][INFO] Dot's daily run complete.
+2026-07-13 04:09:02,445 [DOT][INFO] ═══════════════════════════════════
+2026-07-13 04:09:02,446 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-07-13 04:09:02,446 [DOT][INFO] ═══════════════════════════════════
+2026-07-13 04:09:02,446 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-07-13 04:09:18,458 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:09:19,878 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:09:19,884 [DOT][INFO] Task 1: chunk 1/8 summarised.
+2026-07-13 04:09:35,890 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:09:37,838 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:09:37,842 [DOT][INFO] Task 1: chunk 2/8 summarised.
+2026-07-13 04:09:53,847 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:09:55,432 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:09:55,437 [DOT][INFO] Task 1: chunk 3/8 summarised.
+2026-07-13 04:10:11,442 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:10:13,014 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:10:13,017 [DOT][INFO] Task 1: chunk 4/8 summarised.
+2026-07-13 04:10:29,022 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:10:30,674 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:10:30,677 [DOT][INFO] Task 1: chunk 5/8 summarised.
+2026-07-13 04:10:46,682 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:10:48,234 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:10:48,237 [DOT][INFO] Task 1: chunk 6/8 summarised.
+2026-07-13 04:11:04,243 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:11:06,121 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:11:06,125 [DOT][INFO] Task 1: chunk 7/8 summarised.
+2026-07-13 04:11:22,130 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:11:23,913 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:11:23,917 [DOT][INFO] Task 1: chunk 8/8 summarised.
+2026-07-13 04:11:39,921 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:11:43,675 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:11:43,676 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-07-13 04:11:51,676 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-07-13 04:11:51,678 [DOT][INFO] Task 2: 12 experiences → 3 batch(es) of ≤5.
+2026-07-13 04:11:59,678 [DOT][INFO] Task 2: batch 1/3 — cycles [13, 17, 19, 20, 21]
+2026-07-13 04:12:07,683 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:12:09,136 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:12:17,139 [DOT][INFO] Task 2: batch 2/3 — cycles [51, 54, 55, 56, 57]
+2026-07-13 04:12:25,143 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:12:25,881 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:12:33,884 [DOT][INFO] Task 2: batch 3/3 — cycles [193, 194]
+2026-07-13 04:12:41,889 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:12:43,256 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:12:43,259 [DOT][INFO] Experiences curated: 9 kept, 0 forgotten, 2 consolidated. Total now: 11.
+2026-07-13 04:12:43,260 [DOT][INFO] Letter written to Sam: Letter_20260713T041243Z.md
+2026-07-13 04:12:43,260 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-07-13 04:12:43,260 [DOT][INFO] Finding best recipient for: Tiago Henriques, maintainer of 'cachetools'. His project is a standard for Python caching, and he is an active indie mai
+2026-07-13 04:12:51,265 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:12:51,966 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:12:51,968 [DOT][INFO] Recipient match:  <> confidence=0 — The list does not contain Tiago Henriques, the maintainer of 'cachetools', and no other person in the provided list is a direct match for this specific maintainer role.
+2026-07-13 04:12:51,968 [DOT][WARNING] Match confidence 0 below threshold 7 — skipping.
+2026-07-13 04:12:51,968 [DOT][WARNING] No suitable recipient found in emails.json — request preserved.
+2026-07-13 04:12:51,969 [DOT][INFO] Appended to Letter_20260713T041243Z.md: Email Dispatch — No Match
+2026-07-13 04:12:51,969 [DOT][INFO] Appended to Letter_20260713T041243Z.md: Email Dispatch
+2026-07-13 04:12:59,969 [DOT][INFO] ── Task 4: Bag Review ──
+2026-07-13 04:13:15,975 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-07-13 04:13:18,144 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-13 04:13:18,146 [DOT][INFO] Bag review complete.
+2026-07-13 04:13:18,146 [DOT][INFO] Appended to Letter_20260713T041243Z.md: Bag Excavation Findings
+2026-07-13 04:13:18,146 [DOT][INFO] Today is Monday — inbox check reserved for Sunday.
+2026-07-13 04:13:18,149 [DOT][INFO] Worklog: no stale entries.
+2026-07-13 04:13:19,423 [DOT][INFO] Dot's daily run complete.
