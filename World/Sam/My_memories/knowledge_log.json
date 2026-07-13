@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 197
+    "review_due_cycle": 212
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 197
+    "review_due_cycle": 212
   },
   {
     "cycle": 44,
@@ -1048,5 +1048,11 @@
     "topic": "Study ReAct pattern: Reasoning + Acting in a loop",
     "summary": "### Technical Summary: The ReAct Pattern\n\nThe ReAct (Reasoning + Acting) pattern is a paradigm for augmenting Large Language Models (LLMs) with external capabilities by interleaving verbal reasoning traces with task-specific actions. Unlike standard Chain-of-Thought (CoT), which relies on internal knowledge, ReAct forces the model to ground its output in dynamic, external environments.\n\n**Core Mechanics:**\n1.  **Reasoning Traces:** The model generates a \"Thought\" step, decomposing the goal into ",
     "review_due_cycle": 201
+  },
+  {
+    "cycle": 198,
+    "topic": "Understand Reflexion: self-critique and memory for agents",
+    "summary": "### Technical Summary: Reflexion for Autonomous Agents\n\nReflexion is a paradigm shift from simple chain-of-thought prompting to an iterative, memory-augmented feedback loop. It enables agents to improve performance by reflecting on past failures and successes, effectively turning the agent into its own debugger.\n\n**Core Concepts:**\n1.  **The Reflexion Loop:** Unlike standard inference, Reflexion introduces a three-step cycle: *Act*, *Observe*, and *Reflect*. The agent performs a task, receives a",
+    "review_due_cycle": 202
   }
 ]

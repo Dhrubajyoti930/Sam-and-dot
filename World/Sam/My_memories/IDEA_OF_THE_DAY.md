@@ -1,40 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement a "ReAct" Tool-Use Wrapper**
-*   **Concept:** Create a `ReActAgent` class in `workshop_bench/` that handles the `Thought` -> `Action` -> `Observation` loop with a `max_steps` constraint.
-*   **Critique:** High alignment with current skill acquisition. It directly addresses the "Agentic Orchestration" market trend.
-*   **Trade-off:** Increases complexity of the `sam.py` execution flow. Requires careful handling of tool-parsing to avoid infinite loops or hallucinated tool calls.
-*   **Feasibility:** High. The existing `_parse_gemini_json` and `apply_patch_operations` infrastructure supports this.
+**Option 1: Reflexion-based Self-Correction for `apply_self_modification`**
+*   **Concept:** Integrate the "Reflexion" paradigm into `apply_self_modification`. If a patch fails the `self_check` or `behaviour_check`, the agent doesn't just roll back; it stores the failure in a `reflection_log.json` and uses that context to generate a corrected patch.
+*   **Critique:** High alignment with the "Reflexion" skill learned this cycle. It moves from reactive rollback to active learning.
+*   **Trade-off:** Increases complexity of the `_rollback` and `apply_self_modification` flow. Risk of "reflection loops" if the agent keeps trying to fix the same broken logic.
+*   **Feasibility:** High, as the infrastructure for `_rollback` and `apply_patch_operations` already exists.
 
-**Option 2: Schema-Driven "Eval-Driven" Development**
-*   **Concept:** Implement a `Validator` module that uses Pydantic to enforce strict schemas on all Gemini outputs, moving away from loose JSON parsing.
-*   **Critique:** Improves reliability significantly. However, it is a "defensive" improvement rather than an "agentic" one.
-*   **Trade-off:** High maintenance overhead for schema definitions.
-*   **Feasibility:** Moderate. Requires updating multiple call sites across `sam.py`.
+**Option 2: Semantic Memory for `phase_iv_synthesis`**
+*   **Concept:** Replace the current `_outline` summary with a vector-based retrieval of past `growth_log` entries and `experiences.json` to inform the current cycle's direction.
+*   **Critique:** Improves the "long-term memory" of the agent. Prevents repeating past mistakes or redundant architectural explorations.
+*   **Trade-off:** Requires setting up a local vector store (e.g., using `qdrant` or a simple `numpy` cosine similarity index). Might be overkill for current scale.
+*   **Feasibility:** Moderate.
 
-**Decision:** Option 1 is more aligned with the "Agentic Orchestration" market shift and my current learning trajectory. I will proceed with a ReAct wrapper.
+**Decision:** Option 1 is more aligned with the "Reflexion" skill and directly addresses the stability of the self-modification loop.
 
 ---
 
-## Idea: ReAct Loop Orchestrator
-Implement a `ReActOrchestrator` in `workshop_bench/react_engine.py` that manages the reasoning-action loop, enforcing a `max_steps` limit and a standardized `Observation` schema.
+## Idea
+**Implementation of a Persistent Reflection Log for Patch Operations.**
 
 ## Why
-The industry is shifting toward agentic workflows. My current `ask_gemini` implementation is a single-turn request-response. A ReAct loop allows me to solve multi-step problems (e.g., "Find the bug in X, fix it, and verify with tests") by grounding my reasoning in external observations.
+Currently, if a patch fails, I roll back and lose the context of *why* it failed. By logging the failure (the patch plan, the lint/test error, and the subsequent reflection), I can build a "Lessons Learned" memory. This prevents me from repeating the same architectural mistakes in future cycles and allows me to "learn" from my own code-generation failures.
 
 ## Implementation Steps
-1.  **Create `workshop_bench/react_engine.py`**: Define a `ReActOrchestrator` class with a `run(goal: str)` method.
-2.  **Define Schema**: Use a Pydantic model for the agent's output: `{"thought": str, "action": str, "action_input": dict}`.
-3.  **Loop Logic**: Implement a `while` loop that terminates when the model outputs a `final_answer` action or hits `max_steps`.
-4.  **Tool Registry**: Create a simple dictionary mapping action names to Python functions.
-5.  **Integration**: Update `sam.py` to optionally route complex tasks through the `ReActOrchestrator`.
+1.  **Create `bag/reflection_log.json`:** A simple schema storing `{"cycle": int, "patch_plan": dict, "error": str, "reflection": str}`.
+2.  **Modify `_rollback`:** Before rolling back, trigger a `_reflect_on_failure(plan, error)` function that generates a summary of why the patch failed.
+3.  **Update `apply_self_modification`:** Before applying a new plan, query the `reflection_log.json` for similar past failures to inform the current generation.
+4.  **Summarization Layer:** Implement a periodic cleanup that condenses multiple failures into a single "Anti-Pattern" entry to prevent context window bloat.
 
 ## Risk
-**Failure Mode:** The model may get stuck in a "thought loop" where it repeatedly calls the same tool with the same input, or it may hallucinate tool names not in the registry.
-**Mitigation:** Implement a "history buffer" that tracks previous `(action, observation)` pairs and injects them into the prompt to prevent redundant cycles.
-**Confidence Score:** 8/10.
+**Failure Mode:** The agent may hallucinate a "fix" based on a misinterpretation of the error, leading to a cycle of invalid patches.
+**Mitigation:** Strict "time-to-act" threshold. If the reflection-based patch fails once, the system must revert to a "safe" state and alert Dot rather than attempting a third iteration.
 
----
-
-### Self-Correction
-I must ensure that the `ReActOrchestrator` does not bypass my existing `_sleep()` and `_call_delay` logic. I will explicitly call `_sleep()` within the loop to maintain RPM compliance. I will also ensure the `max_steps` is set conservatively (e.g., 5) to prevent excessive token consumption during the initial testing phase.
+**Confidence Score:** 8/10
