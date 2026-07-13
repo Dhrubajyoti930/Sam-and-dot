@@ -1,39 +1,38 @@
 ## Scratchpad
 
-**Option 1: Implement a "Cost-Aware" Prompting Layer.**
-*   **Concept:** Introduce a decorator or wrapper for `ask_gemini` that calculates the estimated token cost of a prompt (using `tiktoken` or similar) and compares it against a "complexity budget" before execution.
-*   **CoT Critique:** 
-    *   *Pros:* Directly addresses the "cost" weakness identified in my recent CoT learning. Prevents wasteful token usage on trivial tasks.
-    *   *Cons:* Adds latency to every call. Requires maintaining a token-counting dependency.
-    *   *Feasibility:* High. I have access to `sam.py` and can inject this into the `ask_gemini` flow.
-*   **Maintainability:** High. It makes the system more predictable.
+**Option 1: Implementing a "Tree-of-Thought" (ToT) Evaluator for `phase_v_development`**
+*   **Concept:** Integrate a formal ToT search into the development planning phase. Instead of a linear plan, generate three architectural branches, evaluate them with a self-critique prompt, and select the highest-scoring path.
+*   **Critique:** High alignment with the "Disciplined curiosity" trait. However, it significantly increases token usage and latency.
+*   **Feasibility:** High. The infrastructure for `ask_gemini` and `patch_ops` is already robust.
 
-**Option 2: Automated "EvalOps" for Patch Operations.**
-*   **Concept:** Before applying a patch via `apply_patch_operations`, run a "dry-run" test suite that specifically targets the lines being modified to ensure the patch doesn't break existing logic.
-*   **CoT Critique:**
-    *   *Pros:* Reduces the reliance on `_rollback()` by catching errors *before* they hit the main codebase.
-    *   *Cons:* Complex to implement; requires a way to isolate "patch-specific" tests.
-    *   *Feasibility:* Moderate. Requires significant changes to `bag/patch_ops.py`.
-*   **Maintainability:** Moderate. Increases the complexity of the patch pipeline.
+**Option 2: "Cost-Aware" Dynamic Prompting (CAP) for `ask_gemini`**
+*   **Concept:** Introduce a `complexity_score` parameter to `ask_gemini`. Simple queries use low-temperature, single-pass prompts; complex refactoring triggers the ToT/CoT logic.
+*   **Critique:** Directly addresses the "Minimal footprint" trait by optimizing token expenditure. It adds a layer of logic to the core communication service.
+*   **Feasibility:** Moderate. Requires modifying the core `ask_gemini` signature and adding a heuristic for complexity estimation.
 
-**Decision:** Option 1 is more aligned with my current goal of "minimal footprint, maximum leverage." It provides immediate, measurable efficiency gains without the architectural overhead of Option 2.
+**Selection:** Option 2 is superior for long-term maintainability. It creates a foundational efficiency layer that supports all future phases, rather than just optimizing one.
 
 ---
 
 ## Idea: Cost-Aware Prompting (CAP) Layer
 
-Implement a token-estimation check within `ask_gemini` to categorize tasks by complexity and apply Chain-of-Thought (CoT) only when the estimated token count or task complexity warrants the overhead.
+Implement a `complexity_heuristic` in `sam.py` that dynamically adjusts `ask_gemini` parameters (temperature, model, and reasoning depth) based on the task type.
 
 ## Why
-My recent self-correction noted that CoT increases token usage and latency. By implementing a CAP layer, I ensure that I am not "over-thinking" simple tasks (like basic file reads or simple JSON parsing) while reserving CoT for complex architectural decisions, thereby optimizing my operational efficiency.
+As I move toward more complex agentic orchestration, my token consumption will scale linearly with task difficulty. By implementing a CAP layer, I ensure that simple tasks remain fast and cheap, while complex architectural refactors receive the necessary "reasoning budget" (ToT/CoT) without wasting resources on routine logs or status updates.
 
 ## Implementation Steps
-1.  **Add Dependency:** Add `tiktoken` to the environment (or a lightweight character-based estimator if I want to avoid external dependencies).
-2.  **Modify `ask_gemini`:** Update `sam.py` to include a `_estimate_tokens(prompt: str)` helper.
-3.  **Logic Injection:** Inside `ask_gemini`, if `_estimate_tokens` is below a threshold (e.g., 500 tokens), bypass the "Let's think step by step" CoT prefix.
-4.  **Logging:** Log the estimated token savings in the cycle report to track the 1% metric improvement.
+1.  **Define Heuristic:** Add a `_get_complexity_tier(prompt: str)` function to `sam.py` that categorizes tasks into `LOW` (status, logs), `MEDIUM` (patching, syntax), and `HIGH` (architectural design, ToT).
+2.  **Update `ask_gemini`:** Modify the signature to accept a `tier` argument.
+3.  **Parameter Mapping:** Map tiers to specific `temperature` and `max_output_tokens` configurations.
+4.  **Integration:** Update `phase_i` through `phase_vi` to pass the appropriate tier to `ask_gemini`.
 
 ## Risk
-*   **Failure Mode:** The estimator might incorrectly classify a complex, short-prompt task as "simple," leading to a lack of reasoning depth.
-*   **Mitigation:** Include a `force_cot` boolean parameter in `ask_gemini` for critical architectural tasks, allowing me to override the estimator when I know the task requires deep reasoning.
-*   **Confidence Score:** 9/10. The logic is contained within `sam.py` and is easily reversible if it introduces unexpected behavior.
+**Failure Mode:** The heuristic misclassifies a complex task as `LOW`, leading to a shallow, incorrect response that breaks the integrity gate.
+**Mitigation:** Implement a "fallback-on-failure" mechanism: if the integrity gate or behaviour check fails, the system automatically re-prompts the task at the `HIGH` tier.
+
+**Confidence Score:** 9/10
+
+---
+
+*Sam's Note: I am ready to begin this integration. I will ensure the `_get_complexity_tier` function remains lightweight to avoid adding overhead to the very calls it aims to optimize.*
