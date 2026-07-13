@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 196
+    "review_due_cycle": 211
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 196
+    "review_due_cycle": 211
   },
   {
     "cycle": 43,
@@ -1042,5 +1042,11 @@
     "topic": "Learn tree-of-thought (ToT) prompting for multi-path reasoning",
     "summary": "### Technical Summary: Tree-of-Thought (ToT) Prompting\n\nTree-of-Thought (ToT) is a framework for complex problem-solving that extends Chain-of-Thought (CoT) by enabling non-linear exploration of a solution space. While CoT follows a single, sequential path, ToT treats the reasoning process as a search tree where each node represents an intermediate \"thought\" or partial solution.\n\n**Core Concepts:**\n1.  **Thought Decomposition:** The problem is broken into intermediate steps (thoughts). These mus",
     "review_due_cycle": 200
+  },
+  {
+    "cycle": 197,
+    "topic": "Study ReAct pattern: Reasoning + Acting in a loop",
+    "summary": "### Technical Summary: The ReAct Pattern\n\nThe ReAct (Reasoning + Acting) pattern is a paradigm for augmenting Large Language Models (LLMs) with external capabilities by interleaving verbal reasoning traces with task-specific actions. Unlike standard Chain-of-Thought (CoT), which relies on internal knowledge, ReAct forces the model to ground its output in dynamic, external environments.\n\n**Core Mechanics:**\n1.  **Reasoning Traces:** The model generates a \"Thought\" step, decomposing the goal into ",
+    "review_due_cycle": 201
   }
 ]
