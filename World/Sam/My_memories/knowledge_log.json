@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 194
+    "review_due_cycle": 209
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 194
+    "review_due_cycle": 209
   },
   {
     "cycle": 41,
@@ -1030,5 +1030,11 @@
     "topic": "Study few-shot prompting: format, selection, and ordering of examples",
     "summary": "### Few-Shot Prompting: Technical Summary\n\nFew-shot prompting is the practice of providing a model with a set of input-output examples within the prompt to guide its reasoning and output format. Unlike zero-shot prompting, which relies on the model's pre-trained internal distribution, few-shot prompting leverages in-context learning to align the model with specific task constraints, stylistic requirements, or complex logic.\n\n**Key Concepts and Patterns:**\n\n*   **Format Consistency:** The structu",
     "review_due_cycle": 198
+  },
+  {
+    "cycle": 195,
+    "topic": "Understand chain-of-thought (CoT) prompting and when it helps",
+    "summary": "### Technical Summary: Chain-of-Thought (CoT) Prompting\n\nChain-of-Thought (CoT) prompting is a technique that elicits multi-step reasoning from Large Language Models by requiring them to generate intermediate logical steps before arriving at a final answer. By decomposing complex problems into a sequence of smaller, verifiable operations, CoT mitigates the \"stochastic parrot\" effect where models prioritize token probability over logical consistency.\n\n**Key Patterns & Techniques:**\n1.  **Zero-Sho",
+    "review_due_cycle": 199
   }
 ]
