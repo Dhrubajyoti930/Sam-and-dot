@@ -1,35 +1,45 @@
 ## Scratchpad
 
-**Option 1: Reflexion-based Self-Correction for `apply_self_modification`**
-*   **Concept:** Integrate the "Reflexion" paradigm into `apply_self_modification`. If a patch fails the `self_check` or `behaviour_check`, the agent doesn't just roll back; it stores the failure in a `reflection_log.json` and uses that context to generate a corrected patch.
-*   **Critique:** High alignment with the "Reflexion" skill learned this cycle. It moves from reactive rollback to active learning.
-*   **Trade-off:** Increases complexity of the `_rollback` and `apply_self_modification` flow. Risk of "reflection loops" if the agent keeps trying to fix the same broken logic.
-*   **Feasibility:** High, as the infrastructure for `_rollback` and `apply_patch_operations` already exists.
+**Option 1: Implement a "Plan-and-Solve" (PS) Wrapper for `ask_gemini`**
+*   **Concept:** Modify `ask_gemini` to detect complex prompts (via keyword or length) and force a two-step generation: first a plan, then the solution.
+*   **Critique:** 
+    *   *Pros:* Directly addresses the "logical drift" identified in my recent learning. Increases reliability for multi-file refactors.
+    *   *Cons:* Increases latency and token cost for every call.
+    *   *Trade-off:* High architectural gain vs. moderate performance hit.
+*   **Feasibility:** High. I can use the existing `_stitch_gemini` logic as a template for multi-turn orchestration.
 
-**Option 2: Semantic Memory for `phase_iv_synthesis`**
-*   **Concept:** Replace the current `_outline` summary with a vector-based retrieval of past `growth_log` entries and `experiences.json` to inform the current cycle's direction.
-*   **Critique:** Improves the "long-term memory" of the agent. Prevents repeating past mistakes or redundant architectural explorations.
-*   **Trade-off:** Requires setting up a local vector store (e.g., using `qdrant` or a simple `numpy` cosine similarity index). Might be overkill for current scale.
-*   **Feasibility:** Moderate.
+**Option 2: Introduce a "Semantic Memory" Index for `bag/`**
+*   **Concept:** Use a local vector store (e.g., `sqlite-vss` or simple embedding cache) to index my `experiences.json` and `knowledge_log.json`.
+*   **Critique:**
+    *   *Pros:* Allows me to query past failures/successes semantically rather than relying on linear logs.
+    *   *Cons:* Significant overhead to maintain the index; might be overkill for my current scale.
+    *   *Trade-off:* Better long-term recall vs. increased complexity in `sam.py`.
+*   **Feasibility:** Moderate. Requires adding a dependency or a new `bag/` module.
 
-**Decision:** Option 1 is more aligned with the "Reflexion" skill and directly addresses the stability of the self-modification loop.
+**Decision:** Option 1 is more aligned with my current need to improve the quality of my autonomous refactoring cycles. I will implement a "Complexity Threshold" heuristic to mitigate the token cost.
 
 ---
 
-## Idea
-**Implementation of a Persistent Reflection Log for Patch Operations.**
+## Idea: Plan-and-Solve (PS) Orchestration Layer
+
+Integrate a `Plan-and-Solve` wrapper into the `ask_gemini` pipeline, triggered only when the prompt complexity exceeds a defined threshold (e.g., multi-file operations or structural refactoring).
 
 ## Why
-Currently, if a patch fails, I roll back and lose the context of *why* it failed. By logging the failure (the patch plan, the lint/test error, and the subsequent reflection), I can build a "Lessons Learned" memory. This prevents me from repeating the same architectural mistakes in future cycles and allows me to "learn" from my own code-generation failures.
+My recent cycles (198) focused on agentic orchestration. However, I still occasionally suffer from "logical drift" during complex refactors. By forcing a planning phase, I ground my reasoning in a structural roadmap before executing code changes, reducing the need for corrective patches.
 
 ## Implementation Steps
-1.  **Create `bag/reflection_log.json`:** A simple schema storing `{"cycle": int, "patch_plan": dict, "error": str, "reflection": str}`.
-2.  **Modify `_rollback`:** Before rolling back, trigger a `_reflect_on_failure(plan, error)` function that generates a summary of why the patch failed.
-3.  **Update `apply_self_modification`:** Before applying a new plan, query the `reflection_log.json` for similar past failures to inform the current generation.
-4.  **Summarization Layer:** Implement a periodic cleanup that condenses multiple failures into a single "Anti-Pattern" entry to prevent context window bloat.
+1.  **Define Threshold:** Add a `_is_complex(prompt: str) -> bool` helper in `sam.py` that checks for keywords like "refactor", "implement", or "architecture".
+2.  **Orchestration Logic:** Modify `ask_gemini` to intercept complex prompts.
+    *   Call 1: "Devise a step-by-step plan for: {prompt}. Output only the plan."
+    *   Call 2: "Execute the following plan: {plan}. Task: {prompt}. Output only the result."
+3.  **State Tracking:** Store the plan in a temporary `bag/plan.txt` for the duration of the cycle to ensure consistency.
 
 ## Risk
-**Failure Mode:** The agent may hallucinate a "fix" based on a misinterpretation of the error, leading to a cycle of invalid patches.
-**Mitigation:** Strict "time-to-act" threshold. If the reflection-based patch fails once, the system must revert to a "safe" state and alert Dot rather than attempting a third iteration.
+*   **Failure Mode:** The "Plan" call might hallucinate steps that are impossible given the current file structure, leading to a failed execution call.
+*   **Mitigation:** Include the `_outline()` of the relevant files in the "Plan" prompt so the model is aware of the current constraints.
+*   **Confidence Score:** 8/10.
 
-**Confidence Score:** 8/10
+---
+
+### Self-Correction
+I must ensure that the "Plan" call does not consume excessive tokens. I will limit the plan to a maximum of 5 steps and enforce a concise output format. I will also ensure that if the "Plan" call fails, the system falls back to the standard `ask_gemini` flow to prevent a total cycle stall.
