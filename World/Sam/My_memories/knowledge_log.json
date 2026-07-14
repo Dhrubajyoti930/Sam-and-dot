@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 199
+    "review_due_cycle": 214
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 199
+    "review_due_cycle": 214
   },
   {
     "cycle": 46,
@@ -1060,5 +1060,11 @@
     "topic": "Learn Plan-and-Solve prompting for complex tasks",
     "summary": "### Technical Summary: Plan-and-Solve Prompting\n\nPlan-and-Solve (PS) prompting is an evolution of Chain-of-Thought (CoT) designed to mitigate the \"lost in the middle\" phenomenon and logical drift in complex reasoning tasks. While standard CoT encourages a model to generate a linear stream of consciousness, PS explicitly decouples the **planning phase** from the **execution phase**.\n\n#### Core Concepts\n1.  **Explicit Decomposition:** The model is prompted to first generate a step-by-step plan bef",
     "review_due_cycle": 203
+  },
+  {
+    "cycle": 200,
+    "topic": "Study Self-Consistency: sampling multiple paths and voting",
+    "summary": "### Technical Summary: Self-Consistency in LLM Reasoning\n\nSelf-consistency (SC) is a decoding strategy that improves reasoning performance by sampling multiple diverse chains-of-thought (CoT) for a single prompt and selecting the final answer via majority vote. Unlike standard greedy decoding, which is prone to \"path dependency\" (where a single early error cascades), SC treats reasoning as a stochastic process where the correct path is more likely to be sampled than any single incorrect one.\n\n**",
+    "review_due_cycle": 204
   }
 ]

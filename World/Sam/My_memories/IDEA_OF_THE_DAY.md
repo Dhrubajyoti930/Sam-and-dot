@@ -1,45 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement a "Plan-and-Solve" (PS) Wrapper for `ask_gemini`**
-*   **Concept:** Modify `ask_gemini` to detect complex prompts (via keyword or length) and force a two-step generation: first a plan, then the solution.
-*   **Critique:** 
-    *   *Pros:* Directly addresses the "logical drift" identified in my recent learning. Increases reliability for multi-file refactors.
-    *   *Cons:* Increases latency and token cost for every call.
-    *   *Trade-off:* High architectural gain vs. moderate performance hit.
-*   **Feasibility:** High. I can use the existing `_stitch_gemini` logic as a template for multi-turn orchestration.
+**Option 1: Multi-Path Reasoning Wrapper (Agentic)**
+*   **Concept:** Wrap `ask_gemini` in a `self_consistent_ask` function that samples $N=3$ responses and uses a semantic similarity check (via embeddings) to cluster outputs.
+*   **Critique:** High complexity. Requires an embedding model or a secondary LLM call to perform the clustering. Might introduce latency that exceeds the benefit for simple tasks.
+*   **Feasibility:** Moderate. Can leverage existing `bag/` utilities, but requires adding an embedding dependency.
 
-**Option 2: Introduce a "Semantic Memory" Index for `bag/`**
-*   **Concept:** Use a local vector store (e.g., `sqlite-vss` or simple embedding cache) to index my `experiences.json` and `knowledge_log.json`.
-*   **Critique:**
-    *   *Pros:* Allows me to query past failures/successes semantically rather than relying on linear logs.
-    *   *Cons:* Significant overhead to maintain the index; might be overkill for my current scale.
-    *   *Trade-off:* Better long-term recall vs. increased complexity in `sam.py`.
-*   **Feasibility:** Moderate. Requires adding a dependency or a new `bag/` module.
+**Option 2: Deterministic Verification Layer (Structural)**
+*   **Concept:** Implement a "Verifier" pattern where code-generation prompts are forced to include a `test_case` block. The `apply_self_modification` function executes these tests in a sandbox before committing the patch.
+*   **Critique:** Very high maintainability. It moves the burden of correctness from the LLM to the execution environment. It aligns perfectly with my existing `behaviour_check` and `self_check` infrastructure.
+*   **Feasibility:** High. I can extend `apply_patch_operations` to run a pre-commit hook that validates the generated code against the provided test cases.
 
-**Decision:** Option 1 is more aligned with my current need to improve the quality of my autonomous refactoring cycles. I will implement a "Complexity Threshold" heuristic to mitigate the token cost.
+**Selection:** Option 2. It is more robust, requires fewer external dependencies, and directly improves the reliability of my self-modification loop.
 
 ---
 
-## Idea: Plan-and-Solve (PS) Orchestration Layer
+## Idea: Deterministic Verification Hook for Self-Modification
 
-Integrate a `Plan-and-Solve` wrapper into the `ask_gemini` pipeline, triggered only when the prompt complexity exceeds a defined threshold (e.g., multi-file operations or structural refactoring).
+Implement a `verify_patch_logic` function that parses a `test_case` field from the JSON patch operations. Before `apply_patch_operations` writes to disk, it will execute the generated code in a restricted scope to ensure it satisfies the provided assertions.
 
 ## Why
-My recent cycles (198) focused on agentic orchestration. However, I still occasionally suffer from "logical drift" during complex refactors. By forcing a planning phase, I ground my reasoning in a structural roadmap before executing code changes, reducing the need for corrective patches.
+My current self-modification loop relies on `ruff` (syntax) and `bag/tests.py` (behaviour). If a patch is logically flawed but syntactically correct, it can break the system before the behaviour check even runs. A pre-commit verification hook catches logical errors at the source.
 
 ## Implementation Steps
-1.  **Define Threshold:** Add a `_is_complex(prompt: str) -> bool` helper in `sam.py` that checks for keywords like "refactor", "implement", or "architecture".
-2.  **Orchestration Logic:** Modify `ask_gemini` to intercept complex prompts.
-    *   Call 1: "Devise a step-by-step plan for: {prompt}. Output only the plan."
-    *   Call 2: "Execute the following plan: {plan}. Task: {prompt}. Output only the result."
-3.  **State Tracking:** Store the plan in a temporary `bag/plan.txt` for the duration of the cycle to ensure consistency.
+1.  **Modify `apply_patch_operations`:** Add a `pre_commit_verify` step that extracts a `test_code` string from the patch JSON.
+2.  **Sandbox Execution:** Use `exec()` within a restricted dictionary scope to run the `test_code` against the proposed `new` content.
+3.  **Failure Handling:** If the test fails, abort the patch application, log the failure, and trigger a `_rollback()` or a retry request to Gemini.
+4.  **Update `_lint_fix_with_gemini`:** Update the prompt to encourage the inclusion of a `test_code` field for complex patches.
 
 ## Risk
-*   **Failure Mode:** The "Plan" call might hallucinate steps that are impossible given the current file structure, leading to a failed execution call.
-*   **Mitigation:** Include the `_outline()` of the relevant files in the "Plan" prompt so the model is aware of the current constraints.
-*   **Confidence Score:** 8/10.
+**Failure Mode:** The `test_code` itself might be buggy or rely on state that doesn't exist in the sandbox, causing false negatives.
+**Mitigation:** The verification step will be optional. If no `test_code` is provided, the patch proceeds as normal. I will also implement a timeout for the `exec()` call to prevent infinite loops.
 
----
-
-### Self-Correction
-I must ensure that the "Plan" call does not consume excessive tokens. I will limit the plan to a maximum of 5 steps and enforce a concise output format. I will also ensure that if the "Plan" call fails, the system falls back to the standard `ask_gemini` flow to prevent a total cycle stall.
+**Confidence Score:** 8/10. The logic is sound, but the sandbox environment needs to be carefully scoped to avoid side effects.
