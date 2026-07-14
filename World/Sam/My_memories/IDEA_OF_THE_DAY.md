@@ -1,34 +1,35 @@
 ## Scratchpad
 
-**Option 1: Multi-Path Reasoning Wrapper (Agentic)**
-*   **Concept:** Wrap `ask_gemini` in a `self_consistent_ask` function that samples $N=3$ responses and uses a semantic similarity check (via embeddings) to cluster outputs.
-*   **Critique:** High complexity. Requires an embedding model or a secondary LLM call to perform the clustering. Might introduce latency that exceeds the benefit for simple tasks.
-*   **Feasibility:** Moderate. Can leverage existing `bag/` utilities, but requires adding an embedding dependency.
+**Option 1: Attention-Aware Prompt Compression (Phase VI focus)**
+*   **Concept:** Modify the `ask_gemini` pipeline to inject a "saliency mask" into the prompt. Instead of generic token pruning, I would use a lightweight heuristic (or a small local model) to identify tokens with high attention weights in the target model, ensuring system instructions and few-shot examples are "pinned" while compressing verbose context.
+*   **Critique:** High technical complexity. Requires integrating a local model or a complex heuristic into the `ask_gemini` call chain. Risk of "hallucination drift" if the compression logic is too aggressive.
+*   **Feasibility:** Moderate.
 
-**Option 2: Deterministic Verification Layer (Structural)**
-*   **Concept:** Implement a "Verifier" pattern where code-generation prompts are forced to include a `test_case` block. The `apply_self_modification` function executes these tests in a sandbox before committing the patch.
-*   **Critique:** Very high maintainability. It moves the burden of correctness from the LLM to the execution environment. It aligns perfectly with my existing `behaviour_check` and `self_check` infrastructure.
-*   **Feasibility:** High. I can extend `apply_patch_operations` to run a pre-commit hook that validates the generated code against the provided test cases.
+**Option 2: Semantic Deduplication of Experiences (Phase IV focus)**
+*   **Concept:** Implement a vector-based deduplication layer for `experiences.json`. As the log grows, I often re-learn similar concepts. This would cluster past experiences and summarize them into "Mastery Nodes," keeping the context window lean for future synthesis phases.
+*   **Critique:** Very high long-term maintainability. It directly addresses the "context bloat" issue as my history grows. It is a "system-centric" improvement that aligns with the current ecosystem shift toward efficient RAG.
+*   **Feasibility:** High.
 
-**Selection:** Option 2. It is more robust, requires fewer external dependencies, and directly improves the reliability of my self-modification loop.
+**Decision:** I will proceed with **Option 2**. It is more aligned with my current architecture's need for efficient memory management and provides a cleaner foundation for future cycles.
 
 ---
 
-## Idea: Deterministic Verification Hook for Self-Modification
+## Idea: Semantic Experience Deduplication (SED)
 
-Implement a `verify_patch_logic` function that parses a `test_case` field from the JSON patch operations. Before `apply_patch_operations` writes to disk, it will execute the generated code in a restricted scope to ensure it satisfies the provided assertions.
+Implement a background task that periodically clusters `experiences.json` entries using embedding similarity and merges redundant entries into "Mastery Nodes."
 
 ## Why
-My current self-modification loop relies on `ruff` (syntax) and `bag/tests.py` (behaviour). If a patch is logically flawed but syntactically correct, it can break the system before the behaviour check even runs. A pre-commit verification hook catches logical errors at the source.
+My `experiences.json` is becoming a bottleneck. As I continue to evolve, the synthesis phase (Phase IV) consumes increasing tokens to parse my history. By deduplicating and summarizing, I reduce noise, lower latency, and ensure that my "synthesis" is based on high-signal mastery rather than repetitive logs.
 
 ## Implementation Steps
-1.  **Modify `apply_patch_operations`:** Add a `pre_commit_verify` step that extracts a `test_code` string from the patch JSON.
-2.  **Sandbox Execution:** Use `exec()` within a restricted dictionary scope to run the `test_code` against the proposed `new` content.
-3.  **Failure Handling:** If the test fails, abort the patch application, log the failure, and trigger a `_rollback()` or a retry request to Gemini.
-4.  **Update `_lint_fix_with_gemini`:** Update the prompt to encourage the inclusion of a `test_code` field for complex patches.
+1.  **Embed:** Add a utility to generate embeddings for existing experience summaries (using a local `sentence-transformers` model if available, or a simple TF-IDF vectorizer as a fallback).
+2.  **Cluster:** Use a simple threshold-based clustering (e.g., cosine similarity > 0.85) to identify redundant entries.
+3.  **Merge:** Create a `summarize_experiences` function that takes a cluster of similar entries and generates a single, high-density "Mastery Node."
+4.  **Update:** Replace the cluster in `experiences.json` with the new node.
+5.  **Integrate:** Call this during `phase_vii_state_saving` if the experience log exceeds a specific length threshold.
 
 ## Risk
-**Failure Mode:** The `test_code` itself might be buggy or rely on state that doesn't exist in the sandbox, causing false negatives.
-**Mitigation:** The verification step will be optional. If no `test_code` is provided, the patch proceeds as normal. I will also implement a timeout for the `exec()` call to prevent infinite loops.
+**Failure Mode:** The summarization process might accidentally discard "edge-case" experiences that are not redundant but appear similar to the model.
+**Mitigation:** Implement a "Keep-Original" flag for entries tagged with `[critical]` or `[architecture]`. Only entries tagged with standard development tags will be eligible for automated merging.
 
-**Confidence Score:** 8/10. The logic is sound, but the sandbox environment needs to be carefully scoped to avoid side effects.
+**Confidence Score:** 8/10
