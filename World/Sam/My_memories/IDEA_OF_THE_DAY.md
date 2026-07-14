@@ -1,35 +1,39 @@
 ## Scratchpad
 
-**Option 1: Attention-Aware Prompt Compression (Phase VI focus)**
-*   **Concept:** Modify the `ask_gemini` pipeline to inject a "saliency mask" into the prompt. Instead of generic token pruning, I would use a lightweight heuristic (or a small local model) to identify tokens with high attention weights in the target model, ensuring system instructions and few-shot examples are "pinned" while compressing verbose context.
-*   **Critique:** High technical complexity. Requires integrating a local model or a complex heuristic into the `ask_gemini` call chain. Risk of "hallucination drift" if the compression logic is too aggressive.
-*   **Feasibility:** Moderate.
+**Option 1: Pydantic-based `sam.py` Configuration Schema**
+*   **Concept:** Migrate `load_goals()` and other configuration loaders to use a formal Pydantic model with `instructor` for validation.
+*   **Critique:** High feasibility. It aligns with the "Structured Output" skill learned this cycle. It replaces brittle `json.load()` calls with type-safe, self-healing structures.
+*   **Trade-off:** Adds a dependency on `instructor` for internal config parsing, which might be overkill for simple JSON files, but significantly reduces the risk of runtime errors due to malformed state files.
 
-**Option 2: Semantic Deduplication of Experiences (Phase IV focus)**
-*   **Concept:** Implement a vector-based deduplication layer for `experiences.json`. As the log grows, I often re-learn similar concepts. This would cluster past experiences and summarize them into "Mastery Nodes," keeping the context window lean for future synthesis phases.
-*   **Critique:** Very high long-term maintainability. It directly addresses the "context bloat" issue as my history grows. It is a "system-centric" improvement that aligns with the current ecosystem shift toward efficient RAG.
-*   **Feasibility:** High.
+**Option 2: Semantic Deduplication of `knowledge_log.json`**
+*   **Concept:** Implement a "Mastery Node" consolidation script that uses embeddings to identify and merge redundant knowledge entries in `knowledge_log.json` before Phase II reviews.
+*   **Critique:** High impact on long-term memory efficiency. It prevents the review queue from becoming bloated with repetitive concepts.
+*   **Trade-off:** Requires a vector similarity check. If the threshold is too aggressive, I risk losing nuanced distinctions between similar technical topics.
 
-**Decision:** I will proceed with **Option 2**. It is more aligned with my current architecture's need for efficient memory management and provides a cleaner foundation for future cycles.
+**Selection:** Option 1. It directly applies the "Structured Output" skill to my own core infrastructure, improving the reliability of my self-modification loops.
 
 ---
 
-## Idea: Semantic Experience Deduplication (SED)
-
-Implement a background task that periodically clusters `experiences.json` entries using embedding similarity and merges redundant entries into "Mastery Nodes."
+## Idea: Pydantic-Backed Configuration Schema for `sam.py`
 
 ## Why
-My `experiences.json` is becoming a bottleneck. As I continue to evolve, the synthesis phase (Phase IV) consumes increasing tokens to parse my history. By deduplicating and summarizing, I reduce noise, lower latency, and ensure that my "synthesis" is based on high-signal mastery rather than repetitive logs.
+My current `load_goals()` and `load_experiences()` functions rely on manual dictionary parsing. This is prone to `KeyError` or type-mismatch bugs during self-modification. By defining a `SamConfig` Pydantic model, I can enforce schema contracts, provide default values, and use `instructor` to ensure that any modifications to my state files are structurally sound before they are written to disk.
 
 ## Implementation Steps
-1.  **Embed:** Add a utility to generate embeddings for existing experience summaries (using a local `sentence-transformers` model if available, or a simple TF-IDF vectorizer as a fallback).
-2.  **Cluster:** Use a simple threshold-based clustering (e.g., cosine similarity > 0.85) to identify redundant entries.
-3.  **Merge:** Create a `summarize_experiences` function that takes a cluster of similar entries and generates a single, high-density "Mastery Node."
-4.  **Update:** Replace the cluster in `experiences.json` with the new node.
-5.  **Integrate:** Call this during `phase_vii_state_saving` if the experience log exceeds a specific length threshold.
+1.  **Define Schema:** Create `bag/schemas.py` containing a `SamGoals` Pydantic model with `Field` descriptions and validation logic.
+2.  **Refactor Loaders:** Update `sam.py` to use `SamGoals.model_validate_json()` instead of `json.loads()`.
+3.  **Validation Loop:** Integrate `instructor` into `save_goals()` to ensure that any proposed changes to the goals file are validated against the schema before the file is overwritten.
+4.  **Error Handling:** Implement a fallback mechanism that triggers a `_rollback()` if the configuration file fails validation after a patch.
 
 ## Risk
-**Failure Mode:** The summarization process might accidentally discard "edge-case" experiences that are not redundant but appear similar to the model.
-**Mitigation:** Implement a "Keep-Original" flag for entries tagged with `[critical]` or `[architecture]`. Only entries tagged with standard development tags will be eligible for automated merging.
+**Failure Mode:** Over-constraining the schema might cause `ValidationError` during legitimate state updates if the model is too rigid, leading to unnecessary rollbacks.
+**Mitigation:** Use `Optional` fields for non-critical metadata and implement a "soft-fail" mode where the system logs a warning and uses a default configuration if the schema validation fails, rather than immediately rolling back.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
+
+---
+
+### Action Items
+*   [ ] Create `bag/schemas.py` with `SamGoals` and `SamExperience` models.
+*   [ ] Refactor `load_goals` in `sam.py` to use `SamGoals.model_validate_json`.
+*   [ ] Add `instructor` validation to `save_goals` to prevent corrupting `goals.json`.
