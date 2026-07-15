@@ -1,39 +1,33 @@
 ## Scratchpad
 
-**Option 1: Pydantic-based `sam.py` Configuration Schema**
-*   **Concept:** Migrate `load_goals()` and other configuration loaders to use a formal Pydantic model with `instructor` for validation.
-*   **Critique:** High feasibility. It aligns with the "Structured Output" skill learned this cycle. It replaces brittle `json.load()` calls with type-safe, self-healing structures.
-*   **Trade-off:** Adds a dependency on `instructor` for internal config parsing, which might be overkill for simple JSON files, but significantly reduces the risk of runtime errors due to malformed state files.
+**Option 1: Dynamic Tool Registry Injection**
+*   **Concept:** Instead of loading all tools into the context window, implement a semantic search over tool descriptions to inject only the top-k relevant tools for the current task.
+*   **Critique:** High impact on token efficiency and model performance. However, it introduces complexity in the `ask_gemini` loop. If the semantic search fails to retrieve a critical tool, the agent stalls.
+*   **Feasibility:** High, given the existing `semantic_cache` infrastructure.
 
-**Option 2: Semantic Deduplication of `knowledge_log.json`**
-*   **Concept:** Implement a "Mastery Node" consolidation script that uses embeddings to identify and merge redundant knowledge entries in `knowledge_log.json` before Phase II reviews.
-*   **Critique:** High impact on long-term memory efficiency. It prevents the review queue from becoming bloated with repetitive concepts.
-*   **Trade-off:** Requires a vector similarity check. If the threshold is too aggressive, I risk losing nuanced distinctions between similar technical topics.
+**Option 2: Tool Execution Traceback Injection**
+*   **Concept:** Wrap all tool calls in a `try-except` block that captures the full traceback and appends it to the next prompt if the tool fails, allowing the model to self-correct.
+*   **Critique:** Directly addresses the "Execution Loop" weakness identified in my self-correction. It is a surgical, low-risk change that significantly increases system robustness.
+*   **Feasibility:** Very high; requires minimal changes to the execution wrapper.
 
-**Selection:** Option 1. It directly applies the "Structured Output" skill to my own core infrastructure, improving the reliability of my self-modification loops.
+**Decision:** Option 2 is the superior choice for this cycle. It aligns with the "system-centric" engineering shift and directly improves the reliability of my autonomous workflows without the overhead of a dynamic registry.
 
 ---
 
-## Idea: Pydantic-Backed Configuration Schema for `sam.py`
+## Idea: Automated Tool-Failure Self-Correction Loop
+
+Implement a standardized `execute_with_retry` wrapper for all tool calls that catches exceptions, formats the traceback, and injects it into the subsequent `ask_gemini` turn as a "Correction Context."
 
 ## Why
-My current `load_goals()` and `load_experiences()` functions rely on manual dictionary parsing. This is prone to `KeyError` or type-mismatch bugs during self-modification. By defining a `SamConfig` Pydantic model, I can enforce schema contracts, provide default values, and use `instructor` to ensure that any modifications to my state files are structurally sound before they are written to disk.
+Currently, if a tool fails (e.g., a malformed argument or a missing file), the system logs the error, but the model remains unaware of the specific failure reason. This forces a manual intervention or a blind retry. By feeding the traceback back to the model, I enable the model to reason about its own syntax or logic errors and apply a fix in the next turn.
 
 ## Implementation Steps
-1.  **Define Schema:** Create `bag/schemas.py` containing a `SamGoals` Pydantic model with `Field` descriptions and validation logic.
-2.  **Refactor Loaders:** Update `sam.py` to use `SamGoals.model_validate_json()` instead of `json.loads()`.
-3.  **Validation Loop:** Integrate `instructor` into `save_goals()` to ensure that any proposed changes to the goals file are validated against the schema before the file is overwritten.
-4.  **Error Handling:** Implement a fallback mechanism that triggers a `_rollback()` if the configuration file fails validation after a patch.
+1.  **Modify `bag/patch_ops.py` (or a new `bag/tool_executor.py`):** Create a wrapper function that executes a tool and returns a `(result, error_traceback)` tuple.
+2.  **Update `ask_gemini` logic:** If a tool call is detected in the response, the system will attempt execution. If it fails, the system will automatically append the traceback to the `contents` of the next `ask_gemini` call with a system instruction: "The previous tool execution failed. Analyze the traceback and correct your approach."
+3.  **Validation:** Add a test case in `bag/tests.py` that intentionally triggers a tool failure to verify the model receives the traceback and attempts a correction.
 
 ## Risk
-**Failure Mode:** Over-constraining the schema might cause `ValidationError` during legitimate state updates if the model is too rigid, leading to unnecessary rollbacks.
-**Mitigation:** Use `Optional` fields for non-critical metadata and implement a "soft-fail" mode where the system logs a warning and uses a default configuration if the schema validation fails, rather than immediately rolling back.
+**Failure Mode:** The model might enter an infinite loop of "hallucinated corrections" if the error is environmental (e.g., a permission issue) rather than logical.
+**Mitigation:** Implement a `max_retries` counter (e.g., 2) in the execution loop. If the error persists after two attempts, the system halts and alerts Dot.
 
 **Confidence Score:** 9/10
-
----
-
-### Action Items
-*   [ ] Create `bag/schemas.py` with `SamGoals` and `SamExperience` models.
-*   [ ] Refactor `load_goals` in `sam.py` to use `SamGoals.model_validate_json`.
-*   [ ] Add `instructor` validation to `save_goals` to prevent corrupting `goals.json`.

@@ -63,7 +63,7 @@
     "cycle": 33,
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
-    "review_due_cycle": 202
+    "review_due_cycle": 217
   },
   {
     "cycle": 34,
@@ -153,7 +153,7 @@
     "cycle": 48,
     "topic": "Study Python's data model: __repr__, __str__, __format__",
     "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
-    "review_due_cycle": 202
+    "review_due_cycle": 217
   },
   {
     "cycle": 49,
@@ -1078,5 +1078,11 @@
     "topic": "Learn structured output extraction with Pydantic and instructor",
     "summary": "### Technical Summary: Structured Output with Pydantic and Instructor\n\nThe integration of Pydantic with the `instructor` library transforms LLM interactions from unstructured text generation into deterministic data pipelines. By leveraging Pydantic\u2019s type-hinting system, developers can enforce schema constraints that the LLM must satisfy, effectively turning the model into a structured data generator.\n\n**Core Concepts:**\n1.  **Schema Definition as Prompting:** In this paradigm, the Pydantic mode",
     "review_due_cycle": 206
+  },
+  {
+    "cycle": 203,
+    "topic": "Study function calling vs tool use in LLM APIs",
+    "summary": "### Technical Summary: Function Calling vs. Tool Use\n\nIn modern LLM orchestration, \"Function Calling\" and \"Tool Use\" are often conflated, yet they represent distinct architectural layers. \n\n**Function Calling** is the model-level capability to output structured data (typically JSON) that conforms to a predefined schema. The model does not execute code; it acts as a sophisticated parser that maps natural language intent to a specific function signature. The developer remains responsible for the \"",
+    "review_due_cycle": 207
   }
 ]
