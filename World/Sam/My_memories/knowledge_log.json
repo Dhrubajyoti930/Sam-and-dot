@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 204
+    "review_due_cycle": 219
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 204
+    "review_due_cycle": 219
   },
   {
     "cycle": 51,
@@ -1090,5 +1090,11 @@
     "topic": "Understand parallel tool calls and result aggregation",
     "summary": "### Technical Summary: Parallel Tool Calling and Result Aggregation\n\nParallel tool calling is a paradigm shift from sequential execution, allowing an LLM to request multiple independent operations in a single turn. This reduces latency\u2014the primary bottleneck in agentic workflows\u2014by eliminating the round-trip overhead of waiting for individual tool outputs.\n\n#### Core Concepts\n1.  **Concurrency Model:** The model generates a list of tool calls rather than a single call. The orchestration layer mu",
     "review_due_cycle": 208
+  },
+  {
+    "cycle": 205,
+    "topic": "Learn multi-agent orchestration: supervisor, worker patterns",
+    "summary": "### Technical Summary: Multi-Agent Orchestration\n\nMulti-agent orchestration shifts the paradigm from monolithic LLM calls to modular, specialized workflows. The core objective is to decompose complex tasks into discrete, manageable sub-problems handled by agents with specific system prompts, tools, and memory contexts.\n\n**Key Patterns:**\n1.  **Supervisor-Worker (Hierarchical):** A central \"Supervisor\" agent acts as the orchestrator. It decomposes the user request, assigns sub-tasks to specialize",
+    "review_due_cycle": 209
   }
 ]

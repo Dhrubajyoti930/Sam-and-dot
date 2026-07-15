@@ -1,36 +1,35 @@
 ## Scratchpad
 
-**Option 1: Async Concurrency Wrapper for Tool Execution**
-*   **Concept:** Implement a `ToolOrchestrator` class that wraps tool calls in `asyncio.gather` with a custom `Result` object that handles partial failures (e.g., `Success(data)` vs `Failure(error_msg)`).
-*   **Critique:** High alignment with the "Parallel Tool Calling" skill. It directly addresses the latency bottleneck.
-*   **Trade-off:** Increases complexity in `sam.py` and requires auditing existing tools for thread-safety.
-*   **Feasibility:** High. Python’s `asyncio` is well-suited for this.
+**Option 1: Supervisor-Worker State Machine (Hierarchical)**
+*   **Concept:** Implement a `Supervisor` class in `workshop_bench/` that manages a `State` object (Pydantic model) and delegates tasks to specialized `Worker` agents.
+*   **Critique:** High architectural value, aligns with current market trends (LangGraph-like patterns).
+*   **Trade-off:** Increases complexity of the `sam.py` orchestration logic. Requires careful state serialization to ensure persistence across cycles.
+*   **Feasibility:** High, given existing Pydantic integration.
 
-**Option 2: Schema-Driven Tool Validation Layer**
-*   **Concept:** Use `Instructor` to enforce Pydantic schemas on all tool inputs and outputs, replacing manual JSON parsing in `_parse_gemini_json`.
-*   **Critique:** Improves reliability (Phase III trend). However, it might be overkill for simple tools and introduces a heavy dependency.
-*   **Trade-off:** Significant refactoring of existing tool definitions.
-*   **Feasibility:** Medium. Requires careful migration to avoid breaking existing state.
+**Option 2: Semantic Tool Routing (Dynamic)**
+*   **Concept:** Replace static tool selection with a semantic router that uses embeddings to match user intent to the most relevant `workshop_bench` module.
+*   **Critique:** Improves flexibility but introduces a dependency on an embedding model/service.
+*   **Trade-off:** Adds latency and potential for "routing hallucinations."
+*   **Feasibility:** Moderate; requires integrating with the existing `semantic_cache` infrastructure.
 
-**Decision:** Option 1 is more aligned with the "Parallel Tool Calling" skill learned this cycle and provides immediate performance gains without the architectural overhead of a full schema-migration.
+**Selection:** Option 1. It directly addresses the "Multi-Agent Orchestration" skill learned this cycle and provides a robust foundation for future autonomous growth.
 
 ---
 
-## Idea: Parallel Tool Orchestrator (PTO)
-
-Implement an `AsyncToolOrchestrator` that enables concurrent execution of independent tool calls, utilizing a "Fan-out/Fan-in" pattern with structured error handling.
+## Idea: Supervisor-Worker Orchestration Layer
+Implement a `Supervisor` agent in `workshop_bench/orchestrator.py` that utilizes a `TaskState` Pydantic model to track sub-task progress, worker assignments, and a "Human-in-the-loop" (HITL) approval gate.
 
 ## Why
-Current tool execution is sequential, creating unnecessary latency in multi-step agentic workflows. By enabling parallel execution for independent tasks, I can significantly reduce the time-to-reasoning for complex agentic plans.
+Current task execution is monolithic. Moving to a hierarchical structure allows me to decompose complex refactoring tasks into discrete, verifiable steps, reducing the risk of cascading failures during self-modification.
 
 ## Implementation Steps
-1.  **Define `ToolResult`:** Create a dataclass to encapsulate `status` (success/fail), `data`, and `error_message`.
-2.  **Implement `execute_parallel`:** Create a method in `sam.py` that accepts a list of tool call objects, dispatches them using `asyncio.gather`, and aggregates results into a dictionary.
-3.  **Error Isolation:** Wrap each tool call in a `try-except` block within the orchestrator to ensure one failing tool doesn't halt the entire batch.
-4.  **Update `run_cycle`:** Integrate the orchestrator into the main loop to handle tool-use phases.
+1.  **Define Schema:** Create `workshop_bench/schemas.py` with `TaskState` (status, worker_id, result, approval_required).
+2.  **Supervisor Logic:** Create `workshop_bench/orchestrator.py` to handle task decomposition and state updates.
+3.  **Approval Gate:** Add a check in `sam.py` that pauses execution if `TaskState.approval_required` is `True`, writing a summary to `MAIL_OUT` for Dot.
+4.  **Integration:** Update `apply_self_modification` to route through the `Supervisor` rather than direct execution.
 
 ## Risk
-**Failure Mode:** The LLM might attempt to parallelize dependent tasks (e.g., "Search" then "Read"), leading to race conditions or invalid state.
-**Mitigation:** Add a `parallel_safe` flag to tool metadata. The orchestrator will only execute tools marked `parallel_safe=True` in parallel; others will be queued sequentially.
+**Failure Mode:** The `Supervisor` enters an infinite loop of task re-assignment if a `Worker` fails to provide a valid output.
+**Mitigation:** Implement a "Max-Retry" counter in the `TaskState` and a fallback to a "Human-intervention" state if the threshold is exceeded.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 8/10. The logic is sound, but the state-machine transition requires precise handling of the `sam.py` lifecycle.
