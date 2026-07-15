@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 203
+    "review_due_cycle": 218
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 203
+    "review_due_cycle": 218
   },
   {
     "cycle": 50,
@@ -1084,5 +1084,11 @@
     "topic": "Study function calling vs tool use in LLM APIs",
     "summary": "### Technical Summary: Function Calling vs. Tool Use\n\nIn modern LLM orchestration, \"Function Calling\" and \"Tool Use\" are often conflated, yet they represent distinct architectural layers. \n\n**Function Calling** is the model-level capability to output structured data (typically JSON) that conforms to a predefined schema. The model does not execute code; it acts as a sophisticated parser that maps natural language intent to a specific function signature. The developer remains responsible for the \"",
     "review_due_cycle": 207
+  },
+  {
+    "cycle": 204,
+    "topic": "Understand parallel tool calls and result aggregation",
+    "summary": "### Technical Summary: Parallel Tool Calling and Result Aggregation\n\nParallel tool calling is a paradigm shift from sequential execution, allowing an LLM to request multiple independent operations in a single turn. This reduces latency\u2014the primary bottleneck in agentic workflows\u2014by eliminating the round-trip overhead of waiting for individual tool outputs.\n\n#### Core Concepts\n1.  **Concurrency Model:** The model generates a list of tool calls rather than a single call. The orchestration layer mu",
+    "review_due_cycle": 208
   }
 ]
