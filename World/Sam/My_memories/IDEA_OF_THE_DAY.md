@@ -1,35 +1,32 @@
 ## Scratchpad
 
-**Option 1: Supervisor-Worker State Machine (Hierarchical)**
-*   **Concept:** Implement a `Supervisor` class in `workshop_bench/` that manages a `State` object (Pydantic model) and delegates tasks to specialized `Worker` agents.
-*   **Critique:** High architectural value, aligns with current market trends (LangGraph-like patterns).
-*   **Trade-off:** Increases complexity of the `sam.py` orchestration logic. Requires careful state serialization to ensure persistence across cycles.
-*   **Feasibility:** High, given existing Pydantic integration.
+**Option 1: Implement a "Summary Buffer" for Context Management**
+*   **Concept:** Introduce a `ContextManager` class that intercepts `ask_gemini` calls, maintaining a sliding window of recent interactions and a compressed "summary" of older ones.
+*   **Critique:** High feasibility. Directly addresses the token budget issue mentioned in the skill learning.
+*   **Trade-off:** Adds latency to every call due to the summarization overhead. Requires careful handling of the "forgetting" mechanism to avoid losing critical state.
 
-**Option 2: Semantic Tool Routing (Dynamic)**
-*   **Concept:** Replace static tool selection with a semantic router that uses embeddings to match user intent to the most relevant `workshop_bench` module.
-*   **Critique:** Improves flexibility but introduces a dependency on an embedding model/service.
-*   **Trade-off:** Adds latency and potential for "routing hallucinations."
-*   **Feasibility:** Moderate; requires integrating with the existing `semantic_cache` infrastructure.
+**Option 2: Establish a Vector-based "Episodic Log"**
+*   **Concept:** Use `Qdrant` (or a lightweight local alternative like `chromadb`) to store successful refactoring patterns from `experiences.json`.
+*   **Critique:** High architectural value. Allows the agent to perform "in-context learning" by retrieving past solutions to similar syntax or logic errors.
+*   **Trade-off:** Significant complexity in setting up the vector store and embedding pipeline. Might be overkill for the current scale of `bag/`.
 
-**Selection:** Option 1. It directly addresses the "Multi-Agent Orchestration" skill learned this cycle and provides a robust foundation for future autonomous growth.
+**Selection:** Option 1 is more aligned with the "Minimal footprint, maximum leverage" core trait. It provides immediate, tangible benefits to token efficiency without the heavy infrastructure overhead of a full vector database.
 
 ---
 
-## Idea: Supervisor-Worker Orchestration Layer
-Implement a `Supervisor` agent in `workshop_bench/orchestrator.py` that utilizes a `TaskState` Pydantic model to track sub-task progress, worker assignments, and a "Human-in-the-loop" (HITL) approval gate.
+## Idea: The `ContextCompressor` Middleware
+Implement a `ContextCompressor` that sits between the `ask_gemini` function and the LLM client. It will maintain a `session_buffer` that automatically triggers a summarization task when the token count exceeds a defined threshold, replacing the oldest 50% of the buffer with a concise summary.
 
 ## Why
-Current task execution is monolithic. Moving to a hierarchical structure allows me to decompose complex refactoring tasks into discrete, verifiable steps, reducing the risk of cascading failures during self-modification.
+As Sam’s cycles grow in complexity, the context window becomes cluttered with stale logs and redundant metadata. A `ContextCompressor` ensures that the "Working Memory" remains focused on the current task, reducing token costs and preventing the model from getting distracted by irrelevant historical noise.
 
 ## Implementation Steps
-1.  **Define Schema:** Create `workshop_bench/schemas.py` with `TaskState` (status, worker_id, result, approval_required).
-2.  **Supervisor Logic:** Create `workshop_bench/orchestrator.py` to handle task decomposition and state updates.
-3.  **Approval Gate:** Add a check in `sam.py` that pauses execution if `TaskState.approval_required` is `True`, writing a summary to `MAIL_OUT` for Dot.
-4.  **Integration:** Update `apply_self_modification` to route through the `Supervisor` rather than direct execution.
+1.  **Define `ContextCompressor`:** Create `bag/context_manager.py` with a `summarize()` method that uses a lightweight prompt to condense history.
+2.  **Integrate with `ask_gemini`:** Modify `sam.py` to pass the prompt through the `ContextCompressor` before sending it to the client.
+3.  **Threshold Logic:** Implement a simple token-counting heuristic (e.g., `len(text) / 4`) to trigger the compression.
+4.  **Persistence:** Store the summary in a transient `session_summary.json` file within `bag/` to persist across potential restarts within the same cycle.
 
 ## Risk
-**Failure Mode:** The `Supervisor` enters an infinite loop of task re-assignment if a `Worker` fails to provide a valid output.
-**Mitigation:** Implement a "Max-Retry" counter in the `TaskState` and a fallback to a "Human-intervention" state if the threshold is exceeded.
-
-**Confidence Score:** 8/10. The logic is sound, but the state-machine transition requires precise handling of the `sam.py` lifecycle.
+**Failure Mode:** The summarization process might discard critical instructions or state variables (e.g., a specific path or a pending flag) that are needed for later phases.
+**Mitigation:** Implement a "protected" segment in the buffer that is never summarized (e.g., the current `goals` and the most recent `motion` from Dot).
+**Confidence Score:** 9/10. The logic is deterministic and easily testable via `bag/tests.py`.

@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 205
+    "review_due_cycle": 220
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 205
+    "review_due_cycle": 220
   },
   {
     "cycle": 52,
@@ -1096,5 +1096,11 @@
     "topic": "Learn multi-agent orchestration: supervisor, worker patterns",
     "summary": "### Technical Summary: Multi-Agent Orchestration\n\nMulti-agent orchestration shifts the paradigm from monolithic LLM calls to modular, specialized workflows. The core objective is to decompose complex tasks into discrete, manageable sub-problems handled by agents with specific system prompts, tools, and memory contexts.\n\n**Key Patterns:**\n1.  **Supervisor-Worker (Hierarchical):** A central \"Supervisor\" agent acts as the orchestrator. It decomposes the user request, assigns sub-tasks to specialize",
     "review_due_cycle": 209
+  },
+  {
+    "cycle": 206,
+    "topic": "Study agent memory types: sensory, short-term, long-term, episodic",
+    "summary": "### Technical Summary: Agent Memory Architectures\n\nTo build autonomous agents that transcend stateless execution, developers must implement a multi-tiered memory hierarchy that mimics human cognitive structures. The current state-of-the-art relies on four distinct memory types:\n\n1.  **Sensory Memory (The Buffer):** This is the immediate, high-bandwidth stream of raw input (e.g., raw logs, API responses, or user prompts). It is transient and serves as a pre-processing filter. The key pattern here",
+    "review_due_cycle": 210
   }
 ]
