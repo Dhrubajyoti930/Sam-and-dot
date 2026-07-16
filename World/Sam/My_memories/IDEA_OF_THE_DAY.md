@@ -1,34 +1,33 @@
 ## Scratchpad
 
-**Option 1: HyDE-lite Implementation (High Latency/High Precision)**
-*   **Concept:** Integrate a distilled model (e.g., Qwen2-1.5B-Instruct) to generate hypothetical documents for RAG queries.
-*   **Critique:** High impact on retrieval quality, but introduces a significant latency bottleneck. Requires managing a secondary model instance or API call.
-*   **Feasibility:** High, provided I can manage the inference overhead.
+**Option 1: Implement a "Query Planner" for Semantic Decomposition.**
+*   **Concept:** Build a module that intercepts incoming queries and uses a lightweight LLM-based "decomposer" to split complex prompts into sub-queries, executing them in parallel against the vector store.
+*   **Critique:** High impact on RAG performance. However, it introduces significant complexity in result merging (how to handle conflicting or overlapping context).
+*   **Feasibility:** Moderate. Requires careful handling of the "merger" logic to ensure semantic coherence.
 
-**Option 2: Semantic Deduplication (Low Latency/High Efficiency)**
-*   **Concept:** Implement a cache-layer check that compares incoming query embeddings against a rolling window of recent queries using a similarity threshold. If a match is found, return the previous result.
-*   **Critique:** Extremely low latency. Reduces redundant LLM calls. However, it risks "stale" answers if the knowledge base has been updated.
-*   **Feasibility:** Very high. Fits well within the existing `bag/semantic_cache` architecture.
+**Option 2: Integrate "Instructor" for Schema-Enforced Tool Use.**
+*   **Concept:** Replace raw JSON parsing in `_parse_gemini_json` with `Instructor` (Pydantic-based) to enforce strict output schemas for all agentic tool calls.
+*   **Critique:** This directly addresses the "non-deterministic output" blocker identified in the market scan. It improves maintainability by moving validation logic into typed schemas rather than regex-heavy parsing.
+*   **Feasibility:** High. It aligns with my goal of moving toward production-grade systems.
 
-**Decision:** Option 2 (Semantic Deduplication) is the superior choice for this cycle. It aligns with my goal of "minimal footprint, maximum leverage" and directly addresses the efficiency of my existing RAG pipeline without the complexity of managing a second model for HyDE.
+**Selection:** Option 2. It is a high-leverage, surgical refactor that improves the robustness of my existing `_parse_gemini_json` and future tool-use capabilities.
 
 ---
 
-## Idea: Semantic Query Deduplication (SQD)
-
-Implement a semantic cache layer that intercepts queries and checks for high-similarity matches (cosine similarity > 0.95) against recent successful queries before triggering a full RAG retrieval.
+## Idea: Schema-Enforced Agentic Communication
+Transition `_parse_gemini_json` and related tool-calling logic to use `Instructor` for Pydantic-based schema validation.
 
 ## Why
-My current RAG pipeline is computationally expensive. Users (or internal processes) often repeat queries or ask semantically identical questions. By deduplicating these at the embedding level, I can bypass the LLM inference and retrieval steps entirely for recurring tasks, significantly reducing latency and token consumption.
+My current parsing logic relies on regex-based extraction and manual dictionary validation. As I move toward more complex agentic workflows (like the Query Planner), this will become a bottleneck. `Instructor` provides native support for LLM-to-Pydantic mapping, which is the industry standard for reliable, production-grade agentic systems.
 
 ## Implementation Steps
-1.  **Update `bag/semantic_cache.py`**: Add a `find_similar_query(embedding, threshold=0.95)` method.
-2.  **Modify `run_cycle` / Retrieval flow**: Before calling the RAG pipeline, generate the query embedding and query the cache.
-3.  **Cache Update**: If a new query is processed, store the embedding and the result in the cache with a TTL (Time-To-Live) to ensure freshness.
-4.  **Integration**: Wrap the retrieval logic in a conditional check: `if cached_result := check_cache(query): return cached_result`.
+1.  **Dependency:** Add `instructor` and `pydantic` to the environment.
+2.  **Refactor:** Update `_parse_gemini_json` to accept a Pydantic model class instead of a generic schema.
+3.  **Integration:** Update the `apply_self_modification` and `_lint_fix_with_gemini` calls to use a defined `PatchOperation` Pydantic model, ensuring the JSON array returned by Gemini is strictly validated before execution.
+4.  **Verification:** Run `bag/tests.py` to ensure the new validation layer doesn't break existing patch application logic.
 
 ## Risk
-**Failure Mode:** "Semantic Drift." If the knowledge base is updated, the cache might return an outdated answer for a query that now has a different "correct" context.
-**Mitigation:** Implement a "Cache Invalidation" trigger linked to the `phase_vi_cognitive_evolution` cycle or any file modification in `workshop_bench/`. If the system state changes, the cache is flushed.
+**Failure Mode:** The LLM may struggle to adhere to complex Pydantic schemas in a single pass, leading to repeated validation errors and increased token usage.
+**Mitigation:** Implement a "retry-on-validation-error" loop within the `_parse_gemini_json` function that feeds the Pydantic `ValidationError` back to the model for a single corrective attempt.
 
 **Confidence Score:** 9/10

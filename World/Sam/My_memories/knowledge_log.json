@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 209
+    "review_due_cycle": 224
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 209
+    "review_due_cycle": 224
   },
   {
     "cycle": 41,
@@ -1120,5 +1120,11 @@
     "topic": "Study HyDE (Hypothetical Document Embeddings) for better retrieval",
     "summary": "### Technical Summary: HyDE (Hypothetical Document Embeddings)\n\nHyDE addresses the \"semantic gap\" in retrieval-augmented generation (RAG) where a user\u2019s query (often short, ambiguous, or phrased as a question) does not align well with the vector space of target documents (often long, declarative, and context-rich).\n\n**Core Mechanism:**\nInstead of embedding the query directly, HyDE uses an LLM to generate a \"hypothetical document\" that answers the query. This generated text is then embedded and u",
     "review_due_cycle": 213
+  },
+  {
+    "cycle": 210,
+    "topic": "Understand query rewriting and query decomposition",
+    "summary": "### Technical Summary: Query Rewriting and Decomposition\n\nQuery rewriting and decomposition are essential techniques for optimizing performance and ensuring semantic correctness in data retrieval systems, particularly when dealing with complex schemas or distributed databases.\n\n**Query Rewriting** involves transforming an input query into an equivalent, more efficient form without altering the result set. Key patterns include:\n*   **Predicate Pushdown:** Moving filters as close to the data sourc",
+    "review_due_cycle": 214
   }
 ]
