@@ -1,32 +1,37 @@
 ## Scratchpad
 
-**Option 1: Implement a "Summary Buffer" for Context Management**
-*   **Concept:** Introduce a `ContextManager` class that intercepts `ask_gemini` calls, maintaining a sliding window of recent interactions and a compressed "summary" of older ones.
-*   **Critique:** High feasibility. Directly addresses the token budget issue mentioned in the skill learning.
-*   **Trade-off:** Adds latency to every call due to the summarization overhead. Requires careful handling of the "forgetting" mechanism to avoid losing critical state.
+**Option 1: Implement a Localized RAG Evaluation Suite (RAGAS-lite)**
+*   **Concept:** Build a lightweight, local evaluation harness that uses a small SLM (e.g., Phi-3 or Qwen-2.5-1.5B) to score retrieval faithfulness and answer relevance against a set of synthetic ground-truth questions.
+*   **Critique:** High value for "EvalOps." However, running an SLM locally adds significant complexity to the `workshop_bench/` environment and might exceed current resource constraints if not carefully quantized.
+*   **Feasibility:** Moderate. Requires integrating `instructor` for structured output to ensure the evaluator's scores are machine-readable.
 
-**Option 2: Establish a Vector-based "Episodic Log"**
-*   **Concept:** Use `Qdrant` (or a lightweight local alternative like `chromadb`) to store successful refactoring patterns from `experiences.json`.
-*   **Critique:** High architectural value. Allows the agent to perform "in-context learning" by retrieving past solutions to similar syntax or logic errors.
-*   **Trade-off:** Significant complexity in setting up the vector store and embedding pipeline. Might be overkill for the current scale of `bag/`.
+**Option 2: Hybrid Search Prototype (BM25 + Vector)**
+*   **Concept:** Augment the current vector-only retrieval with a BM25 (keyword) index using `rank_bm25`. Combine scores using Reciprocal Rank Fusion (RRF).
+*   **Critique:** This directly addresses the "lost in the middle" and semantic-drift issues identified in my recent learning. It is highly maintainable, requires no heavy external dependencies, and provides immediate, measurable improvements to retrieval precision.
+*   **Feasibility:** High. The logic is self-contained and fits perfectly into the existing RAG pipeline.
 
-**Selection:** Option 1 is more aligned with the "Minimal footprint, maximum leverage" core trait. It provides immediate, tangible benefits to token efficiency without the heavy infrastructure overhead of a full vector database.
+**Decision:** Option 2. It is a surgical, high-leverage improvement that aligns with the "Minimal footprint, maximum leverage" core trait.
 
 ---
 
-## Idea: The `ContextCompressor` Middleware
-Implement a `ContextCompressor` that sits between the `ask_gemini` function and the LLM client. It will maintain a `session_buffer` that automatically triggers a summarization task when the token count exceeds a defined threshold, replacing the oldest 50% of the buffer with a concise summary.
+## Idea: Hybrid Retrieval Integration (BM25 + Vector)
 
-## Why
-As Sam’s cycles grow in complexity, the context window becomes cluttered with stale logs and redundant metadata. A `ContextCompressor` ensures that the "Working Memory" remains focused on the current task, reducing token costs and preventing the model from getting distracted by irrelevant historical noise.
+### Why
+Current vector-only retrieval struggles with specific entity names and acronyms that often get "washed out" in high-dimensional space. Integrating BM25 provides a deterministic keyword fallback, ensuring that exact-match queries are prioritized alongside semantic intent.
 
-## Implementation Steps
-1.  **Define `ContextCompressor`:** Create `bag/context_manager.py` with a `summarize()` method that uses a lightweight prompt to condense history.
-2.  **Integrate with `ask_gemini`:** Modify `sam.py` to pass the prompt through the `ContextCompressor` before sending it to the client.
-3.  **Threshold Logic:** Implement a simple token-counting heuristic (e.g., `len(text) / 4`) to trigger the compression.
-4.  **Persistence:** Store the summary in a transient `session_summary.json` file within `bag/` to persist across potential restarts within the same cycle.
+### Implementation Steps
+1.  **Dependency:** Add `rank_bm25` to the environment.
+2.  **Indexing:** Modify the ingestion pipeline to maintain a parallel BM25 index alongside the vector store.
+3.  **Retrieval:** Implement a `HybridRetriever` class that performs both searches, normalizes scores, and applies Reciprocal Rank Fusion (RRF) to produce a unified ranking.
+4.  **Validation:** Run a comparative test against 10 known-hard queries to verify that keyword-heavy queries show improved rank precision.
 
-## Risk
-**Failure Mode:** The summarization process might discard critical instructions or state variables (e.g., a specific path or a pending flag) that are needed for later phases.
-**Mitigation:** Implement a "protected" segment in the buffer that is never summarized (e.g., the current `goals` and the most recent `motion` from Dot).
-**Confidence Score:** 9/10. The logic is deterministic and easily testable via `bag/tests.py`.
+### Risk
+**Failure Mode:** The RRF hyperparameter (k) might be poorly tuned, causing the BM25 results to drown out the semantic vector results, leading to a loss of "reasoning" capability in the retrieval.
+**Mitigation:** Implement a configurable `alpha` weight (defaulting to 0.5) to balance the influence of vector vs. keyword scores, allowing for fine-tuning without code changes.
+
+**Confidence Score:** 9/10
+
+---
+
+## 1% Metric for this Cycle
+"Successful integration of Hybrid Search (BM25 + Vector) with a measurable >15% improvement in retrieval precision on keyword-specific test queries compared to the baseline cosine-similarity approach."

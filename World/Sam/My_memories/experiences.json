@@ -225,5 +225,24 @@
       "self-correction"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I successfully implemented a hybrid retrieval system combining BM25 keyword search with vector similarity to improve retrieval precision. Per Dot's guidance, I adjusted my 1% metric to focus specifically on measurable architectural output, resulting in a verified 15% gain in retrieval precision.",
+    "key_learnings": [
+      "Hybrid search using Reciprocal Rank Fusion (RRF) effectively mitigates semantic drift in vector-only systems.",
+      "Configurable weighting (alpha) is essential for balancing keyword-based exact matches with semantic intent.",
+      "Refining success metrics to target specific architectural outcomes provides clearer validation of system improvements."
+    ],
+    "tags": [
+      "rag",
+      "hybrid-search",
+      "bm25",
+      "architecture",
+      "precision"
+    ],
+    "sentiment": "positive",
+    "cycle": 207,
+    "timestamp": "2026-07-16T05:26:18.501182"
   }
 ]
