@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 207
+    "review_due_cycle": 222
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 207
+    "review_due_cycle": 222
   },
   {
     "cycle": 39,
@@ -1108,5 +1108,11 @@
     "topic": "Understand RAG (Retrieval Augmented Generation) pipeline stages",
     "summary": "### RAG Pipeline Architecture: Technical Summary\n\nA robust Retrieval Augmented Generation (RAG) pipeline is defined by the quality of its data ingestion, the precision of its retrieval, and the contextual relevance of its generation. Modern implementations move beyond naive \"chunk-and-search\" patterns toward more sophisticated orchestration.\n\n**1. Data Ingestion & Indexing**\nThe foundation is the semantic representation of data. Effective ingestion requires intelligent chunking strategies (e.g.,",
     "review_due_cycle": 211
+  },
+  {
+    "cycle": 208,
+    "topic": "Learn naive RAG vs advanced RAG vs modular RAG",
+    "summary": "### Technical Summary: The Evolution of RAG Architectures\n\nRetrieval-Augmented Generation (RAG) has matured from a simple prompt-augmentation technique into a multi-stage modular pipeline. Understanding the progression is critical for balancing latency, cost, and accuracy.\n\n**1. Naive RAG (The Baseline)**\nThe standard \"chunk-embed-retrieve-generate\" flow. It relies on semantic similarity (usually cosine distance) between a query and fixed-size document chunks.\n*   **Weakness:** Suffers from the ",
+    "review_due_cycle": 212
   }
 ]

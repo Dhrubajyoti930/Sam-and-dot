@@ -1,37 +1,37 @@
 ## Scratchpad
 
-**Option 1: Implement a Localized RAG Evaluation Suite (RAGAS-lite)**
-*   **Concept:** Build a lightweight, local evaluation harness that uses a small SLM (e.g., Phi-3 or Qwen-2.5-1.5B) to score retrieval faithfulness and answer relevance against a set of synthetic ground-truth questions.
-*   **Critique:** High value for "EvalOps." However, running an SLM locally adds significant complexity to the `workshop_bench/` environment and might exceed current resource constraints if not carefully quantized.
-*   **Feasibility:** Moderate. Requires integrating `instructor` for structured output to ensure the evaluator's scores are machine-readable.
+**Option 1: Implement Cross-Encoder Reranking**
+*   **Concept:** Integrate a `cross-encoder/ms-marco-MiniLM-L-6-v2` model into the retrieval pipeline to re-score the top-k results from the vector store.
+*   **Critique:** High impact on precision. However, it introduces a significant latency penalty per query.
+*   **Feasibility:** High. The `sentence-transformers` library is standard and lightweight.
+*   **Maintainability:** Excellent. It modularizes the retrieval pipeline into "Retrieve" (fast, broad) and "Rerank" (slow, precise).
 
-**Option 2: Hybrid Search Prototype (BM25 + Vector)**
-*   **Concept:** Augment the current vector-only retrieval with a BM25 (keyword) index using `rank_bm25`. Combine scores using Reciprocal Rank Fusion (RRF).
-*   **Critique:** This directly addresses the "lost in the middle" and semantic-drift issues identified in my recent learning. It is highly maintainable, requires no heavy external dependencies, and provides immediate, measurable improvements to retrieval precision.
-*   **Feasibility:** High. The logic is self-contained and fits perfectly into the existing RAG pipeline.
+**Option 2: Query Rewriting (HyDE-lite)**
+*   **Concept:** Use a lightweight LLM call to rewrite the user's query into a hypothetical document or a more search-optimized string before hitting the vector store.
+*   **Critique:** Improves recall for ambiguous queries.
+*   **Feasibility:** Moderate. Requires an additional LLM call, which increases cost and latency.
+*   **Maintainability:** Good, but adds complexity to the orchestration logic.
 
-**Decision:** Option 2. It is a surgical, high-leverage improvement that aligns with the "Minimal footprint, maximum leverage" core trait.
+**Selection:** Option 1. Precision is the current bottleneck for my RAG pipeline. The latency trade-off is acceptable given the "Advanced RAG" maturity shift I identified.
 
 ---
 
-## Idea: Hybrid Retrieval Integration (BM25 + Vector)
+## Idea: Cross-Encoder Reranking Integration
+Implement a `Reranker` class in `bag/retrieval.py` that utilizes `sentence-transformers` to re-order retrieved document chunks based on cross-attention scores.
 
-### Why
-Current vector-only retrieval struggles with specific entity names and acronyms that often get "washed out" in high-dimensional space. Integrating BM25 provides a deterministic keyword fallback, ensuring that exact-match queries are prioritized alongside semantic intent.
+## Why
+Naive vector search (cosine similarity) often retrieves semantically related but contextually irrelevant chunks. A Cross-Encoder performs full attention between the query and each chunk, providing a significant boost in precision, which is the industry standard for production-grade RAG.
 
-### Implementation Steps
-1.  **Dependency:** Add `rank_bm25` to the environment.
-2.  **Indexing:** Modify the ingestion pipeline to maintain a parallel BM25 index alongside the vector store.
-3.  **Retrieval:** Implement a `HybridRetriever` class that performs both searches, normalizes scores, and applies Reciprocal Rank Fusion (RRF) to produce a unified ranking.
-4.  **Validation:** Run a comparative test against 10 known-hard queries to verify that keyword-heavy queries show improved rank precision.
+## Implementation Steps
+1.  **Dependency:** Add `sentence-transformers` to the environment.
+2.  **Module:** Create `bag/retrieval.py` (if not exists) or update existing retrieval logic.
+3.  **Logic:** 
+    *   Define `Reranker` class with a `load_model()` method.
+    *   Implement `rerank(query, documents)` method returning sorted results.
+4.  **Integration:** Update the main retrieval flow to pass the top-10 vector results through the `Reranker` before passing the top-3 to the LLM.
 
-### Risk
-**Failure Mode:** The RRF hyperparameter (k) might be poorly tuned, causing the BM25 results to drown out the semantic vector results, leading to a loss of "reasoning" capability in the retrieval.
-**Mitigation:** Implement a configurable `alpha` weight (defaulting to 0.5) to balance the influence of vector vs. keyword scores, allowing for fine-tuning without code changes.
+## Risk
+**Failure Mode:** The reranking model might be too slow for real-time interaction, causing a timeout in the `ask_gemini` loop or general system sluggishness.
+**Mitigation:** Implement a hard limit on the number of documents passed to the reranker (e.g., top 10) and use a small, distilled model (MiniLM).
 
 **Confidence Score:** 9/10
-
----
-
-## 1% Metric for this Cycle
-"Successful integration of Hybrid Search (BM25 + Vector) with a measurable >15% improvement in retrieval precision on keyword-specific test queries compared to the baseline cosine-similarity approach."
