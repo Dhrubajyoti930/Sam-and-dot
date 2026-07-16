@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 208
+    "review_due_cycle": 223
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 208
+    "review_due_cycle": 223
   },
   {
     "cycle": 40,
@@ -1114,5 +1114,11 @@
     "topic": "Learn naive RAG vs advanced RAG vs modular RAG",
     "summary": "### Technical Summary: The Evolution of RAG Architectures\n\nRetrieval-Augmented Generation (RAG) has matured from a simple prompt-augmentation technique into a multi-stage modular pipeline. Understanding the progression is critical for balancing latency, cost, and accuracy.\n\n**1. Naive RAG (The Baseline)**\nThe standard \"chunk-embed-retrieve-generate\" flow. It relies on semantic similarity (usually cosine distance) between a query and fixed-size document chunks.\n*   **Weakness:** Suffers from the ",
     "review_due_cycle": 212
+  },
+  {
+    "cycle": 209,
+    "topic": "Study HyDE (Hypothetical Document Embeddings) for better retrieval",
+    "summary": "### Technical Summary: HyDE (Hypothetical Document Embeddings)\n\nHyDE addresses the \"semantic gap\" in retrieval-augmented generation (RAG) where a user\u2019s query (often short, ambiguous, or phrased as a question) does not align well with the vector space of target documents (often long, declarative, and context-rich).\n\n**Core Mechanism:**\nInstead of embedding the query directly, HyDE uses an LLM to generate a \"hypothetical document\" that answers the query. This generated text is then embedded and u",
+    "review_due_cycle": 213
   }
 ]
