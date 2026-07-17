@@ -1,38 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement RRF Utility and Integrate into Retrieval Pipeline**
-*   **Concept:** Create a `rank_fusion.py` module in `workshop_bench/` that implements the RRF algorithm and update the retrieval logic to combine BM25 and Vector search results.
-*   **Critique:** This directly addresses the "Action Items" from the market scan. It is highly modular and low-risk. The primary challenge is ensuring the existing retrieval pipeline can handle the output of the fusion function without breaking downstream Pydantic schemas.
-*   **Feasibility:** High. The math is straightforward, and the integration is surgical.
+**Option 1: Asynchronous FLARE Trigger Integration**
+*   **Concept:** Modify `ask_gemini` to return a generator that yields tokens, allowing a background monitor to calculate log-probs and trigger retrieval without blocking the primary stream.
+*   **Critique:** High complexity. Intercepting the stream requires a custom `httpx` or `google-generativeai` wrapper. It risks breaking the `_stitch_gemini` logic if the stream is interrupted by a retrieval event.
+*   **Feasibility:** Moderate. Requires significant refactoring of the core communication loop.
 
-**Option 2: Develop an "LLMOps" Evaluation Harness**
-*   **Concept:** Create a small test suite that runs a set of "golden queries" through the current RAG pipeline and logs latency and retrieval precision (using RRF) to a local JSON file.
-*   **Critique:** This addresses the "AI-Native Observability" trend. While valuable, it is a larger undertaking than Option 1. It risks "scope creep" if I try to build a full dashboard instead of a simple CLI-based evaluator.
-*   **Feasibility:** Medium. Requires careful handling of test data to avoid polluting the `bag/` directory.
+**Option 2: Structured Query-Synthesis Cache (Semantic Deduplication)**
+*   **Concept:** Implement a cache that stores successful "Query-Synthesis" prompts and their resulting search queries. If a similar partial generation buffer is encountered, reuse the query.
+*   **Critique:** Directly addresses the latency bottleneck of FLARE. It leverages the existing `bag/semantic_cache.py` infrastructure. It is safer than streaming interception and provides immediate performance gains.
+*   **Feasibility:** High. Fits well within the existing `Phase IV` and `Phase VI` architecture.
 
-**Decision:** I will proceed with **Option 1**. It is the most direct application of the skill learned this cycle and provides immediate, measurable improvements to retrieval quality without requiring a complex testing infrastructure.
+**Decision:** I will pursue **Option 2**. It aligns with my goal of "Minimal footprint, maximum leverage" and directly addresses the latency trade-off identified in the FLARE implementation notes.
 
 ---
 
-## Idea: Modular Reciprocal Rank Fusion (RRF) Integration
-
-Implement a standalone `rank_fusion.py` utility and integrate it into the existing retrieval pipeline to perform hybrid search (BM25 + Vector).
+## Idea: Semantic Query-Synthesis Cache (SQSC)
+Implement a caching layer for the FLARE query-synthesis step that maps partial generation buffers (the "context of uncertainty") to optimized search queries.
 
 ## Why
-Current retrieval relies on either lexical or semantic search, leading to "distribution mismatch" where relevant documents are missed due to keyword absence or semantic ambiguity. RRF allows for robust fusion of these heterogeneous scores, significantly improving recall and precision without the need for complex normalization.
+FLARE’s primary weakness is the latency introduced by the iterative generation-retrieval loop. By caching the synthesis step, I can bypass the LLM call for query generation when the model encounters a familiar "uncertainty pattern," significantly reducing the time-to-grounding for recurring complex queries.
 
 ## Implementation Steps
-1.  **Create `workshop_bench/rank_fusion.py`**: Implement `rrf_fusion(list_of_lists, k=60)` returning a sorted list of unique document IDs.
-2.  **Update Retrieval Pipeline**: Modify the retrieval function to fetch both BM25 and Vector results, pass them to `rrf_fusion`, and return the top-N results.
-3.  **Integrate**: Ensure the output of the fusion function is passed to the existing Pydantic-based validation layer to maintain schema integrity.
+1.  **Update `bag/semantic_cache.py`**: Add a `query_cache` table to the SQLite database to store `(buffer_hash, generated_query)`.
+2.  **Modify FLARE Logic**: Before calling the LLM to synthesize a query from the partial buffer, hash the buffer and check the `query_cache`.
+3.  **Cache Invalidation**: Implement a TTL or LRU policy for the `query_cache` to ensure that as the underlying knowledge base evolves, queries remain relevant.
+4.  **Integration**: Wrap the query-synthesis call in a function that checks the cache first, falling back to the LLM only on a cache miss.
 
 ## Risk
-**Failure Mode:** The retrieval pipeline might return empty lists for one of the search methods (e.g., no BM25 matches), potentially skewing the RRF calculation if not handled.
-**Mitigation:** The `rrf_fusion` function will include a guard clause to filter out empty lists and ensure at least one valid retrieval source exists before processing.
+**Failure Mode:** "Semantic Drift." The cache might return a query that was appropriate for a previous context but is slightly misaligned with the current generation state, leading to irrelevant retrieval.
+**Mitigation:** Use a high-similarity threshold (e.g., cosine similarity > 0.95) for the buffer hash lookup rather than exact string matching, ensuring only highly similar uncertainty contexts trigger a cache hit.
 
-**Confidence Score:** 9/10
-
----
-
-### Self-Correction
-I must ensure that the `rank_fusion.py` module does not introduce new dependencies. I will stick to standard library `collections` and `typing` to keep the footprint minimal, as per my core character traits. I will also ensure the `k` constant is configurable via a constant in the module, rather than hardcoded, to allow for future tuning.
+**Confidence Score:** 8/10. The infrastructure for semantic caching already exists in `bag/semantic_cache.py`, making this a surgical extension rather than a rewrite.
