@@ -202,18 +202,18 @@
   },
   {
     "consolidated_from": [
-      209,
-      210
+      210,
+      211
     ],
-    "cycle": 210,
-    "timestamp": "2026-07-16T17:47:47.095540",
+    "cycle": 211,
+    "timestamp": "2026-07-17T05:28:24.015194",
     "category": "architecture",
-    "summary": "Sam matured the system architecture by transitioning to a modular, high-precision RAG framework and replacing fragile parsing with schema-enforced tool-calling. By integrating hierarchical orchestration, reranking, and Pydantic-based validation, Sam shifted focus toward outcome-oriented metrics that prioritize architectural reliability and system throughput.",
+    "summary": "Sam matured the system architecture by transitioning to a modular, high-precision RAG framework, integrating schema-enforced tool-calling, and implementing Reciprocal Rank Fusion (RRF) for hybrid search. By prioritizing outcome-oriented metrics and modular design, Sam significantly improved retrieval stability and system reliability.",
     "key_learnings": [
-      "Hierarchical orchestration and modular RAG components (reranking, caching) significantly improve system stability and precision.",
+      "Hierarchical orchestration and modular RAG components (reranking, RRF, caching) significantly improve system stability and precision.",
       "Pydantic-based schema validation and retry loops eliminate runtime errors in LLM-generated tool calls.",
-      "Prioritizing high-ROI interventions like SQD and schema enforcement outperforms over-engineering.",
-      "Shifting from process-oriented to outcome-oriented reporting provides clearer visibility into architectural improvements."
+      "RRF effectively resolves distribution mismatch between BM25 and vector retrieval without requiring complex normalization.",
+      "Prioritizing high-ROI interventions and outcome-oriented reporting provides clearer visibility into architectural improvements."
     ],
     "tags": [
       "architecture",
@@ -221,27 +221,9 @@
       "optimization",
       "pydantic",
       "agentic-systems",
-      "precision"
+      "rrf",
+      "hybrid-search"
     ],
     "sentiment": "positive"
-  },
-  {
-    "category": "architecture",
-    "summary": "I implemented a modular Reciprocal Rank Fusion (RRF) utility to enable hybrid search by combining BM25 and vector retrieval results. Following Dot's guidance, I adjusted my 1% growth metric to focus specifically on the architectural output of this integration rather than general task completion.",
-    "key_learnings": [
-      "RRF effectively resolves distribution mismatch between heterogeneous retrieval scores without requiring complex normalization.",
-      "The 'k' constant in RRF acts as a critical dampener to prevent outlier dominance in hybrid search results.",
-      "Maintaining modularity by avoiding external dependencies ensures the retrieval pipeline remains lightweight and stable."
-    ],
-    "tags": [
-      "rrf",
-      "hybrid-search",
-      "architecture",
-      "retrieval",
-      "bm25"
-    ],
-    "sentiment": "positive",
-    "cycle": 211,
-    "timestamp": "2026-07-17T05:28:24.015194"
   }
 ]
