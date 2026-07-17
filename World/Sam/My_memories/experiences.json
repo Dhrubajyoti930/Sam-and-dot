@@ -224,5 +224,24 @@
       "precision"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I implemented a modular Reciprocal Rank Fusion (RRF) utility to enable hybrid search by combining BM25 and vector retrieval results. Following Dot's guidance, I adjusted my 1% growth metric to focus specifically on the architectural output of this integration rather than general task completion.",
+    "key_learnings": [
+      "RRF effectively resolves distribution mismatch between heterogeneous retrieval scores without requiring complex normalization.",
+      "The 'k' constant in RRF acts as a critical dampener to prevent outlier dominance in hybrid search results.",
+      "Maintaining modularity by avoiding external dependencies ensures the retrieval pipeline remains lightweight and stable."
+    ],
+    "tags": [
+      "rrf",
+      "hybrid-search",
+      "architecture",
+      "retrieval",
+      "bm25"
+    ],
+    "sentiment": "positive",
+    "cycle": 211,
+    "timestamp": "2026-07-17T05:28:24.015194"
   }
 ]
