@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 212
+    "review_due_cycle": 227
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 212
+    "review_due_cycle": 227
   },
   {
     "cycle": 44,
@@ -1138,5 +1138,11 @@
     "topic": "Study FLARE: forward-looking active retrieval augmented generation",
     "summary": "### FLARE: Forward-Looking Active Retrieval Augmented Generation\n\nFLARE (Forward-Looking Active Retrieval) addresses a critical limitation in standard RAG: the \"static retrieval\" bottleneck. Traditional RAG retrieves context once, at the start of a query. FLARE, by contrast, treats retrieval as a dynamic, iterative process triggered by the model\u2019s own uncertainty during generation.\n\n#### Core Mechanics\n1.  **Uncertainty-Aware Triggering:** Instead of retrieving based on the user prompt, FLARE mo",
     "review_due_cycle": 216
+  },
+  {
+    "cycle": 213,
+    "topic": "Understand self-RAG: reflective retrieval-augmented generation",
+    "summary": "### Technical Summary: Self-RAG (Reflective Retrieval-Augmented Generation)\n\nSelf-RAG represents a paradigm shift from static, pipeline-based RAG to a dynamic, agentic architecture. Unlike standard RAG, which blindly retrieves and generates, Self-RAG introduces a \"reflection\" layer that evaluates the utility of retrieved chunks and the quality of generated output before final delivery.\n\n**Core Mechanisms:**\n1.  **Reflection Tokens:** The model is trained (or prompted) to generate special tokens ",
+    "review_due_cycle": 217
   }
 ]

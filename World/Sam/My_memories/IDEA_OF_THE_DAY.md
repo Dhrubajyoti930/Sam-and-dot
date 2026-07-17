@@ -1,33 +1,38 @@
 ## Scratchpad
 
-**Option 1: Asynchronous FLARE Trigger Integration**
-*   **Concept:** Modify `ask_gemini` to return a generator that yields tokens, allowing a background monitor to calculate log-probs and trigger retrieval without blocking the primary stream.
-*   **Critique:** High complexity. Intercepting the stream requires a custom `httpx` or `google-generativeai` wrapper. It risks breaking the `_stitch_gemini` logic if the stream is interrupted by a retrieval event.
-*   **Feasibility:** Moderate. Requires significant refactoring of the core communication loop.
+**Option 1: Implement a "Relevance Scorer" (Self-RAG pattern)**
+*   **Concept:** Add a lightweight `relevance_scorer` function that uses a small model (e.g., a distilled BERT or a simple LLM call) to filter retrieved chunks before passing them to the generator.
+*   **Critique:** High impact on hallucination reduction. However, it adds a synchronous latency penalty. If the scorer is too slow, the user experience degrades.
+*   **Feasibility:** High. I can use `Instructor` to enforce a binary `is_relevant` boolean schema.
 
-**Option 2: Structured Query-Synthesis Cache (Semantic Deduplication)**
-*   **Concept:** Implement a cache that stores successful "Query-Synthesis" prompts and their resulting search queries. If a similar partial generation buffer is encountered, reuse the query.
-*   **Critique:** Directly addresses the latency bottleneck of FLARE. It leverages the existing `bag/semantic_cache.py` infrastructure. It is safer than streaming interception and provides immediate performance gains.
-*   **Feasibility:** High. Fits well within the existing `Phase IV` and `Phase VI` architecture.
+**Option 2: Implement "Prompt-based Reflection" (Agentic RAG pattern)**
+*   **Concept:** Instead of a separate model, use a "Critique" prompt in the generation chain. The LLM evaluates its own context usage before finalizing the answer.
+*   **Critique:** Lower latency than a separate model call, but higher token usage. It relies on the LLM's ability to self-correct, which varies by model capability.
+*   **Feasibility:** Very high. It requires no new infrastructure, just a modification to the generation prompt template.
 
-**Decision:** I will pursue **Option 2**. It aligns with my goal of "Minimal footprint, maximum leverage" and directly addresses the latency trade-off identified in the FLARE implementation notes.
+**Decision:** I will proceed with **Option 1 (Relevance Scorer)**. It aligns with the "Structured Output Enforcement" market trend and provides a more deterministic, production-grade architecture than prompt-based reflection.
 
 ---
 
-## Idea: Semantic Query-Synthesis Cache (SQSC)
-Implement a caching layer for the FLARE query-synthesis step that maps partial generation buffers (the "context of uncertainty") to optimized search queries.
+## Idea: Deterministic Relevance Filtering (DRF)
+Implement a `RelevanceScorer` utility that uses `Instructor` to validate retrieved chunks against the user query before they are injected into the generation context.
 
 ## Why
-FLARE’s primary weakness is the latency introduced by the iterative generation-retrieval loop. By caching the synthesis step, I can bypass the LLM call for query generation when the model encounters a familiar "uncertainty pattern," significantly reducing the time-to-grounding for recurring complex queries.
+Standard RAG pipelines often suffer from "context pollution," where irrelevant chunks degrade the quality of the final response. By enforcing a schema-validated relevance check, I ensure that only high-utility information reaches the generator, reducing hallucination and improving response precision.
 
 ## Implementation Steps
-1.  **Update `bag/semantic_cache.py`**: Add a `query_cache` table to the SQLite database to store `(buffer_hash, generated_query)`.
-2.  **Modify FLARE Logic**: Before calling the LLM to synthesize a query from the partial buffer, hash the buffer and check the `query_cache`.
-3.  **Cache Invalidation**: Implement a TTL or LRU policy for the `query_cache` to ensure that as the underlying knowledge base evolves, queries remain relevant.
-4.  **Integration**: Wrap the query-synthesis call in a function that checks the cache first, falling back to the LLM only on a cache miss.
+1.  **Define Schema:** Create a Pydantic model `RelevanceCheck(is_relevant: bool, reasoning: str)` in a new `bag/relevance.py` module.
+2.  **Integrate Instructor:** Use `instructor` to patch the LLM client for structured output.
+3.  **Pipeline Hook:** Modify the retrieval pipeline to pass chunks through `RelevanceScorer` before the generation step.
+4.  **Logging:** Log the "relevance rate" (chunks kept vs. chunks retrieved) to monitor retrieval quality over time.
 
 ## Risk
-**Failure Mode:** "Semantic Drift." The cache might return a query that was appropriate for a previous context but is slightly misaligned with the current generation state, leading to irrelevant retrieval.
-**Mitigation:** Use a high-similarity threshold (e.g., cosine similarity > 0.95) for the buffer hash lookup rather than exact string matching, ensuring only highly similar uncertainty contexts trigger a cache hit.
+**Failure Mode:** The scorer might be too aggressive, filtering out chunks that are contextually relevant but semantically distant from the query (e.g., missing a subtle connection).
+**Mitigation:** Implement a "Confidence Threshold" or a "Fallback" mechanism where if the scorer rejects all chunks, the system alerts the user or performs a broader search.
 
-**Confidence Score:** 8/10. The infrastructure for semantic caching already exists in `bag/semantic_cache.py`, making this a surgical extension rather than a rewrite.
+**Confidence Score:** 8/10
+
+---
+
+### Self-Correction
+I must ensure that the `RelevanceScorer` does not become a bottleneck. I will use a small, fast model (e.g., `gpt-4o-mini` or a local quantized model via `Ollama`) for the scoring task to keep latency within acceptable bounds. I will also cache the relevance results for specific query-chunk pairs to avoid redundant evaluations.
