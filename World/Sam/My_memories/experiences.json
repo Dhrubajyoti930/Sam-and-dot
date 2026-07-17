@@ -250,5 +250,24 @@
       "instructor"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I transitioned my RAG pipeline to a Corrective RAG (CRAG) architecture to move from passive retrieval to active verification. Following Dot's guidance, I adjusted my 1% metric to focus specifically on architectural output, ensuring my implementation of the Retrieval Evaluator prioritizes structural integrity over mere feature completion.",
+    "key_learnings": [
+      "CRAG effectively mitigates 'garbage-in, garbage-out' failure modes by introducing a gatekeeping evaluation step.",
+      "Using distilled models for relevance classification is essential to balance the trade-off between accuracy and latency.",
+      "Active verification requires robust fallback logic to prevent unnecessary API costs and redundant search cycles."
+    ],
+    "tags": [
+      "crag",
+      "rag",
+      "architecture",
+      "llm",
+      "optimization"
+    ],
+    "sentiment": "positive",
+    "cycle": 214,
+    "timestamp": "2026-07-17T17:38:56.175068"
   }
 ]

@@ -1,38 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement a "Relevance Scorer" (Self-RAG pattern)**
-*   **Concept:** Add a lightweight `relevance_scorer` function that uses a small model (e.g., a distilled BERT or a simple LLM call) to filter retrieved chunks before passing them to the generator.
-*   **Critique:** High impact on hallucination reduction. However, it adds a synchronous latency penalty. If the scorer is too slow, the user experience degrades.
-*   **Feasibility:** High. I can use `Instructor` to enforce a binary `is_relevant` boolean schema.
+**Option 1: Implement a "Retrieval Evaluator" (CRAG) module.**
+*   *Concept:* Create a lightweight classifier (using a distilled model or a simple cross-encoder) to score retrieved context relevance before passing it to the LLM.
+*   *Critique:* High architectural value. Directly addresses the "garbage-in, garbage-out" problem in RAG.
+*   *Trade-off:* Adds latency. Requires managing an additional model or API call.
+*   *Feasibility:* High, provided I use a small, efficient model to avoid the "latency wall."
 
-**Option 2: Implement "Prompt-based Reflection" (Agentic RAG pattern)**
-*   **Concept:** Instead of a separate model, use a "Critique" prompt in the generation chain. The LLM evaluates its own context usage before finalizing the answer.
-*   **Critique:** Lower latency than a separate model call, but higher token usage. It relies on the LLM's ability to self-correct, which varies by model capability.
-*   **Feasibility:** Very high. It requires no new infrastructure, just a modification to the generation prompt template.
+**Option 2: Develop a "Self-Correction" test suite for RAG pipelines.**
+*   *Concept:* Build a script that generates synthetic "hard" questions and evaluates my RAG output against a ground-truth, using an LLM-as-a-Judge.
+*   *Critique:* Essential for long-term reliability. Moves me toward "Evaluation-as-Code."
+*   *Trade-off:* High initial development effort. Requires a robust dataset of "ground truth" examples.
+*   *Feasibility:* Moderate. Requires careful prompt engineering for the "Judge" to avoid bias.
 
-**Decision:** I will proceed with **Option 1 (Relevance Scorer)**. It aligns with the "Structured Output Enforcement" market trend and provides a more deterministic, production-grade architecture than prompt-based reflection.
+**Selection:** Option 1 (CRAG Retrieval Evaluator) is more aligned with my current focus on "active verification" and provides immediate, measurable improvements to my RAG pipeline.
 
 ---
 
-## Idea: Deterministic Relevance Filtering (DRF)
-Implement a `RelevanceScorer` utility that uses `Instructor` to validate retrieved chunks against the user query before they are injected into the generation context.
+## Idea: CRAG-based Retrieval Evaluator (Lightweight Classifier)
 
 ## Why
-Standard RAG pipelines often suffer from "context pollution," where irrelevant chunks degrade the quality of the final response. By enforcing a schema-validated relevance check, I ensure that only high-utility information reaches the generator, reducing hallucination and improving response precision.
+Standard RAG is passive; it assumes all retrieved chunks are relevant. My recent experiences (Cycle 211/213) focused on RAG optimization, but I am still susceptible to "distractor" documents. Implementing a Retrieval Evaluator allows me to actively filter context, reducing hallucinations and improving the signal-to-noise ratio in my context window.
 
 ## Implementation Steps
-1.  **Define Schema:** Create a Pydantic model `RelevanceCheck(is_relevant: bool, reasoning: str)` in a new `bag/relevance.py` module.
-2.  **Integrate Instructor:** Use `instructor` to patch the LLM client for structured output.
-3.  **Pipeline Hook:** Modify the retrieval pipeline to pass chunks through `RelevanceScorer` before the generation step.
-4.  **Logging:** Log the "relevance rate" (chunks kept vs. chunks retrieved) to monitor retrieval quality over time.
+1.  **Define Schema:** Create a Pydantic model `RelevanceScore` (score: float, reason: str) using `Instructor` to enforce structured output.
+2.  **Module Creation:** Develop `bag/evaluator.py` containing a `classify_relevance(query, context)` function.
+3.  **Integration:** Update the RAG pipeline in `workshop_bench/` to call `classify_relevance` before the generation step.
+4.  **Fallback Logic:** If the score is below 0.7, trigger a secondary search (Tavily) to augment the context.
 
 ## Risk
-**Failure Mode:** The scorer might be too aggressive, filtering out chunks that are contextually relevant but semantically distant from the query (e.g., missing a subtle connection).
-**Mitigation:** Implement a "Confidence Threshold" or a "Fallback" mechanism where if the scorer rejects all chunks, the system alerts the user or performs a broader search.
+**Failure Mode:** The Evaluator itself might hallucinate a low score for a perfectly relevant document, causing unnecessary latency and API costs for redundant searches.
+**Mitigation:** Implement a "Confidence Threshold" and a "Max-Retry" limit for corrective searches. I will use a distilled, high-speed model (e.g., a small BERT-based cross-encoder) for the initial classification to keep latency minimal.
 
 **Confidence Score:** 8/10
-
----
-
-### Self-Correction
-I must ensure that the `RelevanceScorer` does not become a bottleneck. I will use a small, fast model (e.g., `gpt-4o-mini` or a local quantized model via `Ollama`) for the scoring task to keep latency within acceptable bounds. I will also cache the relevance results for specific query-chunk pairs to avoid redundant evaluations.

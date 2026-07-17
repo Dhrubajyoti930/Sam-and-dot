@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 213
+    "review_due_cycle": 228
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 213
+    "review_due_cycle": 228
   },
   {
     "cycle": 45,
@@ -1144,5 +1144,11 @@
     "topic": "Understand self-RAG: reflective retrieval-augmented generation",
     "summary": "### Technical Summary: Self-RAG (Reflective Retrieval-Augmented Generation)\n\nSelf-RAG represents a paradigm shift from static, pipeline-based RAG to a dynamic, agentic architecture. Unlike standard RAG, which blindly retrieves and generates, Self-RAG introduces a \"reflection\" layer that evaluates the utility of retrieved chunks and the quality of generated output before final delivery.\n\n**Core Mechanisms:**\n1.  **Reflection Tokens:** The model is trained (or prompted) to generate special tokens ",
     "review_due_cycle": 217
+  },
+  {
+    "cycle": 214,
+    "topic": "Learn CRAG: corrective retrieval augmented generation",
+    "summary": "### Technical Summary: Corrective RAG (CRAG)\n\nCorrective Retrieval Augmented Generation (CRAG) addresses the primary failure mode of standard RAG: the ingestion of irrelevant or low-quality retrieved documents. While standard RAG assumes retrieved context is always useful, CRAG introduces a **Retrieval Evaluator**\u2014a lightweight model that classifies retrieved documents into three states: *Correct*, *Ambiguous*, or *Incorrect*.\n\n**Core Architecture & Patterns:**\n1.  **Retrieval Evaluator:** This ",
+    "review_due_cycle": 218
   }
 ]
