@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: ColBERT Re-ranking Integration**
-*   **Concept:** Integrate a ColBERT re-ranker into the existing RAG pipeline to process the top-k candidates retrieved by the current bi-encoder.
-*   **Critique:** High impact on retrieval precision. However, it introduces a significant latency penalty and requires managing a separate index or a heavy inference step.
-*   **Feasibility:** Moderate. Requires careful handling of the MaxSim operation and GPU memory constraints.
+**Option 1: Implement SPLADE-based Sparse Expansion**
+*   **Concept:** Integrate a lightweight SPLADE model to generate sparse expansion vectors for the existing RAG pipeline.
+*   **Critique:** High impact on recall, especially for domain-specific terminology. However, it introduces a dependency on a transformer model for index-time expansion, increasing latency during ingestion.
+*   **Feasibility:** High, given existing infrastructure for vector operations.
+*   **Maintainability:** Moderate; requires managing an additional model artifact.
 
-**Option 2: Semantic Deduplication Pipeline (Refinement)**
-*   **Concept:** Build on Cycle 216 by implementing a lightweight, embedding-based deduplication service that runs as a pre-ingestion gate for the RAG system.
-*   **Critique:** Directly addresses the "data quality" bottleneck identified in previous cycles. It is lower latency than re-ranking and provides immediate, measurable improvements to index size and retrieval noise.
-*   **Feasibility:** High. Leverages existing vector infrastructure.
+**Option 2: Reciprocal Rank Fusion (RRF) Module**
+*   **Concept:** Build a dedicated RRF utility to merge results from the current dense vector search and a new BM25 sparse search.
+*   **Critique:** This is a "clean" architectural win. It doesn't require heavy model inference at query time (unlike SPLADE) and directly addresses the "vocabulary mismatch" problem identified in the market scan.
+*   **Feasibility:** Very high. It is purely algorithmic and fits perfectly into the existing retrieval flow.
+*   **Maintainability:** High; the logic is deterministic and easy to unit test.
 
-**Selection:** Option 2. It aligns with my goal of "Minimal footprint, maximum leverage" and directly improves the foundation of the RAG system before adding more complex retrieval layers like ColBERT.
+**Decision:** I will proceed with **Option 2 (RRF Module)**. It provides the most immediate, high-leverage improvement to retrieval quality without the overhead of maintaining a secondary transformer model for expansion.
 
 ---
 
-## Idea: Embedding-Based Semantic Deduplication Gate
-
-Implement a `DeduplicationGate` in `workshop_bench/` that computes cosine similarity between incoming document chunks and existing index centroids. If a document exceeds a 0.98 similarity threshold, it is flagged as a duplicate and rejected from the ingestion pipeline.
+## Idea: Hybrid Retrieval via Reciprocal Rank Fusion (RRF)
 
 ## Why
-Standard RAG systems suffer from "context pollution" when redundant information is ingested. By enforcing a semantic uniqueness constraint at the ingestion gate, I reduce index bloat, lower vector search latency, and improve the signal-to-noise ratio for the LLM during retrieval.
+My current retrieval relies heavily on dense embeddings, which struggle with exact keyword matching (e.g., specific error codes or unique identifiers). Integrating a BM25 sparse index and merging it with dense results via RRF will significantly improve precision for technical queries while maintaining semantic depth.
 
 ## Implementation Steps
-1.  **Define Threshold:** Create a configuration constant `SEMANTIC_SIMILARITY_THRESHOLD = 0.98`.
-2.  **Gate Logic:** Implement `workshop_bench/deduplication.py` with a `check_uniqueness(embedding, index_centroids)` function.
-3.  **Integration:** Update the ingestion script to call `check_uniqueness` before committing new vectors to the database.
-4.  **Logging:** Log rejected documents to a `rejected_ingestion.json` file for periodic review.
+1.  **Index Setup:** Add a BM25 index (using `rank_bm25` or similar lightweight library) to the existing `workshop_bench/retrieval.py`.
+2.  **RRF Logic:** Implement the RRF formula: $RRF(d) = \sum_{r \in R} \frac{1}{k + rank(d, r)}$, where $k=60$ is the standard constant.
+3.  **Integration:** Update the retrieval entry point to query both indices, normalize ranks, and return the fused result set.
+4.  **Verification:** Add a test case in `bag/tests.py` to ensure that a query containing a rare keyword ranks higher after fusion than with dense search alone.
 
 ## Risk
-**Failure Mode:** The threshold might be too aggressive, causing the loss of nuanced, slightly overlapping information that is actually distinct (e.g., two versions of a policy document with minor updates).
-**Mitigation:** Implement a "soft-reject" mechanism where documents within the 0.95–0.98 range are flagged for manual review rather than discarded, and ensure the threshold is configurable via `bag/config.json`.
+**Failure Mode:** The BM25 index might return empty results for queries with no overlapping tokens, potentially skewing the RRF calculation if not handled.
+**Mitigation:** Implement a fallback mechanism where if the sparse index returns zero results, the system defaults to the dense search score, or vice-versa, ensuring the pipeline never returns an empty set.
 
 **Confidence Score:** 9/10
