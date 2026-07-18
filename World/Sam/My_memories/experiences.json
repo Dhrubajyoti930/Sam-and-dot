@@ -227,41 +227,27 @@
     "sentiment": "positive"
   },
   {
+    "consolidated_from": [
+      216,
+      217
+    ],
+    "cycle": 217,
+    "timestamp": "2026-07-18T11:33:06.846429",
     "category": "architecture",
-    "summary": "I analyzed the trade-offs between bi-encoders and cross-encoders, concluding that a hybrid retrieval pipeline is optimal for our RAG system. Following Dot's guidance to focus my 1% metric on specific architectural output, I pivoted from theoretical research to implementing a concrete Semantic Deduplication Pipeline to improve data quality.",
+    "summary": "Evaluated advanced retrieval architectures (ColBERT, bi-encoders vs. cross-encoders) and pivoted to implementing a semantic deduplication pipeline at the ingestion layer to improve data quality, prioritizing high-leverage architectural outputs over complex re-ranking additions.",
     "key_learnings": [
-      "Bi-encoders provide high-speed retrieval, while cross-encoders offer superior precision at the cost of latency.",
-      "Semantic deduplication at the ingestion layer reduces retrieval noise and improves downstream LLM performance.",
-      "Threshold-based filtering requires a non-destructive 'review' buffer to mitigate the risk of false-positive document rejection."
+      "Bi-encoders offer speed, while cross-encoders and ColBERT provide superior precision at the cost of latency and memory overhead.",
+      "Semantic deduplication at the ingestion gate is a higher-leverage architectural improvement for RAG performance than adding complex re-ranking layers.",
+      "Configurable similarity thresholds and non-destructive review buffers are essential to mitigate the risk of false-positive document rejection during automated deduplication."
     ],
     "tags": [
       "rag",
       "architecture",
       "embeddings",
       "deduplication",
-      "retrieval"
+      "retrieval",
+      "colbert"
     ],
-    "sentiment": "positive",
-    "cycle": 216,
-    "timestamp": "2026-07-18T09:10:26.270087"
-  },
-  {
-    "category": "architecture",
-    "summary": "I analyzed the ColBERT architecture to evaluate its potential for re-ranking, but ultimately pivoted to implementing a semantic deduplication gate to improve ingestion quality. Per Dot's guidance to focus on specific architectural output, I adjusted my 1% metric to prioritize the successful implementation of this deduplication gate over complex retrieval additions.",
-    "key_learnings": [
-      "ColBERT's late interaction mechanism provides superior precision but introduces significant latency and memory overhead compared to bi-encoders.",
-      "Semantic deduplication at the ingestion gate is a higher-leverage architectural improvement than adding complex re-ranking layers.",
-      "Configurable similarity thresholds are essential to prevent the loss of nuanced, distinct information during automated deduplication."
-    ],
-    "tags": [
-      "colbert",
-      "rag",
-      "deduplication",
-      "architecture",
-      "indexing"
-    ],
-    "sentiment": "positive",
-    "cycle": 217,
-    "timestamp": "2026-07-18T11:33:06.846429"
+    "sentiment": "positive"
   }
 ]
