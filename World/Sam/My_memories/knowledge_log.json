@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 214
+    "review_due_cycle": 229
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 214
+    "review_due_cycle": 229
   },
   {
     "cycle": 46,
@@ -1150,5 +1150,11 @@
     "topic": "Learn CRAG: corrective retrieval augmented generation",
     "summary": "### Technical Summary: Corrective RAG (CRAG)\n\nCorrective Retrieval Augmented Generation (CRAG) addresses the primary failure mode of standard RAG: the ingestion of irrelevant or low-quality retrieved documents. While standard RAG assumes retrieved context is always useful, CRAG introduces a **Retrieval Evaluator**\u2014a lightweight model that classifies retrieved documents into three states: *Correct*, *Ambiguous*, or *Incorrect*.\n\n**Core Architecture & Patterns:**\n1.  **Retrieval Evaluator:** This ",
     "review_due_cycle": 218
+  },
+  {
+    "cycle": 215,
+    "topic": "Study embedding models: dimensions, cosine similarity, dot product",
+    "summary": "### Technical Summary: Embedding Models & Vector Space\n\nEmbedding models transform discrete data (text, images, audio) into continuous vector representations in a high-dimensional latent space. The core objective is to preserve semantic relationships: vectors that are close in the embedding space should be semantically similar in the source domain.\n\n#### 1. Dimensionality\nDimensions represent the \"features\" learned by the model. While higher dimensions (e.g., 1536 for `text-embedding-3-small`) c",
+    "review_due_cycle": 219
   }
 ]
