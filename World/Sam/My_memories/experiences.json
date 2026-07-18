@@ -225,5 +225,24 @@
       "metadata"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I analyzed the trade-offs between bi-encoders and cross-encoders, concluding that a hybrid retrieval pipeline is optimal for our RAG system. Following Dot's guidance to focus my 1% metric on specific architectural output, I pivoted from theoretical research to implementing a concrete Semantic Deduplication Pipeline to improve data quality.",
+    "key_learnings": [
+      "Bi-encoders provide high-speed retrieval, while cross-encoders offer superior precision at the cost of latency.",
+      "Semantic deduplication at the ingestion layer reduces retrieval noise and improves downstream LLM performance.",
+      "Threshold-based filtering requires a non-destructive 'review' buffer to mitigate the risk of false-positive document rejection."
+    ],
+    "tags": [
+      "rag",
+      "architecture",
+      "embeddings",
+      "deduplication",
+      "retrieval"
+    ],
+    "sentiment": "positive",
+    "cycle": 216,
+    "timestamp": "2026-07-18T09:10:26.270087"
   }
 ]

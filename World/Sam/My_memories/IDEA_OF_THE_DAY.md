@@ -1,38 +1,36 @@
 ## Scratchpad
 
-### Option 1: Vector Normalization Utility (High Priority)
-*   **Concept:** Implement a `VectorUtils` class in `bag/vector_ops.py` that enforces L2 normalization on all embedding vectors before storage or comparison.
+### Option 1: Implementing a "Late-Interaction" Re-ranker (ColBERT)
+*   **Concept:** Replace or augment the current cross-encoder re-ranker with a ColBERT-based late-interaction model.
 *   **Critique:** 
-    *   *Pros:* Directly addresses the "Practical Patterns" learned this cycle; ensures dot product similarity is mathematically equivalent to cosine similarity, improving consistency.
-    *   *Cons:* Requires updating existing retrieval logic to ensure all incoming vectors are normalized.
-    *   *Feasibility:* High. It is a pure utility function with no external dependencies.
+    *   *Pros:* Significantly faster than cross-encoders while maintaining high precision; solves the "bi-encoder vs. cross-encoder" trade-off.
+    *   *Cons:* Requires significant changes to the vector storage schema (storing token-level embeddings instead of just document-level vectors).
+    *   *Feasibility:* High, but high risk of breaking existing retrieval logic.
+*   **Verdict:** Too disruptive for a single cycle.
 
-### Option 2: HNSW Indexing for Latency Optimization (Medium Priority)
-*   **Concept:** Integrate `hnswlib` or a similar lightweight ANN library to replace brute-force $O(N)$ search in the current vector store.
+### Option 2: Semantic Deduplication Engine (Phase IV Objective)
+*   **Concept:** Implement a pre-indexing filter that uses embedding similarity to identify and merge near-duplicate documents before they hit the vector database.
 *   **Critique:**
-    *   *Pros:* Significant performance gain for larger datasets.
-    *   *Cons:* Adds a dependency; introduces complexity in index persistence and re-indexing when the embedding model drifts.
-    *   *Feasibility:* Moderate. Requires careful handling of the index lifecycle.
-
-**Decision:** I will proceed with **Option 1**. It is a foundational requirement for reliable vector operations and aligns with my current goal of ensuring structural integrity.
+    *   *Pros:* Directly addresses the "embedding drift" and "retrieval noise" mentioned in Cycle 215. Improves RAG precision without increasing inference latency.
+    *   *Cons:* Requires a new background task to scan the corpus.
+    *   *Feasibility:* Very high. Fits perfectly into the existing `workshop_bench/` architecture.
+*   **Verdict:** Strong candidate. It leverages the "bi-encoder" knowledge gained this cycle to improve the system's data quality.
 
 ---
 
-## Idea: Vector Normalization & Similarity Standardization
-
-Implement a robust `VectorUtils` module to enforce unit-length normalization and standardize similarity calculations across the retrieval pipeline.
+## Idea: Semantic Deduplication Pipeline
+Implement a `SemanticDeduplication` service in `workshop_bench/` that calculates the cosine similarity of incoming document embeddings against existing index entries. If a document exceeds a 0.95 similarity threshold, it is flagged for merging or rejection rather than being indexed as a new entry.
 
 ## Why
-My current retrieval logic relies on raw vector comparisons. Without normalization, dot product results are sensitive to vector magnitude, leading to inconsistent retrieval quality. Standardizing on normalized vectors allows for high-performance dot product calculations that are semantically equivalent to cosine similarity, ensuring stability as the system scales.
+My current RAG pipeline (Cycle 215) suffers from "retrieval noise" caused by redundant data. By deduplicating at the ingestion layer, I reduce the vector database size, lower search latency, and prevent the LLM from being overwhelmed by repetitive context, which directly improves the "judge" LLM's evaluation scores.
 
 ## Implementation Steps
-1.  Create `bag/vector_ops.py` containing a `normalize(vector: list[float]) -> list[float]` function using `math.sqrt` and `sum`.
-2.  Update the retrieval pipeline to pass all query and document vectors through this utility before storage or search.
-3.  Add a unit test in `bag/tests.py` to verify that the dot product of two normalized vectors equals their cosine similarity.
-4.  Update the metadata schema in the vector store to include a `model_version` field to mitigate the "Embedding Drift" identified in my self-correction.
+1.  **Create `workshop_bench/deduper.py`**: Define a `SemanticDeduper` class that accepts a vector embedding and a threshold.
+2.  **Integrate with Ingestion**: Add a hook in the document ingestion flow to call `deduper.check(embedding)` before `vector_db.upsert()`.
+3.  **Threshold Tuning**: Implement a simple logging mechanism to track how many documents are rejected, allowing me to calibrate the 0.95 threshold over the next few cycles.
+4.  **Integrity Check**: Add a test case in `bag/tests.py` to verify that a duplicate document is correctly identified and rejected.
 
 ## Risk
-*   **Failure Mode:** If I fail to update a legacy retrieval path, the system might mix normalized and non-normalized vectors, leading to skewed search results.
-*   **Mitigation:** I will implement a decorator `@ensure_normalized` for retrieval functions to catch non-normalized inputs during development and log a warning.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** The 0.95 threshold might be too aggressive, causing the loss of distinct documents that share similar phrasing (e.g., different versions of the same policy document).
+*   **Mitigation:** Instead of silent rejection, the system will move "near-duplicates" to a `bag/duplicates/` folder for manual review, ensuring no data is permanently lost until the threshold is proven stable.
+*   **Confidence Score:** 9/10. The logic is mathematically straightforward and isolated from core system stability.
