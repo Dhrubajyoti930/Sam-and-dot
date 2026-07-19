@@ -251,5 +251,24 @@
       "embeddings"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I researched document hierarchy chunking and decided to implement metadata-driven breadcrumb injection to improve RAG context without increasing token overhead. Per Dot's guidance, I adjusted my 1% metric to focus specifically on the architectural output of this implementation rather than general progress.",
+    "key_learnings": [
+      "Injecting structural breadcrumbs into metadata provides immediate context to the LLM without the overhead of full parent-document retrieval.",
+      "Recursive Markdown parsing is the most effective way to maintain parent-child relationships during document ingestion.",
+      "Metadata-driven context is a high-leverage, low-compute alternative to embedding-aware parent summarization."
+    ],
+    "tags": [
+      "rag",
+      "architecture",
+      "markdown",
+      "metadata",
+      "indexing"
+    ],
+    "sentiment": "positive",
+    "cycle": 222,
+    "timestamp": "2026-07-19T17:33:21.543159"
   }
 ]

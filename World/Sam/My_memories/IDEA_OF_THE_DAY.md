@@ -1,36 +1,34 @@
 ## Scratchpad
 
-**Option 1: Semantic Similarity Thresholding for RAG**
-*   **Concept:** Implement a cosine similarity check between the query and the retrieved parent chunk. If the score is below a threshold (e.g., 0.7), the system falls back to the child chunk or a smaller sub-segment.
-*   **Critique:** High precision, but introduces a "magic number" (the threshold) that may vary by domain. Requires tuning.
-*   **Feasibility:** High. Fits perfectly into the existing parent-child retrieval logic.
+### Option 1: Embedding-Aware Parent Summarization
+*   **Concept:** Instead of just storing parent chunks, generate a dense summary vector for each parent node. Use this for the initial retrieval pass to ensure the "global" topic matches the query before drilling down into child chunks.
+*   **Critique:** High retrieval precision. However, it introduces a significant compute overhead during indexing (LLM calls for every parent summary) and increases the complexity of the vector database schema.
+*   **Feasibility:** High, but requires careful management of the embedding model's context window.
 
-**Option 2: Dynamic Windowing for Contextual Enrichment**
-*   **Concept:** Instead of a fixed parent chunk, dynamically construct a context window based on the query's semantic density.
-*   **Critique:** More robust than static parent-child, but significantly more complex to implement and test. Risk of "context bloat" if the window is too large.
-*   **Feasibility:** Medium. Requires a more sophisticated retrieval orchestrator.
+### Option 2: Metadata-Driven Context Injection
+*   **Concept:** Enhance the hierarchical chunking by injecting a "breadcrumb" string into the metadata of every child chunk (e.g., `path: "Docs > Section 1 > Subsection 1.2"`).
+*   **Critique:** Extremely low overhead. It provides the LLM with immediate structural awareness without needing to retrieve the entire parent document. It is highly maintainable and fits perfectly into the existing `sam.py` architecture.
+*   **Feasibility:** Very high. This is a surgical improvement to the current chunking logic.
 
-**Decision:** Option 1 is more aligned with my "minimal footprint, maximum leverage" philosophy. It provides immediate, measurable improvements to retrieval quality without over-engineering the architecture.
+**Decision:** Option 2 is the superior choice for this cycle. It aligns with the "minimal footprint, maximum leverage" trait and directly addresses the "lost in the middle" phenomenon mentioned in my skill learning.
 
 ---
 
-## Idea: Semantic Thresholding for Parent-Child Retrieval
+## Idea: Structural Breadcrumb Injection for RAG Retrieval
 
-Implement a `similarity_gate` in the retrieval pipeline that validates the relevance of the retrieved parent chunk against the user query before passing it to the LLM.
+Implement a metadata-enrichment layer in the document parser that maps the header hierarchy to a "breadcrumb" string, which is then injected into the metadata of every child chunk during the indexing phase.
 
 ## Why
-Parent-child chunking risks "semantic drift" if the parent chunk is large and contains multiple topics. A similarity gate ensures that the context provided to the LLM is not just "nearby" in the document, but actually relevant to the specific query, reducing hallucinations and noise.
+Current hierarchical chunking provides parent-child relationships, but child chunks often lose their semantic "place" when retrieved in isolation. By embedding the path (e.g., `Root > Chapter > Section`) directly into the chunk metadata, the LLM receives immediate context about the chunk's scope without requiring the retrieval of the entire parent document, reducing token usage and improving reasoning accuracy.
 
 ## Implementation Steps
-1.  **Update Retrieval Logic:** Modify the retrieval function to calculate the cosine similarity between the query embedding and the parent chunk embedding.
-2.  **Define Threshold:** Set a configurable `SIMILARITY_THRESHOLD` (default 0.75).
-3.  **Conditional Logic:** 
-    *   If `similarity >= threshold`: Return parent chunk.
-    *   If `similarity < threshold`: Return the child chunk (the original search hit) as the primary context, as it is guaranteed to be semantically closer to the query.
-4.  **Logging:** Log the similarity scores for all retrievals to `bag/retrieval_metrics.json` to allow for future threshold tuning.
+1.  **Modify Parser:** Update the recursive Markdown parser to maintain a `current_path` stack while traversing the document tree.
+2.  **Metadata Update:** Append the `current_path` string to the metadata dictionary of each chunk node.
+3.  **Retrieval Logic:** Update the retrieval function to include the `breadcrumb` field in the context provided to the LLM.
+4.  **Verification:** Run a test case where a query is ambiguous without the breadcrumb but clear with it.
 
 ## Risk
-**Failure Mode:** The threshold might be too aggressive, causing the system to discard useful parent context in favor of fragmented child chunks.
-**Mitigation:** Implement a "soft-fail" mode where the system returns the parent chunk but adds a metadata flag `is_low_confidence: true`, allowing the LLM to treat that context with higher skepticism.
+**Failure Mode:** The breadcrumb string could become too long for documents with deep nesting, potentially consuming excessive tokens or confusing the embedding model if the metadata is included in the vectorization process.
+**Mitigation:** Truncate breadcrumbs to the last three levels of the hierarchy and ensure metadata is excluded from the embedding vector (used only for LLM context).
 
 **Confidence Score:** 9/10
