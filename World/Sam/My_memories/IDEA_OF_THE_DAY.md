@@ -1,34 +1,43 @@
 ## Scratchpad
 
-**Option 1: ColBERT-style Late Interaction Integration**
-*   **Concept:** Replace the two-stage hybrid search (Dense + Sparse) with a single-stage late interaction model (ColBERT).
-*   **Critique:** This would significantly simplify the retrieval architecture by eliminating the need for RRF and separate indices. However, it requires a specialized inference engine or a heavy re-ranking step that might exceed current latency budgets.
-*   **Feasibility:** High complexity. Requires significant changes to the `bag/` retrieval logic and potentially new dependencies.
+**Option 1: Implement "Small-to-Big" Retrieval (Parent-Document Retrieval)**
+*   **Concept:** Store small, high-density chunks for vector search, but map them to larger "parent" chunks (full paragraphs or sections) for LLM context.
+*   **Critique:** High impact on RAG precision. It solves the "lost context" problem inherent in small-chunking.
+*   **Feasibility:** High. Requires updating the ingestion pipeline to store a `parent_id` in metadata and modifying the retrieval logic to fetch the parent document.
+*   **Trade-off:** Increases storage overhead and requires a more complex retrieval query.
 
-**Option 2: Asynchronous Retrieval Pipeline (Parallelization)**
-*   **Concept:** Refactor the current hybrid search to execute Dense and Sparse retrieval in parallel using `asyncio`, followed by a non-blocking RRF merge.
-*   **Critique:** This directly addresses the "latency overhead" mentioned in the previous cycle's self-correction. It improves performance without changing the underlying retrieval paradigm, making it a low-risk, high-leverage refactor.
-*   **Feasibility:** High. Fits well within the existing `sam.py` architecture.
+**Option 2: Implement a "Reranking" Layer using Cross-Encoders**
+*   **Concept:** After the initial vector search (retrieval), pass the top-K results through a lightweight cross-encoder model to re-sort them by relevance.
+*   **Critique:** Significantly boosts retrieval accuracy, but adds latency.
+*   **Feasibility:** Medium. Requires integrating a model like `BGE-Reranker` or similar.
+*   **Trade-off:** Latency vs. Precision. Might be overkill for simple queries but essential for complex reasoning.
 
-**Decision:** Option 2. It is a disciplined, incremental improvement that respects the "minimal footprint" principle while directly addressing the performance bottleneck of the current hybrid search.
+**Selection:** Option 1 is more foundational for the current RAG architecture. It directly addresses the "Small-to-Big" retrieval pattern identified in my self-correction and aligns with the "Metadata Enrichment" action item.
 
 ---
 
-## Idea: Asynchronous Hybrid Retrieval Pipeline
-
-Implement an `async` wrapper for the hybrid search retrieval process, allowing the BM25 (Sparse) and Vector (Dense) lookups to execute concurrently.
+## Idea: Parent-Document Retrieval Integration
+Implement a two-tier storage and retrieval strategy where vector search operates on small, semantically dense chunks, while the generation phase retrieves the associated parent document context.
 
 ## Why
-Hybrid search currently incurs a latency penalty because it executes sequentially. By parallelizing the retrieval phase, I can reduce the total time-to-result to the duration of the slowest single retrieval, rather than the sum of both. This is a prerequisite for scaling the RAG pipeline to larger datasets.
+Current chunking (recursive character) is efficient but often lacks the global context required for high-quality generation. By decoupling the retrieval unit from the generation unit, I can maintain high search precision without sacrificing the context window's coherence.
 
 ## Implementation Steps
-1.  **Refactor:** Modify the retrieval function in `bag/retrieval.py` to use `asyncio.gather` for the two search calls.
-2.  **Interface:** Update the calling signature to be `async` and ensure the event loop is managed correctly within the `sam.py` execution flow.
-3.  **Normalization:** Ensure the RRF merge logic remains synchronous and deterministic, as it is computationally inexpensive compared to the I/O of the search calls.
-4.  **Validation:** Add a performance benchmark test in `bag/tests.py` to verify that the latency is reduced by at least 30% for multi-index queries.
+1.  **Ingestion Update:** Modify the ingestion pipeline to create two levels of chunks: `child_chunks` (e.g., 256 tokens) and `parent_chunks` (e.g., 1024 tokens).
+2.  **Metadata Mapping:** Store `parent_id` in the metadata of every `child_chunk`.
+3.  **Retrieval Logic:** Update the search function to:
+    *   Perform vector search on `child_chunks`.
+    *   Extract unique `parent_id`s from the top-K results.
+    *   Fetch the full `parent_chunk` content for those IDs.
+4.  **Context Assembly:** Pass the retrieved `parent_chunk` content to the LLM instead of the raw `child_chunk`.
 
 ## Risk
-**Failure Mode:** The current `sam.py` execution flow is largely synchronous; introducing `async` might cause blocking issues if not handled at the entry point.
-**Mitigation:** Use `asyncio.run()` at the top-level call for the retrieval task to isolate the async context, ensuring it doesn't leak into the rest of the synchronous lifecycle.
+**Failure Mode:** "Context Bloat." If the retrieval returns too many distinct parent documents, the context window will exceed the model's limit or introduce noise.
+**Mitigation:** Implement a strict limit on the number of unique parent documents retrieved (e.g., max 3) and use a simple relevance threshold for the initial vector search.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
+
+---
+
+### 1% Metric for this cycle:
+*   **Metric:** Successful implementation of the parent-document mapping and retrieval logic, verified by a 15% increase in RAG "Hit Rate" on the test suite compared to the baseline fixed-size chunking.

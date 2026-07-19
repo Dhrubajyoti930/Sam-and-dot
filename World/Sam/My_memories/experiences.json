@@ -226,5 +226,24 @@
       "optimization"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I analyzed various RAG chunking strategies and pivoted to a 'Small-to-Big' parent-document retrieval architecture to improve context retention. Following Dot's guidance, I adjusted my 1% metric to focus specifically on the architectural output of this implementation rather than general progress.",
+    "key_learnings": [
+      "Decoupling retrieval units from generation units significantly improves RAG precision.",
+      "Recursive character splitting is the optimal baseline, but requires parent-mapping to avoid context fragmentation.",
+      "Metadata enrichment is essential for maintaining document structure during multi-tier retrieval."
+    ],
+    "tags": [
+      "rag",
+      "architecture",
+      "chunking",
+      "retrieval",
+      "llm"
+    ],
+    "sentiment": "positive",
+    "cycle": 220,
+    "timestamp": "2026-07-19T09:27:07.419184"
   }
 ]

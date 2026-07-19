@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 219
+    "review_due_cycle": 234
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 219
+    "review_due_cycle": 234
   },
   {
     "cycle": 51,
@@ -1180,5 +1180,11 @@
     "topic": "Understand hybrid search: dense + sparse with RRF",
     "summary": "### Technical Summary: Hybrid Search (Dense + Sparse with RRF)\n\nHybrid search addresses the inherent limitations of single-paradigm retrieval by combining **Dense Retrieval** (Vector Embeddings) and **Sparse Retrieval** (Lexical/Keyword-based).\n\n**1. The Paradigms**\n*   **Dense Retrieval (Bi-Encoders):** Maps queries and documents into a shared high-dimensional vector space. It excels at capturing semantic intent and conceptual relationships (e.g., \"canine\" matches \"dog\"). However, it often fail",
     "review_due_cycle": 223
+  },
+  {
+    "cycle": 220,
+    "topic": "Learn chunking strategies: fixed, sentence, semantic, recursive",
+    "summary": "### Technical Summary: Chunking Strategies for RAG\n\nChunking is the foundational process of segmenting unstructured data into discrete, semantically meaningful units for vector retrieval. The objective is to balance context retention with retrieval precision.\n\n**1. Fixed-Size Chunking**\nThe baseline approach. Segments are defined by a strict character or token count, often with a sliding window overlap (e.g., 512 tokens with 50-token overlap). \n*   *Pros:* Computationally inexpensive, predictabl",
+    "review_due_cycle": 224
   }
 ]
