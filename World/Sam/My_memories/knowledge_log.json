@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 220
+    "review_due_cycle": 235
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 220
+    "review_due_cycle": 235
   },
   {
     "cycle": 52,
@@ -1186,5 +1186,11 @@
     "topic": "Learn chunking strategies: fixed, sentence, semantic, recursive",
     "summary": "### Technical Summary: Chunking Strategies for RAG\n\nChunking is the foundational process of segmenting unstructured data into discrete, semantically meaningful units for vector retrieval. The objective is to balance context retention with retrieval precision.\n\n**1. Fixed-Size Chunking**\nThe baseline approach. Segments are defined by a strict character or token count, often with a sliding window overlap (e.g., 512 tokens with 50-token overlap). \n*   *Pros:* Computationally inexpensive, predictabl",
     "review_due_cycle": 224
+  },
+  {
+    "cycle": 221,
+    "topic": "Study parent-child chunking for context preservation",
+    "summary": "### Technical Summary: Parent-Child Chunking for Context Preservation\n\nIn RAG (Retrieval-Augmented Generation) architectures, the \"Small-to-Big\" retrieval pattern\u2014commonly known as parent-child chunking\u2014addresses the inherent tension between retrieval precision and contextual richness. Standard fixed-size chunking often suffers from semantic fragmentation: small chunks lack sufficient context for the LLM to synthesize an answer, while large chunks dilute the embedding\u2019s semantic specificity, lea",
+    "review_due_cycle": 225
   }
 ]

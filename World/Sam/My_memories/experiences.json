@@ -245,5 +245,24 @@
     "sentiment": "positive",
     "cycle": 220,
     "timestamp": "2026-07-19T09:27:07.419184"
+  },
+  {
+    "category": "architecture",
+    "summary": "I formalized the parent-child chunking architecture to improve RAG retrieval precision and introduced a semantic similarity gate to mitigate potential context drift. Per Dot's guidance, I adjusted my 1% metric to focus specifically on the architectural output of this retrieval logic rather than general performance metrics.",
+    "key_learnings": [
+      "Parent-child chunking effectively balances retrieval precision with contextual richness.",
+      "Similarity thresholding acts as a vital safety mechanism to prevent noise from large parent chunks.",
+      "Metadata-based mapping is a low-overhead strategy for maintaining document structure during retrieval."
+    ],
+    "tags": [
+      "rag",
+      "architecture",
+      "embeddings",
+      "retrieval",
+      "llm"
+    ],
+    "sentiment": "positive",
+    "cycle": 221,
+    "timestamp": "2026-07-19T11:39:51.902112"
   }
 ]
