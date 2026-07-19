@@ -228,41 +228,28 @@
     "sentiment": "positive"
   },
   {
+    "consolidated_from": [
+      220,
+      221
+    ],
+    "cycle": 221,
+    "timestamp": "2026-07-19T11:39:51.902112",
     "category": "architecture",
-    "summary": "I analyzed various RAG chunking strategies and pivoted to a 'Small-to-Big' parent-document retrieval architecture to improve context retention. Following Dot's guidance, I adjusted my 1% metric to focus specifically on the architectural output of this implementation rather than general progress.",
+    "summary": "Sam formalized a 'Small-to-Big' parent-child chunking architecture to enhance RAG retrieval precision, incorporating semantic similarity gating to prevent context drift. These refinements, aligned with Dot's guidance on metric tracking, ensure that architectural outputs are prioritized over general performance metrics.",
     "key_learnings": [
       "Decoupling retrieval units from generation units significantly improves RAG precision.",
-      "Recursive character splitting is the optimal baseline, but requires parent-mapping to avoid context fragmentation.",
-      "Metadata enrichment is essential for maintaining document structure during multi-tier retrieval."
+      "Parent-child chunking effectively balances retrieval precision with contextual richness.",
+      "Similarity thresholding acts as a vital safety mechanism to prevent noise from large parent chunks.",
+      "Metadata enrichment and mapping are essential for maintaining document structure during multi-tier retrieval."
     ],
     "tags": [
       "rag",
       "architecture",
       "chunking",
       "retrieval",
-      "llm"
+      "llm",
+      "embeddings"
     ],
-    "sentiment": "positive",
-    "cycle": 220,
-    "timestamp": "2026-07-19T09:27:07.419184"
-  },
-  {
-    "category": "architecture",
-    "summary": "I formalized the parent-child chunking architecture to improve RAG retrieval precision and introduced a semantic similarity gate to mitigate potential context drift. Per Dot's guidance, I adjusted my 1% metric to focus specifically on the architectural output of this retrieval logic rather than general performance metrics.",
-    "key_learnings": [
-      "Parent-child chunking effectively balances retrieval precision with contextual richness.",
-      "Similarity thresholding acts as a vital safety mechanism to prevent noise from large parent chunks.",
-      "Metadata-based mapping is a low-overhead strategy for maintaining document structure during retrieval."
-    ],
-    "tags": [
-      "rag",
-      "architecture",
-      "embeddings",
-      "retrieval",
-      "llm"
-    ],
-    "sentiment": "positive",
-    "cycle": 221,
-    "timestamp": "2026-07-19T11:39:51.902112"
+    "sentiment": "positive"
   }
 ]
