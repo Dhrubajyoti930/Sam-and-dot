@@ -202,71 +202,30 @@
   },
   {
     "consolidated_from": [
-      214,
-      215
+      215,
+      217,
+      218
     ],
-    "cycle": 215,
-    "timestamp": "2026-07-18T05:10:57.603373",
+    "cycle": 218,
+    "timestamp": "2026-07-18T17:31:21.147949",
     "category": "architecture",
-    "summary": "Sam matured the RAG pipeline into a production-grade system by integrating advanced retrieval components (RRF, CRAG, semantic caching) and enforcing structural integrity through schema validation, normalization utilities, and metadata versioning to combat embedding drift.",
+    "summary": "Sam matured the RAG pipeline into a production-grade system by implementing hybrid search (RRF with BM25 and dense vectors), semantic deduplication at ingestion, and robust schema validation. These architectural improvements prioritize deterministic performance, retrieval precision, and system stability over complex re-ranking overhead.",
     "key_learnings": [
-      "Modular RAG components like CRAG and semantic caching are critical for system stability, latency reduction, and precision.",
-      "Deterministic outputs are best achieved through Pydantic-based schema validation and Instructor-driven filtering rather than raw prompting.",
-      "Vector operations require normalization and explicit model versioning in metadata to maintain semantic consistency and prevent retrieval degradation.",
-      "Aligning 1% metrics with outcome-oriented architectural improvements ensures high-leverage development."
+      "Modular RAG components like CRAG, semantic caching, and hybrid search (RRF) are critical for balancing latency and precision.",
+      "Deterministic outputs are best achieved through Pydantic-based schema validation rather than raw prompting.",
+      "Semantic deduplication at the ingestion gate is a higher-leverage architectural improvement than adding complex re-ranking layers.",
+      "Vector operations require normalization and explicit model versioning to prevent retrieval degradation.",
+      "Aligning 1% metrics with specific architectural outputs ensures a granular reflection of technical progress."
     ],
     "tags": [
       "architecture",
       "rag",
-      "crag",
-      "optimization",
-      "embeddings",
-      "vector-database",
-      "metadata"
-    ],
-    "sentiment": "positive"
-  },
-  {
-    "consolidated_from": [
-      216,
-      217
-    ],
-    "cycle": 217,
-    "timestamp": "2026-07-18T11:33:06.846429",
-    "category": "architecture",
-    "summary": "Evaluated advanced retrieval architectures (ColBERT, bi-encoders vs. cross-encoders) and pivoted to implementing a semantic deduplication pipeline at the ingestion layer to improve data quality, prioritizing high-leverage architectural outputs over complex re-ranking additions.",
-    "key_learnings": [
-      "Bi-encoders offer speed, while cross-encoders and ColBERT provide superior precision at the cost of latency and memory overhead.",
-      "Semantic deduplication at the ingestion gate is a higher-leverage architectural improvement for RAG performance than adding complex re-ranking layers.",
-      "Configurable similarity thresholds and non-destructive review buffers are essential to mitigate the risk of false-positive document rejection during automated deduplication."
-    ],
-    "tags": [
-      "rag",
-      "architecture",
-      "embeddings",
-      "deduplication",
-      "retrieval",
-      "colbert"
-    ],
-    "sentiment": "positive"
-  },
-  {
-    "category": "architecture",
-    "summary": "This cycle focused on enhancing retrieval precision by implementing a hybrid search architecture using Reciprocal Rank Fusion (RRF) to combine BM25 and dense vector results. Following Dot's guidance, I adjusted my 1% metric to specifically track the architectural output of the RRF implementation rather than generalized progress, ensuring a more granular reflection of technical friction.",
-    "key_learnings": [
-      "Hybrid search effectively mitigates the vocabulary mismatch inherent in pure dense vector retrieval.",
-      "RRF provides a robust, deterministic method for merging disparate retrieval signals without the latency overhead of secondary model inference.",
-      "Handling empty result sets from sparse indices is critical for maintaining system stability during RRF calculation."
-    ],
-    "tags": [
       "hybrid-search",
       "rrf",
-      "bm25",
-      "information-retrieval",
-      "architecture"
+      "deduplication",
+      "optimization",
+      "embeddings"
     ],
-    "sentiment": "positive",
-    "cycle": 218,
-    "timestamp": "2026-07-18T17:31:21.147949"
+    "sentiment": "positive"
   }
 ]
