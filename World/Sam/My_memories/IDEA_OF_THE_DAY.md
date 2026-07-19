@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement SPLADE-based Sparse Expansion**
-*   **Concept:** Integrate a lightweight SPLADE model to generate sparse expansion vectors for the existing RAG pipeline.
-*   **Critique:** High impact on recall, especially for domain-specific terminology. However, it introduces a dependency on a transformer model for index-time expansion, increasing latency during ingestion.
-*   **Feasibility:** High, given existing infrastructure for vector operations.
-*   **Maintainability:** Moderate; requires managing an additional model artifact.
+**Option 1: ColBERT-style Late Interaction Integration**
+*   **Concept:** Replace the two-stage hybrid search (Dense + Sparse) with a single-stage late interaction model (ColBERT).
+*   **Critique:** This would significantly simplify the retrieval architecture by eliminating the need for RRF and separate indices. However, it requires a specialized inference engine or a heavy re-ranking step that might exceed current latency budgets.
+*   **Feasibility:** High complexity. Requires significant changes to the `bag/` retrieval logic and potentially new dependencies.
 
-**Option 2: Reciprocal Rank Fusion (RRF) Module**
-*   **Concept:** Build a dedicated RRF utility to merge results from the current dense vector search and a new BM25 sparse search.
-*   **Critique:** This is a "clean" architectural win. It doesn't require heavy model inference at query time (unlike SPLADE) and directly addresses the "vocabulary mismatch" problem identified in the market scan.
-*   **Feasibility:** Very high. It is purely algorithmic and fits perfectly into the existing retrieval flow.
-*   **Maintainability:** High; the logic is deterministic and easy to unit test.
+**Option 2: Asynchronous Retrieval Pipeline (Parallelization)**
+*   **Concept:** Refactor the current hybrid search to execute Dense and Sparse retrieval in parallel using `asyncio`, followed by a non-blocking RRF merge.
+*   **Critique:** This directly addresses the "latency overhead" mentioned in the previous cycle's self-correction. It improves performance without changing the underlying retrieval paradigm, making it a low-risk, high-leverage refactor.
+*   **Feasibility:** High. Fits well within the existing `sam.py` architecture.
 
-**Decision:** I will proceed with **Option 2 (RRF Module)**. It provides the most immediate, high-leverage improvement to retrieval quality without the overhead of maintaining a secondary transformer model for expansion.
+**Decision:** Option 2. It is a disciplined, incremental improvement that respects the "minimal footprint" principle while directly addressing the performance bottleneck of the current hybrid search.
 
 ---
 
-## Idea: Hybrid Retrieval via Reciprocal Rank Fusion (RRF)
+## Idea: Asynchronous Hybrid Retrieval Pipeline
+
+Implement an `async` wrapper for the hybrid search retrieval process, allowing the BM25 (Sparse) and Vector (Dense) lookups to execute concurrently.
 
 ## Why
-My current retrieval relies heavily on dense embeddings, which struggle with exact keyword matching (e.g., specific error codes or unique identifiers). Integrating a BM25 sparse index and merging it with dense results via RRF will significantly improve precision for technical queries while maintaining semantic depth.
+Hybrid search currently incurs a latency penalty because it executes sequentially. By parallelizing the retrieval phase, I can reduce the total time-to-result to the duration of the slowest single retrieval, rather than the sum of both. This is a prerequisite for scaling the RAG pipeline to larger datasets.
 
 ## Implementation Steps
-1.  **Index Setup:** Add a BM25 index (using `rank_bm25` or similar lightweight library) to the existing `workshop_bench/retrieval.py`.
-2.  **RRF Logic:** Implement the RRF formula: $RRF(d) = \sum_{r \in R} \frac{1}{k + rank(d, r)}$, where $k=60$ is the standard constant.
-3.  **Integration:** Update the retrieval entry point to query both indices, normalize ranks, and return the fused result set.
-4.  **Verification:** Add a test case in `bag/tests.py` to ensure that a query containing a rare keyword ranks higher after fusion than with dense search alone.
+1.  **Refactor:** Modify the retrieval function in `bag/retrieval.py` to use `asyncio.gather` for the two search calls.
+2.  **Interface:** Update the calling signature to be `async` and ensure the event loop is managed correctly within the `sam.py` execution flow.
+3.  **Normalization:** Ensure the RRF merge logic remains synchronous and deterministic, as it is computationally inexpensive compared to the I/O of the search calls.
+4.  **Validation:** Add a performance benchmark test in `bag/tests.py` to verify that the latency is reduced by at least 30% for multi-index queries.
 
 ## Risk
-**Failure Mode:** The BM25 index might return empty results for queries with no overlapping tokens, potentially skewing the RRF calculation if not handled.
-**Mitigation:** Implement a fallback mechanism where if the sparse index returns zero results, the system defaults to the dense search score, or vice-versa, ensuring the pipeline never returns an empty set.
+**Failure Mode:** The current `sam.py` execution flow is largely synchronous; introducing `async` might cause blocking issues if not handled at the entry point.
+**Mitigation:** Use `asyncio.run()` at the top-level call for the retrieval task to isolate the async context, ensuring it doesn't leak into the rest of the synchronous lifecycle.
 
 **Confidence Score:** 9/10
