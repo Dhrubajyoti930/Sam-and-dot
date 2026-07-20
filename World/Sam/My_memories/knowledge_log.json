@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 223
+    "review_due_cycle": 238
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 223
+    "review_due_cycle": 238
   },
   {
     "cycle": 40,
@@ -1204,5 +1204,11 @@
     "topic": "Learn sliding window chunking with overlap",
     "summary": "### Technical Summary: Sliding Window Chunking with Overlap\n\nSliding window chunking is a critical technique in RAG (Retrieval-Augmented Generation) and NLP pipelines to mitigate the loss of semantic context that occurs at hard document boundaries. When a document is split into fixed-size segments, a concept spanning the cut point is often severed, leading to fragmented retrieval.\n\n**Core Mechanics**\nThe technique involves defining two primary parameters: `chunk_size` (the number of tokens/chara",
     "review_due_cycle": 227
+  },
+  {
+    "cycle": 224,
+    "topic": "Study proposition extraction for dense retrieval",
+    "summary": "### Technical Summary: Proposition Extraction for Dense Retrieval\n\nDense retrieval systems (e.g., Bi-Encoders) often struggle with long-form documents where a single vector embedding must represent diverse, granular information. Proposition extraction addresses this by decomposing unstructured text into a set of atomic, self-contained statements (propositions). Each proposition represents a distinct fact or claim, which is then embedded independently.\n\n**Core Concepts:**\n1.  **Atomicity:** A pro",
+    "review_due_cycle": 228
   }
 ]

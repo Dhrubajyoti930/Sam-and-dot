@@ -1,56 +1,36 @@
 ## Scratchpad
 
-**Option 1: Recursive Character Text Splitting (RCTS)**
-*   **Concept:** Implement a splitter that respects document hierarchy (e.g., `\n\n`, `\n`, ` `) before falling back to sliding window chunking.
-*   **Critique:** High alignment with the "Self-Correction" note. It preserves semantic boundaries better than fixed-size sliding windows.
-*   **Feasibility:** High. It leverages standard patterns found in libraries like LangChain but can be implemented natively to keep the footprint minimal.
-*   **Maintainability:** Excellent. It makes the RAG pipeline more robust to varied document types.
+**Option 1: Proposition-Level Indexing Prototype**
+*   **Concept:** Implement a pipeline that uses a lightweight LLM to decompose documents into atomic propositions before embedding.
+*   **Critique:** High impact on retrieval precision. However, it introduces significant latency and cost during indexing.
+*   **Feasibility:** High, provided I use a small model (e.g., GPT-4o-mini or a local SLM) for the extraction.
+*   **Maintainability:** Requires managing a new mapping layer between propositions and parent documents.
 
-**Option 2: Metadata-Driven "Contextual Breadcrumbs"**
-*   **Concept:** Inject a header into every chunk containing the document title, section hierarchy, and a summary of the parent document.
-*   **Critique:** Improves retrieval relevance significantly for LLMs, but increases token consumption per query.
-*   **Feasibility:** Moderate. Requires a pre-processing pass to generate summaries for each document.
-*   **Maintainability:** Good, but adds complexity to the ingestion pipeline.
+**Option 2: Distillation-based Extraction Pipeline**
+*   **Concept:** Fine-tune a small model (e.g., Phi-3 or Llama-3-8B) to perform proposition extraction, distilling knowledge from a larger model.
+*   **Critique:** Solves the "cost-at-scale" problem identified in my self-correction.
+*   **Feasibility:** Medium. Requires generating a synthetic dataset first, which is a multi-cycle effort.
+*   **Maintainability:** High, as it removes the dependency on expensive API calls for every document indexed.
 
-**Selection:** Option 1 is the logical next step for the RAG architecture. It directly addresses the "hard boundary" problem identified in the self-correction and provides a cleaner foundation for future improvements.
+**Selection:** I will proceed with **Option 1** as a prototype. It provides immediate, measurable gains in retrieval quality, which I can then optimize via distillation in future cycles.
 
 ---
 
-## Idea: Recursive Structure-Aware Chunking
+## Idea: Atomic Proposition Extraction for RAG
 
-Implement a `RecursiveCharacterTextSplitter` utility that prioritizes structural delimiters (`\n\n`, `\n`, `.`, ` `) to ensure chunks align with natural document boundaries, while maintaining a sliding window overlap to preserve context across those boundaries.
+Implement a `PropositionExtractor` module that decomposes text into atomic, self-contained facts before vectorization.
 
 ## Why
-Fixed-size chunking often severs sentences or paragraphs, leading to "context fragmentation." By splitting on structural markers first, we ensure that the retriever captures complete semantic units. The sliding window overlap then acts as a safety net for cross-boundary continuity.
+Standard chunking (fixed-size or recursive) often dilutes semantic density. By extracting atomic propositions, I ensure that the vector space is populated with high-signal, fact-centric embeddings, significantly reducing noise and improving retrieval precision for complex queries.
 
 ## Implementation Steps
-1.  **Define Delimiter Hierarchy:** Create a list of separators in order of preference: `["\n\n", "\n", ". ", " ", ""]`.
-2.  **Recursive Logic:** Create a function that attempts to split the text by the first separator. If the resulting chunk is still larger than `chunk_size`, recurse using the next separator in the list.
-3.  **Overlap Integration:** Once a chunk is within the `chunk_size` limit, append the specified `overlap` from the end of the previous chunk to the start of the current one.
-4.  **Token Validation:** Use `tiktoken` to verify that the final chunk size (including overlap) does not exceed the embedding model's input limit.
+1.  **Define Schema:** Create a Pydantic model for a `Proposition` (fact, source_id, confidence_score).
+2.  **Extractor Module:** Develop `workshop_bench/proposition_engine.py` using `instructor` to enforce structured output from a lightweight model.
+3.  **Pipeline Integration:** Update the indexing flow to pass raw chunks through the `PropositionExtractor` before they reach the vector database.
+4.  **Mapping Utility:** Implement a simple key-value store (using `sqlite3` or a JSON file) to map `proposition_id` back to `parent_document_id` for context-aware generation.
 
 ## Risk
-**Failure Mode:** If a document has no structural delimiters (e.g., a single massive block of text), the recursion will fall back to character-level splitting, which is inefficient.
-**Mitigation:** Implement a "hard-stop" character-count fallback that forces a split if a segment remains too large after all delimiters are exhausted.
+**Failure Mode:** The LLM may hallucinate facts or fail to maintain atomicity, leading to "fragmented" context that confuses the generation phase.
+**Mitigation:** Implement a "Confidence Threshold" in the extraction prompt; if the model's self-reported confidence is low, fall back to standard chunking for that specific document.
 
-**Confidence Score:** 9/10
-
----
-
-## Action Items
-```json
-[
-  {
-    "task": "Implement `RecursiveCharacterTextSplitter` in `workshop_bench/chunking.py`.",
-    "priority": "high"
-  },
-  {
-    "task": "Update `sam.py` to utilize this new utility for document ingestion.",
-    "priority": "medium"
-  },
-  {
-    "task": "Add a unit test in `bag/tests.py` to verify that chunks do not split mid-sentence when `\n` or `. ` delimiters are present.",
-    "priority": "medium"
-  }
-]
-```
+**Confidence Score:** 8/10
