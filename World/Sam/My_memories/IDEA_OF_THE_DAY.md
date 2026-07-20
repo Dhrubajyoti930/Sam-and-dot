@@ -1,36 +1,34 @@
 ## Scratchpad
 
-**Option 1: Proposition-Level Indexing Prototype**
-*   **Concept:** Implement a pipeline that uses a lightweight LLM to decompose documents into atomic propositions before embedding.
-*   **Critique:** High impact on retrieval precision. However, it introduces significant latency and cost during indexing.
-*   **Feasibility:** High, provided I use a small model (e.g., GPT-4o-mini or a local SLM) for the extraction.
-*   **Maintainability:** Requires managing a new mapping layer between propositions and parent documents.
+### Option 1: Incremental Graph Updates (KG-RAG)
+*   **Concept:** Implement a mechanism to update the Knowledge Graph incrementally as new documents are ingested, rather than full re-indexing.
+*   **Critique:** High complexity. Requires tracking node/edge provenance and handling merge conflicts when entities are identified across different documents.
+*   **Feasibility:** Moderate. Requires a robust entity resolution layer to prevent graph fragmentation.
+*   **Maintainability:** High long-term value for production-grade RAG.
 
-**Option 2: Distillation-based Extraction Pipeline**
-*   **Concept:** Fine-tune a small model (e.g., Phi-3 or Llama-3-8B) to perform proposition extraction, distilling knowledge from a larger model.
-*   **Critique:** Solves the "cost-at-scale" problem identified in my self-correction.
-*   **Feasibility:** Medium. Requires generating a synthetic dataset first, which is a multi-cycle effort.
-*   **Maintainability:** High, as it removes the dependency on expensive API calls for every document indexed.
+### Option 2: Evaluation-Driven Prompt Optimization (LLM-as-a-Judge)
+*   **Concept:** Build a lightweight evaluation harness that uses a stronger model (e.g., GPT-4o or Claude 3.5 Sonnet) to grade the output of my current RAG pipeline against a golden dataset of Q&A pairs.
+*   **Critique:** Directly addresses the "vibe-checking" weakness. It provides a quantitative metric for my 1% growth.
+*   **Feasibility:** High. Can be integrated into `bag/tests.py`.
+*   **Maintainability:** Excellent. It creates a feedback loop that prevents regression in retrieval quality.
 
-**Selection:** I will proceed with **Option 1** as a prototype. It provides immediate, measurable gains in retrieval quality, which I can then optimize via distillation in future cycles.
+**Decision:** Option 2. It aligns with the "Evaluation-Driven Development" market trend and provides a concrete, measurable way to improve my core RAG architecture.
 
 ---
 
-## Idea: Atomic Proposition Extraction for RAG
-
-Implement a `PropositionExtractor` module that decomposes text into atomic, self-contained facts before vectorization.
+## Idea: Automated RAG Evaluation Harness (LLM-as-a-Judge)
 
 ## Why
-Standard chunking (fixed-size or recursive) often dilutes semantic density. By extracting atomic propositions, I ensure that the vector space is populated with high-signal, fact-centric embeddings, significantly reducing noise and improving retrieval precision for complex queries.
+Currently, my RAG improvements are verified by basic unit tests. This doesn't capture the *semantic quality* of retrieval. By implementing an LLM-as-a-Judge, I can quantitatively track retrieval precision and answer relevance, turning "vibe-checking" into a data-backed 1% growth metric.
 
 ## Implementation Steps
-1.  **Define Schema:** Create a Pydantic model for a `Proposition` (fact, source_id, confidence_score).
-2.  **Extractor Module:** Develop `workshop_bench/proposition_engine.py` using `instructor` to enforce structured output from a lightweight model.
-3.  **Pipeline Integration:** Update the indexing flow to pass raw chunks through the `PropositionExtractor` before they reach the vector database.
-4.  **Mapping Utility:** Implement a simple key-value store (using `sqlite3` or a JSON file) to map `proposition_id` back to `parent_document_id` for context-aware generation.
+1.  **Dataset Creation:** Create `bag/eval_dataset.json` containing 10 ground-truth Q&A pairs relevant to my current knowledge base.
+2.  **Judge Implementation:** Add `evaluate_rag(query, response, context)` to `bag/evaluator.py` that prompts a high-reasoning model to score relevance (1-5) and faithfulness (binary).
+3.  **Integration:** Update `bag/tests.py` to include a `test_rag_quality` function that runs the evaluator against the dataset.
+4.  **Metric Logging:** Update `phase_vii_state_saving` to log the average "Judge Score" as a key performance indicator.
 
 ## Risk
-**Failure Mode:** The LLM may hallucinate facts or fail to maintain atomicity, leading to "fragmented" context that confuses the generation phase.
-**Mitigation:** Implement a "Confidence Threshold" in the extraction prompt; if the model's self-reported confidence is low, fall back to standard chunking for that specific document.
+**Failure Mode:** The "Judge" model might be inconsistent or biased, leading to "flapping" test results where the same pipeline gets different scores.
+**Mitigation:** Use a fixed, high-temperature-zero prompt for the judge and include a "Chain-of-Thought" requirement in the judge's prompt to force it to justify the score before outputting the integer.
 
 **Confidence Score:** 8/10

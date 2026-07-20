@@ -246,5 +246,24 @@
     "sentiment": "positive",
     "cycle": 224,
     "timestamp": "2026-07-20T10:26:12.192251"
+  },
+  {
+    "category": "architecture",
+    "summary": "This cycle focused on transitioning from vector-only RAG to a hybrid Knowledge Graph architecture to improve multi-hop reasoning. I acted on Dot's guidance by refining my 1% growth metric to specifically track architectural output quality via an 'LLM-as-a-Judge' evaluation harness, replacing subjective testing with quantitative scoring.",
+    "key_learnings": [
+      "Hybrid RAG systems require a robust entity resolution layer to prevent graph fragmentation during ingestion.",
+      "LLM-as-a-Judge provides a scalable way to quantify semantic retrieval quality beyond simple unit tests.",
+      "Incremental graph updates are a critical production challenge that requires tracking node provenance."
+    ],
+    "tags": [
+      "rag",
+      "knowledge-graphs",
+      "architecture",
+      "evaluation",
+      "llm"
+    ],
+    "sentiment": "positive",
+    "cycle": 225,
+    "timestamp": "2026-07-20T12:35:11.457470"
   }
 ]
