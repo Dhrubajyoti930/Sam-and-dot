@@ -1,34 +1,33 @@
 ## Scratchpad
 
-### Option 1: Incremental Graph Updates (KG-RAG)
-*   **Concept:** Implement a mechanism to update the Knowledge Graph incrementally as new documents are ingested, rather than full re-indexing.
-*   **Critique:** High complexity. Requires tracking node/edge provenance and handling merge conflicts when entities are identified across different documents.
-*   **Feasibility:** Moderate. Requires a robust entity resolution layer to prevent graph fragmentation.
-*   **Maintainability:** High long-term value for production-grade RAG.
+**Option 1: Implement a Leiden-based Community Detection Module**
+*   **Concept:** Integrate a lightweight graph-clustering library (e.g., `leidenalg`) into the `workshop_bench/` to partition the knowledge graph into hierarchical communities.
+*   **Critique:** High impact on retrieval quality for global queries. However, it introduces a heavy dependency (`igraph`/`leidenalg`) which may complicate the environment.
+*   **Feasibility:** Moderate. Requires careful handling of graph serialization between the vector store and the community summary cache.
 
-### Option 2: Evaluation-Driven Prompt Optimization (LLM-as-a-Judge)
-*   **Concept:** Build a lightweight evaluation harness that uses a stronger model (e.g., GPT-4o or Claude 3.5 Sonnet) to grade the output of my current RAG pipeline against a golden dataset of Q&A pairs.
-*   **Critique:** Directly addresses the "vibe-checking" weakness. It provides a quantitative metric for my 1% growth.
-*   **Feasibility:** High. Can be integrated into `bag/tests.py`.
-*   **Maintainability:** Excellent. It creates a feedback loop that prevents regression in retrieval quality.
+**Option 2: Schema-Constrained Extraction Pipeline**
+*   **Concept:** Refactor the ingestion pipeline to use `Instructor` or Pydantic-based structured output to enforce strict entity-relationship schemas during graph construction.
+*   **Critique:** Directly addresses the "Extraction Noise" challenge identified in the GraphRAG research. It is highly maintainable and aligns with the "Schema Engineering" market trend.
+*   **Feasibility:** High. It leverages existing `_parse_gemini_json` logic and strengthens the integrity of the graph.
 
-**Decision:** Option 2. It aligns with the "Evaluation-Driven Development" market trend and provides a concrete, measurable way to improve my core RAG architecture.
+**Selection:** Option 2. It is a foundational step that must precede community detection to ensure the graph being clustered is actually clean.
 
 ---
 
-## Idea: Automated RAG Evaluation Harness (LLM-as-a-Judge)
+## Idea: Pydantic-Driven Graph Extraction Schema
+Implement a strict `GraphSchema` model using Pydantic to enforce the structure of extracted entities and relationships during the ingestion phase, replacing loose text-based extraction.
 
 ## Why
-Currently, my RAG improvements are verified by basic unit tests. This doesn't capture the *semantic quality* of retrieval. By implementing an LLM-as-a-Judge, I can quantitatively track retrieval precision and answer relevance, turning "vibe-checking" into a data-backed 1% growth metric.
+Current extraction is prone to hallucinated relationships and inconsistent entity naming. By enforcing a schema, I ensure that the graph nodes and edges are programmatically deterministic, which is a prerequisite for reliable community detection and global search. This aligns with the "Schema Engineering" trend and directly mitigates the "Extraction Noise" identified in my GraphRAG research.
 
 ## Implementation Steps
-1.  **Dataset Creation:** Create `bag/eval_dataset.json` containing 10 ground-truth Q&A pairs relevant to my current knowledge base.
-2.  **Judge Implementation:** Add `evaluate_rag(query, response, context)` to `bag/evaluator.py` that prompts a high-reasoning model to score relevance (1-5) and faithfulness (binary).
-3.  **Integration:** Update `bag/tests.py` to include a `test_rag_quality` function that runs the evaluator against the dataset.
-4.  **Metric Logging:** Update `phase_vii_state_saving` to log the average "Judge Score" as a key performance indicator.
+1.  **Define Schema:** Create `workshop_bench/graph_schema.py` containing `Entity` and `Relationship` Pydantic models.
+2.  **Update Ingestion:** Modify the ingestion prompt in `sam.py` (or the relevant workshop module) to explicitly request JSON output that validates against the new `GraphSchema`.
+3.  **Validation Layer:** Update the ingestion logic to pass the LLM output through `_parse_gemini_json` with the `schema` argument to ensure strict compliance before graph insertion.
+4.  **Deduplication:** Implement a simple fuzzy-matching check (using `difflib`) against existing nodes before committing new entities to the graph.
 
 ## Risk
-**Failure Mode:** The "Judge" model might be inconsistent or biased, leading to "flapping" test results where the same pipeline gets different scores.
-**Mitigation:** Use a fixed, high-temperature-zero prompt for the judge and include a "Chain-of-Thought" requirement in the judge's prompt to force it to justify the score before outputting the integer.
+**Failure Mode:** The LLM may struggle to map complex, unstructured text into a rigid schema, leading to empty extractions or "schema-clamping" where it ignores valid but non-conforming data.
+**Mitigation:** Include a "catch-all" field in the schema for unclassified metadata and implement a fallback to a more permissive extraction mode if the strict schema validation fails three times consecutively.
 
 **Confidence Score:** 8/10
