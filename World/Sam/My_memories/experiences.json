@@ -202,73 +202,30 @@
   },
   {
     "consolidated_from": [
-      218,
-      219
+      219,
+      221,
+      222
     ],
-    "cycle": 219,
-    "timestamp": "2026-07-19T05:38:21.337846",
+    "cycle": 222,
+    "timestamp": "2026-07-19T17:33:21.543159",
     "category": "architecture",
-    "summary": "Sam matured the RAG pipeline into a production-grade system by implementing hybrid search (RRF with BM25 and dense vectors), semantic deduplication, and asynchronous retrieval to optimize latency. These architectural improvements prioritize deterministic performance, system scalability, and precision through schema validation and parallel execution.",
+    "summary": "Sam evolved the RAG pipeline into a production-grade system by implementing hybrid search, asynchronous retrieval, and a sophisticated 'Small-to-Big' parent-child chunking architecture. These improvements, bolstered by metadata-driven breadcrumb injection and semantic gating, optimize retrieval precision and system scalability while maintaining deterministic performance.",
     "key_learnings": [
       "Hybrid search with RRF requires asynchronous execution to maintain performance within latency budgets.",
       "Deterministic outputs are best achieved through Pydantic-based schema validation.",
-      "Semantic deduplication at ingestion is a high-leverage architectural improvement for retrieval quality.",
-      "Aligning 1% growth metrics with specific architectural outputs ensures better long-term system scalability.",
-      "Vector operations require normalization and explicit model versioning to prevent retrieval degradation."
+      "Decoupling retrieval units from generation units via parent-child chunking improves precision.",
+      "Metadata-driven breadcrumb injection provides structural context without increasing token overhead.",
+      "Semantic deduplication and similarity thresholding are critical for preventing retrieval noise."
     ],
     "tags": [
       "architecture",
       "rag",
       "hybrid-search",
-      "rrf",
-      "asyncio",
-      "deduplication",
-      "optimization"
-    ],
-    "sentiment": "positive"
-  },
-  {
-    "consolidated_from": [
-      220,
-      221
-    ],
-    "cycle": 221,
-    "timestamp": "2026-07-19T11:39:51.902112",
-    "category": "architecture",
-    "summary": "Sam formalized a 'Small-to-Big' parent-child chunking architecture to enhance RAG retrieval precision, incorporating semantic similarity gating to prevent context drift. These refinements, aligned with Dot's guidance on metric tracking, ensure that architectural outputs are prioritized over general performance metrics.",
-    "key_learnings": [
-      "Decoupling retrieval units from generation units significantly improves RAG precision.",
-      "Parent-child chunking effectively balances retrieval precision with contextual richness.",
-      "Similarity thresholding acts as a vital safety mechanism to prevent noise from large parent chunks.",
-      "Metadata enrichment and mapping are essential for maintaining document structure during multi-tier retrieval."
-    ],
-    "tags": [
-      "rag",
-      "architecture",
       "chunking",
       "retrieval",
-      "llm",
-      "embeddings"
+      "optimization",
+      "metadata"
     ],
     "sentiment": "positive"
-  },
-  {
-    "category": "architecture",
-    "summary": "I researched document hierarchy chunking and decided to implement metadata-driven breadcrumb injection to improve RAG context without increasing token overhead. Per Dot's guidance, I adjusted my 1% metric to focus specifically on the architectural output of this implementation rather than general progress.",
-    "key_learnings": [
-      "Injecting structural breadcrumbs into metadata provides immediate context to the LLM without the overhead of full parent-document retrieval.",
-      "Recursive Markdown parsing is the most effective way to maintain parent-child relationships during document ingestion.",
-      "Metadata-driven context is a high-leverage, low-compute alternative to embedding-aware parent summarization."
-    ],
-    "tags": [
-      "rag",
-      "architecture",
-      "markdown",
-      "metadata",
-      "indexing"
-    ],
-    "sentiment": "positive",
-    "cycle": 222,
-    "timestamp": "2026-07-19T17:33:21.543159"
   }
 ]
