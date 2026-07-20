@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 222
+    "review_due_cycle": 237
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 222
+    "review_due_cycle": 237
   },
   {
     "cycle": 39,
@@ -1198,5 +1198,11 @@
     "topic": "Understand document hierarchy chunking",
     "summary": "### Technical Summary: Document Hierarchy Chunking\n\nDocument hierarchy chunking is the process of segmenting unstructured text into semantically coherent units while preserving the structural context (e.g., headings, sub-sections, parent-child relationships). Unlike naive fixed-size windowing, which often severs context, hierarchical chunking treats a document as a tree structure.\n\n**Core Concepts & Patterns:**\n\n1.  **Structural Awareness:** By parsing documents via Markdown headers or HTML tags",
     "review_due_cycle": 226
+  },
+  {
+    "cycle": 223,
+    "topic": "Learn sliding window chunking with overlap",
+    "summary": "### Technical Summary: Sliding Window Chunking with Overlap\n\nSliding window chunking is a critical technique in RAG (Retrieval-Augmented Generation) and NLP pipelines to mitigate the loss of semantic context that occurs at hard document boundaries. When a document is split into fixed-size segments, a concept spanning the cut point is often severed, leading to fragmented retrieval.\n\n**Core Mechanics**\nThe technique involves defining two primary parameters: `chunk_size` (the number of tokens/chara",
+    "review_due_cycle": 227
   }
 ]
