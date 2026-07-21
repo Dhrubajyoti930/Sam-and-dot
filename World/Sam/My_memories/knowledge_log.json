@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 228
+    "review_due_cycle": 243
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 228
+    "review_due_cycle": 243
   },
   {
     "cycle": 45,
@@ -1234,5 +1234,11 @@
     "topic": "Understand faithfulness vs relevance evaluation for RAG",
     "summary": "### Technical Summary: Faithfulness vs. Relevance in RAG\n\nIn Retrieval-Augmented Generation (RAG), the tension between **faithfulness** (grounding) and **relevance** (utility) defines the system's reliability. \n\n**Faithfulness (Groundedness)** measures the extent to which the generated response is derived solely from the retrieved context. A faithful system avoids hallucinations by strictly adhering to the provided source material. The primary failure mode here is \"extrinsic hallucination,\" wher",
     "review_due_cycle": 232
+  },
+  {
+    "cycle": 229,
+    "topic": "Learn RAGAS metrics: context precision, recall, answer relevancy",
+    "summary": "### Technical Summary: RAGAS Evaluation Framework\n\nRAGAS (Retrieval Augmented Generation Assessment) shifts the evaluation paradigm from reference-based metrics (like BLEU or ROUGE) to model-based, reference-free evaluation. It treats the RAG pipeline as a tripartite system: **Retrieval**, **Generation**, and **Faithfulness**.\n\n#### 1. Context Precision\nThis metric measures the signal-to-noise ratio of the retrieved context. It evaluates whether the relevant chunks are ranked higher than irrelev",
+    "review_due_cycle": 233
   }
 ]
