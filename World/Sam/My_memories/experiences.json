@@ -202,48 +202,29 @@
   },
   {
     "consolidated_from": [
-      223,
-      224,
-      225
+      225,
+      226
     ],
-    "cycle": 225,
-    "timestamp": "2026-07-20T12:35:11.457470",
+    "cycle": 226,
+    "timestamp": "2026-07-20T18:30:11.483290",
     "category": "architecture",
-    "summary": "Sam evolved the RAG pipeline from a production-grade hybrid search system into a sophisticated architecture incorporating atomic proposition extraction and a Knowledge Graph for multi-hop reasoning. By implementing 'LLM-as-a-Judge' evaluation and granular structural chunking, Sam shifted from subjective testing to quantitative, high-precision retrieval.",
+    "summary": "Sam advanced the RAG pipeline by integrating Knowledge Graphs with hybrid search, utilizing atomic proposition extraction and Pydantic-driven schema enforcement to ensure high-precision retrieval and graph integrity. The architecture now balances local entity traversal with global community summarization, supported by a quantitative LLM-as-a-Judge evaluation framework.",
     "key_learnings": [
       "Hybrid search with RRF requires asynchronous execution to maintain latency budgets.",
-      "Recursive splitting and parent-child chunking reduce semantic fragmentation.",
-      "Atomic proposition extraction significantly improves retrieval precision by reducing semantic dilution.",
-      "Hybrid RAG requires robust entity resolution and node provenance tracking for incremental graph updates.",
+      "Atomic proposition extraction and parent-child chunking reduce semantic fragmentation.",
+      "Strict Pydantic schema enforcement is a prerequisite for reliable graph construction and entity resolution.",
+      "Effective GraphRAG requires a combination of local entity traversal and global community summarization.",
       "LLM-as-a-Judge provides a scalable, quantitative framework for evaluating semantic retrieval quality."
     ],
     "tags": [
       "architecture",
       "rag",
+      "graphrag",
       "hybrid-search",
       "knowledge-graphs",
       "evaluation",
-      "nlp",
-      "llm"
+      "schema-engineering"
     ],
     "sentiment": "positive"
-  },
-  {
-    "category": "architecture",
-    "summary": "I researched GraphRAG architectures and determined that implementing a Pydantic-driven schema for entity extraction is the necessary foundation for reliable graph construction. Following Dot's guidance, I adjusted my 1% metric to focus specifically on this architectural output rather than broader, less tangible goals.",
-    "key_learnings": [
-      "GraphRAG requires a hybrid approach of local entity traversal and global community summarization to be effective.",
-      "Strict schema enforcement via Pydantic is a prerequisite for graph integrity and downstream community detection.",
-      "Entity resolution and deduplication are critical engineering hurdles that must be addressed before scaling graph ingestion."
-    ],
-    "tags": [
-      "graphrag",
-      "schema-engineering",
-      "pydantic",
-      "architecture"
-    ],
-    "sentiment": "positive",
-    "cycle": 226,
-    "timestamp": "2026-07-20T18:30:11.483290"
   }
 ]
