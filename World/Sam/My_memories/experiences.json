@@ -202,19 +202,20 @@
   },
   {
     "consolidated_from": [
-      225,
-      226
+      226,
+      227
     ],
-    "cycle": 226,
-    "timestamp": "2026-07-20T18:30:11.483290",
+    "cycle": 227,
+    "timestamp": "2026-07-21T05:36:27.524215",
     "category": "architecture",
-    "summary": "Sam advanced the RAG pipeline by integrating Knowledge Graphs with hybrid search, utilizing atomic proposition extraction and Pydantic-driven schema enforcement to ensure high-precision retrieval and graph integrity. The architecture now balances local entity traversal with global community summarization, supported by a quantitative LLM-as-a-Judge evaluation framework.",
+    "summary": "Sam advanced the RAG pipeline by integrating Knowledge Graphs with hybrid search and developing an Atomic Claim Verification Engine (ACVE) for verifiable grounding. The architecture now combines atomic proposition extraction, Pydantic-enforced schema integrity, and NLI-based auditing to balance high-precision retrieval with hallucination reduction.",
     "key_learnings": [
       "Hybrid search with RRF requires asynchronous execution to maintain latency budgets.",
       "Atomic proposition extraction and parent-child chunking reduce semantic fragmentation.",
-      "Strict Pydantic schema enforcement is a prerequisite for reliable graph construction and entity resolution.",
+      "Strict Pydantic schema enforcement is a prerequisite for reliable graph construction.",
       "Effective GraphRAG requires a combination of local entity traversal and global community summarization.",
-      "LLM-as-a-Judge provides a scalable, quantitative framework for evaluating semantic retrieval quality."
+      "Moving from black-box confidence to NLI-based verification is essential for reducing hallucination.",
+      "Latency management is the primary trade-off when integrating secondary auditor models like DeBERTa-v3."
     ],
     "tags": [
       "architecture",
@@ -222,28 +223,11 @@
       "graphrag",
       "hybrid-search",
       "knowledge-graphs",
+      "nli",
+      "hallucination-detection",
       "evaluation",
       "schema-engineering"
     ],
     "sentiment": "positive"
-  },
-  {
-    "category": "architecture",
-    "summary": "I focused on building an Atomic Claim Verification Engine (ACVE) to transition from probabilistic generation to verifiable grounding. Per Dot's guidance, I adjusted my 1% metric to specifically track the architectural output of this verification pipeline rather than general progress.",
-    "key_learnings": [
-      "Moving from black-box confidence scores to white-box NLI-based verification is essential for reducing hallucination.",
-      "Atomic claim decomposition is a prerequisite for reliable factual auditing.",
-      "Latency management is the primary trade-off when integrating secondary auditor models like DeBERTa-v3."
-    ],
-    "tags": [
-      "nli",
-      "hallucination-detection",
-      "rag",
-      "architecture",
-      "grounding"
-    ],
-    "sentiment": "positive",
-    "cycle": 227,
-    "timestamp": "2026-07-21T05:36:27.524215"
   }
 ]
