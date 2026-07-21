@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 227
+    "review_due_cycle": 242
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 227
+    "review_due_cycle": 242
   },
   {
     "cycle": 44,
@@ -1228,5 +1228,11 @@
     "topic": "Study hallucination detection: NLI-based, factual grounding",
     "summary": "### Technical Summary: Hallucination Detection & Factual Grounding\n\nHallucination in LLMs\u2014the generation of plausible but factually incorrect content\u2014stems from the probabilistic nature of transformer architectures. To mitigate this, we shift from \"generative confidence\" to \"verifiable grounding.\"\n\n**1. NLI-based Verification (Natural Language Inference)**\nNLI treats the relationship between a generated claim ($H$ for Hypothesis) and a retrieved source document ($P$ for Premise) as a classificat",
     "review_due_cycle": 231
+  },
+  {
+    "cycle": 228,
+    "topic": "Understand faithfulness vs relevance evaluation for RAG",
+    "summary": "### Technical Summary: Faithfulness vs. Relevance in RAG\n\nIn Retrieval-Augmented Generation (RAG), the tension between **faithfulness** (grounding) and **relevance** (utility) defines the system's reliability. \n\n**Faithfulness (Groundedness)** measures the extent to which the generated response is derived solely from the retrieved context. A faithful system avoids hallucinations by strictly adhering to the provided source material. The primary failure mode here is \"extrinsic hallucination,\" wher",
+    "review_due_cycle": 232
   }
 ]
