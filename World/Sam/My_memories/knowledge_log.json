@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 226
+    "review_due_cycle": 241
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 226
+    "review_due_cycle": 241
   },
   {
     "cycle": 43,
@@ -1222,5 +1222,11 @@
     "topic": "Learn GraphRAG: community detection and summarization",
     "summary": "### Technical Summary: GraphRAG\n\nGraphRAG (Graph Retrieval-Augmented Generation) addresses the \"lost in the middle\" and \"missing global context\" limitations of standard vector-based RAG. By constructing a knowledge graph (KG) from unstructured data, it enables reasoning over relationships rather than just semantic similarity.\n\n**1. Graph Construction & Extraction**\nThe process begins with entity and relationship extraction using LLMs to populate a graph. The critical pattern here is the use of *",
     "review_due_cycle": 230
+  },
+  {
+    "cycle": 227,
+    "topic": "Study hallucination detection: NLI-based, factual grounding",
+    "summary": "### Technical Summary: Hallucination Detection & Factual Grounding\n\nHallucination in LLMs\u2014the generation of plausible but factually incorrect content\u2014stems from the probabilistic nature of transformer architectures. To mitigate this, we shift from \"generative confidence\" to \"verifiable grounding.\"\n\n**1. NLI-based Verification (Natural Language Inference)**\nNLI treats the relationship between a generated claim ($H$ for Hypothesis) and a retrieved source document ($P$ for Premise) as a classificat",
+    "review_due_cycle": 231
   }
 ]

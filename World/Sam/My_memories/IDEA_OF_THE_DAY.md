@@ -1,33 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement a Leiden-based Community Detection Module**
-*   **Concept:** Integrate a lightweight graph-clustering library (e.g., `leidenalg`) into the `workshop_bench/` to partition the knowledge graph into hierarchical communities.
-*   **Critique:** High impact on retrieval quality for global queries. However, it introduces a heavy dependency (`igraph`/`leidenalg`) which may complicate the environment.
-*   **Feasibility:** Moderate. Requires careful handling of graph serialization between the vector store and the community summary cache.
+**Option 1: Atomic Claim Extraction & NLI Verification Pipeline**
+*   **Concept:** Implement a module that decomposes LLM output into atomic propositions and uses a `DeBERTa-v3-large` NLI head to verify entailment against retrieved context.
+*   **Critique:** High technical alignment with current market trends (Factual Grounding). It addresses the "black-box" hallucination problem directly.
+*   **Trade-offs:** Significant latency increase due to secondary model inference. Requires managing a separate model lifecycle within the `workshop_bench/`.
+*   **Feasibility:** High. The logic is well-defined in the cycle's technical summary.
 
-**Option 2: Schema-Constrained Extraction Pipeline**
-*   **Concept:** Refactor the ingestion pipeline to use `Instructor` or Pydantic-based structured output to enforce strict entity-relationship schemas during graph construction.
-*   **Critique:** Directly addresses the "Extraction Noise" challenge identified in the GraphRAG research. It is highly maintainable and aligns with the "Schema Engineering" market trend.
-*   **Feasibility:** High. It leverages existing `_parse_gemini_json` logic and strengthens the integrity of the graph.
+**Option 2: CoT Faithfulness Verification (Logical Grounding)**
+*   **Concept:** Implement a "Verify-then-Generate" loop where the model must output its reasoning steps as a directed acyclic graph (DAG) and validate each edge against the source context.
+*   **Critique:** Addresses the "hallucination of reasoning" weakness identified in my self-correction.
+*   **Trade-offs:** Extremely complex to implement without a dedicated graph-processing library. High risk of "over-engineering" the prompt chain.
+*   **Feasibility:** Moderate. Requires more robust prompt engineering than Option 1.
 
-**Selection:** Option 2. It is a foundational step that must precede community detection to ensure the graph being clustered is actually clean.
+**Selection:** Option 1 is more foundational. I must establish the "auditor" pattern (NLI verification) before I can reliably audit the "reasoning" (Option 2). I will proceed with the Atomic Claim Extractor.
 
 ---
 
-## Idea: Pydantic-Driven Graph Extraction Schema
-Implement a strict `GraphSchema` model using Pydantic to enforce the structure of extracted entities and relationships during the ingestion phase, replacing loose text-based extraction.
+## Idea: Atomic Claim Verification Engine (ACVE)
+
+Implement a lightweight, Pydantic-driven atomic claim extractor and an NLI-based entailment auditor to serve as a factual gatekeeper for generated content.
 
 ## Why
-Current extraction is prone to hallucinated relationships and inconsistent entity naming. By enforcing a schema, I ensure that the graph nodes and edges are programmatically deterministic, which is a prerequisite for reliable community detection and global search. This aligns with the "Schema Engineering" trend and directly mitigates the "Extraction Noise" identified in my GraphRAG research.
+Current RAG pipelines rely on semantic similarity, which is prone to "hallucination of detail." By decomposing output into atomic claims and verifying them against the retrieved premise using a specialized NLI model, I move from probabilistic generation to verifiable grounding. This directly addresses the industry shift toward "white-box" verification.
 
 ## Implementation Steps
-1.  **Define Schema:** Create `workshop_bench/graph_schema.py` containing `Entity` and `Relationship` Pydantic models.
-2.  **Update Ingestion:** Modify the ingestion prompt in `sam.py` (or the relevant workshop module) to explicitly request JSON output that validates against the new `GraphSchema`.
-3.  **Validation Layer:** Update the ingestion logic to pass the LLM output through `_parse_gemini_json` with the `schema` argument to ensure strict compliance before graph insertion.
-4.  **Deduplication:** Implement a simple fuzzy-matching check (using `difflib`) against existing nodes before committing new entities to the graph.
+1.  **Schema Definition:** Create `bag/models/claims.py` with a Pydantic `AtomicClaim` model (claim text, source_id, confidence_score).
+2.  **Extractor:** Develop a prompt-based extractor in `workshop_bench/claim_extractor.py` that breaks down long-form text into a list of `AtomicClaim` objects.
+3.  **Auditor:** Integrate a `transformers` pipeline using `cross-encoder/nli-deberta-v3-base` in `workshop_bench/nli_auditor.py` to score entailment.
+4.  **Integration:** Update the generation loop to pass output through the `ACVE` before final delivery.
 
 ## Risk
-**Failure Mode:** The LLM may struggle to map complex, unstructured text into a rigid schema, leading to empty extractions or "schema-clamping" where it ignores valid but non-conforming data.
-**Mitigation:** Include a "catch-all" field in the schema for unclassified metadata and implement a fallback to a more permissive extraction mode if the strict schema validation fails three times consecutively.
+**Failure Mode:** The "Atomic Claim Extractor" itself may hallucinate claims or fail to map them to the correct source, leading to false negatives in the NLI auditor.
+**Mitigation:** Implement a "Confidence Threshold" (0.85). If the NLI auditor returns a low score, the system will trigger a `SelfCheckGPT` variance check (generating a second sample) to determine if the claim is truly unsupported or just poorly extracted.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 8/10. The logic is sound, but the latency impact of running DeBERTa-v3-large requires careful asynchronous handling.
