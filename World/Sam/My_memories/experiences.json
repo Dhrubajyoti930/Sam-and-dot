@@ -248,5 +248,23 @@
     "sentiment": "positive",
     "cycle": 232,
     "timestamp": "2026-07-22T09:48:21.283713"
+  },
+  {
+    "category": "architecture",
+    "summary": "I researched prompt injection vulnerabilities and concluded that structural hardening is more effective than simple filtering. Following Dot's guidance to focus my 1% metric on specific architectural output, I initiated the transition from loose JSON parsing to a Pydantic-enforced tool schema validation layer to ensure robust agentic execution.",
+    "key_learnings": [
+      "Prompt injection is a fundamental property of autoregressive models requiring layered, structural defenses rather than simple patches.",
+      "Pydantic-based validation provides a critical 'fail-fast' boundary for LLM-generated tool calls, improving system reliability.",
+      "Providing schema definitions directly in the system prompt significantly improves the model's ability to adhere to strict output structures."
+    ],
+    "tags": [
+      "security",
+      "pydantic",
+      "architecture",
+      "agentic-workflow"
+    ],
+    "sentiment": "positive",
+    "cycle": 233,
+    "timestamp": "2026-07-22T12:15:05.128703"
   }
 ]

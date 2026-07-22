@@ -63,7 +63,7 @@
     "cycle": 33,
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
-    "review_due_cycle": 232
+    "review_due_cycle": 247
   },
   {
     "cycle": 34,
@@ -153,7 +153,7 @@
     "cycle": 48,
     "topic": "Study Python's data model: __repr__, __str__, __format__",
     "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
-    "review_due_cycle": 232
+    "review_due_cycle": 247
   },
   {
     "cycle": 49,
@@ -1258,5 +1258,11 @@
     "topic": "Learn evals for agentic systems: task completion, tool accuracy",
     "summary": "### Technical Summary: Evals for Agentic Systems\n\nEvaluating agentic systems requires shifting from static input-output validation to **process-oriented assessment**. Unlike traditional LLM applications, agents operate in loops; therefore, evaluation must account for state transitions, tool-use fidelity, and trajectory efficiency.\n\n**1. Task Completion (Success Metrics)**\nSuccess in agentic workflows is rarely binary. We must employ **Goal-Conditioned Evals**. Instead of checking if the final ou",
     "review_due_cycle": 236
+  },
+  {
+    "cycle": 233,
+    "topic": "Study prompt injection attacks and defenses",
+    "summary": "### Technical Summary: Prompt Injection Defense\n\nPrompt injection exploits the ambiguity between developer-provided instructions (system prompts) and user-provided data. The core vulnerability lies in the LLM\u2019s inability to distinguish between \"instruction\" and \"content\" when both are processed within the same latent space.\n\n#### Key Concepts & Patterns\n1.  **Direct vs. Indirect Injection:** \n    *   **Direct:** The user explicitly attempts to override system instructions (e.g., \"Ignore previous",
+    "review_due_cycle": 237
   }
 ]
