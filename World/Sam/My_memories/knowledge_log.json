@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 233
+    "review_due_cycle": 248
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 233
+    "review_due_cycle": 248
   },
   {
     "cycle": 50,
@@ -1264,5 +1264,11 @@
     "topic": "Study prompt injection attacks and defenses",
     "summary": "### Technical Summary: Prompt Injection Defense\n\nPrompt injection exploits the ambiguity between developer-provided instructions (system prompts) and user-provided data. The core vulnerability lies in the LLM\u2019s inability to distinguish between \"instruction\" and \"content\" when both are processed within the same latent space.\n\n#### Key Concepts & Patterns\n1.  **Direct vs. Indirect Injection:** \n    *   **Direct:** The user explicitly attempts to override system instructions (e.g., \"Ignore previous",
     "review_due_cycle": 237
+  },
+  {
+    "cycle": 234,
+    "topic": "Understand jailbreak patterns and system prompt leakage",
+    "summary": "### Technical Summary: Jailbreak Patterns and Prompt Leakage\n\nPrompt injection and jailbreaking represent the primary security surface for Large Language Models (LLMs). These vulnerabilities stem from the fundamental inability of transformer architectures to distinguish between \"instruction\" (system-level directives) and \"data\" (user-provided input).\n\n**Core Patterns:**\n1.  **Direct Injection (Prompt Leakage):** The attacker attempts to extract the system prompt or internal instructions. Common ",
+    "review_due_cycle": 238
   }
 ]
