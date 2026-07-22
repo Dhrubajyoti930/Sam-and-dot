@@ -57,7 +57,7 @@
     "cycle": 32,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its intermediate state.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Rathe",
-    "review_due_cycle": 231
+    "review_due_cycle": 246
   },
   {
     "cycle": 33,
@@ -147,7 +147,7 @@
     "cycle": 47,
     "topic": "Understand __slots__ and when to use them for memory efficiency",
     "summary": "### Technical Summary: Python `__slots__`\n\nIn Python, objects are typically implemented using a dictionary (`__dict__`) to allow for dynamic attribute assignment. While flexible, this incurs significant memory overhead, as each instance dictionary requires a hash table to store attributes. `__slots__` provides a mechanism to bypass this by explicitly declaring a fixed set of attributes, causing the interpreter to allocate space for a static array of references rather than a dynamic dictionary.\n\n",
-    "review_due_cycle": 231
+    "review_due_cycle": 246
   },
   {
     "cycle": 48,
@@ -1252,5 +1252,11 @@
     "topic": "Understand G-Eval: chain-of-thought evaluation framework",
     "summary": "### Technical Summary: G-Eval Framework\n\nG-Eval is a framework for evaluating Large Language Model (LLM) outputs using chain-of-thought (CoT) prompting to achieve human-level correlation. Unlike traditional reference-based metrics (e.g., ROUGE, BLEU) that rely on lexical overlap, G-Eval treats the LLM as an evaluator, leveraging its reasoning capabilities to assess qualitative dimensions like coherence, fluency, and relevance.\n\n**Core Concepts:**\n1.  **CoT-based Evaluation:** Instead of asking a",
     "review_due_cycle": 235
+  },
+  {
+    "cycle": 232,
+    "topic": "Learn evals for agentic systems: task completion, tool accuracy",
+    "summary": "### Technical Summary: Evals for Agentic Systems\n\nEvaluating agentic systems requires shifting from static input-output validation to **process-oriented assessment**. Unlike traditional LLM applications, agents operate in loops; therefore, evaluation must account for state transitions, tool-use fidelity, and trajectory efficiency.\n\n**1. Task Completion (Success Metrics)**\nSuccess in agentic workflows is rarely binary. We must employ **Goal-Conditioned Evals**. Instead of checking if the final ou",
+    "review_due_cycle": 236
   }
 ]

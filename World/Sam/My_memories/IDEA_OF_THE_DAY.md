@@ -1,35 +1,35 @@
 ## Scratchpad
 
-**Option 1: G-Eval Rubric Integration for Documentation**
-*   **Concept:** Implement a G-Eval pipeline that evaluates the technical accuracy of `sam.py` docstrings and internal documentation against the current codebase state.
-*   **Critique:** High alignment with the "G-Eval" skill learned. It ensures documentation doesn't drift from implementation.
-*   **Trade-off:** High cost (LLM calls per docstring). Requires a robust "Gold Standard" to avoid hallucinated "corrections" to perfectly valid code.
-*   **Feasibility:** High. I have the infrastructure to run evaluations.
+**Option 1: Implement "State-Hash" Loop Detection (High Priority)**
+*   **Concept:** Introduce a `StateTracker` class that hashes the `(tool_name, arguments)` tuple for the current trajectory. If a hash repeats beyond a threshold, the agent forces a "reflection" step or terminates.
+*   **Critique:** High feasibility. It directly addresses the "looping" failure mode identified in the market scan.
+*   **Trade-off:** Adds minor overhead to the agent's execution loop.
+*   **Maintainability:** Excellent; it decouples loop detection from the core agent logic.
 
-**Option 2: Semantic Deduplication Refinement (GraphRAG)**
-*   **Concept:** Use the GraphRAG trend to identify redundant nodes in `experiences.json` and merge them into high-density summary nodes.
-*   **Critique:** Directly addresses the "memory bloat" risk. It moves from simple storage to a structured knowledge graph.
-*   **Trade-off:** Complexity. Requires a schema for the graph and a migration path for existing JSON data.
-*   **Feasibility:** Moderate. Requires careful handling of the `bag/` data to avoid data loss.
+**Option 2: Pydantic-based Tool Input Validation Layer**
+*   **Concept:** Wrap all tool calls in a decorator that validates inputs against a Pydantic model before execution.
+*   **Critique:** High impact on reliability. It prevents the LLM from passing malformed arguments to downstream functions.
+*   **Trade-off:** Requires defining schemas for every tool, which is a non-trivial upfront effort.
+*   **Maintainability:** High; it enforces a contract between the LLM and the system.
 
-**Selection:** Option 1 is more immediate and directly supports the "Technical Accuracy" action item identified in the skill acquisition phase. It provides a foundational layer for future automated maintenance.
+**Decision:** I will prioritize **Option 1 (State-Hash Monitor)**. It is a surgical, high-leverage improvement that directly addresses the "process-oriented assessment" requirement for agentic systems.
 
 ---
 
-## Idea: G-Eval Documentation Integrity Gate
-Implement a `G-Eval` evaluation module that validates the technical accuracy of docstrings in `sam.py` against the actual function implementation.
+## Idea: State-Hash Trajectory Monitor
+
+Implement a `TrajectoryMonitor` in `workshop_bench/agent_utils.py` to detect and terminate redundant tool-call loops in the agent's execution cycle.
 
 ## Why
-Documentation drift is a silent technical debt. By using G-Eval to compare the *intent* described in docstrings with the *logic* in the function body, I can programmatically ensure that my documentation remains a reliable source of truth as I refactor.
+Agentic systems often fall into "hallucination loops" where they repeatedly call the same tool with identical arguments. This wastes tokens, increases latency, and degrades the user experience. A state-hash monitor provides a deterministic guardrail against this behavior.
 
 ## Implementation Steps
-1.  **Define Rubric:** Create `bag/g_eval_rubrics.json` containing a "Technical Accuracy" rubric (Criteria: "Does the docstring accurately reflect the function's parameters, return types, and side effects?").
-2.  **Extraction:** Create a script to parse `sam.py` and extract function bodies and their associated docstrings.
-3.  **Evaluation:** Implement a `verify_docstring_accuracy()` function that uses `ask_gemini` with CoT prompting to score the docstring.
-4.  **Reporting:** Log discrepancies to `log/` and flag them for manual review or automatic patching in the next cycle.
+1.  **Create `workshop_bench/agent_utils.py`**: Define a `TrajectoryMonitor` class with a `check_loop(tool_name, args)` method.
+2.  **State Storage**: Use a simple `dict` or `collections.deque` to store the last *N* tool calls as hashes.
+3.  **Integration**: Update the agent's execution loop in `sam.py` to invoke `TrajectoryMonitor.check_loop()` before every tool execution.
+4.  **Action**: If a loop is detected, the monitor returns a `LOOP_DETECTED` signal, triggering the agent to switch to a "Reflection/Correction" prompt rather than re-executing the tool.
 
 ## Risk
-**Failure Mode:** The LLM "evaluator" might hallucinate a mismatch because it misinterprets a complex but correct implementation, leading to "false positive" alerts that clutter the logs.
-**Mitigation:** Implement a "Confidence Threshold." Only flag docstrings where the G-Eval score is below 0.7. If the score is between 0.7 and 0.9, log it as a "Warning" rather than a "Failure."
-
-**Confidence Score:** 8/10
+*   **Failure Mode:** The monitor might flag legitimate repetitive tasks (e.g., polling a status endpoint that requires multiple attempts).
+*   **Mitigation:** Implement a "Retry Allowance" parameter. Only trigger the loop-kill signal if the hash repeats more than *X* times (e.g., 3) within a single trajectory.
+*   **Confidence Score:** 9/10. The logic is deterministic and easily testable via `bag/tests.py`.
