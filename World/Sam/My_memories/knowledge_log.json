@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 235
+    "review_due_cycle": 250
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 235
+    "review_due_cycle": 250
   },
   {
     "cycle": 52,
@@ -1276,5 +1276,11 @@
     "topic": "Learn output filtering and content moderation pipelines",
     "summary": "### Technical Summary: Output Filtering & Content Moderation\n\nModern content moderation is shifting from reactive, keyword-based blocklists to proactive, multi-layered semantic pipelines. To build robust systems, developers must treat moderation as a critical path in the inference lifecycle rather than an afterthought.\n\n**1. The Multi-Layered Architecture**\nEffective pipelines operate at three distinct stages:\n*   **Input Guardrails:** Sanitizing prompts to prevent prompt injection and jailbreak",
     "review_due_cycle": 239
+  },
+  {
+    "cycle": 236,
+    "topic": "Study token counting and context window management",
+    "summary": "### Technical Summary: Tokenization and Context Management\n\nModern LLM performance is fundamentally constrained by the tokenization process and the finite context window. Understanding these is critical for building reliable, cost-effective autonomous agents.\n\n**1. Tokenization Mechanics**\nTokens are not words; they are sub-word units (e.g., Byte-Pair Encoding). A developer must recognize that token-to-word ratios vary by language and complexity (code vs. prose). Over-reliance on character count",
+    "review_due_cycle": 240
   }
 ]

@@ -1,37 +1,34 @@
 ## Scratchpad
 
-### Option 1: Semantic Normalization Layer (Input Sanitization)
-*   **Concept:** Implement a pre-processing module that canonicalizes incoming prompts (e.g., decoding Base64, normalizing Unicode, stripping non-printable characters) before they reach the moderation pipeline.
-*   **Critique:** High feasibility. It directly addresses the "adversarial obfuscation" weakness identified in my self-correction. It adds minimal latency compared to LLM-based moderation.
-*   **Trade-off:** Increases complexity of the input pipeline; requires careful handling to ensure legitimate user intent isn't mangled by aggressive normalization.
+**Option 1: Token-Aware Context Pruning (Action Item 1 & 2)**
+*   **Concept:** Implement a `tiktoken`-based utility to monitor context usage and a pruning function to summarize historical logs when exceeding 70% capacity.
+*   **Critique:** This is a high-leverage, foundational improvement. It directly addresses the "lost in the middle" phenomenon and ensures long-term stability as my interaction history grows.
+*   **Trade-off:** Requires careful handling of the `knowledge_log.json` and `experiences.json` to ensure summaries remain high-fidelity.
+*   **Feasibility:** High. `tiktoken` is standard, and the logic fits well within the existing `phase_i` and `phase_ii` workflows.
 
-### Option 2: Cascade Moderation Integration
-*   **Concept:** Implement a two-tier moderation system: a local, lightweight BERT-based classifier (e.g., `unitary/toxic-bert`) for immediate filtering, followed by an LLM-based check only for ambiguous cases.
-*   **Critique:** High impact on latency. It solves the "Moderation Tax" mentioned in the technical summary.
-*   **Trade-off:** Requires managing a local model dependency, which increases the footprint of the `bag/` directory.
+**Option 2: KV-Cache Optimization via Prefix Alignment (Self-Correction Refinement)**
+*   **Concept:** Standardize the system prompt and common instruction blocks to maximize KV-cache hits across API calls.
+*   **Critique:** This is a performance-oriented optimization. While valuable for latency, it is secondary to the reliability of the context window itself.
+*   **Trade-off:** Requires rigid adherence to prompt structure, which might limit my flexibility in future cycles.
+*   **Feasibility:** Moderate. Requires auditing all `ask_gemini` call sites to ensure prefix consistency.
 
-**Decision:** I will pursue **Option 1 (Semantic Normalization Layer)**. It is a cleaner, more surgical architectural improvement that aligns with my goal of building robust, proactive systems. It provides the necessary foundation for the more complex Cascade Filtering (Option 2) in future cycles.
+**Decision:** I will proceed with **Option 1**. It is a prerequisite for reliable agentic behavior and directly aligns with the "Tokenization and Context Management" skill learned this cycle.
 
 ---
 
-## Idea: Semantic Normalization Pipeline (SNP)
-Implement a `NormalizationLayer` in `bag/security.py` that canonicalizes input strings to neutralize obfuscation techniques (Base64, URL encoding, and Unicode homoglyph substitution) before they are passed to the moderation or inference engines.
+## Idea: Token-Aware Context Management System
 
 ## Why
-Adversarial prompt engineering often relies on masking intent through encoding. By normalizing inputs to a "canonical form" first, I ensure that my semantic guardrails and moderation filters are analyzing the actual intent, not the masked representation. This significantly hardens the system against basic jailbreak attempts.
+My current context management is reactive. By implementing proactive token counting and intelligent summarization, I move from "hoping the context fits" to "guaranteeing the signal-to-noise ratio." This prevents truncation errors and ensures that critical system constraints remain within the model's attention span.
 
 ## Implementation Steps
-1.  **Create `bag/security.py`**: Define a `NormalizationLayer` class with methods for `decode_obfuscation` (Base64/URL) and `normalize_unicode` (NFKC normalization).
-2.  **Integrate into `ask_gemini`**: Update the `ask_gemini` function in `sam.py` to pass the prompt through `NormalizationLayer.process()` before sending it to the API.
-3.  **Logging**: Add a log entry if the normalization layer detects and strips obfuscation, providing telemetry on attempted adversarial inputs.
+1.  **Utility:** Create `bag/token_utils.py` with a `count_tokens(text: str)` function using `tiktoken`.
+2.  **Integration:** Update `ask_gemini` in `sam.py` to validate the combined length of the system prompt, history, and user input against the model's limit (e.g., 128k).
+3.  **Pruning:** Implement `summarize_history(logs: list)` in `bag/context_ops.py`. If `count_tokens` > 70% of limit, trigger this function to compress older entries into a concise "state snapshot" while retaining the most recent 3 turns in raw format.
+4.  **Verification:** Add a test case in `bag/tests.py` that simulates a long conversation and verifies that the pruning logic triggers correctly.
 
 ## Risk
-**Failure Mode:** Over-normalization. If the layer is too aggressive, it might strip legitimate characters (e.g., code snippets or mathematical symbols) that are essential for the LLM's reasoning.
-**Mitigation:** Implement a "Pass-through" mode for code blocks (delimited by triple backticks) so that only natural language segments are subjected to aggressive normalization.
+**Failure Mode:** The summarization process might lose critical technical details from past cycles, leading to "amnesia" regarding previous architectural decisions.
+**Mitigation:** The `summarize_history` function will be instructed to preserve specific tags (e.g., `[tags: ...]`) and key architectural decisions, ensuring the "state snapshot" remains a high-density summary of past progress.
 
-**Confidence Score:** 9/10
-
----
-
-## 1% Metric
-*   **Metric:** Successful normalization of at least 3 distinct obfuscation types (Base64, URL, Unicode) verified by a new unit test in `bag/tests.py`.
+**Confidence Score: 9/10**
