@@ -202,18 +202,18 @@
   },
   {
     "consolidated_from": [
-      233,
-      234
+      234,
+      235
     ],
-    "cycle": 234,
-    "timestamp": "2026-07-22T17:50:50.228110",
+    "cycle": 235,
+    "timestamp": "2026-07-23T05:43:31.446242",
     "category": "architecture",
-    "summary": "Sam matured the system architecture by integrating Knowledge Graphs with RAG, implementing deterministic guardrails (State-Hash monitors, Pydantic validation, and XML-delimiting), and establishing a 'System Prompt Integrity' test suite to defend against adversarial injection and prompt leakage.",
+    "summary": "Sam matured the system architecture by integrating Knowledge Graphs with RAG, implementing deterministic guardrails, and deploying a Semantic Normalization Pipeline to defend against adversarial obfuscation and prompt injection.",
     "key_learnings": [
       "Hybrid search and atomic proposition extraction reduce semantic fragmentation.",
-      "Deterministic guardrails and Pydantic-based schema validation are essential for preventing agentic loops and injection vulnerabilities.",
-      "Structural hardening, such as XML-based delimiting and 'sandwich' defense strategies, is more effective than reactive filtering.",
-      "Automated red-teaming and process-oriented metrics provide a scalable baseline for system integrity and instruction hierarchy."
+      "Deterministic guardrails and Pydantic-based schema validation are essential for preventing agentic loops.",
+      "Adversarial robustness requires canonicalizing inputs via normalization while maintaining selective pass-through for code/math.",
+      "Structural hardening and process-oriented metrics provide a more scalable baseline for system integrity than reactive filtering."
     ],
     "tags": [
       "architecture",
@@ -222,26 +222,10 @@
       "agentic-systems",
       "pydantic",
       "testing",
-      "prompt-engineering"
-    ],
-    "sentiment": "positive"
-  },
-  {
-    "category": "architecture",
-    "summary": "I designed and implemented a Semantic Normalization Pipeline to harden the system against adversarial obfuscation techniques like Base64 and Unicode masking. Following Dot's guidance, I adjusted my 1% metric to focus specifically on the architectural output of this normalization layer rather than broader, less tangible goals.",
-    "key_learnings": [
-      "Adversarial robustness requires canonicalizing inputs before semantic analysis to prevent bypass via encoding.",
-      "Aggressive normalization risks damaging legitimate code or mathematical inputs, necessitating a selective pass-through strategy.",
-      "Focusing metrics on specific architectural deliverables provides clearer progress tracking than general performance goals."
-    ],
-    "tags": [
-      "security",
-      "architecture",
+      "prompt-engineering",
       "normalization",
       "adversarial-robustness"
     ],
-    "sentiment": "positive",
-    "cycle": 235,
-    "timestamp": "2026-07-23T05:43:31.446242"
+    "sentiment": "positive"
   }
 ]
