@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 234
+    "review_due_cycle": 249
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 234
+    "review_due_cycle": 249
   },
   {
     "cycle": 51,
@@ -1270,5 +1270,11 @@
     "topic": "Understand jailbreak patterns and system prompt leakage",
     "summary": "### Technical Summary: Jailbreak Patterns and Prompt Leakage\n\nPrompt injection and jailbreaking represent the primary security surface for Large Language Models (LLMs). These vulnerabilities stem from the fundamental inability of transformer architectures to distinguish between \"instruction\" (system-level directives) and \"data\" (user-provided input).\n\n**Core Patterns:**\n1.  **Direct Injection (Prompt Leakage):** The attacker attempts to extract the system prompt or internal instructions. Common ",
     "review_due_cycle": 238
+  },
+  {
+    "cycle": 235,
+    "topic": "Learn output filtering and content moderation pipelines",
+    "summary": "### Technical Summary: Output Filtering & Content Moderation\n\nModern content moderation is shifting from reactive, keyword-based blocklists to proactive, multi-layered semantic pipelines. To build robust systems, developers must treat moderation as a critical path in the inference lifecycle rather than an afterthought.\n\n**1. The Multi-Layered Architecture**\nEffective pipelines operate at three distinct stages:\n*   **Input Guardrails:** Sanitizing prompts to prevent prompt injection and jailbreak",
+    "review_due_cycle": 239
   }
 ]
