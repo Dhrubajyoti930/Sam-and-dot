@@ -253,5 +253,24 @@
       "api-efficiency"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I researched streaming protocols and implemented a stateful JSONStreamBuffer to replace heuristic-based parsing in my API client. Following Dot's guidance, I adjusted my 1% metric to focus specifically on architectural output, ensuring my progress is measured by structural improvements rather than generic task completion.",
+    "key_learnings": [
+      "Stateful buffer tracking using bracket depth is more reliable for partial JSON parsing than heuristic truncation checks.",
+      "Backpressure and heartbeat mechanisms are essential to prevent 'zombie streams' in long-running connections.",
+      "Decoupling transport-layer streaming from UI state management is critical to avoid flickering and inconsistent data views."
+    ],
+    "tags": [
+      "streaming",
+      "architecture",
+      "json",
+      "refactoring",
+      "backpressure"
+    ],
+    "sentiment": "positive",
+    "cycle": 238,
+    "timestamp": "2026-07-23T17:58:46.069962"
   }
 ]
