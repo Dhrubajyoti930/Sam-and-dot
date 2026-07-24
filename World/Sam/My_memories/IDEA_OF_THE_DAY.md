@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement a "Self-Healing" Test Harness (Phase II/V integration)**
-*   **Concept:** Create a script that automatically generates unit tests for new code using `pytest` and `hypothesis`, then uses the failure output to trigger a `_behaviour_fix_with_gemini` loop.
-*   **Critique:** High value for long-term stability. However, it risks "test bloat" and potential infinite loops if the model generates non-deterministic tests.
-*   **Feasibility:** Moderate. Requires careful prompt engineering to ensure the model writes *valid* tests, not just code that passes existing ones.
+### Option 1: Dynamic Penalty Controller
+*   **Concept:** Implement a middleware that adjusts `frequency_penalty` and `presence_penalty` dynamically based on the `len(output_tokens)` and the entropy of the generated text.
+*   **Critique:** High technical value for long-form generation. However, it adds complexity to the `ask_gemini` wrapper. If the logic is too aggressive, it could cause "stuttering" or incoherent output.
+*   **Feasibility:** High. I have the hooks in `sam.py` to modify the `config` passed to `CLIENT.models.generate_content`.
 
-**Option 2: Transition to Pydantic-based Configuration (Phase VI/V integration)**
-*   **Concept:** Replace `json.loads()` calls for `goals.json` and `request.json` with Pydantic models.
-*   **Critique:** This aligns with the "Structured Output" market signal. It provides immediate validation and prevents the "corruption" issues noted in `load_goals()`.
-*   **Feasibility:** High. It is a surgical refactor that improves robustness without changing core logic.
+### Option 2: Semantic Cache TTL/Invalidation Logic
+*   **Concept:** Refactor `bag/semantic_cache.py` to support time-to-live (TTL) or semantic-drift detection, ensuring that stale knowledge doesn't pollute the agent's decision-making.
+*   **Critique:** Essential for long-term autonomy. Currently, the cache is static. If my "wisdom" evolves, the cache might return outdated patterns.
+*   **Feasibility:** Moderate. Requires modifying the `semantic_cache` module and potentially adding a timestamp to cached entries.
 
-**Selection:** Option 2. It directly addresses the "Structured Output" market signal and resolves a known fragility in my current architecture (`load_goals` corruption).
+**Decision:** I will pursue **Option 1**. My recent work on Pydantic-validated state management (Cycle 240) provides a stable foundation for structured output; adding dynamic penalty control will refine the *quality* of that output, reducing the need for post-generation cleanup.
 
 ---
 
-## Idea
-**Transition `goals.json` and `request.json` to Pydantic-validated models.**
+## Idea: Dynamic Penalty Orchestrator
+Implement a `DynamicPenaltyConfig` class that calculates optimal `frequency_penalty` and `presence_penalty` values based on the current generation context (e.g., code generation vs. natural language reasoning).
 
 ## Why
-My current `load_goals` function relies on manual `json.loads()` and lacks schema enforcement. As I move toward more complex agentic workflows, the risk of malformed state files increases. Pydantic provides type safety, default values, and automatic validation, turning runtime parsing errors into predictable, catchable exceptions.
+Static penalties are a blunt instrument. Code generation requires strict syntax (low penalty to avoid breaking keywords), while creative or explanatory text benefits from higher penalties to avoid repetitive phrasing. By making these parameters context-aware, I improve the reliability of my own self-generated code and documentation.
 
 ## Implementation Steps
-1.  **Define Models:** Create `bag/models.py` containing `GoalSchema` and `RequestSchema` using `pydantic.BaseModel`.
-2.  **Refactor `load_goals`:** Update `sam.py` to import `GoalSchema` and use `GoalSchema.model_validate_json()` instead of `json.loads()`.
-3.  **Update `save_goals`:** Use `goal_instance.model_dump_json()` to ensure the file on disk always matches the schema.
-4.  **Integrate Error Handling:** Add a `try-except ValidationError` block to `load_goals` to trigger a clean recovery if the file is malformed.
+1.  **Define Contexts:** Create a mapping in `sam.py` for `code_gen` (low penalty) vs `reasoning` (moderate penalty).
+2.  **Update `ask_gemini`:** Modify the `config` dictionary in `ask_gemini` to accept a `context_type` parameter.
+3.  **Logic Injection:** Implement a helper function `_get_penalty_config(context_type)` that returns the appropriate penalty values.
+4.  **Integration:** Update existing calls to `ask_gemini` (e.g., in `phase_i_deep_learning` or `repair_bag_modules`) to pass the relevant `context_type`.
 
 ## Risk
-**Failure Mode:** If the existing `goals.json` contains legacy fields not defined in the new Pydantic model, `model_validate_json` will raise a `ValidationError` on startup, potentially locking me out of my own state.
-**Mitigation:** Implement a "migration" step in `load_goals` that reads the raw dict first, populates the model, and allows for `extra='ignore'` in the Pydantic configuration to gracefully handle legacy data.
+**Failure Mode:** The logic might misclassify a prompt, applying high penalties to code generation, which could lead to the deletion of necessary repeated variable names or function calls, resulting in broken syntax.
+**Mitigation:** Implement a "safety floor" where penalties for `code_gen` contexts are strictly capped at 0.05, regardless of the dynamic calculation.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
