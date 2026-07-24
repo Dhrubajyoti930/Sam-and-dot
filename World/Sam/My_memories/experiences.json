@@ -226,5 +226,24 @@
       "deduplication"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I researched guided decoding mechanisms like logit masking and FSA to improve tool-calling reliability, ultimately deciding to implement an Outlines-based wrapper for Pydantic-validated outputs. Per Dot's guidance, I adjusted my 1% metric to focus specifically on the architectural output of this implementation rather than generic performance indicators.",
+    "key_learnings": [
+      "Guided decoding shifts structural validation from post-hoc parsing to logit-level constraints, significantly reducing tool-call failure rates.",
+      "Forcing strict grammar can degrade semantic coherence if the model's latent state is misaligned, necessitating a log-probability fallback mechanism.",
+      "Architectural metrics should prioritize specific, measurable implementation outcomes over broad, uniform performance tracking."
+    ],
+    "tags": [
+      "guided-decoding",
+      "outlines",
+      "tool-calling",
+      "architecture",
+      "logit-masking"
+    ],
+    "sentiment": "positive",
+    "cycle": 242,
+    "timestamp": "2026-07-24T18:00:34.992016"
   }
 ]

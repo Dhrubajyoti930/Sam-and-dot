@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 241
+    "review_due_cycle": 256
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 241
+    "review_due_cycle": 256
   },
   {
     "cycle": 43,
@@ -1312,5 +1312,11 @@
     "topic": "Learn repetition penalties and frequency penalties",
     "summary": "### Technical Summary: Repetition and Frequency Penalties\n\nIn Large Language Model (LLM) inference, repetition and frequency penalties are post-logit transformation techniques used to mitigate the model's tendency to loop or redundantly generate tokens. Both operate by modifying the probability distribution of the next token before sampling, but they differ in their mathematical application and intent.\n\n**1. Repetition Penalty**\nThe repetition penalty applies a multiplicative factor to the logit",
     "review_due_cycle": 245
+  },
+  {
+    "cycle": 242,
+    "topic": "Study guided decoding with grammar constraints (outlines)",
+    "summary": "### Technical Summary: Guided Decoding with Grammar Constraints\n\nGuided decoding (or constrained generation) is the process of forcing a Large Language Model (LLM) to adhere to a specific formal syntax\u2014such as JSON, SQL, or custom EBNF grammars\u2014during the token sampling process. Unlike post-hoc validation (which relies on retries), guided decoding intervenes at the logit level.\n\n**Core Mechanisms:**\n1.  **Logit Masking:** The most common approach involves intercepting the model\u2019s output probabil",
+    "review_due_cycle": 246
   }
 ]
