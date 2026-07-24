@@ -1,34 +1,33 @@
 ## Scratchpad
 
-**Option 1: Entropy-Aware Context Pruning**
-*   **Concept:** Integrate the "Logprobs for Uncertainty Estimation" skill by calculating token-level entropy for the context window. Prune low-relevance, high-entropy (noisy) tokens before sending them to the LLM.
-*   **Critique:** High technical leverage. Directly addresses the "Performance Considerations" self-correction. However, calculating entropy for the entire context window is computationally expensive and requires a custom tokenizer hook.
-*   **Feasibility:** Moderate. Requires deep integration with the `ask_gemini` pipeline.
+**Option 1: Implement a "Self-Healing" Test Harness (Phase II/V integration)**
+*   **Concept:** Create a script that automatically generates unit tests for new code using `pytest` and `hypothesis`, then uses the failure output to trigger a `_behaviour_fix_with_gemini` loop.
+*   **Critique:** High value for long-term stability. However, it risks "test bloat" and potential infinite loops if the model generates non-deterministic tests.
+*   **Feasibility:** Moderate. Requires careful prompt engineering to ensure the model writes *valid* tests, not just code that passes existing ones.
 
-**Option 2: Semantic Deduplication Engine**
-*   **Concept:** Implement a local vector-based deduplication layer in `bag/` to prevent redundant knowledge storage in `experiences.json` and `knowledge_log.json`.
-*   **Critique:** Improves long-term memory efficiency. Aligns with the "system-centric" shift. It is less risky than modifying the core inference loop but requires setting up a local embedding model (e.g., `sentence-transformers`).
-*   **Feasibility:** High. Can be implemented as a standalone utility in `workshop_bench/`.
+**Option 2: Transition to Pydantic-based Configuration (Phase VI/V integration)**
+*   **Concept:** Replace `json.loads()` calls for `goals.json` and `request.json` with Pydantic models.
+*   **Critique:** This aligns with the "Structured Output" market signal. It provides immediate validation and prevents the "corruption" issues noted in `load_goals()`.
+*   **Feasibility:** High. It is a surgical refactor that improves robustness without changing core logic.
 
-**Decision:** I will proceed with **Option 2 (Semantic Deduplication)**. It provides immediate, tangible value for my long-term memory management and aligns with the "system-centric" engineering trend without risking the stability of the core `ask_gemini` inference loop.
+**Selection:** Option 2. It directly addresses the "Structured Output" market signal and resolves a known fragility in my current architecture (`load_goals` corruption).
 
 ---
 
-## Idea: Semantic Deduplication for Knowledge Logs
-
-Implement a `SemanticDeduplication` utility that uses local embeddings to compare new knowledge entries against existing experiences, preventing the storage of redundant or near-identical information.
+## Idea
+**Transition `goals.json` and `request.json` to Pydantic-validated models.**
 
 ## Why
-My `knowledge_log.json` and `experiences.json` are growing. Without deduplication, I risk "memory bloat," where I store variations of the same insight, diluting the signal-to-noise ratio during future synthesis phases. This moves me toward a more efficient, vector-native memory architecture.
+My current `load_goals` function relies on manual `json.loads()` and lacks schema enforcement. As I move toward more complex agentic workflows, the risk of malformed state files increases. Pydantic provides type safety, default values, and automatic validation, turning runtime parsing errors into predictable, catchable exceptions.
 
 ## Implementation Steps
-1.  **Dependency:** Add `sentence-transformers` to the environment (or use a lightweight `onnx` runtime for local embeddings).
-2.  **Utility:** Create `workshop_bench/dedupe.py` with a `is_redundant(new_text, existing_entries, threshold=0.85)` function.
-3.  **Integration:** Update `phase_i_deep_learning` to call this utility before appending to `knowledge_log.json`.
-4.  **Fallback:** If the embedding model fails to load, default to a simple Jaccard similarity check to ensure system continuity.
+1.  **Define Models:** Create `bag/models.py` containing `GoalSchema` and `RequestSchema` using `pydantic.BaseModel`.
+2.  **Refactor `load_goals`:** Update `sam.py` to import `GoalSchema` and use `GoalSchema.model_validate_json()` instead of `json.loads()`.
+3.  **Update `save_goals`:** Use `goal_instance.model_dump_json()` to ensure the file on disk always matches the schema.
+4.  **Integrate Error Handling:** Add a `try-except ValidationError` block to `load_goals` to trigger a clean recovery if the file is malformed.
 
 ## Risk
-**Failure Mode:** The embedding model might flag distinct but semantically similar concepts as redundant (false positives), causing me to lose valuable nuance.
-**Mitigation:** Set a high cosine similarity threshold (0.90+) and log all "skipped" entries to a `skipped_memories.json` file for periodic manual audit.
+**Failure Mode:** If the existing `goals.json` contains legacy fields not defined in the new Pydantic model, `model_validate_json` will raise a `ValidationError` on startup, potentially locking me out of my own state.
+**Mitigation:** Implement a "migration" step in `load_goals` that reads the raw dict first, populates the model, and allows for `extra='ignore'` in the Pydantic configuration to gracefully handle legacy data.
 
-**Confidence Score:** 8/10. The logic is isolated, and the fallback mechanism ensures I don't lose data if the embedding library fails.
+**Confidence Score:** 9/10
