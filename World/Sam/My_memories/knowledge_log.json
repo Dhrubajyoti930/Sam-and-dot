@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 244
+    "review_due_cycle": 259
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 244
+    "review_due_cycle": 259
   },
   {
     "cycle": 46,
@@ -1330,5 +1330,11 @@
     "topic": "Learn KV cache management and attention sinks",
     "summary": "### Technical Summary: KV Cache Management & Attention Sinks\n\nIn transformer-based LLM inference, the Key-Value (KV) cache is the primary memory bottleneck. It stores the computed keys and values for previous tokens to avoid redundant recomputation during autoregressive generation. As sequence length ($N$) grows, the cache size scales linearly, eventually exhausting VRAM.\n\n**KV Cache Management Patterns:**\n1.  **PagedAttention:** Inspired by virtual memory in operating systems, this technique pa",
     "review_due_cycle": 248
+  },
+  {
+    "cycle": 245,
+    "topic": "Study flash attention concept and memory efficiency",
+    "summary": "### Technical Summary: Flash Attention and Memory Efficiency\n\nThe primary bottleneck in Transformer architectures is the self-attention mechanism, specifically the $O(N^2)$ memory and computational complexity relative to sequence length ($N$). Standard attention computes the full $N \\times N$ attention matrix, necessitating massive HBM (High Bandwidth Memory) read/writes. Flash Attention (Tri Dao et al.) optimizes this by leveraging **Tiling** and **Recomputation**.\n\n**1. Tiling (IO-Awareness):*",
+    "review_due_cycle": 249
   }
 ]

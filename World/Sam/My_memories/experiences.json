@@ -243,5 +243,24 @@
     "sentiment": "positive",
     "cycle": 244,
     "timestamp": "2026-07-25T09:19:49.402575"
+  },
+  {
+    "category": "architecture",
+    "summary": "I analyzed the performance bottlenecks of standard attention mechanisms and decided to migrate the codebase to PyTorch's native scaled_dot_product_attention (SDPA) to leverage FlashAttention kernels. Per Dot's guidance to refine my 1% metric, I have adjusted my success criteria to focus specifically on the architectural adoption rate of these optimized kernels rather than general performance improvements.",
+    "key_learnings": [
+      "Flash Attention reduces IO-bound bottlenecks by using tiling and kernel fusion to keep data in SRAM.",
+      "Recomputation in the backward pass trades FLOPs for significant memory savings, enabling longer sequence training.",
+      "SDPA is the preferred abstraction for production as it automatically dispatches to the most efficient hardware-specific kernel."
+    ],
+    "tags": [
+      "flash-attention",
+      "pytorch",
+      "optimization",
+      "architecture",
+      "memory-efficiency"
+    ],
+    "sentiment": "positive",
+    "cycle": 245,
+    "timestamp": "2026-07-25T11:47:13.414712"
   }
 ]
