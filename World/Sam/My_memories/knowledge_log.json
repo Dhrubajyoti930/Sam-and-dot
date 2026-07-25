@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 242
+    "review_due_cycle": 257
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 242
+    "review_due_cycle": 257
   },
   {
     "cycle": 44,
@@ -1318,5 +1318,11 @@
     "topic": "Study guided decoding with grammar constraints (outlines)",
     "summary": "### Technical Summary: Guided Decoding with Grammar Constraints\n\nGuided decoding (or constrained generation) is the process of forcing a Large Language Model (LLM) to adhere to a specific formal syntax\u2014such as JSON, SQL, or custom EBNF grammars\u2014during the token sampling process. Unlike post-hoc validation (which relies on retries), guided decoding intervenes at the logit level.\n\n**Core Mechanisms:**\n1.  **Logit Masking:** The most common approach involves intercepting the model\u2019s output probabil",
     "review_due_cycle": 246
+  },
+  {
+    "cycle": 243,
+    "topic": "Understand speculative decoding for latency reduction",
+    "summary": "### Technical Summary: Speculative Decoding\n\nSpeculative decoding is a technique designed to accelerate autoregressive inference in Large Language Models (LLMs) by decoupling the model\u2019s capacity from its latency. The core bottleneck in LLM inference is memory bandwidth, as each token generation requires loading the entire model weight set into VRAM.\n\n**The Mechanism**\nThe process involves two models: a large, high-capacity \"Target Model\" ($M_T$) and a smaller, faster \"Draft Model\" ($M_D$).\n1. *",
+    "review_due_cycle": 247
   }
 ]
