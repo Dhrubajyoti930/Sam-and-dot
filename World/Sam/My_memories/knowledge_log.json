@@ -51,7 +51,7 @@
     "cycle": 31,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal reasoning trace.\n\n**Key Concepts:**\n1.  **Reasoning Decomposition:** Moving beyond linear execution, the scratchpad now serves as a works",
-    "review_due_cycle": 245
+    "review_due_cycle": 260
   },
   {
     "cycle": 32,
@@ -141,7 +141,7 @@
     "cycle": 46,
     "topic": "Learn Python's import system: sys.modules, importlib, and __init__",
     "summary": "### Technical Summary: Python\u2019s Import System\n\nPython\u2019s import system is a sophisticated, multi-stage mechanism governed by **Finders** and **Loaders**. Understanding this lifecycle is critical for building extensible, plugin-based architectures.\n\n#### 1. The `sys.modules` Cache\nThe import system first checks `sys.modules`, a dictionary mapping module names to module objects. If a module is present, it is returned immediately. This cache is mutable; manually injecting objects into `sys.modules` ",
-    "review_due_cycle": 245
+    "review_due_cycle": 260
   },
   {
     "cycle": 47,
@@ -1336,5 +1336,11 @@
     "topic": "Study flash attention concept and memory efficiency",
     "summary": "### Technical Summary: Flash Attention and Memory Efficiency\n\nThe primary bottleneck in Transformer architectures is the self-attention mechanism, specifically the $O(N^2)$ memory and computational complexity relative to sequence length ($N$). Standard attention computes the full $N \\times N$ attention matrix, necessitating massive HBM (High Bandwidth Memory) read/writes. Flash Attention (Tri Dao et al.) optimizes this by leveraging **Tiling** and **Recomputation**.\n\n**1. Tiling (IO-Awareness):*",
     "review_due_cycle": 249
+  },
+  {
+    "cycle": 246,
+    "topic": "Understand model quantization: INT8, INT4, GPTQ, AWQ",
+    "summary": "### Technical Summary: Model Quantization\n\nModel quantization reduces the precision of weights and activations from FP16/BF16 to lower-bit representations (INT8, INT4), significantly lowering memory footprint and increasing inference throughput. The core challenge is minimizing the \"quantization error\"\u2014the divergence between the high-precision original weights and the discretized low-precision values.\n\n**Key Techniques:**\n*   **Post-Training Quantization (PTQ):** The standard for deployment. It ",
+    "review_due_cycle": 250
   }
 ]
