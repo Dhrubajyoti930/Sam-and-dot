@@ -1,32 +1,35 @@
 ## Scratchpad
 
-**Option 1: Speculative Decoding Integration (Inference Optimization)**
-*   **Concept:** Implement a draft-model verification loop within the `ask_gemini` pipeline (or a local proxy) to accelerate token generation.
-*   **Critique:** High technical complexity. Requires managing a secondary model (e.g., TinyLlama) and complex KV cache alignment. While it aligns with the "Speculative Decoding" skill learned, it may be overkill for Sam’s current communication-heavy, low-latency-requirement workflow.
-*   **Feasibility:** Moderate. The math is well-defined, but the infrastructure overhead is high.
+### Option 1: KV Cache Block Manager (PagedAttention)
+*   **Concept:** Implement a `BlockManager` class in `workshop_bench/` to manage non-contiguous VRAM blocks for the inference engine.
+*   **Critique:** High impact on throughput. However, it requires significant low-level memory management (tracking block indices, mapping to physical VRAM).
+*   **Feasibility:** Moderate. Requires careful handling of `torch` tensors or `numpy` buffers to avoid memory leaks.
+*   **Maintainability:** High, if encapsulated well.
 
-**Option 2: Structured Output Enforcement (Reliability Hardening)**
-*   **Concept:** Replace manual JSON parsing in `_parse_gemini_json` with a more robust, schema-first approach using `Instructor` or a custom Pydantic-based validator that forces the LLM to retry on schema violations.
-*   **Critique:** High impact on stability. Sam’s current `_parse_gemini_json` is fragile when faced with complex nested structures. This directly addresses the "Structured Output Enforcement" market trend.
-*   **Feasibility:** High. It leverages existing Pydantic knowledge and improves the "glue" layer of the architecture.
+### Option 2: Sink-Aware Cache Eviction
+*   **Concept:** Refactor the sliding window cache to pin the first 4 tokens (attention sinks) and implement a circular buffer for the remaining $N$ tokens.
+*   **Critique:** Lower complexity than PagedAttention but addresses the "catastrophic performance degradation" mentioned in the skill summary.
+*   **Feasibility:** High. It is a surgical modification to existing cache logic.
+*   **Maintainability:** Excellent. It is a localized, deterministic logic change.
 
-**Decision:** Option 2 is superior for long-term maintainability. It reduces the "hallucination of structure" and makes the `apply_patch_operations` logic significantly more resilient.
+**Decision:** I will proceed with **Option 2 (Sink-Aware Cache Eviction)**. It provides immediate stability for long-context inference without the architectural overhead of a full PagedAttention implementation, which is better suited for a multi-cycle project.
 
 ---
 
-## Idea: Pydantic-Driven Schema Enforcement for Patch Operations
+## Idea: Sink-Aware KV Cache Pinning
+Implement a "sink-aware" eviction policy in the local inference engine that preserves the first 4 tokens (attention sinks) while rotating the remaining tokens in the KV cache.
 
 ## Why
-Sam’s current `_parse_gemini_json` relies on regex-based extraction, which is prone to failure if the LLM includes conversational filler or malformed JSON. By formalizing the patch operation schema using Pydantic and implementing a "retry-on-failure" loop, I can eliminate the need for manual cleanup of patch JSON, ensuring that `apply_patch_operations` receives perfectly typed input every time.
+Standard sliding window eviction often discards the initial tokens of a sequence. Research shows these tokens act as "attention sinks" that stabilize the model's attention weights. Preserving them prevents the perplexity spikes observed during long-sequence generation.
 
 ## Implementation Steps
-1.  **Define Schema:** Create `bag/schemas.py` containing a `PatchOperation` Pydantic model with strict validation for `operation` (replace/delete/insert_after) and required fields.
-2.  **Refactor Parser:** Update `_parse_gemini_json` in `sam.py` to accept a `Type[BaseModel]` and use `model_validate_json` for strict enforcement.
-3.  **Implement Retry Logic:** Modify `apply_self_modification` to catch validation errors and re-prompt Gemini with the specific schema violation error, forcing a correction.
-4.  **Integrate:** Update `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to utilize the new schema-validated parsing.
+1.  **Identify Cache Module:** Locate the current sliding window implementation in `workshop_bench/`.
+2.  **Modify Eviction Logic:** Update the `evict()` method to slice the cache: `[0:4]` (pinned) + `[4:]` (rotating).
+3.  **Update Buffer:** Ensure the rotating portion uses a circular buffer index to minimize array copying.
+4.  **Verification:** Run a test case with a sequence length $2\times$ the window size to ensure the first 4 tokens remain constant while the rest shift.
 
 ## Risk
-**Failure Mode:** The LLM enters a "correction loop" where it repeatedly generates the same invalid JSON despite error feedback, consuming cycle time and API quota.
-**Mitigation:** Implement a hard limit of 2 retries per patch request. If validation fails after 2 attempts, fall back to a "human-in-the-loop" alert to Dot.
+**Failure Mode:** If the model's architecture (e.g., specific positional embedding types) does not rely on initial tokens as sinks, pinning them might waste cache space or introduce bias.
+**Mitigation:** Add a configuration flag `PIN_SINKS=True` to allow toggling this behavior if performance metrics (perplexity) degrade.
 
 **Confidence Score:** 9/10

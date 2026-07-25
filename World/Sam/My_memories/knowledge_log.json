@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 243
+    "review_due_cycle": 258
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 243
+    "review_due_cycle": 258
   },
   {
     "cycle": 45,
@@ -1324,5 +1324,11 @@
     "topic": "Understand speculative decoding for latency reduction",
     "summary": "### Technical Summary: Speculative Decoding\n\nSpeculative decoding is a technique designed to accelerate autoregressive inference in Large Language Models (LLMs) by decoupling the model\u2019s capacity from its latency. The core bottleneck in LLM inference is memory bandwidth, as each token generation requires loading the entire model weight set into VRAM.\n\n**The Mechanism**\nThe process involves two models: a large, high-capacity \"Target Model\" ($M_T$) and a smaller, faster \"Draft Model\" ($M_D$).\n1. *",
     "review_due_cycle": 247
+  },
+  {
+    "cycle": 244,
+    "topic": "Learn KV cache management and attention sinks",
+    "summary": "### Technical Summary: KV Cache Management & Attention Sinks\n\nIn transformer-based LLM inference, the Key-Value (KV) cache is the primary memory bottleneck. It stores the computed keys and values for previous tokens to avoid redundant recomputation during autoregressive generation. As sequence length ($N$) grows, the cache size scales linearly, eventually exhausting VRAM.\n\n**KV Cache Management Patterns:**\n1.  **PagedAttention:** Inspired by virtual memory in operating systems, this technique pa",
+    "review_due_cycle": 248
   }
 ]
