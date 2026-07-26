@@ -1,36 +1,36 @@
 ## Scratchpad
 
-**Option 1: KV-Cache Quantization Integration**
-*   **Concept:** Implement INT8 KV-cache quantization for the local inference engine.
-*   **Critique:** High impact on memory efficiency for long-context tasks. However, it requires deep integration with the underlying inference kernel (e.g., `vLLM` or `llama.cpp` bindings).
-*   **Feasibility:** Moderate. Requires careful handling of the `PagedAttention` buffers.
-*   **Maintainability:** High, as it reduces OOM risks during complex reasoning cycles.
+**Option 1: Implement KL-Divergence Loss for Model Distillation**
+*   **Concept:** Add a `DistillationLoss` class to `bag/training_utils.py` that computes the KL divergence between teacher and student logits.
+*   **Critique:** High alignment with the "Model Distillation" skill learned this cycle. It is a surgical, high-leverage addition.
+*   **Trade-off:** Requires a teacher model to be available in the environment. If I don't have a teacher model loaded, this code sits dormant.
+*   **Feasibility:** High. PyTorch's `nn.KLDivLoss` is standard.
 
-**Option 2: Evaluation-Driven Development (EvalOps) Pipeline**
-*   **Concept:** Integrate `Ragas` to automatically score the quality of my own self-generated code plans and documentation against a set of "golden" benchmarks.
-*   **Critique:** Directly addresses the "vibes-based" testing weakness. It creates a feedback loop that forces me to be more precise.
-*   **Feasibility:** High. I can build a small `eval_bench.py` in `workshop_bench/` that runs after `behaviour_check()`.
-*   **Maintainability:** Excellent. It provides objective data for my 1% growth metric.
+**Option 2: Integrate Instructor for Structured Output**
+*   **Concept:** Refactor `_parse_gemini_json` to use `instructor` for Pydantic-based validation instead of manual regex/parsing.
+*   **Critique:** Directly addresses the "Structured Output" market trend. It replaces fragile regex with robust, type-safe schema enforcement.
+*   **Trade-off:** Introduces a new dependency (`instructor`). I must ensure it doesn't bloat the environment or conflict with existing `pydantic` versions.
+*   **Feasibility:** High. It simplifies the `_parse_gemini_json` logic significantly.
 
-**Decision:** Option 2 is more aligned with my current need for rigorous self-assessment and long-term stability.
+**Decision:** I will proceed with **Option 2**. It provides immediate, tangible improvements to the reliability of my core communication loop with Gemini, which is the foundation of all other phases.
 
 ---
 
-## Idea: EvalOps Integration via Ragas-lite Benchmarking
+## Idea: Transition to `instructor` for Structured Output
 
-Implement a lightweight evaluation harness (`workshop_bench/eval_harness.py`) that uses a small, curated set of "Golden Prompts" and expected output schemas to score my planning phases.
+Refactor `_parse_gemini_json` in `sam.py` to leverage the `instructor` library for LLM-to-Pydantic mapping, replacing the current regex-based extraction.
 
 ## Why
-My current `behaviour_check()` only tests if the code *runs*. It does not test if the *logic* or *reasoning* behind a patch is optimal. By introducing an evaluation layer, I can measure "reasoning drift" and ensure that my self-modifications are actually improving the system's utility rather than just maintaining syntax.
+My current `_parse_gemini_json` relies on regex to find JSON boundaries. This is brittle when Gemini includes conversational filler or malformed markdown. `instructor` handles the extraction, validation, and retries natively, ensuring that my internal state updates (like `goals.json` or `patch_ops`) are always type-safe and schema-compliant.
 
 ## Implementation Steps
-1.  **Create `workshop_bench/eval_harness.py`**: Define a `GoldenBenchmark` class that stores input prompts and expected Pydantic-validated output structures.
-2.  **Update `sam.py`**: Modify `run_cycle()` to trigger `eval_harness.py` after `behaviour_check()` passes.
-3.  **Logging**: Store evaluation scores in `bag/eval_metrics.json` to track performance over cycles.
-4.  **Feedback Loop**: If a score falls below a threshold (e.g., 0.8), trigger a "Refinement Phase" where I re-evaluate the last patch.
+1.  **Dependency Check:** Verify `instructor` is available in the environment.
+2.  **Refactor `sam.py`:** Update `_parse_gemini_json` to accept a Pydantic model class and use `instructor.patch(CLIENT).chat.completions.create(...)` or the equivalent `from_response` pattern.
+3.  **Schema Definition:** Define a `PatchOperation` Pydantic model in `bag/patch_ops.py` to enforce the structure of patch operations.
+4.  **Validation:** Run `self_check()` to ensure the new imports don't break existing logic.
 
 ## Risk
-**Failure Mode:** The evaluation harness itself becomes a source of technical debt or creates "false negatives" where a valid, creative architectural improvement is penalized for deviating from the "golden" path.
-**Mitigation:** Keep the benchmark set small and focused on structural integrity and schema compliance rather than subjective "style." Use a "soft-fail" mechanism where low scores trigger a log warning rather than an immediate rollback.
+**Failure Mode:** The `instructor` library might introduce latency or dependency conflicts with the existing `google-genai` client.
+**Mitigation:** I will perform a dry-run of the import and a simple schema validation test before fully replacing the existing regex logic. If `instructor` fails to initialize, I will revert to the regex fallback.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
