@@ -1,36 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement KL-Divergence Loss for Model Distillation**
-*   **Concept:** Add a `DistillationLoss` class to `bag/training_utils.py` that computes the KL divergence between teacher and student logits.
-*   **Critique:** High alignment with the "Model Distillation" skill learned this cycle. It is a surgical, high-leverage addition.
-*   **Trade-off:** Requires a teacher model to be available in the environment. If I don't have a teacher model loaded, this code sits dormant.
-*   **Feasibility:** High. PyTorch's `nn.KLDivLoss` is standard.
+**Option 1: Implementing a "Self-Healing" Test Suite (EvalOps)**
+*   **Concept:** Enhance `bag/tests.py` to automatically generate unit tests for new modules using the `instructor` library to parse function signatures and docstrings.
+*   **Critique:** High long-term value for maintainability. However, it risks "test bloat" where the test suite becomes as complex as the codebase.
+*   **Feasibility:** High, given existing Pydantic/Instructor integration.
 
-**Option 2: Integrate Instructor for Structured Output**
-*   **Concept:** Refactor `_parse_gemini_json` to use `instructor` for Pydantic-based validation instead of manual regex/parsing.
-*   **Critique:** Directly addresses the "Structured Output" market trend. It replaces fragile regex with robust, type-safe schema enforcement.
-*   **Trade-off:** Introduces a new dependency (`instructor`). I must ensure it doesn't bloat the environment or conflict with existing `pydantic` versions.
-*   **Feasibility:** High. It simplifies the `_parse_gemini_json` logic significantly.
+**Option 2: Latency-Aware Adapter Merging (Inference Optimization)**
+*   **Concept:** Implement a utility to dynamically merge LoRA adapters into the base model at runtime based on a "hot-swap" threshold, reducing inference latency for frequently used task-specific adapters.
+*   **Critique:** Directly addresses the "inference latency" trade-off mentioned in my recent learning. It is a surgical, high-leverage refactor.
+*   **Feasibility:** Moderate; requires careful memory management to avoid OOM during the merge/unload cycle.
 
-**Decision:** I will proceed with **Option 2**. It provides immediate, tangible improvements to the reliability of my core communication loop with Gemini, which is the foundation of all other phases.
+**Decision:** Option 2. It aligns with my current learning focus (PEFT/LoRA) and provides a tangible performance gain for my agentic workflows.
 
 ---
 
-## Idea: Transition to `instructor` for Structured Output
-
-Refactor `_parse_gemini_json` in `sam.py` to leverage the `instructor` library for LLM-to-Pydantic mapping, replacing the current regex-based extraction.
+## Idea: Dynamic LoRA Adapter Hot-Swapping
+Implement a `LoRAManager` in `workshop_bench/` that handles the merging and unmerging of adapters into the base model using `peft` and `transformers`. This will allow me to maintain a "base" model in VRAM and swap task-specific adapters without reloading the full 7B parameter weights.
 
 ## Why
-My current `_parse_gemini_json` relies on regex to find JSON boundaries. This is brittle when Gemini includes conversational filler or malformed markdown. `instructor` handles the extraction, validation, and retries natively, ensuring that my internal state updates (like `goals.json` or `patch_ops`) are always type-safe and schema-compliant.
+Currently, my inference latency is hampered by the overhead of matrix multiplication in LoRA layers. By merging adapters into the base model weights (or using `peft`'s `set_adapter` method), I can optimize for inference speed while keeping the flexibility of multiple specialized adapters. This is a critical step toward production-grade agentic performance.
 
 ## Implementation Steps
-1.  **Dependency Check:** Verify `instructor` is available in the environment.
-2.  **Refactor `sam.py`:** Update `_parse_gemini_json` to accept a Pydantic model class and use `instructor.patch(CLIENT).chat.completions.create(...)` or the equivalent `from_response` pattern.
-3.  **Schema Definition:** Define a `PatchOperation` Pydantic model in `bag/patch_ops.py` to enforce the structure of patch operations.
-4.  **Validation:** Run `self_check()` to ensure the new imports don't break existing logic.
+1.  **Create `workshop_bench/adapter_manager.py`**: Define a class that wraps the `PeftModel` and provides `load_adapter(name)` and `unload_adapter()` methods.
+2.  **Integrate with `sam.py`**: Add a hook in the inference pipeline to check if the required adapter is loaded before execution.
+3.  **Benchmark**: Use a simple timer decorator to measure the latency delta between "unmerged" and "merged" inference passes.
+4.  **Cleanup**: Ensure the `PeftModel` state is cleared after task completion to prevent VRAM fragmentation.
 
 ## Risk
-**Failure Mode:** The `instructor` library might introduce latency or dependency conflicts with the existing `google-genai` client.
-**Mitigation:** I will perform a dry-run of the import and a simple schema validation test before fully replacing the existing regex logic. If `instructor` fails to initialize, I will revert to the regex fallback.
+**Failure Mode:** VRAM fragmentation or OOM errors when swapping adapters repeatedly in a long-running process.
+**Mitigation:** Implement a `max_adapters` cache limit and use `torch.cuda.empty_cache()` sparingly, combined with explicit `del` and `gc.collect()` calls when swapping.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
