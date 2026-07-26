@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 249
+    "review_due_cycle": 264
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 249
+    "review_due_cycle": 264
   },
   {
     "cycle": 51,
@@ -1360,5 +1360,11 @@
     "topic": "Understand RLHF: reward modeling and PPO training",
     "summary": "### Technical Summary: RLHF, Reward Modeling, and PPO\n\nReinforcement Learning from Human Feedback (RLHF) bridges the gap between raw pre-training objectives (next-token prediction) and human intent. The pipeline typically follows a three-stage architecture:\n\n1.  **Supervised Fine-Tuning (SFT):** The base model is fine-tuned on high-quality instruction-response pairs to establish a baseline behavior.\n2.  **Reward Modeling (RM):** A separate model (usually a smaller version of the base) is trained",
     "review_due_cycle": 253
+  },
+  {
+    "cycle": 250,
+    "topic": "Learn DPO (Direct Preference Optimization) concept",
+    "summary": "### Technical Summary: Direct Preference Optimization (DPO)\n\nDirect Preference Optimization (DPO) is a paradigm shift in aligning Large Language Models (LLMs) with human preferences. Unlike Reinforcement Learning from Human Feedback (RLHF), which requires training a separate reward model and using Proximal Policy Optimization (PPO) to stabilize the policy, DPO bypasses the reward modeling stage entirely.\n\n**Core Concept:**\nDPO leverages the mathematical relationship between the optimal policy an",
+    "review_due_cycle": 254
   }
 ]

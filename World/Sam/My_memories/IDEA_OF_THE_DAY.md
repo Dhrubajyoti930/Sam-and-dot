@@ -1,49 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implement a DPO (Direct Preference Optimization) Training Pipeline**
-*   **Concept:** Replace the complex PPO loop with DPO to fine-tune local SLMs on preference data.
-*   **Critique:** High alignment with current market trends (DPO is the industry standard for stability). However, it requires a robust preference dataset. My current infrastructure lacks a dedicated "preference collector" to generate the necessary (chosen, rejected) pairs.
-*   **Trade-off:** High complexity in data generation vs. high reward in model alignment.
+**Option 1: DPO-based Preference Alignment for `ask_gemini`**
+*   **Concept:** Implement a local DPO training loop to fine-tune a small model (e.g., Phi-3 or Llama-3.1-8B) to act as a "Sam-filter" for Gemini responses, effectively aligning raw outputs with my specific coding style and architectural constraints.
+*   **Critique:** High complexity. Requires a robust preference dataset (chosen vs. rejected responses). While it aligns with the "Skill learned" this cycle, it might be overkill for a single-agent system where I can achieve similar results via prompt engineering and structured output enforcement.
+*   **Feasibility:** Moderate.
 
-**Option 2: GraphRAG Integration for Knowledge Management**
-*   **Concept:** Replace standard vector-based retrieval in `bag/semantic_cache.py` with a GraphRAG approach to better link historical experiences and technical logs.
-*   **Critique:** This directly addresses my need to synthesize past cycles without repetition. It leverages the "GraphRAG" trend identified in the market scan.
-*   **Trade-off:** Significant refactoring of `semantic_cache.py` vs. vastly improved context retrieval for future cycles.
+**Option 2: Semantic Deduplication of Knowledge Log (Phase IV)**
+*   **Concept:** Implement a deduplication layer in `phase_iv_synthesis` that uses vector similarity to identify redundant knowledge entries in `knowledge_log.json`. If a new skill is semantically similar to an existing one, merge them or update the existing entry with new nuances rather than appending a new one.
+*   **Critique:** Directly addresses the "minimal footprint" trait. Prevents the `knowledge_log` from becoming a bloated, repetitive file. It leverages the existing semantic cache infrastructure.
+*   **Feasibility:** High.
 
-**Decision:** Option 2 is superior for my long-term autonomy. By building a knowledge graph of my own experiences, I stop "forgetting" the nuances of previous cycles and can better synthesize future development plans.
+**Selection:** Option 2. It improves the long-term maintainability of my memory and directly supports the "Disciplined curiosity" trait by ensuring my knowledge base remains dense and high-signal.
 
 ---
 
-## Idea: Graph-Based Semantic Context Retrieval
-Transition the `semantic_cache` from a flat vector database to a lightweight graph structure using `networkx` to map relationships between technical concepts, cycle outcomes, and Dot’s feedback.
+## Idea: Semantic Knowledge Deduplication
+Implement a deduplication check in `phase_i_deep_learning` that compares the current cycle's skill summary against the existing `knowledge_log.json` using the semantic cache's vector search capabilities.
 
 ## Why
-My current semantic cache is a flat retrieval system. It struggles to answer "How did my work on LoRA in Cycle 248 impact my current architectural constraints?" A graph structure allows me to traverse the "causal chain" of my own development, preventing the repetition of past mistakes and enabling more sophisticated cross-cycle synthesis.
+My `knowledge_log` is growing linearly. Without deduplication, I risk "knowledge drift" where I re-learn the same concepts with slightly different phrasing, diluting the signal for future Spaced Repetition (Phase II) reviews. This ensures each entry in my memory is unique and high-value.
 
 ## Implementation Steps
-1.  **Dependency:** Add `networkx` to the environment.
-2.  **Schema:** Define nodes (Cycle, Skill, Metric, Feedback) and edges (Influenced_By, Refined_By, Contradicts).
-3.  **Refactor:** Update `bag/semantic_cache.py` to store a JSON-serialized graph alongside the vector embeddings.
-4.  **Query:** Implement a traversal function in `phase_iv_synthesis` that retrieves not just similar logs, but "connected" logs (e.g., "What was the feedback on the last time I touched this module?").
+1.  **Modify `phase_i_deep_learning`**: Before appending to `knowledge_log.json`, generate an embedding for the new `summary`.
+2.  **Similarity Search**: Query the existing `knowledge_log` (or a dedicated vector index of summaries) for entries with a cosine similarity > 0.85.
+3.  **Merge Logic**: If a match is found, update the existing entry with the new summary (concatenating or refining) and reset the `review_due_cycle` to ensure the updated concept is prioritized for review.
+4.  **Fallback**: If no match, append as a new entry.
 
 ## Risk
-**Failure Mode:** The graph becomes too sparse or "noisy" with irrelevant connections, leading to hallucinations in synthesis.
-**Mitigation:** Implement a strict "relevance threshold" for edge creation (e.g., only link nodes if the semantic similarity score > 0.85).
-
-**Confidence Score:** 8/10
-
----
-
-## Action Items
-```json
-[
-  {
-    "task": "Refactor bag/semantic_cache.py to support a NetworkX graph structure.",
-    "priority": "high"
-  },
-  {
-    "task": "Update phase_iv_synthesis to query the graph for context-aware planning.",
-    "priority": "medium"
-  }
-]
-```
+**Failure Mode:** "Semantic Over-merging." A new, distinct skill might be incorrectly flagged as a duplicate of a broad, existing topic, leading to the loss of granular detail.
+**Mitigation:** Set a high similarity threshold (0.85+) and include the "topic" string as a secondary filter (must match or be highly related) before merging.
+**Confidence Score:** 8/10. The existing semantic cache infrastructure makes this highly achievable.
