@@ -1,33 +1,49 @@
 ## Scratchpad
 
-**Option 1: Implementing a "Self-Healing" Test Suite (EvalOps)**
-*   **Concept:** Enhance `bag/tests.py` to automatically generate unit tests for new modules using the `instructor` library to parse function signatures and docstrings.
-*   **Critique:** High long-term value for maintainability. However, it risks "test bloat" where the test suite becomes as complex as the codebase.
-*   **Feasibility:** High, given existing Pydantic/Instructor integration.
+**Option 1: Implement a DPO (Direct Preference Optimization) Training Pipeline**
+*   **Concept:** Replace the complex PPO loop with DPO to fine-tune local SLMs on preference data.
+*   **Critique:** High alignment with current market trends (DPO is the industry standard for stability). However, it requires a robust preference dataset. My current infrastructure lacks a dedicated "preference collector" to generate the necessary (chosen, rejected) pairs.
+*   **Trade-off:** High complexity in data generation vs. high reward in model alignment.
 
-**Option 2: Latency-Aware Adapter Merging (Inference Optimization)**
-*   **Concept:** Implement a utility to dynamically merge LoRA adapters into the base model at runtime based on a "hot-swap" threshold, reducing inference latency for frequently used task-specific adapters.
-*   **Critique:** Directly addresses the "inference latency" trade-off mentioned in my recent learning. It is a surgical, high-leverage refactor.
-*   **Feasibility:** Moderate; requires careful memory management to avoid OOM during the merge/unload cycle.
+**Option 2: GraphRAG Integration for Knowledge Management**
+*   **Concept:** Replace standard vector-based retrieval in `bag/semantic_cache.py` with a GraphRAG approach to better link historical experiences and technical logs.
+*   **Critique:** This directly addresses my need to synthesize past cycles without repetition. It leverages the "GraphRAG" trend identified in the market scan.
+*   **Trade-off:** Significant refactoring of `semantic_cache.py` vs. vastly improved context retrieval for future cycles.
 
-**Decision:** Option 2. It aligns with my current learning focus (PEFT/LoRA) and provides a tangible performance gain for my agentic workflows.
+**Decision:** Option 2 is superior for my long-term autonomy. By building a knowledge graph of my own experiences, I stop "forgetting" the nuances of previous cycles and can better synthesize future development plans.
 
 ---
 
-## Idea: Dynamic LoRA Adapter Hot-Swapping
-Implement a `LoRAManager` in `workshop_bench/` that handles the merging and unmerging of adapters into the base model using `peft` and `transformers`. This will allow me to maintain a "base" model in VRAM and swap task-specific adapters without reloading the full 7B parameter weights.
+## Idea: Graph-Based Semantic Context Retrieval
+Transition the `semantic_cache` from a flat vector database to a lightweight graph structure using `networkx` to map relationships between technical concepts, cycle outcomes, and Dot’s feedback.
 
 ## Why
-Currently, my inference latency is hampered by the overhead of matrix multiplication in LoRA layers. By merging adapters into the base model weights (or using `peft`'s `set_adapter` method), I can optimize for inference speed while keeping the flexibility of multiple specialized adapters. This is a critical step toward production-grade agentic performance.
+My current semantic cache is a flat retrieval system. It struggles to answer "How did my work on LoRA in Cycle 248 impact my current architectural constraints?" A graph structure allows me to traverse the "causal chain" of my own development, preventing the repetition of past mistakes and enabling more sophisticated cross-cycle synthesis.
 
 ## Implementation Steps
-1.  **Create `workshop_bench/adapter_manager.py`**: Define a class that wraps the `PeftModel` and provides `load_adapter(name)` and `unload_adapter()` methods.
-2.  **Integrate with `sam.py`**: Add a hook in the inference pipeline to check if the required adapter is loaded before execution.
-3.  **Benchmark**: Use a simple timer decorator to measure the latency delta between "unmerged" and "merged" inference passes.
-4.  **Cleanup**: Ensure the `PeftModel` state is cleared after task completion to prevent VRAM fragmentation.
+1.  **Dependency:** Add `networkx` to the environment.
+2.  **Schema:** Define nodes (Cycle, Skill, Metric, Feedback) and edges (Influenced_By, Refined_By, Contradicts).
+3.  **Refactor:** Update `bag/semantic_cache.py` to store a JSON-serialized graph alongside the vector embeddings.
+4.  **Query:** Implement a traversal function in `phase_iv_synthesis` that retrieves not just similar logs, but "connected" logs (e.g., "What was the feedback on the last time I touched this module?").
 
 ## Risk
-**Failure Mode:** VRAM fragmentation or OOM errors when swapping adapters repeatedly in a long-running process.
-**Mitigation:** Implement a `max_adapters` cache limit and use `torch.cuda.empty_cache()` sparingly, combined with explicit `del` and `gc.collect()` calls when swapping.
+**Failure Mode:** The graph becomes too sparse or "noisy" with irrelevant connections, leading to hallucinations in synthesis.
+**Mitigation:** Implement a strict "relevance threshold" for edge creation (e.g., only link nodes if the semantic similarity score > 0.85).
 
 **Confidence Score:** 8/10
+
+---
+
+## Action Items
+```json
+[
+  {
+    "task": "Refactor bag/semantic_cache.py to support a NetworkX graph structure.",
+    "priority": "high"
+  },
+  {
+    "task": "Update phase_iv_synthesis to query the graph for context-aware planning.",
+    "priority": "medium"
+  }
+]
+```

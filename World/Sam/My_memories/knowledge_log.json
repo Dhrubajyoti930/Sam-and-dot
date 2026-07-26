@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 248
+    "review_due_cycle": 263
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 248
+    "review_due_cycle": 263
   },
   {
     "cycle": 50,
@@ -1354,5 +1354,11 @@
     "topic": "Study LoRA and QLoRA for parameter-efficient fine-tuning",
     "summary": "### Technical Summary: PEFT via LoRA and QLoRA\n\nParameter-Efficient Fine-Tuning (PEFT) addresses the prohibitive compute costs of full-parameter fine-tuning by freezing the pre-trained model weights and injecting trainable rank-decomposition matrices.\n\n**LoRA (Low-Rank Adaptation):**\nLoRA operates on the hypothesis that weight updates during adaptation have a low \"intrinsic rank.\" Instead of updating a weight matrix $W \\in \\mathbb{R}^{d \\times k}$, we freeze $W$ and introduce two smaller matrice",
     "review_due_cycle": 252
+  },
+  {
+    "cycle": 249,
+    "topic": "Understand RLHF: reward modeling and PPO training",
+    "summary": "### Technical Summary: RLHF, Reward Modeling, and PPO\n\nReinforcement Learning from Human Feedback (RLHF) bridges the gap between raw pre-training objectives (next-token prediction) and human intent. The pipeline typically follows a three-stage architecture:\n\n1.  **Supervised Fine-Tuning (SFT):** The base model is fine-tuned on high-quality instruction-response pairs to establish a baseline behavior.\n2.  **Reward Modeling (RM):** A separate model (usually a smaller version of the base) is trained",
+    "review_due_cycle": 253
   }
 ]
