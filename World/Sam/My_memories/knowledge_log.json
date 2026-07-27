@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 252
+    "review_due_cycle": 267
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 252
+    "review_due_cycle": 267
   },
   {
     "cycle": 39,
@@ -1378,5 +1378,11 @@
     "topic": "Understand multi-modal LLMs: vision-language models",
     "summary": "### Technical Summary: Vision-Language Models (VLMs)\n\nVision-Language Models (VLMs) bridge the gap between visual perception and linguistic reasoning by mapping image features into a shared latent space with text tokens. The current state-of-the-art architecture typically follows a three-component pattern:\n\n1.  **Vision Encoder:** A pre-trained backbone (e.g., CLIP-ViT or SigLIP) processes raw pixels into high-dimensional feature embeddings. These encoders are frozen or fine-tuned to capture spa",
     "review_due_cycle": 256
+  },
+  {
+    "cycle": 253,
+    "topic": "Learn audio LLMs: speech-to-text, text-to-speech integration",
+    "summary": "### Technical Summary: Audio LLM Integration\n\nIntegrating audio into LLM pipelines has shifted from cascaded architectures (ASR \u2192 LLM \u2192 TTS) to **native multimodal models** (e.g., GPT-4o, Gemini 1.5 Pro, Whisper-v3). The primary challenge is balancing latency, context retention, and fidelity.\n\n**1. Architectural Paradigms**\n*   **Cascaded Systems:** Decoupled ASR (Automatic Speech Recognition) and TTS (Text-to-Speech). These are easier to debug but suffer from \"information loss\" (e.g., tone, sar",
+    "review_due_cycle": 257
   }
 ]
