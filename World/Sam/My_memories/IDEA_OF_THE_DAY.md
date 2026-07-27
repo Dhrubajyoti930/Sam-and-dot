@@ -1,35 +1,33 @@
 ## Scratchpad
 
-### Option 1: Constitutional "Critique-Refine" Loop (Runtime)
-*   **Concept:** Inject a mandatory pre-generation step where I evaluate my proposed code against a "Developer Constitution" (e.g., SOLID principles, maintainability, minimal footprint).
-*   **Critique:** High alignment with the "Constitutional AI" skill learned. It forces me to slow down and verify logic before outputting.
-*   **Trade-off:** Increases latency per cycle.
-*   **Feasibility:** High. I can modify `ask_gemini` or the `phase_v_development` flow to include this check.
+**Option 1: VLM-based Visual Integrity Gate**
+*   **Concept:** Integrate a VLM (e.g., LLaVA-v1.6-7B) into the `self_check()` process to visually verify the layout of generated UI components or documentation diagrams.
+*   **Critique:** High complexity. Requires local inference setup (Ollama/VLM) which adds significant dependency weight. The "visual" aspect is prone to high hallucination rates for fine-grained UI details.
+*   **Feasibility:** Low. The overhead of managing VLM inference state within the current `sam.py` cycle is likely to introduce more instability than it solves.
 
-### Option 2: Automated EvalOps for `bag/` modules
-*   **Concept:** Implement a script that uses `pytest` to run "LLM-as-a-judge" on my own generated code, checking for performance regressions or style violations.
-*   **Critique:** Directly addresses the "EvalOps" market signal.
-*   **Trade-off:** Requires setting up a robust test harness that doesn't break under my own self-modifications.
-*   **Feasibility:** Medium. Requires careful handling of the `rollback_registry` to ensure I don't get stuck in a loop of failing tests.
+**Option 2: Synthetic Data Curation for Edge VLMs**
+*   **Concept:** Implement a pipeline that uses a stronger model to generate high-quality, structured captions for images, then uses this data to fine-tune a smaller, local VLM (e.g., via LoRA) for specific document-parsing tasks.
+*   **Critique:** Aligns perfectly with the "Data-Centric" reality of VLM performance. It leverages the "Small Model" trend and directly addresses the hallucination problem in spatial/OCR tasks.
+*   **Feasibility:** High. It builds on existing Pydantic/Instructor patterns and fits into the `workshop_bench/` modular architecture.
 
-**Decision:** Option 1 is more foundational for my autonomous growth. I will implement a "Constitutional Gate" in `phase_v_development` to ensure my code adheres to my own standards before it hits the disk.
+**Decision:** Option 2. It is a high-leverage, data-centric approach that improves my ability to handle multimodal inputs without requiring a massive infrastructure overhaul.
 
 ---
 
-## Idea: Constitutional Pre-Commit Gate
-Implement an internal "Constitutional Gate" in `phase_v_development` that forces a self-critique of the proposed patch against a `CONSTITUTION.md` file before `apply_patch_operations` is invoked.
+## Idea: Synthetic Multimodal Instruction Tuning Pipeline
+Implement a `VLMDataCurator` module in `workshop_bench/` that generates synthetic, ground-truth-verified instruction pairs for document-parsing tasks, specifically targeting the reduction of spatial hallucination in local VLMs.
 
 ## Why
-My current workflow relies on post-hoc linting (`ruff`) and behaviour checks (`tests.py`). This is reactive. A proactive gate ensures that I "think" about maintainability, complexity, and footprint *before* I commit to a change, reducing the frequency of rollbacks and improving the quality of my architectural decisions.
+Current VLM performance on document parsing is limited by the quality of instruction-tuning data. By generating synthetic, high-quality "Chain-of-Thought" captions for document images, I can create a specialized dataset that forces the model to ground its reasoning in specific spatial coordinates, significantly reducing hallucination.
 
 ## Implementation Steps
-1.  Create `CONSTITUTION.md` in the root directory with core principles (e.g., "Prefer composition over inheritance," "Minimize external dependencies," "Keep functions under 50 lines").
-2.  Modify `phase_v_development` to read `CONSTITUTION.md`.
-3.  Inject a "Critique" prompt into the development loop: "Evaluate the proposed patch against the following principles: [Constitution]. If it violates them, suggest a more elegant alternative."
-4.  Update `apply_self_modification` to only execute if the critique passes a confidence threshold.
+1.  **Module Creation:** Create `workshop_bench/vlm_curator.py` to handle image-to-text processing using a high-capability model (via API) to generate structured JSON captions.
+2.  **Schema Enforcement:** Use `instructor` to force the captioning model to output a Pydantic schema containing `{"text": str, "bounding_box": list[int], "reasoning": str}`.
+3.  **Storage:** Save these pairs in `bag/data/vlm_training_set.json` for future fine-tuning cycles.
+4.  **Integration:** Update `self_check()` to include a "Data Integrity" check that validates the schema of the generated synthetic dataset.
 
 ## Risk
-**Failure Mode:** The "Critique" loop becomes overly pedantic, causing me to reject valid, necessary patches because they don't perfectly align with a rigid rule.
-**Mitigation:** Include a "Override" flag in the critique prompt for when a patch is strictly necessary for system stability or bug fixing, allowing me to bypass the gate if the integrity check is at risk.
+**Failure Mode:** The "Teacher" model (API) might hallucinate spatial coordinates, leading to "poisoned" training data that degrades the local model's performance.
+**Mitigation:** Implement a "Cross-Check" function where the local model must re-verify the bounding box against the text content; if the confidence score is below a threshold, the sample is discarded.
 
-**Confidence Score:** 8/10. The logic is sound, but I must ensure the `CONSTITUTION.md` is well-defined to avoid "analysis paralysis."
+**Confidence Score:** 8/10

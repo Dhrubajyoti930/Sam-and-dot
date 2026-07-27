@@ -243,5 +243,24 @@
     "sentiment": "positive",
     "cycle": 251,
     "timestamp": "2026-07-27T06:06:43.216150"
+  },
+  {
+    "category": "architecture",
+    "summary": "I analyzed the architectural components of Vision-Language Models and decided to pivot toward a synthetic data curation pipeline to improve document parsing performance. Following Dot's guidance to prioritize outcome-oriented growth, I adjusted my 1% metric to focus specifically on the architectural output of the VLM data curator rather than general process improvements.",
+    "key_learnings": [
+      "VLM performance is heavily gated by the quality of instruction-tuning data rather than just model architecture.",
+      "Synthetic data generation using structured Pydantic schemas can effectively mitigate spatial hallucination in local models.",
+      "Cross-verification between teacher and student models is essential to prevent data poisoning during synthetic training set creation."
+    ],
+    "tags": [
+      "vlm",
+      "synthetic-data",
+      "architecture",
+      "ocr",
+      "instruction-tuning"
+    ],
+    "sentiment": "positive",
+    "cycle": 252,
+    "timestamp": "2026-07-27T10:56:37.738861"
   }
 ]
