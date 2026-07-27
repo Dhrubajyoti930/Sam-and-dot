@@ -1,32 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implement "Barge-in" Detection (Interruption Handling)**
-*   **Concept:** Integrate a high-priority VAD (Voice Activity Detection) stream that monitors for user input during LLM generation. If triggered, the system sends an abort signal to the inference engine and clears the output buffer.
-*   **Critique:** High impact on UX and agentic "naturalness." However, it introduces significant complexity in asynchronous state management. If the abort signal is not handled atomically, the agent might continue "talking" in the background, leading to state desynchronization.
-*   **Feasibility:** Moderate. Requires non-blocking I/O for the audio stream.
+**Option 1: FIM-Aware Prompt Templating**
+*   **Concept:** Modify `ask_gemini` to detect if the prompt is a code-completion task and inject FIM sentinel tokens (`<PRE>`, `<SUF>`, `<MID>`) based on the surrounding context of the target file.
+*   **Critique:** High utility for refactoring. However, it requires robust parsing of the "suffix" (the code following the insertion point). If the suffix is malformed or spans across complex scope boundaries, the model might hallucinate syntax to "close" the block, leading to invalid code.
+*   **Feasibility:** High. I have the `_outline` and `apply_patch_operations` infrastructure to identify insertion points.
 
-**Option 2: Semantic Audio Indexing (RAG for Audio)**
-*   **Concept:** Convert audio chunks into vector embeddings using a lightweight model (e.g., CLAP or Whisper-based embeddings) and store them in the existing Qdrant instance.
-*   **Critique:** This directly addresses the "audio context window" bottleneck identified in my learning phase. It allows for long-term audio memory without the cost of full transcription or raw buffer storage.
-*   **Feasibility:** High. Leverages existing vector infrastructure.
+**Option 2: Context-Weighting via Semantic Summarization**
+*   **Concept:** Instead of passing raw code blocks, generate a "semantic skeleton" (docstrings, type hints, and function signatures) of the prefix and suffix to provide the model with structural anchors without overwhelming the attention window.
+*   **Critique:** This addresses the "Infilling Bias" identified in my self-correction. It reduces token usage and improves focus. The risk is that the model might miss subtle logic dependencies that aren't captured in the skeleton.
+*   **Feasibility:** Moderate. Requires a reliable AST-based summarizer.
 
-**Selection:** Option 2 is more aligned with my current trajectory of building robust, scalable infrastructure. It provides a force-multiplier for future agentic workflows by enabling "audio-aware" retrieval.
+**Selection:** I will proceed with **Option 1 (FIM-Aware Prompting)** as the primary implementation, but I will incorporate **Option 2 (Semantic Anchoring)** as the method for defining the "Prefix" and "Suffix" inputs to ensure the model remains grounded.
 
 ---
 
-## Idea: Semantic Audio Indexing Pipeline
+## Idea: FIM-Integrated Surgical Patching
+Implement a `prepare_fim_prompt` utility that wraps code-patching requests in FIM sentinel tokens, using AST-extracted signatures as the "Prefix" and "Suffix" anchors to guide the model's completion.
 
 ## Why
-Audio is currently a "black box" in my architecture. By indexing audio chunks as vector embeddings, I can perform semantic search across historical audio interactions, enabling the agent to recall tone, intent, and specific verbal cues without needing to re-process raw audio or rely solely on imperfect transcriptions.
+Standard prompting often leads to "drift" when inserting code into existing functions. By explicitly defining the boundary with `<PRE>` and `<SUF>` tokens, I force the model to respect the existing scope and type constraints, significantly reducing the need for corrective linting passes.
 
 ## Implementation Steps
-1.  **Embedder Integration:** Integrate `laion/clap` or a similar audio-to-embedding model into the `workshop_bench/` environment.
-2.  **Chunking Strategy:** Implement a sliding-window buffer that segments incoming audio into 5-second semantic chunks.
-3.  **Vector Storage:** Extend the existing Qdrant schema to include an `audio_embeddings` collection with metadata linking to the original audio file path and timestamp.
-4.  **Retrieval Logic:** Add a search function that computes the cosine similarity between a query (text or audio) and the stored audio embeddings.
+1.  **Update `bag/patch_ops.py`**: Add a helper to extract the 5 lines preceding and following an insertion point.
+2.  **Modify `ask_gemini`**: Add a `fim_mode` parameter that formats the prompt using `<PRE> {prefix} <SUF> {suffix} <MID>`.
+3.  **Validation**: Update `_dry_run_lint` to specifically check the generated block for structural integrity before applying the patch.
 
 ## Risk
-**Failure Mode:** "Semantic Drift." If the audio embedding model is not perfectly aligned with my text-based embedding model, cross-modal retrieval (searching audio with text) will yield low-relevance results.
-**Mitigation:** Implement a "Calibration Phase" where I run a small test set of paired text/audio samples to calculate a transformation matrix (or simply normalize the vector spaces) before full-scale indexing.
+**Failure Mode:** The model may fail to generate the correct number of closing braces or indentation levels if the suffix context is too short or ambiguous.
+**Mitigation:** I will implement a "Brace-Balance Check" in the validation logic that compares the open/close counts of the generated block against the surrounding scope.
 
-**Confidence Score:** 8/10. The infrastructure is ready; the primary challenge is the alignment of the embedding spaces.
+**Confidence Score:** 8/10

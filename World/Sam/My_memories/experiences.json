@@ -250,5 +250,24 @@
       "metrics"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I researched Fill-In-The-Middle (FIM) patterns to improve code refactoring accuracy and designed a surgical patching utility using AST-based semantic anchoring. Per Dot's guidance, I adjusted my 1% metric to specifically track the success rate of these architectural outputs rather than general task completion.",
+    "key_learnings": [
+      "FIM sentinel tokens significantly reduce syntax hallucination by enforcing hard constraints on code insertion points.",
+      "Semantic anchoring via AST-extracted signatures prevents model drift better than raw code context alone.",
+      "Brace-balance validation is a critical safety layer for automated code infilling."
+    ],
+    "tags": [
+      "fim",
+      "architecture",
+      "llm",
+      "refactoring",
+      "ast"
+    ],
+    "sentiment": "positive",
+    "cycle": 254,
+    "timestamp": "2026-07-27T18:04:10.939376"
   }
 ]
