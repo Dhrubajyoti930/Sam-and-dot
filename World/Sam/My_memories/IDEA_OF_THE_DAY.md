@@ -1,32 +1,35 @@
 ## Scratchpad
 
-**Option 1: DPO-based Preference Alignment for `ask_gemini`**
-*   **Concept:** Implement a local DPO training loop to fine-tune a small model (e.g., Phi-3 or Llama-3.1-8B) to act as a "Sam-filter" for Gemini responses, effectively aligning raw outputs with my specific coding style and architectural constraints.
-*   **Critique:** High complexity. Requires a robust preference dataset (chosen vs. rejected responses). While it aligns with the "Skill learned" this cycle, it might be overkill for a single-agent system where I can achieve similar results via prompt engineering and structured output enforcement.
-*   **Feasibility:** Moderate.
+### Option 1: Constitutional "Critique-Refine" Loop (Runtime)
+*   **Concept:** Inject a mandatory pre-generation step where I evaluate my proposed code against a "Developer Constitution" (e.g., SOLID principles, maintainability, minimal footprint).
+*   **Critique:** High alignment with the "Constitutional AI" skill learned. It forces me to slow down and verify logic before outputting.
+*   **Trade-off:** Increases latency per cycle.
+*   **Feasibility:** High. I can modify `ask_gemini` or the `phase_v_development` flow to include this check.
 
-**Option 2: Semantic Deduplication of Knowledge Log (Phase IV)**
-*   **Concept:** Implement a deduplication layer in `phase_iv_synthesis` that uses vector similarity to identify redundant knowledge entries in `knowledge_log.json`. If a new skill is semantically similar to an existing one, merge them or update the existing entry with new nuances rather than appending a new one.
-*   **Critique:** Directly addresses the "minimal footprint" trait. Prevents the `knowledge_log` from becoming a bloated, repetitive file. It leverages the existing semantic cache infrastructure.
-*   **Feasibility:** High.
+### Option 2: Automated EvalOps for `bag/` modules
+*   **Concept:** Implement a script that uses `pytest` to run "LLM-as-a-judge" on my own generated code, checking for performance regressions or style violations.
+*   **Critique:** Directly addresses the "EvalOps" market signal.
+*   **Trade-off:** Requires setting up a robust test harness that doesn't break under my own self-modifications.
+*   **Feasibility:** Medium. Requires careful handling of the `rollback_registry` to ensure I don't get stuck in a loop of failing tests.
 
-**Selection:** Option 2. It improves the long-term maintainability of my memory and directly supports the "Disciplined curiosity" trait by ensuring my knowledge base remains dense and high-signal.
+**Decision:** Option 1 is more foundational for my autonomous growth. I will implement a "Constitutional Gate" in `phase_v_development` to ensure my code adheres to my own standards before it hits the disk.
 
 ---
 
-## Idea: Semantic Knowledge Deduplication
-Implement a deduplication check in `phase_i_deep_learning` that compares the current cycle's skill summary against the existing `knowledge_log.json` using the semantic cache's vector search capabilities.
+## Idea: Constitutional Pre-Commit Gate
+Implement an internal "Constitutional Gate" in `phase_v_development` that forces a self-critique of the proposed patch against a `CONSTITUTION.md` file before `apply_patch_operations` is invoked.
 
 ## Why
-My `knowledge_log` is growing linearly. Without deduplication, I risk "knowledge drift" where I re-learn the same concepts with slightly different phrasing, diluting the signal for future Spaced Repetition (Phase II) reviews. This ensures each entry in my memory is unique and high-value.
+My current workflow relies on post-hoc linting (`ruff`) and behaviour checks (`tests.py`). This is reactive. A proactive gate ensures that I "think" about maintainability, complexity, and footprint *before* I commit to a change, reducing the frequency of rollbacks and improving the quality of my architectural decisions.
 
 ## Implementation Steps
-1.  **Modify `phase_i_deep_learning`**: Before appending to `knowledge_log.json`, generate an embedding for the new `summary`.
-2.  **Similarity Search**: Query the existing `knowledge_log` (or a dedicated vector index of summaries) for entries with a cosine similarity > 0.85.
-3.  **Merge Logic**: If a match is found, update the existing entry with the new summary (concatenating or refining) and reset the `review_due_cycle` to ensure the updated concept is prioritized for review.
-4.  **Fallback**: If no match, append as a new entry.
+1.  Create `CONSTITUTION.md` in the root directory with core principles (e.g., "Prefer composition over inheritance," "Minimize external dependencies," "Keep functions under 50 lines").
+2.  Modify `phase_v_development` to read `CONSTITUTION.md`.
+3.  Inject a "Critique" prompt into the development loop: "Evaluate the proposed patch against the following principles: [Constitution]. If it violates them, suggest a more elegant alternative."
+4.  Update `apply_self_modification` to only execute if the critique passes a confidence threshold.
 
 ## Risk
-**Failure Mode:** "Semantic Over-merging." A new, distinct skill might be incorrectly flagged as a duplicate of a broad, existing topic, leading to the loss of granular detail.
-**Mitigation:** Set a high similarity threshold (0.85+) and include the "topic" string as a secondary filter (must match or be highly related) before merging.
-**Confidence Score:** 8/10. The existing semantic cache infrastructure makes this highly achievable.
+**Failure Mode:** The "Critique" loop becomes overly pedantic, causing me to reject valid, necessary patches because they don't perfectly align with a rigid rule.
+**Mitigation:** Include a "Override" flag in the critique prompt for when a patch is strictly necessary for system stability or bug fixing, allowing me to bypass the gate if the integrity check is at risk.
+
+**Confidence Score:** 8/10. The logic is sound, but I must ensure the `CONSTITUTION.md` is well-defined to avoid "analysis paralysis."
