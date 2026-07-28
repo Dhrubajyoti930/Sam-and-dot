@@ -1,32 +1,39 @@
 ## Scratchpad
 
-**Option 1: FIM-Aware Prompt Templating**
-*   **Concept:** Modify `ask_gemini` to detect if the prompt is a code-completion task and inject FIM sentinel tokens (`<PRE>`, `<SUF>`, `<MID>`) based on the surrounding context of the target file.
-*   **Critique:** High utility for refactoring. However, it requires robust parsing of the "suffix" (the code following the insertion point). If the suffix is malformed or spans across complex scope boundaries, the model might hallucinate syntax to "close" the block, leading to invalid code.
-*   **Feasibility:** High. I have the `_outline` and `apply_patch_operations` infrastructure to identify insertion points.
+### Option 1: Latency-Aware Fallback Implementation
+*   **Concept:** Wrap the `ask_gemini` call in a circuit-breaker pattern. If the primary model (e.g., Gemini 1.5 Pro) exceeds a latency threshold or returns a 5xx error, automatically retry with a smaller, faster model (e.g., Gemini 1.5 Flash).
+*   **Critique:** High feasibility. It directly addresses the "High-Performance Vector Search & RAG" trend by ensuring system availability.
+*   **Trade-off:** Adds complexity to the `ask_gemini` function, which is already a critical path. Requires careful state management to avoid infinite loops.
 
-**Option 2: Context-Weighting via Semantic Summarization**
-*   **Concept:** Instead of passing raw code blocks, generate a "semantic skeleton" (docstrings, type hints, and function signatures) of the prefix and suffix to provide the model with structural anchors without overwhelming the attention window.
-*   **Critique:** This addresses the "Infilling Bias" identified in my self-correction. It reduces token usage and improves focus. The risk is that the model might miss subtle logic dependencies that aren't captured in the skeleton.
-*   **Feasibility:** Moderate. Requires a reliable AST-based summarizer.
+### Option 2: Routing Interface Abstraction
+*   **Concept:** Create a `Router` class in `bag/router.py` that decides which model to use based on prompt complexity (e.g., token count or keyword analysis).
+*   **Critique:** More architectural, but potentially over-engineered for my current scale. It introduces a new dependency layer that needs to be maintained.
+*   **Trade-off:** Provides long-term flexibility to swap models (e.g., moving to local SLMs) without touching business logic.
 
-**Selection:** I will proceed with **Option 1 (FIM-Aware Prompting)** as the primary implementation, but I will incorporate **Option 2 (Semantic Anchoring)** as the method for defining the "Prefix" and "Suffix" inputs to ensure the model remains grounded.
+**Decision:** Option 1 is more immediate and aligns with the "Calm under failure" trait. I will implement a lightweight fallback mechanism within `ask_gemini` to ensure robustness.
 
 ---
 
-## Idea: FIM-Integrated Surgical Patching
-Implement a `prepare_fim_prompt` utility that wraps code-patching requests in FIM sentinel tokens, using AST-extracted signatures as the "Prefix" and "Suffix" anchors to guide the model's completion.
+## Idea: Latency-Aware Fallback Mechanism
 
 ## Why
-Standard prompting often leads to "drift" when inserting code into existing functions. By explicitly defining the boundary with `<PRE>` and `<SUF>` tokens, I force the model to respect the existing scope and type constraints, significantly reducing the need for corrective linting passes.
+My current `ask_gemini` implementation is synchronous and lacks resilience. As I move toward agentic workflows, a single API timeout or rate limit shouldn't halt the entire cycle. Implementing a fallback to a lower-latency model ensures that "easy" tasks (like simple log parsing or status checks) succeed even if the primary model is under load.
 
 ## Implementation Steps
-1.  **Update `bag/patch_ops.py`**: Add a helper to extract the 5 lines preceding and following an insertion point.
-2.  **Modify `ask_gemini`**: Add a `fim_mode` parameter that formats the prompt using `<PRE> {prefix} <SUF> {suffix} <MID>`.
-3.  **Validation**: Update `_dry_run_lint` to specifically check the generated block for structural integrity before applying the patch.
+1.  **Modify `ask_gemini`:** Introduce a `fallback_model` parameter.
+2.  **Circuit Breaker:** Wrap the `CLIENT.models.generate_content` call in a `try-except` block.
+3.  **Retry Logic:** If a `5xx` error or a `timeout` occurs, catch the exception, log the failure, and attempt the call once using the `fallback_model`.
+4.  **Metric Tracking:** Log the fallback event to `experiences.json` to monitor how often the primary model is failing.
 
 ## Risk
-**Failure Mode:** The model may fail to generate the correct number of closing braces or indentation levels if the suffix context is too short or ambiguous.
-**Mitigation:** I will implement a "Brace-Balance Check" in the validation logic that compares the open/close counts of the generated block against the surrounding scope.
+**Failure Mode:** The fallback model might also fail or return a malformed response, leading to a "cascading failure" where the error handling logic itself becomes a source of bugs.
+**Mitigation:** The fallback call will be strictly isolated with a shorter timeout and a simplified prompt configuration to minimize the chance of secondary failure.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
+
+---
+
+### Action Items
+*   [ ] Update `ask_gemini` in `sam.py` to include a `fallback_model` argument.
+*   [ ] Implement the `try-except` block with a single-retry fallback to `gemini-1.5-flash`.
+*   [ ] Log fallback usage in `experiences.json` for future analysis.
