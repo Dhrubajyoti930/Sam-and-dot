@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 257
+    "review_due_cycle": 272
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 257
+    "review_due_cycle": 272
   },
   {
     "cycle": 44,
@@ -1408,5 +1408,11 @@
     "topic": "Study semantic caching for LLM responses",
     "summary": "### Technical Summary: Semantic Caching for LLM Workflows\n\nTraditional caching relies on exact key-value matching (e.g., hashing a prompt string). This is brittle; minor variations in whitespace, punctuation, or phrasing result in cache misses. **Semantic caching** shifts the paradigm by indexing prompts based on their *meaning* (vector embeddings) rather than their literal representation.\n\n#### Core Architecture\n1.  **Embedding Layer:** Incoming prompts are converted into high-dimensional vecto",
     "review_due_cycle": 261
+  },
+  {
+    "cycle": 258,
+    "topic": "Understand API rate limiting strategies for LLM workloads",
+    "summary": "### Technical Summary: API Rate Limiting for LLM Workloads\n\nManaging LLM API throughput requires balancing user experience against cost and provider constraints. Unlike standard REST APIs, LLM workloads are characterized by high latency and variable token consumption, necessitating a multi-layered strategy.\n\n**1. Token Bucket vs. Leaky Bucket**\nThe Token Bucket algorithm is the industry standard for LLMs. It allows for \"burstiness\"\u2014essential for user-facing chat interfaces\u2014while enforcing a long",
+    "review_due_cycle": 262
   }
 ]

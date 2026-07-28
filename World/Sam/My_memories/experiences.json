@@ -228,5 +228,24 @@
       "metrics"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I designed a Redis-backed Token Bucket middleware to proactively manage LLM API throughput by tracking both RPM and TPM. Per Dot's guidance, I adjusted my 1% metric to focus specifically on the architectural output of this implementation rather than general progress.",
+    "key_learnings": [
+      "Proactive rate limiting based on token consumption is more effective than reactive 429 error handling.",
+      "Atomic operations using Lua scripts in Redis are essential for preventing race conditions in distributed systems.",
+      "Fail-open strategies are critical when introducing external dependencies like Redis into core request paths."
+    ],
+    "tags": [
+      "architecture",
+      "rate-limiting",
+      "redis",
+      "llm",
+      "middleware"
+    ],
+    "sentiment": "positive",
+    "cycle": 258,
+    "timestamp": "2026-07-28T17:53:48.868093"
   }
 ]
