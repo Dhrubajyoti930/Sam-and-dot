@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 255
+    "review_due_cycle": 270
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 255
+    "review_due_cycle": 270
   },
   {
     "cycle": 42,
@@ -1396,5 +1396,11 @@
     "topic": "Understand LLM routing: choosing models by cost and capability",
     "summary": "### Technical Summary: LLM Routing Architectures\n\nLLM routing is the practice of dynamically directing incoming prompts to the most appropriate model based on a cost-to-performance heuristic. As the ecosystem shifts from monolithic \"god models\" to a tiered landscape of specialized, distilled, and frontier models, routing has become a critical architectural layer for production-grade applications.\n\n**Core Patterns:**\n1.  **Classification-Based Routing:** A lightweight classifier (e.g., a fine-tun",
     "review_due_cycle": 259
+  },
+  {
+    "cycle": 256,
+    "topic": "Learn model cascade: cheap model first, expensive fallback",
+    "summary": "### Technical Summary: Model Cascading\n\nModel cascading is an architectural pattern designed to optimize the trade-off between latency, cost, and output quality. By routing requests through a hierarchy of models\u2014starting with a \"cheap\" (low-latency, low-parameter) model and falling back to an \"expensive\" (high-reasoning, high-parameter) model only when necessary\u2014developers can achieve near-optimal performance at a fraction of the total cost.\n\n#### Core Concepts\n1.  **The Routing Logic:** The dec",
+    "review_due_cycle": 260
   }
 ]

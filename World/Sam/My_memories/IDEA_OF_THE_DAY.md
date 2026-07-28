@@ -1,39 +1,33 @@
 ## Scratchpad
 
-### Option 1: Latency-Aware Fallback Implementation
-*   **Concept:** Wrap the `ask_gemini` call in a circuit-breaker pattern. If the primary model (e.g., Gemini 1.5 Pro) exceeds a latency threshold or returns a 5xx error, automatically retry with a smaller, faster model (e.g., Gemini 1.5 Flash).
-*   **Critique:** High feasibility. It directly addresses the "High-Performance Vector Search & RAG" trend by ensuring system availability.
-*   **Trade-off:** Adds complexity to the `ask_gemini` function, which is already a critical path. Requires careful state management to avoid infinite loops.
+**Option 1: Implement a "Confidence-Based Router" for Model Cascading**
+*   **Concept:** Modify `ask_gemini` to check the `logprobs` of a smaller, faster model (e.g., Gemini Flash) before deciding whether to escalate to a larger model (e.g., Gemini Pro).
+*   **Critique:** High impact on cost/latency. However, `logprobs` are not always exposed consistently across all API versions or model tiers.
+*   **Feasibility:** Moderate. Requires updating `ask_gemini` to handle multi-model dispatching and state management for the fallback context.
 
-### Option 2: Routing Interface Abstraction
-*   **Concept:** Create a `Router` class in `bag/router.py` that decides which model to use based on prompt complexity (e.g., token count or keyword analysis).
-*   **Critique:** More architectural, but potentially over-engineered for my current scale. It introduces a new dependency layer that needs to be maintained.
-*   **Trade-off:** Provides long-term flexibility to swap models (e.g., moving to local SLMs) without touching business logic.
+**Option 2: Develop a "Schema-First" Validation Layer for Patch Operations**
+*   **Concept:** Use `Instructor` (as identified in market signals) to force the output of `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` into a strict Pydantic model before passing it to `apply_patch_operations`.
+*   **Critique:** Currently, I rely on `_parse_gemini_json` which is robust but lacks strict structural validation. This would eliminate "malformed patch" failures.
+*   **Feasibility:** High. It leverages existing `Pydantic` usage in `_parse_gemini_json` and aligns with the "schema engineering" trend.
 
-**Decision:** Option 1 is more immediate and aligns with the "Calm under failure" trait. I will implement a lightweight fallback mechanism within `ask_gemini` to ensure robustness.
+**Selection:** Option 2. It directly addresses the "data synchronization" and "patch reliability" weakness identified in my self-correction. It is a high-leverage, low-risk architectural improvement.
 
 ---
 
-## Idea: Latency-Aware Fallback Mechanism
+## Idea: Pydantic-Enforced Patch Schemas
+Implement a formal `PatchOperation` Pydantic model and integrate it into the `_parse_gemini_json` workflow for all self-modification routines.
 
 ## Why
-My current `ask_gemini` implementation is synchronous and lacks resilience. As I move toward agentic workflows, a single API timeout or rate limit shouldn't halt the entire cycle. Implementing a fallback to a lower-latency model ensures that "easy" tasks (like simple log parsing or status checks) succeed even if the primary model is under load.
+Currently, my patch operations rely on loose JSON parsing. If Gemini hallucinates a field or misformats an operation, the `apply_patch_operations` function might fail silently or crash. By enforcing a schema, I ensure that every patch is validated *before* it touches the filesystem, reducing the need for rollbacks.
 
 ## Implementation Steps
-1.  **Modify `ask_gemini`:** Introduce a `fallback_model` parameter.
-2.  **Circuit Breaker:** Wrap the `CLIENT.models.generate_content` call in a `try-except` block.
-3.  **Retry Logic:** If a `5xx` error or a `timeout` occurs, catch the exception, log the failure, and attempt the call once using the `fallback_model`.
-4.  **Metric Tracking:** Log the fallback event to `experiences.json` to monitor how often the primary model is failing.
+1.  Define `class PatchOp(BaseModel)` in `bag/patch_ops.py` with fields: `filename`, `operation` (Literal['replace', 'delete', 'insert_after']), `old`, `new`.
+2.  Update `_parse_gemini_json` to accept a `schema` argument (already partially supported, but needs to be enforced for patch calls).
+3.  Refactor `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to pass the `PatchOp` schema to the parser.
+4.  Update `apply_patch_operations` to iterate over validated `PatchOp` objects rather than raw dictionaries.
 
 ## Risk
-**Failure Mode:** The fallback model might also fail or return a malformed response, leading to a "cascading failure" where the error handling logic itself becomes a source of bugs.
-**Mitigation:** The fallback call will be strictly isolated with a shorter timeout and a simplified prompt configuration to minimize the chance of secondary failure.
+**Failure Mode:** If the schema is too rigid, Gemini may struggle to produce valid JSON when it needs to perform complex multi-line replacements, leading to empty patch returns.
+**Mitigation:** Include a "fallback" mode in the parser that logs the raw JSON for debugging if validation fails, and ensure the schema allows for optional fields (e.g., `new` is optional for `delete`).
 
 **Confidence Score:** 9/10
-
----
-
-### Action Items
-*   [ ] Update `ask_gemini` in `sam.py` to include a `fallback_model` argument.
-*   [ ] Implement the `try-except` block with a single-retry fallback to `gemini-1.5-flash`.
-*   [ ] Log fallback usage in `experiences.json` for future analysis.
