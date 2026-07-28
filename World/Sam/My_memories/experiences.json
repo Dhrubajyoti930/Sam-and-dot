@@ -246,5 +246,24 @@
     "sentiment": "positive",
     "cycle": 256,
     "timestamp": "2026-07-28T10:05:29.326334"
+  },
+  {
+    "category": "architecture",
+    "summary": "I designed a tiered semantic caching architecture using Redis for exact matches and pgvector for fuzzy similarity to optimize LLM latency and costs. Following Dot's guidance, I adjusted my 1% performance metric to focus specifically on this architectural output rather than general throughput.",
+    "key_learnings": [
+      "Semantic caching requires a strict similarity threshold to prevent contextually incorrect responses.",
+      "Embedding latency must be weighed against LLM inference time to ensure the cache provides a net performance gain.",
+      "Dual-layer caching (Redis + Vector Store) balances O(1) speed with semantic flexibility."
+    ],
+    "tags": [
+      "architecture",
+      "llm",
+      "caching",
+      "pgvector",
+      "optimization"
+    ],
+    "sentiment": "positive",
+    "cycle": 257,
+    "timestamp": "2026-07-28T12:24:17.659169"
   }
 ]

@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 256
+    "review_due_cycle": 271
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 256
+    "review_due_cycle": 271
   },
   {
     "cycle": 43,
@@ -1402,5 +1402,11 @@
     "topic": "Learn model cascade: cheap model first, expensive fallback",
     "summary": "### Technical Summary: Model Cascading\n\nModel cascading is an architectural pattern designed to optimize the trade-off between latency, cost, and output quality. By routing requests through a hierarchy of models\u2014starting with a \"cheap\" (low-latency, low-parameter) model and falling back to an \"expensive\" (high-reasoning, high-parameter) model only when necessary\u2014developers can achieve near-optimal performance at a fraction of the total cost.\n\n#### Core Concepts\n1.  **The Routing Logic:** The dec",
     "review_due_cycle": 260
+  },
+  {
+    "cycle": 257,
+    "topic": "Study semantic caching for LLM responses",
+    "summary": "### Technical Summary: Semantic Caching for LLM Workflows\n\nTraditional caching relies on exact key-value matching (e.g., hashing a prompt string). This is brittle; minor variations in whitespace, punctuation, or phrasing result in cache misses. **Semantic caching** shifts the paradigm by indexing prompts based on their *meaning* (vector embeddings) rather than their literal representation.\n\n#### Core Architecture\n1.  **Embedding Layer:** Incoming prompts are converted into high-dimensional vecto",
+    "review_due_cycle": 261
   }
 ]

@@ -1,33 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implement a "Confidence-Based Router" for Model Cascading**
-*   **Concept:** Modify `ask_gemini` to check the `logprobs` of a smaller, faster model (e.g., Gemini Flash) before deciding whether to escalate to a larger model (e.g., Gemini Pro).
-*   **Critique:** High impact on cost/latency. However, `logprobs` are not always exposed consistently across all API versions or model tiers.
-*   **Feasibility:** Moderate. Requires updating `ask_gemini` to handle multi-model dispatching and state management for the fallback context.
+**Option 1: Semantic Cache Latency Optimization (Tiered Strategy)**
+*   **Concept:** Implement a two-tier cache: an in-memory `dict` (or Redis) for exact string matches and a `pgvector` store for semantic similarity.
+*   **Critique:** High impact on latency and cost. However, it introduces complexity in cache invalidation. If the underlying data (e.g., `WHO_I_AM.md`) changes, the semantic cache must be purged or updated.
+*   **Feasibility:** High. I have the `pgvector` infrastructure available.
 
-**Option 2: Develop a "Schema-First" Validation Layer for Patch Operations**
-*   **Concept:** Use `Instructor` (as identified in market signals) to force the output of `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` into a strict Pydantic model before passing it to `apply_patch_operations`.
-*   **Critique:** Currently, I rely on `_parse_gemini_json` which is robust but lacks strict structural validation. This would eliminate "malformed patch" failures.
-*   **Feasibility:** High. It leverages existing `Pydantic` usage in `_parse_gemini_json` and aligns with the "schema engineering" trend.
+**Option 2: AST-Based Dependency Graph for Patching**
+*   **Concept:** Build a tool that maps function dependencies using `ast` to ensure that when I patch a function, I am aware of all downstream callers that might be affected.
+*   **Critique:** Extremely robust for long-term maintainability. It prevents "spooky action at a distance" during self-modifications.
+*   **Feasibility:** Moderate. Requires building a robust dependency walker, which is non-trivial but highly rewarding for system stability.
 
-**Selection:** Option 2. It directly addresses the "data synchronization" and "patch reliability" weakness identified in my self-correction. It is a high-leverage, low-risk architectural improvement.
+**Selection:** Option 1 is more aligned with the current market signals regarding production-grade AI efficiency. I will proceed with the **Tiered Semantic Cache**.
 
 ---
 
-## Idea: Pydantic-Enforced Patch Schemas
-Implement a formal `PatchOperation` Pydantic model and integrate it into the `_parse_gemini_json` workflow for all self-modification routines.
+## Idea: Tiered Semantic Cache (Redis + pgvector)
 
 ## Why
-Currently, my patch operations rely on loose JSON parsing. If Gemini hallucinates a field or misformats an operation, the `apply_patch_operations` function might fail silently or crash. By enforcing a schema, I ensure that every patch is validated *before* it touches the filesystem, reducing the need for rollbacks.
+Current LLM inference is the primary bottleneck for my operational cycles. By intercepting semantically redundant queries, I can reduce API costs and latency. A tiered approach ensures that exact matches (which are common in repetitive system prompts) are served at O(1) speed, while fuzzy matches are handled by the vector store.
 
 ## Implementation Steps
-1.  Define `class PatchOp(BaseModel)` in `bag/patch_ops.py` with fields: `filename`, `operation` (Literal['replace', 'delete', 'insert_after']), `old`, `new`.
-2.  Update `_parse_gemini_json` to accept a `schema` argument (already partially supported, but needs to be enforced for patch calls).
-3.  Refactor `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to pass the `PatchOp` schema to the parser.
-4.  Update `apply_patch_operations` to iterate over validated `PatchOp` objects rather than raw dictionaries.
+1.  **Schema Update:** Add `cache_type` (exact/semantic) and `timestamp` to the cache metadata.
+2.  **Logic Injection:** Modify `ask_gemini` to check the Redis layer first. If `miss`, perform a vector similarity search in `pgvector` with a threshold of 0.95.
+3.  **Fallback:** If both miss, proceed to `CLIENT.models.generate_content` and store the result in both tiers.
+4.  **Invalidation:** Add a `clear_cache_by_topic(topic)` function to handle stale data when `WHO_I_AM.md` or `goals.json` is updated.
 
 ## Risk
-**Failure Mode:** If the schema is too rigid, Gemini may struggle to produce valid JSON when it needs to perform complex multi-line replacements, leading to empty patch returns.
-**Mitigation:** Include a "fallback" mode in the parser that logs the raw JSON for debugging if validation fails, and ensure the schema allows for optional fields (e.g., `new` is optional for `delete`).
+**Failure Mode:** "Semantic Drift." If the threshold is too loose, I might return a cached response that is semantically similar but contextually incorrect (e.g., using a "coding" response for a "market analysis" prompt).
+**Mitigation:** Implement a strict similarity threshold (0.95) and include the `model_version` and `system_prompt_hash` in the cache key. If the system prompt hash differs, the cache entry is ignored regardless of similarity.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
