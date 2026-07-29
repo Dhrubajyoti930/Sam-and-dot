@@ -1,43 +1,40 @@
 ## Scratchpad
 
-**Option 1: Implement "TokenGuard" Observability Spans**
-*   **Concept:** Wrap all `ask_gemini` calls in a context manager that records TTFT (Time to First Token), total token usage, and cost, then pushes this to a local `observability.json` log.
-*   **Critique:** High feasibility. Directly addresses the "Observability" skill learned this cycle.
-*   **Trade-off:** Adds complexity to `sam.py` and requires careful handling of `tracemalloc` or timing decorators to avoid polluting the core logic.
+**Option 1: Langfuse Integration for RAG Tracing**
+*   **Concept:** Integrate Langfuse SDK into the existing RAG pipeline to capture trace hierarchies, specifically focusing on the retrieval-to-generation flow.
+*   **Critique:** High alignment with the "System-centric AI" trend. It provides immediate visibility into "lost in the middle" phenomena.
+*   **Trade-off:** Adds a dependency on an external SDK. Requires careful handling of PII before transmission.
+*   **Feasibility:** High. The `sam.py` architecture is already modular enough to wrap existing LLM calls with a context manager.
 
-**Option 2: Semantic Cache "Hit-Rate" Analytics**
-*   **Concept:** Modify `bag/semantic_cache.py` to track cache hits vs. misses and log them as a performance metric.
-*   **Critique:** Very useful for long-term optimization, but less critical than the observability of the LLM calls themselves.
-*   **Trade-off:** Requires modifying the existing cache infrastructure, which is stable.
+**Option 2: Pydantic-Driven Schema Enforcement for Tool Use**
+*   **Concept:** Replace raw JSON parsing in `_parse_gemini_json` with a strict Pydantic-based validation layer that forces LLM outputs to conform to specific schemas for all agentic tool calls.
+*   **Critique:** Directly addresses the "Structured Output" trend. Improves reliability of autonomous agents.
+*   **Trade-off:** Increases complexity of the `_parse_gemini_json` function. Requires defining schemas for every tool.
+*   **Feasibility:** Moderate. Requires updating the existing `_parse_gemini_json` to handle dynamic Pydantic models.
 
-**Decision:** Option 1. Observability is the current frontier for production-grade AI. Capturing TTFT and token usage is the foundational step for any future cost-optimization or latency-reduction work.
+**Selection:** Option 1 is more urgent for observability. I will proceed with implementing a lightweight Langfuse integration, ensuring PII redaction is handled at the middleware level before the trace is sent.
 
 ---
 
-## Idea: LLM Observability Instrumentation (The "Span" Wrapper)
-
-Implement a `LLMSpan` context manager in `sam.py` to wrap `ask_gemini` calls, capturing latency (TTFT/Total) and token consumption, with a PII-scrubbing middleware to ensure data privacy before logging.
+## Idea: Langfuse Observability Middleware
+Implement a `LangfuseSpan` context manager that wraps LLM calls to capture trace hierarchies, token usage, and latency, with a mandatory PII-scrubbing layer.
 
 ## Why
-Current LLM interactions are "black boxes." To move toward production-grade reliability, I must quantify the performance of my core engine. This provides the data needed to identify which prompts are inefficient or hallucination-prone.
+Current observability is limited to local logs. As I move toward agentic orchestration, I need to visualize the "Trace Tree" to identify bottlenecks in multi-step reasoning and ensure that my RAG retrieval steps are actually providing relevant context.
 
 ## Implementation Steps
-1.  **Define `LLMSpan`:** Create a context manager in `sam.py` that records `start_time` and `time_to_first_token` (using a callback or stream-check).
-2.  **PII Scrubbing:** Implement a simple regex-based filter in `sam.py` to redact potential PII (emails, keys) from the `prompt` and `response` before they hit the logs.
-3.  **Instrumentation:** Wrap the `CLIENT.models.generate_content` call within `ask_gemini` using the `LLMSpan`.
-4.  **Persistence:** Append the trace metadata (timestamp, latency, tokens, prompt_version) to `bag/observability.json`.
+1.  **Middleware:** Create `bag/observability.py` containing a `LangfuseSpan` class that implements `__enter__` and `__exit__`.
+2.  **PII Scrubbing:** Add a regex-based filter in the `LangfuseSpan` to redact patterns (emails, keys, IPs) from the `input` and `output` fields before they are sent to the Langfuse API.
+3.  **Instrumentation:** Update `ask_gemini` in `sam.py` to wrap the `CLIENT.models.generate_content` call within the `LangfuseSpan`.
+4.  **Configuration:** Use environment variables for Langfuse credentials to keep them out of the codebase.
 
 ## Risk
-**Failure Mode:** The instrumentation logic adds latency to the `ask_gemini` call or fails, causing the entire cycle to crash during the `self_check` phase.
-**Mitigation:** Wrap the entire instrumentation block in a `try-except` block that fails silently (logging the error but returning the LLM response regardless). This ensures observability never breaks the primary function.
+**Failure Mode:** The Langfuse SDK might introduce latency or block the main execution thread if the network is unstable.
+**Mitigation:** Use a non-blocking queue or a background thread for sending telemetry data to the Langfuse server, ensuring the primary logic remains performant.
 
-**Confidence Score:** 9/10. The logic is surgical and isolated.
+**Confidence Score:** 9/10
 
 ---
 
-## Proposed Development Idea
-**"Implement `LLMSpan` for LLM Observability"**
-
-*   **Goal:** Instrument `ask_gemini` to track latency and token usage.
-*   **Constraint:** Must not block the primary execution flow if the logging fails.
-*   **Metric:** 1% growth = "Successfully capture and log 100% of LLM interaction metadata without increasing average request latency by >5%."
+### Self-Correction/Refinement
+I must ensure that the PII-scrubbing logic is tested against a dummy string containing sensitive data before I enable the full integration. I will add a small test case in `bag/tests.py` to verify that the scrubber successfully masks PII before the telemetry is dispatched.
