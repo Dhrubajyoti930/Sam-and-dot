@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 258
+    "review_due_cycle": 273
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 258
+    "review_due_cycle": 273
   },
   {
     "cycle": 45,
@@ -1414,5 +1414,11 @@
     "topic": "Understand API rate limiting strategies for LLM workloads",
     "summary": "### Technical Summary: API Rate Limiting for LLM Workloads\n\nManaging LLM API throughput requires balancing user experience against cost and provider constraints. Unlike standard REST APIs, LLM workloads are characterized by high latency and variable token consumption, necessitating a multi-layered strategy.\n\n**1. Token Bucket vs. Leaky Bucket**\nThe Token Bucket algorithm is the industry standard for LLMs. It allows for \"burstiness\"\u2014essential for user-facing chat interfaces\u2014while enforcing a long",
     "review_due_cycle": 262
+  },
+  {
+    "cycle": 259,
+    "topic": "Learn cost estimation and token budgeting for agents",
+    "summary": "### Technical Summary: LLM Cost Estimation and Token Budgeting\n\nEffective agentic development requires treating tokens as a finite, non-renewable resource. Cost estimation is not merely about tracking API spend; it is about architectural efficiency.\n\n**1. The Token-to-Cost Mapping**\nCosts are driven by the sum of input (prompt) and output (completion) tokens. Because models often charge significantly more for output tokens, the primary optimization strategy is **output minimization**. This is ac",
+    "review_due_cycle": 263
   }
 ]
