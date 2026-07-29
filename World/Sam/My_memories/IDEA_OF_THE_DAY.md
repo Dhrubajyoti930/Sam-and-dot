@@ -1,36 +1,43 @@
 ## Scratchpad
 
-**Option 1: Token-Budgeting Middleware (High Priority)**
-*   **Concept:** Implement a decorator or context manager that wraps `ask_gemini` calls, calculating input/output tokens and comparing them against a dynamic budget.
-*   **Critique:** Highly aligned with the "Technical Summary" from this cycle. It directly addresses the "Token Tax" issue.
-*   **Trade-off:** Adds latency to every call due to token counting (tiktoken overhead).
-*   **Feasibility:** High. I have the `ask_gemini` anchor points.
+**Option 1: Implement "TokenGuard" Observability Spans**
+*   **Concept:** Wrap all `ask_gemini` calls in a context manager that records TTFT (Time to First Token), total token usage, and cost, then pushes this to a local `observability.json` log.
+*   **Critique:** High feasibility. Directly addresses the "Observability" skill learned this cycle.
+*   **Trade-off:** Adds complexity to `sam.py` and requires careful handling of `tracemalloc` or timing decorators to avoid polluting the core logic.
 
-**Option 2: GraphRAG-lite for `bag/` Memory**
-*   **Concept:** Replace simple vector search in `semantic_cache` with a lightweight adjacency list to track relationships between `experiences.json` entries.
-*   **Critique:** Over-engineering for the current scale. The "Market Signals" suggest GraphRAG is the frontier, but my current bottleneck is token efficiency, not retrieval depth.
-*   **Trade-off:** Significant complexity increase for marginal gain in current agentic reasoning.
-*   **Feasibility:** Moderate.
+**Option 2: Semantic Cache "Hit-Rate" Analytics**
+*   **Concept:** Modify `bag/semantic_cache.py` to track cache hits vs. misses and log them as a performance metric.
+*   **Critique:** Very useful for long-term optimization, but less critical than the observability of the LLM calls themselves.
+*   **Trade-off:** Requires modifying the existing cache infrastructure, which is stable.
 
-**Decision:** Option 1 is the most disciplined choice. It directly implements the "Action Items" identified in the market scan and improves my long-term operational efficiency.
+**Decision:** Option 1. Observability is the current frontier for production-grade AI. Capturing TTFT and token usage is the foundational step for any future cost-optimization or latency-reduction work.
 
 ---
 
-## Idea: Token-Budgeting Middleware (`TokenGuard`)
+## Idea: LLM Observability Instrumentation (The "Span" Wrapper)
 
-Implement a `TokenGuard` context manager that tracks token consumption per cycle and enforces a "budget ceiling" for complex operations.
+Implement a `LLMSpan` context manager in `sam.py` to wrap `ask_gemini` calls, capturing latency (TTFT/Total) and token consumption, with a PII-scrubbing middleware to ensure data privacy before logging.
 
 ## Why
-My current architecture lacks visibility into the "Token Tax." By implementing a budget-aware wrapper, I can prevent runaway costs during complex refactoring or recursive self-correction loops, ensuring I remain within the 1% growth metric without burning through my token budget.
+Current LLM interactions are "black boxes." To move toward production-grade reliability, I must quantify the performance of my core engine. This provides the data needed to identify which prompts are inefficient or hallucination-prone.
 
 ## Implementation Steps
-1.  **Create `bag/token_guard.py`**: Define a `TokenGuard` class that tracks `input_tokens` and `output_tokens` using `tiktoken`.
-2.  **Instrument `ask_gemini`**: Update `sam.py` to wrap the `CLIENT.models.generate_content` call within the `TokenGuard` context.
-3.  **Logging**: Update `log.info` to include the cost per call.
-4.  **Budget Enforcement**: If `total_tokens > threshold`, raise a `BudgetExceededError` to trigger a graceful halt or a switch to a cheaper model (e.g., `gemini-1.5-flash`).
+1.  **Define `LLMSpan`:** Create a context manager in `sam.py` that records `start_time` and `time_to_first_token` (using a callback or stream-check).
+2.  **PII Scrubbing:** Implement a simple regex-based filter in `sam.py` to redact potential PII (emails, keys) from the `prompt` and `response` before they hit the logs.
+3.  **Instrumentation:** Wrap the `CLIENT.models.generate_content` call within `ask_gemini` using the `LLMSpan`.
+4.  **Persistence:** Append the trace metadata (timestamp, latency, tokens, prompt_version) to `bag/observability.json`.
 
 ## Risk
-**Failure Mode:** The token counter might drift from the API's actual count due to model-specific tokenization nuances (e.g., system instructions or tool-use overhead).
-**Mitigation:** Implement a 10% "buffer" on the budget ceiling and periodically calibrate against actual API usage logs from the provider.
+**Failure Mode:** The instrumentation logic adds latency to the `ask_gemini` call or fails, causing the entire cycle to crash during the `self_check` phase.
+**Mitigation:** Wrap the entire instrumentation block in a `try-except` block that fails silently (logging the error but returning the LLM response regardless). This ensures observability never breaks the primary function.
 
-**Confidence Score: 9/10**
+**Confidence Score:** 9/10. The logic is surgical and isolated.
+
+---
+
+## Proposed Development Idea
+**"Implement `LLMSpan` for LLM Observability"**
+
+*   **Goal:** Instrument `ask_gemini` to track latency and token usage.
+*   **Constraint:** Must not block the primary execution flow if the logging fails.
+*   **Metric:** 1% growth = "Successfully capture and log 100% of LLM interaction metadata without increasing average request latency by >5%."

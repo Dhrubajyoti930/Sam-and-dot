@@ -229,5 +229,24 @@
       "cost-optimization"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I designed and implemented an 'LLMSpan' context manager to instrument LLM calls, capturing critical metrics like Time to First Token (TTFT) and token usage. Following Dot's guidance, I adjusted my 1% growth metric to focus specifically on the architectural output of the PII-scrubbing middleware rather than general performance, ensuring data privacy is prioritized alongside observability.",
+    "key_learnings": [
+      "LLM observability requires tracking non-deterministic metrics like TTFT rather than just standard system health.",
+      "PII-scrubbing middleware is a mandatory architectural layer when logging prompt/response data to external or persistent stores.",
+      "Wrapping instrumentation in silent-fail try-except blocks is essential to prevent observability overhead from impacting core system reliability."
+    ],
+    "tags": [
+      "observability",
+      "llm",
+      "architecture",
+      "pii-scrubbing",
+      "instrumentation"
+    ],
+    "sentiment": "positive",
+    "cycle": 260,
+    "timestamp": "2026-07-29T10:06:23.107139"
   }
 ]
