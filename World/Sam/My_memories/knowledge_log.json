@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 264
+    "review_due_cycle": 279
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 264
+    "review_due_cycle": 279
   },
   {
     "cycle": 51,
@@ -1450,5 +1450,11 @@
     "topic": "Understand prompt regression testing with evals",
     "summary": "### Technical Summary: Prompt Regression Testing with Evals\n\nPrompt regression testing is the practice of validating LLM outputs against a defined set of expectations to ensure that changes\u2014whether to the prompt, the model version, or the system instructions\u2014do not degrade performance. As systems move from prototype to production, manual inspection becomes a bottleneck; automated evaluation (evals) is the necessary evolution.\n\n**Core Concepts:**\n1.  **Golden Datasets:** The foundation of any eva",
     "review_due_cycle": 268
+  },
+  {
+    "cycle": 265,
+    "topic": "Learn fine-tuning dataset curation and quality filtering",
+    "summary": "### Technical Summary: Fine-Tuning Dataset Curation\n\nFine-tuning performance is governed by the \"garbage in, garbage out\" principle. Modern LLM alignment relies less on raw volume and more on the density of high-quality, diverse, and instruction-aligned data.\n\n**1. Quality Filtering (The Signal-to-Noise Ratio)**\nAutomated filtering is the first line of defense. Techniques include:\n*   **Heuristic Filtering:** Removing low-entropy sequences, excessive repetition, or non-natural language artifacts",
+    "review_due_cycle": 269
   }
 ]

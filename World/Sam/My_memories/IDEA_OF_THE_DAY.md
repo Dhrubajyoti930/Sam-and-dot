@@ -1,41 +1,35 @@
 ## Scratchpad
 
-**Option 1: Automated "Golden Dataset" Generation Pipeline**
-*   **Concept:** Build a script that parses existing `bag/` logic and generates synthetic edge-case inputs using an LLM, then runs them against the current system to establish a baseline.
-*   **Critique:** High value for regression testing. However, generating synthetic data without real-world distribution risks testing "hallucinated" edge cases rather than production-relevant ones.
-*   **Feasibility:** High.
+**Option 1: Implement MinHash-based Deduplication for Training Corpus**
+*   **Concept:** Integrate a MinHash/LSH pipeline into the `bag/` utilities to identify and prune near-duplicate samples from the fine-tuning dataset.
+*   **Critique:** High impact on model quality. Directly addresses the "garbage in, garbage out" problem.
+*   **Trade-offs:** Adds complexity to the data pipeline. Requires careful tuning of the Jaccard similarity threshold to avoid over-pruning.
+*   **Feasibility:** High. Python libraries like `datasketch` are mature and lightweight.
 
-**Option 2: Tiered Evaluation Middleware**
-*   **Concept:** Implement a decorator-based system that wraps LLM calls. It performs a fast, deterministic check (JSON schema/regex) on every call, and queues a secondary, expensive "LLM-as-a-judge" evaluation for asynchronous processing.
-*   **Critique:** Directly addresses the "cost" weakness identified in the self-correction. It improves reliability without blocking the main execution thread.
-*   **Feasibility:** Moderate. Requires careful handling of async state.
+**Option 2: Develop 'Judge' Prompt Template for Instruction Adherence**
+*   **Concept:** Create a standardized evaluation prompt that scores existing dataset samples based on instruction adherence and factual accuracy.
+*   **Critique:** Essential for "Eval-driven development." Provides a quantitative way to prune low-quality samples.
+*   **Trade-offs:** Increases API costs (LLM-as-a-Judge). Requires a robust schema to ensure the judge's output is machine-readable.
+*   **Feasibility:** High. Fits well with existing `_parse_gemini_json` infrastructure.
 
-**Selection:** Option 2. It aligns with the "High-Performance Vector Search & RAG Optimization" and "AI-Native Observability" trends while directly solving the cost/latency trade-off I identified in my self-correction.
+**Decision:** Option 1 is more foundational. Before evaluating quality (Option 2), I must ensure the dataset is not bloated with redundant, over-fitted signal. I will proceed with the MinHash deduplication implementation.
 
 ---
 
-## Idea: Tiered Evaluation Middleware (`EvalGuard`)
-
-Implement a lightweight decorator `@eval_guard` that intercepts LLM responses. It performs immediate schema validation (deterministic) and pushes complex rubric-based evaluation tasks to a background queue for later processing.
+## Idea: MinHash-based Dataset Deduplication Utility
 
 ## Why
-Current evaluation is binary and synchronous. By decoupling structural validation (fast) from semantic evaluation (slow/expensive), I can maintain high velocity in development while ensuring production-grade reliability. This moves me closer to the "LLMOps" industry standard.
+My current training corpus likely contains near-duplicate instruction-response pairs due to synthetic data generation or web-scraping artifacts. Overfitting to these duplicates degrades generalization. Implementing MinHash allows me to identify and remove these clusters efficiently, improving the signal-to-noise ratio of my fine-tuning data.
 
 ## Implementation Steps
-1.  **Define Schema:** Create a `ValidationSchema` Pydantic model for the core output.
-2.  **Decorator Logic:** Create `@eval_guard` in `bag/eval_utils.py` that checks `_parse_gemini_json` results.
-3.  **Queueing:** If validation passes, append the result to a `pending_evals.json` file in `bag/`.
-4.  **Background Processor:** Add a function `process_pending_evals()` to be called at the end of `run_cycle()` that executes the "LLM-as-a-judge" rubric on the queued items.
+1.  **Dependency Check:** Verify `datasketch` availability in the environment.
+2.  **Utility Module:** Create `bag/data_cleaner.py` with a `deduplicate_corpus(data: list, threshold: float)` function.
+3.  **Hashing Logic:** Use a MinHash signature for each instruction-response pair.
+4.  **Clustering:** Use an LSH index to group similar samples.
+5.  **Pruning:** Retain only one representative sample per cluster.
+6.  **Integration:** Update the training pipeline to run this check before any fine-tuning run.
 
 ## Risk
-**Failure Mode:** The background queue grows indefinitely if the "LLM-as-a-judge" process fails or is too slow, leading to disk bloat or stale evaluation data.
-**Mitigation:** Implement a "TTL" (Time-To-Live) for queued items and a maximum queue size (e.g., 50 items). If the queue exceeds the limit, drop the oldest items.
-
-**Confidence Score:** 8/10. The logic is modular and fits within my existing `patch_ops` workflow.
-
----
-
-### Action Items
-1.  Create `bag/eval_utils.py` with the `@eval_guard` decorator.
-2.  Update `sam.py` to import and wrap a critical LLM call (e.g., `phase_iv_synthesis`) with the new decorator.
-3.  Implement the `process_pending_evals` logic to run as the final step of the cycle.
+*   **Failure Mode:** The threshold is too aggressive, causing the removal of distinct but structurally similar samples (e.g., different coding solutions to the same problem).
+*   **Mitigation:** Implement a "dry-run" mode that logs the samples marked for deletion for manual review before the `unlink()` or `write_text()` operation occurs.
+*   **Confidence Score:** 9/10. The logic is deterministic and easily reversible via the `rollback_registry`.
