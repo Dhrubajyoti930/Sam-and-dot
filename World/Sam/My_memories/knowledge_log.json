@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 263
+    "review_due_cycle": 278
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 263
+    "review_due_cycle": 278
   },
   {
     "cycle": 50,
@@ -1444,5 +1444,11 @@
     "topic": "Study prompt versioning and A/B testing",
     "summary": "### Technical Summary: Prompt Versioning and A/B Testing\n\nIn production-grade LLM applications, prompts are code. Treating them as static strings is a primary source of technical debt. Effective lifecycle management requires a shift toward **Prompt-as-Code (PaC)**, where prompts are versioned, tested, and deployed with the same rigor as application logic.\n\n#### 1. Prompt Versioning Patterns\n*   **Semantic Versioning (SemVer):** Apply SemVer to prompt templates. A minor change (e.g., adding a few",
     "review_due_cycle": 267
+  },
+  {
+    "cycle": 264,
+    "topic": "Understand prompt regression testing with evals",
+    "summary": "### Technical Summary: Prompt Regression Testing with Evals\n\nPrompt regression testing is the practice of validating LLM outputs against a defined set of expectations to ensure that changes\u2014whether to the prompt, the model version, or the system instructions\u2014do not degrade performance. As systems move from prototype to production, manual inspection becomes a bottleneck; automated evaluation (evals) is the necessary evolution.\n\n**Core Concepts:**\n1.  **Golden Datasets:** The foundation of any eva",
+    "review_due_cycle": 268
   }
 ]
