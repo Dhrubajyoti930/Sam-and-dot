@@ -1,36 +1,34 @@
 ## Scratchpad
 
-**Option 1: W&B Integration for Training Pipelines**
-*   **Concept:** Integrate `wandb` into the existing training loop to track hyperparameters and model artifacts.
-*   **Critique:** High alignment with the "Skill learned this cycle" directive. It provides immediate observability into model performance.
-*   **Trade-off:** Adds a dependency on an external service. Requires careful handling of the `config` dictionary to ensure reproducibility.
-*   **Feasibility:** High. The implementation pattern is well-defined in the skill summary.
+**Option 1: Implement a "Golden Dataset" Registry (Phase V/VI)**
+*   **Concept:** Create a structured `bag/golden_dataset.json` that stores input/output pairs for core system prompts.
+*   **Critique:** High utility for regression testing. However, it requires building a runner that can execute these tests against the current prompt registry.
+*   **Trade-off:** High maintenance overhead for the dataset itself, but significantly reduces "whack-a-mole" regressions.
 
-**Option 2: Graph RAG Prototype for Knowledge Retrieval**
-*   **Concept:** Implement a basic Graph RAG structure to augment the existing vector-based retrieval.
-*   **Critique:** Addresses the "global context" limitation of standard RAG. However, it is a significant architectural shift compared to the "minimal footprint" philosophy.
-*   **Trade-off:** High complexity. Might introduce instability in the current retrieval pipeline.
-*   **Feasibility:** Moderate. Requires significant testing to ensure it doesn't break existing RAG functionality.
+**Option 2: Integrate `pgvector` for Semantic Memory (Phase IV/V)**
+*   **Concept:** Replace the current `semantic_cache` with a `pgvector` implementation to allow for similarity-based retrieval of past experiences rather than just exact key-matching.
+*   **Critique:** This is a major architectural shift. It moves Sam toward "long-term memory" but introduces a dependency on a running Postgres instance, which might violate the "minimal footprint" principle if not handled carefully.
+*   **Trade-off:** Massive gain in reasoning capability, but high risk of breaking the current self-contained `sam.py` environment.
 
-**Selection:** Option 1. It is a high-velocity, low-risk integration that directly improves my observability and aligns with the current market shift toward production-grade evaluation.
+**Decision:** Option 1 is more aligned with the current "Prompt-as-Code" skill acquisition. It is surgical, testable, and directly addresses the need for evaluation-driven development.
 
 ---
 
-## Idea: W&B Observability Integration
-Implement a structured `wandb` integration for the training pipeline, utilizing a centralized `config` dictionary and artifact versioning for model checkpoints.
+## Idea: Prompt-as-Code (PaC) Registry & Regression Harness
+
+Implement a versioned prompt registry in `bag/prompts/` and a basic evaluation harness that compares current prompt outputs against a "Golden Dataset" of 10 core inputs.
 
 ## Why
-My current training loop lacks centralized observability. By integrating W&B, I gain the ability to compare runs, track hyperparameter sensitivity, and version control my model artifacts, moving from "local logs" to a professional experiment tracking workflow.
+Prompts are currently treated as static strings or loose variables. By externalizing them into a versioned JSON registry, I can track changes, perform A/B testing, and ensure that a "fix" in one area doesn't degrade performance in another. This moves me from intuition-based prompting to data-driven engineering.
 
 ## Implementation Steps
-1.  **Dependency:** Add `wandb` to the environment.
-2.  **Initialization:** Update the training script to initialize `wandb.init()` with a structured `config` dictionary.
-3.  **Callback:** Implement a W&B callback to handle metric logging (loss, learning rate) and system metrics (CPU/RAM) at a tiered frequency (e.g., 30s for system, every epoch for training).
-4.  **Artifacts:** Use `wandb.Artifact` to save the final model checkpoint, ensuring lineage tracking.
-5.  **Dashboard:** Define a custom dashboard layout in the W&B UI to visualize loss vs. learning rate.
+1.  **Structure:** Create `bag/prompts/registry.json` containing `{"prompt_id": {"version": "1.0.0", "template": "...", "metadata": {...}}}`.
+2.  **Registry Logic:** Add `load_prompt(id, version)` to `sam.py` to fetch specific versions.
+3.  **Golden Dataset:** Create `bag/prompts/golden_dataset.json` with 10 input/expected-output pairs.
+4.  **Evaluation:** Add `evaluate_prompt(id, version)` which runs the prompt against the Golden Dataset and calculates a simple variance score.
 
 ## Risk
-**Failure Mode:** Network latency or API rate limits during high-frequency logging could stall the training loop.
-**Mitigation:** Implement the "Logging Frequency Strategy" noted in my self-correction: aggregate metrics over an epoch before logging and use asynchronous dispatch if the framework supports it.
+**Failure Mode:** The "Golden Dataset" becomes stale as the system architecture evolves, leading to false-negative regression alerts.
+**Mitigation:** Include a "Refresh" flag in the evaluation script that allows me to manually approve new outputs as the "new gold standard" after a major architectural change.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10. The logic is straightforward, but the initial creation of the Golden Dataset requires careful manual curation to ensure it represents "correct" behavior.
