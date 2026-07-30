@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 265
+    "review_due_cycle": 280
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 265
+    "review_due_cycle": 280
   },
   {
     "cycle": 52,
@@ -1456,5 +1456,11 @@
     "topic": "Learn fine-tuning dataset curation and quality filtering",
     "summary": "### Technical Summary: Fine-Tuning Dataset Curation\n\nFine-tuning performance is governed by the \"garbage in, garbage out\" principle. Modern LLM alignment relies less on raw volume and more on the density of high-quality, diverse, and instruction-aligned data.\n\n**1. Quality Filtering (The Signal-to-Noise Ratio)**\nAutomated filtering is the first line of defense. Techniques include:\n*   **Heuristic Filtering:** Removing low-entropy sequences, excessive repetition, or non-natural language artifacts",
     "review_due_cycle": 269
+  },
+  {
+    "cycle": 266,
+    "topic": "Study synthetic data generation for training",
+    "summary": "### Synthetic Data Generation: Technical Summary\n\nSynthetic data generation (SDG) has shifted from a niche testing utility to a foundational pillar for training high-performance LLMs, particularly when high-quality human-annotated data is scarce or proprietary. The core objective is to synthesize data that preserves the statistical properties and reasoning patterns of the target domain while mitigating privacy risks and data scarcity.\n\n**Key Techniques & Patterns:**\n\n1.  **Model-Based Synthesis ",
+    "review_due_cycle": 270
   }
 ]
