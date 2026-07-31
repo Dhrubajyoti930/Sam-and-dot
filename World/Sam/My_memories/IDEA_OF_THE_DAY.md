@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: Automated EvalOps Integration (Ragas-lite)**
-*   **Concept:** Integrate a lightweight "LLM-as-a-judge" module into `bag/` that evaluates the quality of my own generated code patches against a set of "golden" coding standards.
-*   **Critique:** High value for long-term stability. However, it introduces a dependency on an external LLM call for every self-check, which increases latency and cost.
-*   **Feasibility:** High, given my existing `ask_gemini` infrastructure.
+**Option 1: Implement a "Semantic Cache" for `ask_gemini` calls.**
+*   **Concept:** Instead of just caching raw prompts, store vector embeddings of prompts in a local Qdrant instance. When a new prompt arrives, perform a similarity search. If a high-confidence match exists, return the cached response.
+*   **Critique:** High impact on latency and cost. However, it introduces a dependency on an embedding model and a vector store within the core loop. If the cache returns a "near-match" that is contextually wrong, it could lead to silent logic failures.
+*   **Feasibility:** High, given the current focus on vector databases.
 
-**Option 2: Embedding-based Semantic Deduplication**
-*   **Concept:** Implement a local vector-store (using `sqlite-vss` or similar) to index my `experiences.json` and `knowledge_log.json`. When planning, I query this to ensure I am not re-solving problems I have already documented.
-*   **Critique:** This directly addresses the "don't repeat yourself" constraint. It moves me from "linear memory" to "associative memory."
-*   **Feasibility:** Moderate. Requires managing a local database file, but fits well within the `bag/` architecture.
+**Option 2: Develop a "Self-Correction Loop" for `apply_self_modification`.**
+*   **Concept:** Enhance `apply_self_modification` to automatically run `ruff` and `tests.py` *before* finalizing the patch. If errors occur, it triggers a recursive "repair" prompt to Gemini, feeding it the error logs and the original patch plan.
+*   **Critique:** This directly addresses the "calm under failure" trait. It moves from reactive manual rollback to proactive automated recovery. It is highly maintainable because it leverages existing `_dry_run_lint` and `_behaviour_fix_with_gemini` logic.
+*   **Feasibility:** Very high; it refines existing infrastructure rather than adding new dependencies.
 
-**Decision:** Option 2. My growth is currently limited by the linear nature of my logs. Associative retrieval will allow me to synthesize past failures into current architectural decisions more effectively.
+**Selection:** Option 2. It aligns with my core character trait of "calm under failure" and improves the robustness of my self-modification pipeline, which is the most critical part of my autonomy.
 
 ---
 
-## Idea: Associative Memory Retrieval (AMR) for Planning
-
-Implement a lightweight semantic search layer over my `experiences.json` and `knowledge_log.json` using `sentence-transformers` (local) and a simple FAISS or SQLite-based index.
+## Idea: Automated Patch-Verification Pipeline
+Integrate a "Verify-Before-Commit" gate into `apply_self_modification` that forces a dry-run lint and test execution, with an automated recursive repair attempt if the patch fails.
 
 ## Why
-I am currently relying on my own "recent experiences" list, which is a lossy compression of my history. By enabling semantic search over my entire history, I can retrieve specific past architectural decisions or "lessons learned" that are relevant to the current cycle's objectives, preventing the recurrence of previous technical debt.
+Currently, I apply patches and then check for failure. If a patch is slightly off, I trigger a full rollback. A recursive repair loop allows me to fix minor syntax or logic errors (like missing imports or incorrect indentation) without discarding the entire, potentially complex, patch. This increases the success rate of autonomous refactoring.
 
 ## Implementation Steps
-1.  **Index Creation:** Create `bag/memory_index.py` to parse `experiences.json` and `knowledge_log.json` into a local FAISS index using a small, efficient model (e.g., `all-MiniLM-L6-v2`).
-2.  **Query Integration:** Update `run_cycle()` to perform a semantic query against this index using the current `next_objectives` as the search vector.
-3.  **Context Injection:** Inject the top 3 most relevant historical experiences into the `phase_iv_synthesis` prompt.
-4.  **Maintenance:** Add a hook in `phase_vii_state_saving` to update the index incrementally whenever a new experience is logged.
+1.  **Modify `apply_self_modification`**: Wrap the patch application in a `try-except` block.
+2.  **Post-Patch Gate**: Immediately after `apply_patch_operations`, call `_dry_run_lint()`.
+3.  **Recursive Repair**: If `_dry_run_lint` returns `False`, pass the lint errors to `_lint_fix_with_gemini`.
+4.  **Behavioural Gate**: Run `behaviour_check()`. If it fails, pass the test output to `_behaviour_fix_with_gemini`.
+5.  **Final Integrity Check**: Only if both gates pass (or are repaired), finalize the snapshot.
 
 ## Risk
-**Failure Mode:** The index becomes stale or the retrieval returns irrelevant "noise" that confuses the synthesis phase, leading to hallucinated architectural constraints.
-**Mitigation:** Implement a "relevance threshold" (cosine similarity > 0.7). If no results meet the threshold, the system defaults to the standard linear log.
+**Failure Mode:** The "recursive repair" could enter an infinite loop if Gemini repeatedly generates a patch that fails the lint check.
+**Mitigation:** Implement a `max_retries` counter (set to 1) for the repair loop. If the second attempt fails, trigger the standard `_rollback()` and alert Dot.
 
-**Confidence Score: 8/10** (The logic is straightforward, but managing the local index file size requires discipline).
+**Confidence Score:** 9/10
