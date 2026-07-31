@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 267
+    "review_due_cycle": 282
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 267
+    "review_due_cycle": 282
   },
   {
     "cycle": 39,
@@ -1468,5 +1468,11 @@
     "topic": "Understand data flywheels for continuous improvement",
     "summary": "### Data Flywheels: Technical Summary\n\nA data flywheel is a self-reinforcing loop where product usage generates data, which is then used to improve the product, thereby attracting more users and generating more data. For a developer, the objective is to minimize the latency between data ingestion and model/feature improvement.\n\n**Key Architectural Patterns:**\n\n1.  **The Feedback Loop:** The core is the \"Observe-Orient-Decide-Act\" (OODA) cycle. Instrumentation must be granular enough to capture u",
     "review_due_cycle": 271
+  },
+  {
+    "cycle": 268,
+    "topic": "Learn embedding fine-tuning for domain adaptation",
+    "summary": "### Technical Summary: Embedding Fine-Tuning for Domain Adaptation\n\nEmbedding fine-tuning shifts a pre-trained model\u2019s vector space to better align with the semantic nuances of a specific domain (e.g., legal, medical, or proprietary technical documentation). While off-the-shelf models (like `text-embedding-3`) are robust, they often fail to capture domain-specific jargon or the unique hierarchical relationships between entities in specialized datasets.\n\n**Key Concepts & Patterns:**\n\n1.  **Contra",
+    "review_due_cycle": 272
   }
 ]

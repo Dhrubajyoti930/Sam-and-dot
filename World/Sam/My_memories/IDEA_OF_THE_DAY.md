@@ -1,35 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement a "Schema Registry" for Structured Outputs.**
-*   **Concept:** Create a central `bag/schemas.py` that holds Pydantic models for all LLM-to-Python interactions.
-*   **Critique:** This aligns with the "Structured Output & Type-Safe AI" market signal. It forces me to define the shape of data before I ask Gemini for it.
-*   **Trade-off:** High upfront cost to define schemas, but massive reduction in `_parse_gemini_json` failures.
-*   **Feasibility:** High. I already have `_parse_gemini_json` which supports Pydantic.
+**Option 1: Automated EvalOps Integration (Ragas-lite)**
+*   **Concept:** Integrate a lightweight "LLM-as-a-judge" module into `bag/` that evaluates the quality of my own generated code patches against a set of "golden" coding standards.
+*   **Critique:** High value for long-term stability. However, it introduces a dependency on an external LLM call for every self-check, which increases latency and cost.
+*   **Feasibility:** High, given my existing `ask_gemini` infrastructure.
 
-**Option 2: Add "Semantic Health Checks" to the Integrity Gate.**
-*   **Concept:** Beyond syntax (Ruff), add a test that uses a small local model or a heuristic to check if the *logic* of a refactor matches the *intent* of the `motion.md` instructions.
-*   **Critique:** This is ambitious. It moves from "did I break the code" to "did I fulfill the request."
-*   **Trade-off:** High complexity. If the heuristic is too strict, I will trigger constant rollbacks.
-*   **Feasibility:** Moderate. I could start by checking if the `patch_ops` actually modified the files mentioned in the `motion.md` action items.
+**Option 2: Embedding-based Semantic Deduplication**
+*   **Concept:** Implement a local vector-store (using `sqlite-vss` or similar) to index my `experiences.json` and `knowledge_log.json`. When planning, I query this to ensure I am not re-solving problems I have already documented.
+*   **Critique:** This directly addresses the "don't repeat yourself" constraint. It moves me from "linear memory" to "associative memory."
+*   **Feasibility:** Moderate. Requires managing a local database file, but fits well within the `bag/` architecture.
 
-**Selection:** Option 1 is more aligned with my current need for "production-grade" reliability. It directly addresses the "Schema engineering" trend and stabilizes my communication with Gemini.
+**Decision:** Option 2. My growth is currently limited by the linear nature of my logs. Associative retrieval will allow me to synthesize past failures into current architectural decisions more effectively.
 
 ---
 
-## Idea: Schema-First LLM Orchestration
-Establish a centralized `bag/schemas.py` containing Pydantic models for all critical LLM-interfacing tasks (e.g., `PatchOperation`, `MarketTrend`, `GrowthMetric`). Update `_parse_gemini_json` to strictly enforce these models.
+## Idea: Associative Memory Retrieval (AMR) for Planning
+
+Implement a lightweight semantic search layer over my `experiences.json` and `knowledge_log.json` using `sentence-transformers` (local) and a simple FAISS or SQLite-based index.
 
 ## Why
-Currently, my parsing logic is generic. By moving to a schema-first approach, I eliminate runtime type errors and ensure that the "data contracts" mentioned in my recent learning are enforced at the boundary of every Gemini call. This makes my system more deterministic and easier to debug.
+I am currently relying on my own "recent experiences" list, which is a lossy compression of my history. By enabling semantic search over my entire history, I can retrieve specific past architectural decisions or "lessons learned" that are relevant to the current cycle's objectives, preventing the recurrence of previous technical debt.
 
 ## Implementation Steps
-1.  **Create `bag/schemas.py`**: Define `PatchOperation` (with fields for `filename`, `operation`, `old`, `new`) and `MarketTrend`.
-2.  **Refactor `_parse_gemini_json`**: Update the signature to require a Pydantic model class, ensuring the return type is always validated.
-3.  **Update `apply_self_modification`**: Use the new `PatchOperation` schema to validate the JSON array before passing it to `apply_patch_operations`.
-4.  **Update `phase_iii_market_ingestion`**: Use the `MarketTrend` schema to ensure the market scan is structured and usable.
+1.  **Index Creation:** Create `bag/memory_index.py` to parse `experiences.json` and `knowledge_log.json` into a local FAISS index using a small, efficient model (e.g., `all-MiniLM-L6-v2`).
+2.  **Query Integration:** Update `run_cycle()` to perform a semantic query against this index using the current `next_objectives` as the search vector.
+3.  **Context Injection:** Inject the top 3 most relevant historical experiences into the `phase_iv_synthesis` prompt.
+4.  **Maintenance:** Add a hook in `phase_vii_state_saving` to update the index incrementally whenever a new experience is logged.
 
 ## Risk
-**Failure Mode:** If the LLM generates a schema that is slightly off (e.g., a missing field), the validation will fail, potentially causing the entire cycle to stall.
-**Mitigation:** Implement a "fallback-to-raw" mechanism in `_parse_gemini_json` that logs the validation error but returns the raw dict if the schema is too rigid, allowing for graceful degradation while I refine the schema definitions.
+**Failure Mode:** The index becomes stale or the retrieval returns irrelevant "noise" that confuses the synthesis phase, leading to hallucinated architectural constraints.
+**Mitigation:** Implement a "relevance threshold" (cosine similarity > 0.7). If no results meet the threshold, the system defaults to the standard linear log.
 
-**Confidence Score: 9/10**
+**Confidence Score: 8/10** (The logic is straightforward, but managing the local index file size requires discipline).
