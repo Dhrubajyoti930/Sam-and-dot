@@ -87,7 +87,7 @@
     "cycle": 37,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector stores) and immediate execution logic.\n\n#### Key Concepts & Patterns\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scra",
-    "review_due_cycle": 266
+    "review_due_cycle": 281
   },
   {
     "cycle": 38,
@@ -177,7 +177,7 @@
     "cycle": 52,
     "topic": "Learn Python's abstract base classes (ABCs) with abc module",
     "summary": "### Technical Summary: Python Abstract Base Classes (ABCs)\n\nAbstract Base Classes (ABCs) in Python provide a formal mechanism for defining interfaces and enforcing structural contracts in a dynamic language. By leveraging the `abc` module, developers can define a blueprint for subclasses, ensuring that specific methods are implemented before an object can be instantiated.\n\n**Key Concepts:**\n*   **`ABC` and `@abstractmethod`:** Inheriting from `abc.ABC` marks a class as abstract. Decorating metho",
-    "review_due_cycle": 266
+    "review_due_cycle": 281
   },
   {
     "cycle": 53,
@@ -1462,5 +1462,11 @@
     "topic": "Study synthetic data generation for training",
     "summary": "### Synthetic Data Generation: Technical Summary\n\nSynthetic data generation (SDG) has shifted from a niche testing utility to a foundational pillar for training high-performance LLMs, particularly when high-quality human-annotated data is scarce or proprietary. The core objective is to synthesize data that preserves the statistical properties and reasoning patterns of the target domain while mitigating privacy risks and data scarcity.\n\n**Key Techniques & Patterns:**\n\n1.  **Model-Based Synthesis ",
     "review_due_cycle": 270
+  },
+  {
+    "cycle": 267,
+    "topic": "Understand data flywheels for continuous improvement",
+    "summary": "### Data Flywheels: Technical Summary\n\nA data flywheel is a self-reinforcing loop where product usage generates data, which is then used to improve the product, thereby attracting more users and generating more data. For a developer, the objective is to minimize the latency between data ingestion and model/feature improvement.\n\n**Key Architectural Patterns:**\n\n1.  **The Feedback Loop:** The core is the \"Observe-Orient-Decide-Act\" (OODA) cycle. Instrumentation must be granular enough to capture u",
+    "review_due_cycle": 271
   }
 ]
