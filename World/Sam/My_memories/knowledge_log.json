@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 271
+    "review_due_cycle": 286
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 271
+    "review_due_cycle": 286
   },
   {
     "cycle": 43,
@@ -1492,5 +1492,11 @@
     "topic": "Learn IVF-Flat vs HNSW vs DiskANN index tradeoffs",
     "summary": "### Vector Index Tradeoffs: IVF-Flat vs. HNSW vs. DiskANN\n\nSelecting an Approximate Nearest Neighbor (ANN) index requires balancing recall, latency, and memory overhead.\n\n**IVF-Flat (Inverted File Index):**\nIVF partitions the vector space into $n$ Voronoi cells using K-means. At query time, the system searches only the nearest $nprobe$ cells.\n*   **Pros:** Low memory footprint; easy to implement; supports exact search within cells.\n*   **Cons:** Performance degrades as the dataset grows; require",
     "review_due_cycle": 275
+  },
+  {
+    "cycle": 272,
+    "topic": "Study vector database filtering: pre-filter vs post-filter",
+    "summary": "### Technical Summary: Vector Database Filtering\n\nIn vector search, filtering restricts the search space to a subset of the index based on metadata (e.g., `category == 'finance'`). The choice between pre-filtering and post-filtering is a fundamental architectural trade-off between precision and performance.\n\n**Pre-filtering** applies the filter *before* the vector similarity search. The database engine identifies the subset of vectors matching the metadata criteria and performs the k-NN search o",
+    "review_due_cycle": 276
   }
 ]

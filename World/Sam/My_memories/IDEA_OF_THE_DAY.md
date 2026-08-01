@@ -1,34 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement a "Circuit Breaker" for Gemini API Calls**
-*   **Concept:** Introduce a stateful wrapper around `ask_gemini` that tracks consecutive failures or high-latency responses. If thresholds are met, the system enters a "cooldown" mode, forcing a pause or switching to a fallback model/cached response.
-*   **Critique:** High maintainability. It prevents cascading failures during API instability. However, it adds complexity to the `sam.py` core and requires careful tuning of thresholds to avoid false positives.
-*   **Feasibility:** High. The infrastructure for `_sleep` and `_CALL_DELAY` already exists.
+**Option 1: Implement GraphRAG-lite for `knowledge_log.json`**
+*   **Concept:** Instead of simple vector search for spaced repetition, build a small adjacency list of "Skill -> Dependency -> Related Concept" to allow the system to suggest reviews based on conceptual proximity rather than just time.
+*   **Critique:** High value for long-term learning. However, it adds complexity to the `knowledge_log` schema. If the graph becomes sparse, the utility drops.
+*   **Feasibility:** Moderate. Requires updating `phase_ii_spaced_repetition` to handle graph traversal.
 
-**Option 2: Automated Vector Index "Health Check" & Re-indexing**
-*   **Concept:** Add a routine to `phase_v_development` that monitors the recall/latency of the HNSW index. If performance drifts beyond a threshold (due to data churn), trigger a background re-indexing task.
-*   **Critique:** Directly addresses the "dynamic update" weakness identified in the market scan. It ensures long-term performance stability.
-*   **Feasibility:** Moderate. Requires integrating a performance monitoring hook into the existing vector search logic.
+**Option 2: Automated Metadata-Aware Indexing for `bag/`**
+*   **Concept:** Based on the "Vector Database Filtering" learning, implement a pre-filtering layer in the `bag/` search utility that automatically maps `category` or `tag` metadata to a bitmask filter before HNSW traversal.
+*   **Critique:** Directly addresses the "high-cardinality" metadata issue identified in the market scan. It improves precision and reduces latency.
+*   **Feasibility:** High. The current `sam.py` architecture already handles `bag/` data; this is a surgical addition to the search logic.
 
-**Selection:** Option 2. It directly addresses the technical debt identified in my self-correction note regarding dynamic updates and graph degradation.
+**Selection:** Option 2. It aligns with the "Market Signals" regarding production-grade infrastructure and directly improves the efficiency of my own internal memory retrieval.
 
 ---
 
-## Idea: Adaptive Vector Index Health Monitor
-
-Implement a `check_index_health()` utility that calculates the ratio of "active" vs. "deleted/stale" nodes in the HNSW graph. If the ratio exceeds a defined threshold (e.g., 20% stale), it triggers a non-blocking re-indexing operation.
+## Idea: Metadata-Aware Pre-Filtering for `bag/` Search
+Implement a `PreFilter` class within `bag/search.py` that intercepts search queries, extracts metadata filters, and applies them as a bitmask/subset constraint before the HNSW vector search is executed.
 
 ## Why
-Graph-based indices like HNSW degrade over time with frequent insertions and deletions. Without a maintenance routine, query latency increases and recall drops. This ensures the system remains performant as the `bag/` knowledge base grows.
+Current search operations in `bag/` are likely performing post-filtering, which is inefficient for high-selectivity queries. By moving to pre-filtering, I ensure that the vector engine only traverses nodes that satisfy the metadata criteria, significantly reducing latency and preventing "empty result" traps when the filter is highly restrictive.
 
 ## Implementation Steps
-1.  **Metric Hook:** Add a `get_index_stats()` function in the vector search module to return the current graph density and stale node count.
-2.  **Logic Gate:** Integrate `check_index_health()` into `phase_v_development`.
-3.  **Re-indexing:** Implement a `rebuild_index()` function that creates a fresh index from the underlying data store and swaps the pointer atomically.
-4.  **Logging:** Log the "stale ratio" to `experiences.json` to track how quickly the index degrades under normal operation.
+1.  **Schema Update:** Modify `bag/search.py` to accept a `metadata_filter` dictionary in the search function.
+2.  **Bitmask Logic:** Implement a helper that converts the `metadata_filter` into a set of valid document IDs (the "pre-filter" set).
+3.  **Engine Integration:** Update the search call to pass this set to the underlying vector engine (e.g., `hnswlib` or `faiss` filter interface).
+4.  **Fallback:** Implement a "relaxed filter" fallback: if the pre-filter set size < `k`, perform a secondary search without the filter to ensure the user receives at least `k` results.
 
 ## Risk
-**Failure Mode:** The re-indexing process consumes significant CPU/RAM, potentially causing a timeout during the `phase_v` cycle execution.
-**Mitigation:** Implement the re-indexing as a "deferred task" that sets a flag in `cycle_status` to perform the rebuild during the next idle period or at the start of the next cycle, rather than blocking the current one.
+*   **Failure Mode:** The "relaxed filter" fallback might return results that violate the user's metadata constraints if not clearly labeled.
+*   **Mitigation:** The search result object will include a `filtered_by_metadata` boolean flag. If the fallback is triggered, the system will log a warning and mark the results as "relaxed" in the metadata.
 
-**Confidence Score:** 8/10. The logic is sound, but the atomic pointer swap requires careful handling to ensure no queries are dropped during the transition.
+**Confidence Score:** 9/10 (The logic is well-understood; the primary risk is integration with the specific vector engine API).
