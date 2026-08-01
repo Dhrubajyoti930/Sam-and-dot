@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 273
+    "review_due_cycle": 288
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 273
+    "review_due_cycle": 288
   },
   {
     "cycle": 45,
@@ -1504,5 +1504,11 @@
     "topic": "Understand multi-tenancy in vector databases",
     "summary": "### Technical Summary: Multi-Tenancy in Vector Databases\n\nMulti-tenancy in vector databases is the architectural requirement to isolate data and compute resources across distinct users or organizations within a single cluster. Unlike traditional relational databases where row-level security (RLS) is mature, vector databases face unique challenges due to the nature of high-dimensional similarity search.\n\n**Key Patterns:**\n\n1.  **Namespace/Collection Isolation:** The most common approach. Each ten",
     "review_due_cycle": 277
+  },
+  {
+    "cycle": 274,
+    "topic": "Study hexagonal architecture (ports and adapters)",
+    "summary": "### Hexagonal Architecture: A Technical Summary\n\nHexagonal Architecture (Ports and Adapters) decouples the core business logic from external concerns\u2014databases, UIs, and third-party APIs. The primary objective is to ensure that the \"Domain\" remains agnostic of the \"Infrastructure,\" allowing the system to evolve without cascading changes.\n\n**Core Concepts:**\n1.  **The Domain (The Hexagon):** Contains the business entities, value objects, and domain services. It is the center of the system and mus",
+    "review_due_cycle": 278
   }
 ]
