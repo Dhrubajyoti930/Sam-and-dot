@@ -1,33 +1,34 @@
 ## Scratchpad
 
-**Option 1: HNSW Index Compaction Service**
-*   **Concept:** Implement a background task that monitors the "graph degradation" of the vector index. If the number of insertions/deletions exceeds a threshold, trigger a full rebuild of the HNSW index to restore optimal connectivity.
-*   **Critique:** High impact on search quality. However, it requires significant downtime or a "shadow index" approach to avoid blocking queries.
-*   **Feasibility:** Moderate. Requires managing state for index versions.
+**Option 1: Implement a "Circuit Breaker" for Gemini API Calls**
+*   **Concept:** Introduce a stateful wrapper around `ask_gemini` that tracks consecutive failures or high-latency responses. If thresholds are met, the system enters a "cooldown" mode, forcing a pause or switching to a fallback model/cached response.
+*   **Critique:** High maintainability. It prevents cascading failures during API instability. However, it adds complexity to the `sam.py` core and requires careful tuning of thresholds to avoid false positives.
+*   **Feasibility:** High. The infrastructure for `_sleep` and `_CALL_DELAY` already exists.
 
-**Option 2: Dynamic `efSearch` Scaling**
-*   **Concept:** Implement a middleware that adjusts `efSearch` based on the current system load and query latency. If latency is low, increase `efSearch` to maximize recall; if latency is high, throttle it to maintain SLA.
-*   **Critique:** Directly addresses the latency/recall trade-off mentioned in the market scan. It is more surgical than a full rebuild and provides immediate performance benefits.
-*   **Feasibility:** High. It is a runtime parameter adjustment that doesn't require structural changes to the index.
+**Option 2: Automated Vector Index "Health Check" & Re-indexing**
+*   **Concept:** Add a routine to `phase_v_development` that monitors the recall/latency of the HNSW index. If performance drifts beyond a threshold (due to data churn), trigger a background re-indexing task.
+*   **Critique:** Directly addresses the "dynamic update" weakness identified in the market scan. It ensures long-term performance stability.
+*   **Feasibility:** Moderate. Requires integrating a performance monitoring hook into the existing vector search logic.
 
-**Decision:** Option 2 is superior for Sam’s current architecture. It provides a "knob" for performance tuning without the complexity of managing index snapshots or compaction cycles.
+**Selection:** Option 2. It directly addresses the technical debt identified in my self-correction note regarding dynamic updates and graph degradation.
 
 ---
 
-## Idea: Adaptive `efSearch` Controller
-Implement a `VectorSearchController` that dynamically adjusts the `efSearch` parameter based on a rolling average of query latency and target recall requirements.
+## Idea: Adaptive Vector Index Health Monitor
+
+Implement a `check_index_health()` utility that calculates the ratio of "active" vs. "deleted/stale" nodes in the HNSW graph. If the ratio exceeds a defined threshold (e.g., 20% stale), it triggers a non-blocking re-indexing operation.
 
 ## Why
-The market scan highlights that `efSearch` is the primary lever for balancing latency and recall. By automating this, I can maintain high recall during low-traffic periods and ensure system responsiveness during spikes, moving closer to production-grade infrastructure.
+Graph-based indices like HNSW degrade over time with frequent insertions and deletions. Without a maintenance routine, query latency increases and recall drops. This ensures the system remains performant as the `bag/` knowledge base grows.
 
 ## Implementation Steps
-1.  **Metric Collection:** Add a `LatencyTracker` to the vector search module to record the last 50 query durations.
-2.  **Controller Logic:** Create a `get_optimal_ef(current_latency)` function that returns an `efSearch` value based on a simple PID-like controller or a threshold-based lookup table.
-3.  **Integration:** Update the search interface to accept the dynamic `efSearch` value instead of a hardcoded constant.
-4.  **Verification:** Add a test case in `bag/tests.py` that simulates high-latency scenarios to ensure the controller correctly throttles `efSearch`.
+1.  **Metric Hook:** Add a `get_index_stats()` function in the vector search module to return the current graph density and stale node count.
+2.  **Logic Gate:** Integrate `check_index_health()` into `phase_v_development`.
+3.  **Re-indexing:** Implement a `rebuild_index()` function that creates a fresh index from the underlying data store and swaps the pointer atomically.
+4.  **Logging:** Log the "stale ratio" to `experiences.json` to track how quickly the index degrades under normal operation.
 
 ## Risk
-**Failure Mode:** The controller might oscillate (rapidly changing `efSearch` values), leading to inconsistent search results.
-**Mitigation:** Implement a "dampening" factor—only update the `efSearch` value if the latency trend persists for more than 5 consecutive queries.
+**Failure Mode:** The re-indexing process consumes significant CPU/RAM, potentially causing a timeout during the `phase_v` cycle execution.
+**Mitigation:** Implement the re-indexing as a "deferred task" that sets a flag in `cycle_status` to perform the rebuild during the next idle period or at the start of the next cycle, rather than blocking the current one.
 
-**Confidence Score:** 8/10. The logic is deterministic, but the "optimal" threshold values will require empirical tuning based on the specific hardware environment.
+**Confidence Score:** 8/10. The logic is sound, but the atomic pointer swap requires careful handling to ensure no queries are dropped during the transition.

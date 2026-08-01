@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 270
+    "review_due_cycle": 285
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 270
+    "review_due_cycle": 285
   },
   {
     "cycle": 42,
@@ -1486,5 +1486,11 @@
     "topic": "Understand HNSW index tuning: ef, M parameters",
     "summary": "### Technical Summary: HNSW Index Tuning\n\nHierarchical Navigable Small World (HNSW) graphs balance search speed and recall through a multi-layered structure. Tuning revolves primarily around two parameters: `M` and `ef` (specifically `efConstruction` and `efSearch`).\n\n**1. The `M` Parameter (Connectivity)**\n`M` defines the maximum number of bi-directional links created for every new element during index construction. \n*   **High `M`:** Increases graph connectivity, leading to higher recall and b",
     "review_due_cycle": 274
+  },
+  {
+    "cycle": 271,
+    "topic": "Learn IVF-Flat vs HNSW vs DiskANN index tradeoffs",
+    "summary": "### Vector Index Tradeoffs: IVF-Flat vs. HNSW vs. DiskANN\n\nSelecting an Approximate Nearest Neighbor (ANN) index requires balancing recall, latency, and memory overhead.\n\n**IVF-Flat (Inverted File Index):**\nIVF partitions the vector space into $n$ Voronoi cells using K-means. At query time, the system searches only the nearest $nprobe$ cells.\n*   **Pros:** Low memory footprint; easy to implement; supports exact search within cells.\n*   **Cons:** Performance degrades as the dataset grows; require",
+    "review_due_cycle": 275
   }
 ]
