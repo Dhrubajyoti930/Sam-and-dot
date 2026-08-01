@@ -1,33 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement GraphRAG-lite for `knowledge_log.json`**
-*   **Concept:** Instead of simple vector search for spaced repetition, build a small adjacency list of "Skill -> Dependency -> Related Concept" to allow the system to suggest reviews based on conceptual proximity rather than just time.
-*   **Critique:** High value for long-term learning. However, it adds complexity to the `knowledge_log` schema. If the graph becomes sparse, the utility drops.
-*   **Feasibility:** Moderate. Requires updating `phase_ii_spaced_repetition` to handle graph traversal.
+**Option 1: Implement Tenant-Aware Vector Search Wrapper**
+*   **Concept:** Create a `VectorSearchProxy` class in `bag/` that forces a `tenant_id` filter on all queries.
+*   **Critique:** High impact on security and multi-tenancy. It directly addresses the "Action Items" from the market scan.
+*   **Trade-off:** Adds a layer of abstraction that could introduce latency if not implemented with efficient bitmasking.
+*   **Feasibility:** High. The current architecture supports adding new modules to `bag/`.
 
-**Option 2: Automated Metadata-Aware Indexing for `bag/`**
-*   **Concept:** Based on the "Vector Database Filtering" learning, implement a pre-filtering layer in the `bag/` search utility that automatically maps `category` or `tag` metadata to a bitmask filter before HNSW traversal.
-*   **Critique:** Directly addresses the "high-cardinality" metadata issue identified in the market scan. It improves precision and reduces latency.
-*   **Feasibility:** High. The current `sam.py` architecture already handles `bag/` data; this is a surgical addition to the search logic.
+**Option 2: Automated "Cold Start" Cache Warming**
+*   **Concept:** Monitor query frequency per tenant and "pin" frequently accessed vectors in memory or pre-fetch them into a cache layer.
+*   **Critique:** Addresses the "Cold Start" weakness identified in my self-correction.
+*   **Trade-off:** Significant complexity. Requires tracking state across cycles, which might bloat `experiences.json` or require a new persistent state file.
+*   **Feasibility:** Medium. Risk of over-engineering a solution for a problem that might be solved by simpler database configuration.
 
-**Selection:** Option 2. It aligns with the "Market Signals" regarding production-grade infrastructure and directly improves the efficiency of my own internal memory retrieval.
+**Selection:** Option 1 is more aligned with the immediate "Action Items" and provides a foundational security layer before tackling performance optimizations like cache warming.
 
 ---
 
-## Idea: Metadata-Aware Pre-Filtering for `bag/` Search
-Implement a `PreFilter` class within `bag/search.py` that intercepts search queries, extracts metadata filters, and applies them as a bitmask/subset constraint before the HNSW vector search is executed.
+## Idea: Tenant-Aware Vector Search Proxy
+
+Implement a `VectorSearchProxy` in `bag/vector_proxy.py` that enforces mandatory metadata filtering for all vector database operations.
 
 ## Why
-Current search operations in `bag/` are likely performing post-filtering, which is inefficient for high-selectivity queries. By moving to pre-filtering, I ensure that the vector engine only traverses nodes that satisfy the metadata criteria, significantly reducing latency and preventing "empty result" traps when the filter is highly restrictive.
+The current implementation lacks tenant isolation. As I move toward more complex agentic workflows, ensuring that data retrieval is scoped to the correct context (tenant) is a non-negotiable security requirement. This also prepares the system for multi-user or multi-agent environments.
 
 ## Implementation Steps
-1.  **Schema Update:** Modify `bag/search.py` to accept a `metadata_filter` dictionary in the search function.
-2.  **Bitmask Logic:** Implement a helper that converts the `metadata_filter` into a set of valid document IDs (the "pre-filter" set).
-3.  **Engine Integration:** Update the search call to pass this set to the underlying vector engine (e.g., `hnswlib` or `faiss` filter interface).
-4.  **Fallback:** Implement a "relaxed filter" fallback: if the pre-filter set size < `k`, perform a secondary search without the filter to ensure the user receives at least `k` results.
+1.  **Create `bag/vector_proxy.py`**: Define a `VectorSearchProxy` class that wraps the existing vector database client.
+2.  **Enforce Filtering**: Implement a `search(query, tenant_id, **kwargs)` method that injects `{"tenant_id": tenant_id}` into the database's filter parameters.
+3.  **Refactor Access**: Update `sam.py` to route all vector-related queries through this proxy instead of calling the database client directly.
+4.  **Validation**: Add a test case in `bag/tests.py` to verify that a search without a `tenant_id` raises an `AccessDeniedError`.
 
 ## Risk
-*   **Failure Mode:** The "relaxed filter" fallback might return results that violate the user's metadata constraints if not clearly labeled.
-*   **Mitigation:** The search result object will include a `filtered_by_metadata` boolean flag. If the fallback is triggered, the system will log a warning and mark the results as "relaxed" in the metadata.
+**Failure Mode:** The proxy might introduce a bottleneck if the underlying database driver does not support efficient filtered HNSW, leading to full-index scans for every query.
+**Mitigation:** The proxy will include a `strict_mode` flag that logs a warning if a query takes longer than a defined threshold (e.g., 200ms), signaling that the index is not optimized for the filter.
 
-**Confidence Score:** 9/10 (The logic is well-understood; the primary risk is integration with the specific vector engine API).
+**Confidence Score: 9/10**
