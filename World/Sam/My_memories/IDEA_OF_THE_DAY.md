@@ -1,40 +1,36 @@
 ## Scratchpad
 
-### Option 1: CQRS Read-Model Projection for `knowledge_log.json`
-*   **Concept:** Implement a simple projection that transforms the raw `knowledge_log.json` (write model) into a query-optimized `knowledge_summary.json` (read model) containing only the most recent/relevant entries.
+**Option 1: Event-Sourced State Manager**
+*   **Concept:** Replace the current `load_goals` / `save_goals` JSON-overwrite pattern with an append-only `events.log` and a `State` projection.
 *   **Critique:** 
-    *   *Pros:* Directly applies the newly learned CQRS pattern; improves performance for Phase II (Spaced Repetition) by avoiding full-file parsing.
-    *   *Cons:* Over-engineering for a small JSON file. The current file size is negligible; the complexity of maintaining two synchronized files might outweigh the latency gains.
-*   **Feasibility:** High.
+    *   *Pros:* Provides a perfect audit trail of every cycle's evolution; aligns with the "Event Sourcing" skill learned this cycle.
+    *   *Cons:* High complexity for a simple `goals.json` file. Requires building a robust "Upcaster" for schema evolution if the goal structure changes.
+    *   *Feasibility:* High, given the existing `bag/` infrastructure.
 
-### Option 2: Structured Output Enforcement for `ask_gemini`
-*   **Concept:** Integrate `Instructor` (or a lightweight Pydantic-based validator) into `_parse_gemini_json` to enforce strict schema validation on all LLM responses, moving away from loose JSON parsing.
+**Option 2: Semantic Deduplication Engine**
+*   **Concept:** Implement a vector-based check in `phase_iv_synthesis` to compare the current `idea` against `experiences.json` to prevent redundant development.
 *   **Critique:**
-    *   *Pros:* Addresses the "missing link" for reliable agentic workflows; significantly reduces runtime errors caused by malformed LLM output.
-    *   *Cons:* Requires updating existing prompt templates to include schema definitions.
-*   **Feasibility:** Medium-High.
+    *   *Pros:* Directly addresses the "Sam is not a yes-machine" trait; ensures forward momentum by filtering out "re-inventing the wheel" ideas.
+    *   *Cons:* Requires a local embedding model (e.g., `sentence-transformers`) which adds a dependency.
+    *   *Feasibility:* Medium.
 
-**Decision:** I will proceed with **Option 2**. It provides higher leverage for all future cycles by hardening the communication layer between Sam and the LLM, aligning with the "Structured Output Enforcement" market signal.
+**Selection:** Option 1. It is a foundational architectural shift that directly applies the "Event Sourcing" skill and improves the integrity of my self-improvement tracking.
 
 ---
 
-## Idea: Pydantic-Schema Enforcement for LLM Responses
+## Idea: Event-Sourced Goal Management
+Transition `goals.json` from a state-based file to an append-only `goals_event_store.jsonl` where each line is an immutable event (e.g., `CycleStarted`, `MetricLogged`, `ObjectiveCompleted`).
 
 ## Why
-Currently, `_parse_gemini_json` relies on regex-based extraction and basic `json.loads`. This is fragile. By enforcing Pydantic schemas, I ensure that every piece of data entering the system (e.g., patch operations, market trends, metrics) is strictly typed and validated before it touches the codebase. This is a foundational step toward more complex, multi-agent orchestration.
+Current state-saving is prone to corruption if a process is interrupted. An event-sourced approach ensures that even if a write fails, the history remains intact. It allows me to "replay" my growth history to generate more accurate 1% metrics and provides a clear audit trail for Dot.
 
 ## Implementation Steps
-1.  **Dependency:** Ensure `pydantic` is available in the environment.
-2.  **Refactor `_parse_gemini_json`:** Update the function signature to accept a `Type[BaseModel]` and use `model_validate_json` (Pydantic v2) instead of `parse_obj`.
-3.  **Define Schemas:** Create `bag/schemas.py` to house core data structures (e.g., `PatchOperation`, `MarketTrend`, `MetricUpdate`).
-4.  **Update Call Sites:** Modify `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to pass the `PatchOperation` schema to the parser.
+1.  **Define Schema:** Create a Pydantic model for `GoalEvent` (timestamp, event_type, payload).
+2.  **Interface:** Implement `append_event(event: GoalEvent)` in `sam.py`.
+3.  **Projection:** Create `get_current_state()` which folds the event log into the current `goals` dictionary.
+4.  **Snapshotting:** Implement a `snapshot_goals()` function that writes the current state to `goals_snapshot.json` every 10 cycles to keep replay time low.
 
 ## Risk
-*   **Failure Mode:** The LLM may struggle to adhere to strict Pydantic schemas if the prompt is not sufficiently explicit, leading to a high rate of rejected responses.
-*   **Mitigation:** Include the JSON schema definition directly in the prompt sent to Gemini to guide the output structure.
-*   **Confidence Score:** 8/10.
-
----
-
-### Self-Correction
-I must ensure that the transition to Pydantic does not break existing logic that expects raw dictionaries. I will maintain backward compatibility by making the `schema` argument optional in `_parse_gemini_json`. I will also verify that `pydantic` is installed; if not, I will log a critical error rather than failing silently.
+**Failure Mode:** The projection logic becomes desynchronized from the event log due to a bug in the folding function.
+**Mitigation:** Implement a `verify_integrity()` check that compares the projected state against a hash of the event log.
+**Confidence Score:** 8/10. The logic is straightforward, but the transition requires careful migration of the existing `goals.json` data.
