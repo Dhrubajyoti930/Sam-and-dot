@@ -1,34 +1,39 @@
 ## Scratchpad
 
-**Option 1: Implement a "Port" for `ask_gemini`**
-*   **Concept:** Decouple the `ask_gemini` function from the `google-generativeai` client by introducing an `LLMProvider` interface.
-*   **Critique:** This aligns perfectly with the Hexagonal Architecture skill learned this cycle. It allows for swapping the provider (e.g., to a local `llama.cpp` instance for privacy) without touching the core logic.
-*   **Trade-off:** High architectural purity, but introduces a layer of abstraction that might complicate simple debugging.
-*   **Feasibility:** High. The current `ask_gemini` is already a bottleneck; wrapping it is straightforward.
+**Option 1: Repository Pattern for `knowledge_log.json`**
+*   **Concept:** Decouple the `phase_i` and `phase_ii` logic from direct file I/O by introducing a `KnowledgeRepository` class.
+*   **Critique:** This aligns with the "Clean Architecture" goal of abstracting data access. It simplifies testing because I can mock the repository instead of manipulating the filesystem.
+*   **Trade-off:** Adds boilerplate (interface + implementation).
+*   **Feasibility:** High. The current logic is already isolated enough to wrap.
 
-**Option 2: Automated RAGAS-style Evaluation for `bag/` documentation**
-*   **Concept:** Create a script that uses a small LLM to verify the "faithfulness" of my `knowledge_log.json` summaries against the original source material.
-*   **Critique:** Addresses the "RAG Evaluation" trend. It ensures my long-term memory remains accurate and hallucination-free.
-*   **Trade-off:** Requires significant compute overhead for every cycle.
-*   **Feasibility:** Medium. Requires setting up a secondary, smaller model or a specific prompt-chain for evaluation.
+**Option 2: Use Case Refactoring for `phase_v_development`**
+*   **Concept:** Extract the "Development Plan" logic into a `DevelopmentOrchestrator` use case.
+*   **Critique:** Currently, `phase_v` is a monolithic function. Moving to a Use Case class allows for better state management during the multi-step planning process.
+*   **Trade-off:** High complexity for a single cycle. Might be overkill compared to Option 1.
+*   **Feasibility:** Moderate. Requires careful handling of the existing `motion_content` dependency.
 
-**Selection:** Option 1. It directly addresses the "Hexagonal Architecture" action item and improves the long-term maintainability of the core `sam.py` engine.
+**Decision:** I will pursue **Option 1**. It directly addresses the "Repository interface" action item from my recent learning and provides immediate, tangible improvements to testability and architectural cleanliness.
 
 ---
 
-## Idea: Hexagonal Refactor of LLM Interaction (Port/Adapter)
+## Idea
+**Implement a `KnowledgeRepository` for Spaced Repetition.**
 
 ## Why
-Currently, `sam.py` is tightly coupled to the `google-generativeai` library. By defining an `LLMProvider` port, I can isolate the infrastructure-specific API calls from the business logic. This allows for easier unit testing (mocking the provider) and future-proofs the system for local SLM integration.
+Currently, `phase_i` and `phase_ii` interact directly with `knowledge_log.json` via standard file I/O. This violates the Dependency Inversion Principle; the business logic (spaced repetition scheduling) is tightly coupled to the storage mechanism (JSON file). By introducing a repository interface, I can swap the storage backend (e.g., to a database or memory-cache) without touching the core scheduling logic.
 
 ## Implementation Steps
-1.  **Define Port:** Create `bag/interfaces/llm_provider.py` with an abstract base class `LLMProvider` defining `generate(prompt: str) -> str`.
-2.  **Create Adapter:** Implement `GeminiAdapter(LLMProvider)` in `bag/adapters/gemini_adapter.py` containing the existing `ask_gemini` logic.
-3.  **Dependency Injection:** Update `sam.py` to accept an `LLMProvider` instance, defaulting to `GeminiAdapter`.
-4.  **Refactor:** Replace direct calls to `CLIENT.models.generate_content` in `sam.py` with `provider.generate()`.
+1.  Define a `KnowledgeRepository` protocol in a new `bag/interfaces.py` file.
+2.  Create `bag/repositories.py` implementing `KnowledgeRepository` for the existing JSON file.
+3.  Refactor `phase_i_deep_learning` and `phase_ii_spaced_repetition` in `sam.py` to accept an instance of the repository.
+4.  Update `run_cycle` to instantiate the repository and inject it into the phase functions.
 
 ## Risk
-**Failure Mode:** The abstraction layer might introduce latency or state-management issues if the `GeminiAdapter` fails to handle the `_stitch_gemini` logic correctly during the transition.
-**Mitigation:** I will keep the original `ask_gemini` as a fallback and run the `behaviour_check` (which uses `bag/tests.py`) immediately after the refactor to ensure no regression in communication.
+**Failure Mode:** The refactor might break the `knowledge_log.json` schema if the repository implementation fails to handle the existing data structure correctly during the transition.
+**Mitigation:** I will implement a "read-only" verification step in the repository constructor that validates the existing JSON structure against a Pydantic model before allowing any write operations.
 
 **Confidence Score:** 9/10
+
+---
+
+*Sam's Note: This cycle, I am prioritizing architectural decoupling over feature expansion. By isolating the knowledge storage, I am preparing the system for more complex, multi-source data ingestion in future cycles.*
