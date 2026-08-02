@@ -1,36 +1,31 @@
 ## Scratchpad
 
-**Option 1: Event-Sourced State Manager**
-*   **Concept:** Replace the current `load_goals` / `save_goals` JSON-overwrite pattern with an append-only `events.log` and a `State` projection.
-*   **Critique:** 
-    *   *Pros:* Provides a perfect audit trail of every cycle's evolution; aligns with the "Event Sourcing" skill learned this cycle.
-    *   *Cons:* High complexity for a simple `goals.json` file. Requires building a robust "Upcaster" for schema evolution if the goal structure changes.
-    *   *Feasibility:* High, given the existing `bag/` infrastructure.
+### Option 1: Domain-Driven Refactoring (Bounded Contexts)
+*   **Concept:** Explicitly separate `sam.py` logic into `core/` (orchestration) and `domain/` (business logic/goals/memory).
+*   **Critique:** High long-term value for maintainability. However, it requires significant structural changes to `sam.py` imports and `bag/` path resolution.
+*   **Feasibility:** High, but carries a risk of breaking the `_bag_data` resolution logic if not handled with surgical precision.
 
-**Option 2: Semantic Deduplication Engine**
-*   **Concept:** Implement a vector-based check in `phase_iv_synthesis` to compare the current `idea` against `experiences.json` to prevent redundant development.
-*   **Critique:**
-    *   *Pros:* Directly addresses the "Sam is not a yes-machine" trait; ensures forward momentum by filtering out "re-inventing the wheel" ideas.
-    *   *Cons:* Requires a local embedding model (e.g., `sentence-transformers`) which adds a dependency.
-    *   *Feasibility:* Medium.
+### Option 2: Structured Output Enforcement (Pydantic Integration)
+*   **Concept:** Replace the loose `_parse_gemini_json` with a strict `Instructor`-like pattern for all Gemini interactions, ensuring all tool-use and patch-ops are validated against Pydantic models.
+*   **Critique:** Directly addresses the "black box" risk of LLM-generated patches. It aligns with the "Structured Output" market trend.
+*   **Feasibility:** Very high. It leverages existing `Pydantic` capabilities and improves the reliability of `apply_self_modification`.
 
-**Selection:** Option 1. It is a foundational architectural shift that directly applies the "Event Sourcing" skill and improves the integrity of my self-improvement tracking.
+**Decision:** Option 2. It provides immediate, measurable improvements to the reliability of my self-modification loop, which is the foundation of my autonomy.
 
 ---
 
-## Idea: Event-Sourced Goal Management
-Transition `goals.json` from a state-based file to an append-only `goals_event_store.jsonl` where each line is an immutable event (e.g., `CycleStarted`, `MetricLogged`, `ObjectiveCompleted`).
+## Idea: Pydantic-Validated Patch Operations
+Implement a `PatchOperation` Pydantic model and enforce its use within `apply_self_modification` to replace the current loose dictionary-based parsing.
 
 ## Why
-Current state-saving is prone to corruption if a process is interrupted. An event-sourced approach ensures that even if a write fails, the history remains intact. It allows me to "replay" my growth history to generate more accurate 1% metrics and provides a clear audit trail for Dot.
+Currently, `apply_self_modification` relies on `_parse_gemini_json` returning a raw dictionary. If Gemini hallucinates a key or provides an invalid operation type, the system fails at runtime. By enforcing a schema, I can catch invalid patch structures *before* they touch the filesystem, significantly reducing the need for `_rollback()` cycles.
 
 ## Implementation Steps
-1.  **Define Schema:** Create a Pydantic model for `GoalEvent` (timestamp, event_type, payload).
-2.  **Interface:** Implement `append_event(event: GoalEvent)` in `sam.py`.
-3.  **Projection:** Create `get_current_state()` which folds the event log into the current `goals` dictionary.
-4.  **Snapshotting:** Implement a `snapshot_goals()` function that writes the current state to `goals_snapshot.json` every 10 cycles to keep replay time low.
+1.  Define `class PatchOperation(BaseModel)` in `bag/patch_ops.py` with strict `Literal` types for `operation` ('replace', 'insert_after', 'delete').
+2.  Update `apply_self_modification` in `sam.py` to validate the list of operations against `List[PatchOperation]` before passing them to `apply_patch_operations`.
+3.  Add a custom validator to `PatchOperation` to ensure `old` and `new` fields are present based on the `operation` type.
 
 ## Risk
-**Failure Mode:** The projection logic becomes desynchronized from the event log due to a bug in the folding function.
-**Mitigation:** Implement a `verify_integrity()` check that compares the projected state against a hash of the event log.
-**Confidence Score:** 8/10. The logic is straightforward, but the transition requires careful migration of the existing `goals.json` data.
+**Failure Mode:** Gemini might struggle to adhere to the strict schema if the prompt is not sufficiently constrained, leading to repeated validation errors.
+**Mitigation:** Include the Pydantic model definition (as a string) in the prompt sent to Gemini so it understands the required structure.
+**Confidence Score:** 9/10. The logic is contained, and the benefit to system stability is high.

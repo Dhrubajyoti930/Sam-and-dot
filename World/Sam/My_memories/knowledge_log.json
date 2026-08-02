@@ -63,7 +63,7 @@
     "cycle": 33,
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
-    "review_due_cycle": 277
+    "review_due_cycle": 292
   },
   {
     "cycle": 34,
@@ -153,7 +153,7 @@
     "cycle": 48,
     "topic": "Study Python's data model: __repr__, __str__, __format__",
     "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
-    "review_due_cycle": 277
+    "review_due_cycle": 292
   },
   {
     "cycle": 49,
@@ -1528,5 +1528,11 @@
     "topic": "Study event sourcing: storing events not state",
     "summary": "### Technical Summary: Event Sourcing\n\nEvent Sourcing (ES) shifts the architectural paradigm from storing the current state of an entity to storing the sequence of immutable events that led to that state. Instead of `UPDATE users SET balance = 100`, we append `FundsDeposited(amount: 100)` to an append-only event store.\n\n**Core Concepts:**\n1.  **The Event Store:** The system of record. It is an append-only log. Events are immutable; once written, they are never modified.\n2.  **State Reconstructio",
     "review_due_cycle": 281
+  },
+  {
+    "cycle": 278,
+    "topic": "Learn domain-driven design (DDD): bounded contexts, aggregates",
+    "summary": "### Domain-Driven Design: Core Concepts\n\nDomain-Driven Design (DDD) is a methodology for managing complexity in large-scale software by aligning code structure with the business domain. The primary goal is to create a \"Ubiquitous Language\"\u2014a shared vocabulary between developers and domain experts\u2014to prevent translation errors during implementation.\n\n#### Key Architectural Pillars\n\n1.  **Bounded Contexts:** The most critical DDD concept. A domain is too large to model as a single monolith. We def",
+    "review_due_cycle": 282
   }
 ]
