@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement the Transactional Outbox (Polling Publisher)**
-*   **Concept:** Create an `outbox` table (JSON-based file in `bag/`) and a background worker that processes pending events before archiving them.
-*   **Critique:** High reliability for event-driven state changes. However, it introduces a "polling" overhead. If the process crashes mid-publish, I need robust idempotency.
-*   **Feasibility:** High. I already have `patch_ops.py` for atomic file operations.
+**Option 1: Implement a "Circuit Breaker" for Gemini API calls.**
+*   *Concept:* Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates. If the API returns 5xx errors or timeouts, the breaker trips, preventing further calls for a cooldown period.
+*   *Critique:* High feasibility. Improves system resilience during transient network/provider instability. However, it adds complexity to `sam.py` and requires persistent state (e.g., a `circuit_state.json` in `bag/`).
+*   *Trade-off:* Increases robustness at the cost of slightly more complex error handling logic.
 
-**Option 2: Structured Output Enforcement (Instructor/Pydantic Integration)**
-*   **Concept:** Refactor `_parse_gemini_json` to use `instructor` or strict Pydantic schema validation for all LLM interactions.
-*   **Critique:** This directly addresses the "hallucinated format" problem. It makes my self-modification logic significantly more resilient.
-*   **Feasibility:** Medium. Requires adding a dependency or writing a robust wrapper.
+**Option 2: Formalize "Schema-First" Patching via JSON-Schema validation.**
+*   *Concept:* Instead of relying on `_parse_gemini_json` to guess the structure, force Gemini to provide a JSON-Schema alongside the patch operations. Validate the patch against this schema before `apply_patch_operations` is called.
+*   *Critique:* Very high long-term maintainability. It moves us away from "vibe-based" parsing toward deterministic contract enforcement.
+*   *Trade-off:* Requires updating `apply_patch_operations` to accept and validate the schema, which is a non-trivial refactor of the core pipeline.
 
-**Decision:** I will proceed with **Option 1 (Transactional Outbox)**. It aligns with my recent learning on distributed reliability and directly addresses the "dual-write" risk in my self-modification pipeline.
+**Decision:** Option 2 is superior for long-term stability. It aligns with the "Structured Output" trend identified in the market scan and directly addresses the risk of malformed patches reaching the `apply_patch_operations` logic.
 
 ---
 
-## Idea: Transactional Outbox for Self-Modification
-Implement a `TransactionalOutbox` class in `bag/outbox.py` that acts as a staging area for all file-system mutations. Instead of `apply_patch_operations` writing directly to the disk, it will write to an `outbox/pending/` directory. A secondary "Publisher" process will then commit these to the `workshop_bench/` and move them to `outbox/processed/`.
+## Idea: Schema-Enforced Patch Validation
+
+Implement a mandatory JSON-Schema validation layer for all self-modification patch operations. Gemini will be prompted to include a schema definition in its response, which `sam.py` will use to validate the patch structure before execution.
 
 ## Why
-My current `apply_patch_operations` is vulnerable to partial failures if the process is interrupted. By decoupling the *intent* to modify from the *execution* of the modification, I ensure that I can always recover the state of a pending patch, even if the system crashes mid-write.
+Currently, `_parse_gemini_json` is a heuristic-based parser. If Gemini returns a slightly malformed JSON object, the patch might fail silently or partially. By enforcing a schema, we ensure that every `replace`, `delete`, or `insert_after` operation is structurally sound before it touches the file system. This is the next logical step in the "Inbox Pattern" philosophy of moving from optimistic execution to deterministic, validated state changes.
 
 ## Implementation Steps
-1.  **Define Schema:** Create `bag/outbox.py` with a `PendingEvent` Pydantic model (timestamp, operation_type, payload).
-2.  **Staging:** Modify `apply_patch_operations` to write to `bag/outbox/pending/` instead of directly to the target file.
-3.  **Publisher:** Create a `publish_outbox()` function that iterates through `pending/`, applies the changes, and moves the files to `bag/outbox/processed/`.
-4.  **Integration:** Update `run_cycle()` to call `publish_outbox()` as the final step of the development phase.
+1.  **Define Schema:** Create a standard JSON schema for patch operations in `bag/patch_schema.json`.
+2.  **Update `apply_self_modification`:** Modify the function to accept the schema and use `jsonschema` (or a lightweight equivalent) to validate the parsed JSON before passing it to `apply_patch_operations`.
+3.  **Prompt Engineering:** Update the system prompt for `_behaviour_fix_with_gemini` and `apply_self_modification` to explicitly require the schema-compliant structure.
+4.  **Error Handling:** If validation fails, log the schema violation and trigger a retry or alert, rather than attempting to apply the patch.
 
 ## Risk
-**Failure Mode:** The "Publisher" process itself crashes while applying a patch, leaving the system in an inconsistent state between the `pending` queue and the actual file system.
-**Mitigation:** The `publish_outbox` will use a "lock file" mechanism. If a lock file exists on startup, it triggers a `_rollback()` before attempting to resume, ensuring a clean slate.
-
-**Confidence Score:** 8/10
+*   **Failure Mode:** Gemini may struggle to generate a valid JSON-Schema alongside the patch, leading to "validation fatigue" where the system rejects valid patches due to schema mismatch.
+*   **Mitigation:** Provide a "Schema-Only" mode where the schema is hardcoded in `sam.py` and Gemini is only asked to provide the data, reducing the cognitive load on the model.
+*   **Confidence Score:** 8/10. The logic is sound, but the initial prompt tuning for schema generation will require careful calibration.
