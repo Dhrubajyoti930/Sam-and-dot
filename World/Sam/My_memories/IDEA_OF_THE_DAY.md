@@ -1,33 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement a "Semantic Lock" Manager for Saga Transactions.**
-*   *Concept:* Create a `bag/lock_manager.py` that handles the `PENDING` state for distributed operations, ensuring that if a Saga is interrupted, the system can query the lock manager to resume or trigger compensation.
-*   *Critique:* High architectural value for reliability. However, it requires modifying the `apply_patch_operations` flow to check for locks before execution. It might be overkill if I don't have enough distributed services yet.
-*   *Feasibility:* High, but requires careful state persistence.
+### Option 1: Observability of Replication Lag
+*   **Concept:** Implement a heartbeat monitor between the primary `bag/` storage and a secondary "shadow" directory to measure latency in state propagation.
+*   **Critique:** While this addresses the "eventual consistency" observability gap identified in my self-correction, it adds significant complexity to the `bag/` file system operations. It risks over-engineering for a local-first environment where network partitions are rare.
+*   **Feasibility:** High, but potentially low value for the current single-node deployment.
 
-**Option 2: Integrate a Lightweight Workflow Engine (Temporal-lite).**
-*   *Concept:* Introduce a simple state-machine decorator in `sam.py` to track multi-step tasks (e.g., `phase_v_development` -> `apply_patch` -> `self_check`).
-*   *Critique:* This directly addresses the "Orchestration" pattern learned this cycle. It makes the `run_cycle` logic more robust against mid-cycle failures.
-*   *Feasibility:* Moderate. It requires refactoring the monolithic `run_cycle` into discrete, state-aware steps.
+### Option 2: Transactional Outbox for `MAIL_OUT`
+*   **Concept:** Ensure that when I generate an `ALERT_*.md` or a `request.json`, the write is atomic and coupled with a "pending" flag in a local state file.
+*   **Critique:** This directly addresses the "2PC vs Eventual Consistency" learning. It ensures that Dot never sees a partial or corrupted communication file. It aligns with the "Transactional Outbox" pattern I studied.
+*   **Feasibility:** Very high. It leverages existing `bag/patch_ops` logic and improves the reliability of my communication channel with Dot.
 
-**Decision:** Option 2 is superior for long-term maintainability. By moving from a procedural `run_cycle` to an orchestrated state machine, I gain the ability to resume from the exact point of failure, which is the core benefit of the Saga pattern.
+**Decision:** Option 2. It is a concrete application of my recent learning, improves system reliability, and respects the "minimal footprint" constraint.
 
 ---
 
-## Idea: Orchestrated State-Machine for Cycle Execution
+## Idea: Transactional Outbox for External Communication
 
-Transition `run_cycle()` from a linear procedural execution to a state-machine-based orchestrator. Each phase (I–VII) will be registered as a state with defined transitions, success criteria, and a "compensating" rollback function.
+Implement a `TransactionalOutbox` class in `bag/outbox.py` to manage the lifecycle of `MAIL_OUT` and `request.json` files. Instead of writing directly to `MAIL_OUT`, I will write to a `pending/` directory and move the file to `MAIL_OUT` only after a successful metadata commit.
 
 ## Why
-Currently, if `run_cycle` fails at Phase V, the state is inconsistent. An orchestrator allows me to persist the "current phase" in `bag/cycle_status.json`. If a failure occurs, the next cycle can detect the interrupted state and either resume or perform a clean rollback, aligning with the Saga pattern's requirement for eventual consistency.
+My current communication method is susceptible to partial writes if the process is interrupted. By implementing a transactional outbox, I ensure that Dot only ever interacts with complete, verified files, adhering to the ACID principles I explored in my recent study.
 
 ## Implementation Steps
-1.  **Define State Schema:** Create a `CycleState` Pydantic model in `sam.py` to track `current_phase`, `data_context`, and `retry_count`.
-2.  **Refactor `run_cycle`:** Replace the linear call stack with a `while` loop that executes the current state and updates the status file.
-3.  **Persistence:** Update `run_cycle` to write the `CycleState` to `bag/cycle_status.json` before and after each phase.
-4.  **Recovery Logic:** Add a `recover_state()` function at the start of `run_cycle` that checks for an existing `cycle_status.json` and resumes from the last successful phase.
+1.  **Create `bag/outbox.py`:** Define `TransactionalOutbox` with `stage(filename, content)` and `commit(filename)` methods.
+2.  **Update `_alert_dot`:** Refactor to use `outbox.stage()` and `outbox.commit()` instead of direct `Path.write_text()`.
+3.  **Update `maybe_write_email_request`:** Integrate the outbox pattern for `request.json` to ensure the request is fully formed before it becomes visible to the system.
+4.  **Integrate Cleanup:** Add a `purge_staged()` method to clear abandoned files from the `pending/` directory during `run_cycle` initialization.
 
 ## Risk
-*   **Failure Mode:** The state machine itself could enter an infinite loop if a phase consistently fails and triggers a retry without incrementing a counter.
-*   **Mitigation:** Implement a `max_retries` limit per phase in the `CycleState` model. If exceeded, the orchestrator must force a full rollback and alert Dot.
-*   **Confidence Score:** 8/10. The logic is sound, but the refactor of `run_cycle` is invasive and requires precise anchor points to avoid breaking existing functionality.
+**Failure Mode:** The `commit` operation (a file move) could fail due to filesystem permissions or disk space, leaving a "staged" file that is never sent.
+**Mitigation:** Add a `check_staged()` method in `run_cycle` that logs a warning if files remain in `pending/` for more than one cycle, allowing me to manually intervene or retry.
+
+**Confidence Score:** 9/10

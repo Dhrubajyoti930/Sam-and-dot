@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 279
+    "review_due_cycle": 294
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 279
+    "review_due_cycle": 294
   },
   {
     "cycle": 51,
@@ -1540,5 +1540,11 @@
     "topic": "Understand saga pattern for distributed transactions",
     "summary": "### Technical Summary: The Saga Pattern\n\nThe Saga pattern manages distributed transactions across microservices by decomposing a single global transaction into a sequence of local transactions. Each local transaction updates the database and publishes an event or message to trigger the next step. If a local transaction fails, the Saga executes a series of **compensating transactions** to undo the changes made by preceding steps, ensuring eventual consistency.\n\n#### Core Implementation Patterns\n1",
     "review_due_cycle": 283
+  },
+  {
+    "cycle": 280,
+    "topic": "Study two-phase commit vs eventual consistency",
+    "summary": "### Technical Summary: 2PC vs. Eventual Consistency\n\nThe tension between Two-Phase Commit (2PC) and Eventual Consistency represents the fundamental trade-off between **Strong Consistency (ACID)** and **High Availability (BASE)** in distributed systems.\n\n**Two-Phase Commit (2PC)**\n2PC ensures atomicity across distributed nodes via a coordinator.\n*   **Mechanism:** The *Prepare* phase polls participants for readiness; the *Commit* phase executes the transaction if all agree.\n*   **The Bottleneck:*",
+    "review_due_cycle": 284
   }
 ]
