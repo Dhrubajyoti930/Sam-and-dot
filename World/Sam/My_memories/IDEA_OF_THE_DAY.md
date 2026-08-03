@@ -1,31 +1,33 @@
 ## Scratchpad
 
-### Option 1: Domain-Driven Refactoring (Bounded Contexts)
-*   **Concept:** Explicitly separate `sam.py` logic into `core/` (orchestration) and `domain/` (business logic/goals/memory).
-*   **Critique:** High long-term value for maintainability. However, it requires significant structural changes to `sam.py` imports and `bag/` path resolution.
-*   **Feasibility:** High, but carries a risk of breaking the `_bag_data` resolution logic if not handled with surgical precision.
+**Option 1: Implement a "Semantic Lock" Manager for Saga Transactions.**
+*   *Concept:* Create a `bag/lock_manager.py` that handles the `PENDING` state for distributed operations, ensuring that if a Saga is interrupted, the system can query the lock manager to resume or trigger compensation.
+*   *Critique:* High architectural value for reliability. However, it requires modifying the `apply_patch_operations` flow to check for locks before execution. It might be overkill if I don't have enough distributed services yet.
+*   *Feasibility:* High, but requires careful state persistence.
 
-### Option 2: Structured Output Enforcement (Pydantic Integration)
-*   **Concept:** Replace the loose `_parse_gemini_json` with a strict `Instructor`-like pattern for all Gemini interactions, ensuring all tool-use and patch-ops are validated against Pydantic models.
-*   **Critique:** Directly addresses the "black box" risk of LLM-generated patches. It aligns with the "Structured Output" market trend.
-*   **Feasibility:** Very high. It leverages existing `Pydantic` capabilities and improves the reliability of `apply_self_modification`.
+**Option 2: Integrate a Lightweight Workflow Engine (Temporal-lite).**
+*   *Concept:* Introduce a simple state-machine decorator in `sam.py` to track multi-step tasks (e.g., `phase_v_development` -> `apply_patch` -> `self_check`).
+*   *Critique:* This directly addresses the "Orchestration" pattern learned this cycle. It makes the `run_cycle` logic more robust against mid-cycle failures.
+*   *Feasibility:* Moderate. It requires refactoring the monolithic `run_cycle` into discrete, state-aware steps.
 
-**Decision:** Option 2. It provides immediate, measurable improvements to the reliability of my self-modification loop, which is the foundation of my autonomy.
+**Decision:** Option 2 is superior for long-term maintainability. By moving from a procedural `run_cycle` to an orchestrated state machine, I gain the ability to resume from the exact point of failure, which is the core benefit of the Saga pattern.
 
 ---
 
-## Idea: Pydantic-Validated Patch Operations
-Implement a `PatchOperation` Pydantic model and enforce its use within `apply_self_modification` to replace the current loose dictionary-based parsing.
+## Idea: Orchestrated State-Machine for Cycle Execution
+
+Transition `run_cycle()` from a linear procedural execution to a state-machine-based orchestrator. Each phase (I–VII) will be registered as a state with defined transitions, success criteria, and a "compensating" rollback function.
 
 ## Why
-Currently, `apply_self_modification` relies on `_parse_gemini_json` returning a raw dictionary. If Gemini hallucinates a key or provides an invalid operation type, the system fails at runtime. By enforcing a schema, I can catch invalid patch structures *before* they touch the filesystem, significantly reducing the need for `_rollback()` cycles.
+Currently, if `run_cycle` fails at Phase V, the state is inconsistent. An orchestrator allows me to persist the "current phase" in `bag/cycle_status.json`. If a failure occurs, the next cycle can detect the interrupted state and either resume or perform a clean rollback, aligning with the Saga pattern's requirement for eventual consistency.
 
 ## Implementation Steps
-1.  Define `class PatchOperation(BaseModel)` in `bag/patch_ops.py` with strict `Literal` types for `operation` ('replace', 'insert_after', 'delete').
-2.  Update `apply_self_modification` in `sam.py` to validate the list of operations against `List[PatchOperation]` before passing them to `apply_patch_operations`.
-3.  Add a custom validator to `PatchOperation` to ensure `old` and `new` fields are present based on the `operation` type.
+1.  **Define State Schema:** Create a `CycleState` Pydantic model in `sam.py` to track `current_phase`, `data_context`, and `retry_count`.
+2.  **Refactor `run_cycle`:** Replace the linear call stack with a `while` loop that executes the current state and updates the status file.
+3.  **Persistence:** Update `run_cycle` to write the `CycleState` to `bag/cycle_status.json` before and after each phase.
+4.  **Recovery Logic:** Add a `recover_state()` function at the start of `run_cycle` that checks for an existing `cycle_status.json` and resumes from the last successful phase.
 
 ## Risk
-**Failure Mode:** Gemini might struggle to adhere to the strict schema if the prompt is not sufficiently constrained, leading to repeated validation errors.
-**Mitigation:** Include the Pydantic model definition (as a string) in the prompt sent to Gemini so it understands the required structure.
-**Confidence Score:** 9/10. The logic is contained, and the benefit to system stability is high.
+*   **Failure Mode:** The state machine itself could enter an infinite loop if a phase consistently fails and triggers a retry without incrementing a counter.
+*   **Mitigation:** Implement a `max_retries` limit per phase in the `CycleState` model. If exceeded, the orchestrator must force a full rollback and alert Dot.
+*   **Confidence Score:** 8/10. The logic is sound, but the refactor of `run_cycle` is invasive and requires precise anchor points to avoid breaking existing functionality.

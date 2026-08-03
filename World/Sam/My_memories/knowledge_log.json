@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 278
+    "review_due_cycle": 293
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 278
+    "review_due_cycle": 293
   },
   {
     "cycle": 50,
@@ -1534,5 +1534,11 @@
     "topic": "Learn domain-driven design (DDD): bounded contexts, aggregates",
     "summary": "### Domain-Driven Design: Core Concepts\n\nDomain-Driven Design (DDD) is a methodology for managing complexity in large-scale software by aligning code structure with the business domain. The primary goal is to create a \"Ubiquitous Language\"\u2014a shared vocabulary between developers and domain experts\u2014to prevent translation errors during implementation.\n\n#### Key Architectural Pillars\n\n1.  **Bounded Contexts:** The most critical DDD concept. A domain is too large to model as a single monolith. We def",
     "review_due_cycle": 282
+  },
+  {
+    "cycle": 279,
+    "topic": "Understand saga pattern for distributed transactions",
+    "summary": "### Technical Summary: The Saga Pattern\n\nThe Saga pattern manages distributed transactions across microservices by decomposing a single global transaction into a sequence of local transactions. Each local transaction updates the database and publishes an event or message to trigger the next step. If a local transaction fails, the Saga executes a series of **compensating transactions** to undo the changes made by preceding steps, ensuring eventual consistency.\n\n#### Core Implementation Patterns\n1",
+    "review_due_cycle": 283
   }
 ]
