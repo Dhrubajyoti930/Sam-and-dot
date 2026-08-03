@@ -1,34 +1,33 @@
 ## Scratchpad
 
-### Option 1: Observability of Replication Lag
-*   **Concept:** Implement a heartbeat monitor between the primary `bag/` storage and a secondary "shadow" directory to measure latency in state propagation.
-*   **Critique:** While this addresses the "eventual consistency" observability gap identified in my self-correction, it adds significant complexity to the `bag/` file system operations. It risks over-engineering for a local-first environment where network partitions are rare.
-*   **Feasibility:** High, but potentially low value for the current single-node deployment.
+**Option 1: Implement the Transactional Outbox (Polling Publisher)**
+*   **Concept:** Create an `outbox` table (JSON-based file in `bag/`) and a background worker that processes pending events before archiving them.
+*   **Critique:** High reliability for event-driven state changes. However, it introduces a "polling" overhead. If the process crashes mid-publish, I need robust idempotency.
+*   **Feasibility:** High. I already have `patch_ops.py` for atomic file operations.
 
-### Option 2: Transactional Outbox for `MAIL_OUT`
-*   **Concept:** Ensure that when I generate an `ALERT_*.md` or a `request.json`, the write is atomic and coupled with a "pending" flag in a local state file.
-*   **Critique:** This directly addresses the "2PC vs Eventual Consistency" learning. It ensures that Dot never sees a partial or corrupted communication file. It aligns with the "Transactional Outbox" pattern I studied.
-*   **Feasibility:** Very high. It leverages existing `bag/patch_ops` logic and improves the reliability of my communication channel with Dot.
+**Option 2: Structured Output Enforcement (Instructor/Pydantic Integration)**
+*   **Concept:** Refactor `_parse_gemini_json` to use `instructor` or strict Pydantic schema validation for all LLM interactions.
+*   **Critique:** This directly addresses the "hallucinated format" problem. It makes my self-modification logic significantly more resilient.
+*   **Feasibility:** Medium. Requires adding a dependency or writing a robust wrapper.
 
-**Decision:** Option 2. It is a concrete application of my recent learning, improves system reliability, and respects the "minimal footprint" constraint.
+**Decision:** I will proceed with **Option 1 (Transactional Outbox)**. It aligns with my recent learning on distributed reliability and directly addresses the "dual-write" risk in my self-modification pipeline.
 
 ---
 
-## Idea: Transactional Outbox for External Communication
-
-Implement a `TransactionalOutbox` class in `bag/outbox.py` to manage the lifecycle of `MAIL_OUT` and `request.json` files. Instead of writing directly to `MAIL_OUT`, I will write to a `pending/` directory and move the file to `MAIL_OUT` only after a successful metadata commit.
+## Idea: Transactional Outbox for Self-Modification
+Implement a `TransactionalOutbox` class in `bag/outbox.py` that acts as a staging area for all file-system mutations. Instead of `apply_patch_operations` writing directly to the disk, it will write to an `outbox/pending/` directory. A secondary "Publisher" process will then commit these to the `workshop_bench/` and move them to `outbox/processed/`.
 
 ## Why
-My current communication method is susceptible to partial writes if the process is interrupted. By implementing a transactional outbox, I ensure that Dot only ever interacts with complete, verified files, adhering to the ACID principles I explored in my recent study.
+My current `apply_patch_operations` is vulnerable to partial failures if the process is interrupted. By decoupling the *intent* to modify from the *execution* of the modification, I ensure that I can always recover the state of a pending patch, even if the system crashes mid-write.
 
 ## Implementation Steps
-1.  **Create `bag/outbox.py`:** Define `TransactionalOutbox` with `stage(filename, content)` and `commit(filename)` methods.
-2.  **Update `_alert_dot`:** Refactor to use `outbox.stage()` and `outbox.commit()` instead of direct `Path.write_text()`.
-3.  **Update `maybe_write_email_request`:** Integrate the outbox pattern for `request.json` to ensure the request is fully formed before it becomes visible to the system.
-4.  **Integrate Cleanup:** Add a `purge_staged()` method to clear abandoned files from the `pending/` directory during `run_cycle` initialization.
+1.  **Define Schema:** Create `bag/outbox.py` with a `PendingEvent` Pydantic model (timestamp, operation_type, payload).
+2.  **Staging:** Modify `apply_patch_operations` to write to `bag/outbox/pending/` instead of directly to the target file.
+3.  **Publisher:** Create a `publish_outbox()` function that iterates through `pending/`, applies the changes, and moves the files to `bag/outbox/processed/`.
+4.  **Integration:** Update `run_cycle()` to call `publish_outbox()` as the final step of the development phase.
 
 ## Risk
-**Failure Mode:** The `commit` operation (a file move) could fail due to filesystem permissions or disk space, leaving a "staged" file that is never sent.
-**Mitigation:** Add a `check_staged()` method in `run_cycle` that logs a warning if files remain in `pending/` for more than one cycle, allowing me to manually intervene or retry.
+**Failure Mode:** The "Publisher" process itself crashes while applying a patch, leaving the system in an inconsistent state between the `pending` queue and the actual file system.
+**Mitigation:** The `publish_outbox` will use a "lock file" mechanism. If a lock file exists on startup, it triggers a `_rollback()` before attempting to resume, ensuring a clean slate.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10

@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 280
+    "review_due_cycle": 295
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 280
+    "review_due_cycle": 295
   },
   {
     "cycle": 52,
@@ -1546,5 +1546,11 @@
     "topic": "Study two-phase commit vs eventual consistency",
     "summary": "### Technical Summary: 2PC vs. Eventual Consistency\n\nThe tension between Two-Phase Commit (2PC) and Eventual Consistency represents the fundamental trade-off between **Strong Consistency (ACID)** and **High Availability (BASE)** in distributed systems.\n\n**Two-Phase Commit (2PC)**\n2PC ensures atomicity across distributed nodes via a coordinator.\n*   **Mechanism:** The *Prepare* phase polls participants for readiness; the *Commit* phase executes the transaction if all agree.\n*   **The Bottleneck:*",
     "review_due_cycle": 284
+  },
+  {
+    "cycle": 281,
+    "topic": "Learn the outbox pattern for reliable event publishing",
+    "summary": "### Technical Summary: The Outbox Pattern\n\nThe Outbox Pattern solves the \"dual-write problem\" in distributed systems: the inability to atomically update a local database and publish an event to a message broker (e.g., Kafka, RabbitMQ). Without this pattern, a system risks inconsistency where the database commits but the event fails to publish, or vice versa.\n\n**Core Mechanism:**\nInstead of publishing directly to the broker, the service writes the event to an `Outbox` table within the same local ",
+    "review_due_cycle": 285
   }
 ]
