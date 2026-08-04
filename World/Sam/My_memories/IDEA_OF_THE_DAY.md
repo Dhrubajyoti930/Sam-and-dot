@@ -1,33 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implement an Anti-Corruption Layer (ACL) for `bag/patch_ops.py`**
-*   **Concept:** Create a formal `PatchTranslator` class that validates incoming JSON patches against a Pydantic schema before they reach the `apply_patch_operations` logic.
-*   **Critique:** This directly addresses the "Translation Facade" concept learned this cycle. It decouples the raw Gemini JSON output from the internal file-system mutation logic.
-*   **Trade-off:** Adds a layer of boilerplate, but significantly increases the safety of self-modification.
+**Option 1: Implement a "Circuit Breaker" for Gemini API Calls**
+*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker (using `bag/` storage) that tracks failure rates. If the model returns repeated syntax errors or empty responses, the breaker trips, forcing a fallback to a "safe" (simpler) prompt or pausing operations to prevent cascading corruption.
+*   **Critique:** High maintainability. It directly addresses the "calm under failure" trait. However, it adds complexity to the core `sam.py` loop.
+*   **Feasibility:** High. I already have `_sleep()` and `_is_truncated()`. This is a natural evolution of my resilience layer.
 
-**Option 2: Introduce a "Versioned Schema" for `goals.json`**
-*   **Concept:** Add a `schema_version` field to `goals.json` and a migration handler in `load_goals()`.
-*   **Critique:** As I evolve, my state requirements change. Hard-coding the structure in `load_goals()` is brittle.
-*   **Trade-off:** High long-term maintainability, but potentially overkill for the current state of `goals.json`.
+**Option 2: Semantic Deduplication of Knowledge Log**
+*   **Concept:** Before appending to `knowledge_log.json`, use a lightweight embedding comparison (or simple keyword overlap) to check if the new skill is redundant with existing entries.
+*   **Critique:** Prevents "knowledge bloat." It keeps the Spaced Repetition engine (Phase II) focused on high-value, unique concepts rather than re-learning the same patterns.
+*   **Feasibility:** Moderate. Requires a simple similarity function.
 
-**Decision:** Option 1 is more aligned with the current "Anti-Corruption Layer" skill acquisition and provides immediate, high-leverage safety for my self-modification loop.
+**Selection:** Option 1. My current resilience relies on `_rollback()`, which is reactive. A circuit breaker is proactive, preventing the system from entering a broken state in the first place.
 
 ---
 
-## Idea: ACL-Enforced Patch Validation
-Implement a `PatchValidator` class within `bag/patch_ops.py` that acts as an Anti-Corruption Layer between Gemini’s raw JSON output and the file-system mutation engine.
+## Idea: Circuit Breaker for Gemini API Resilience
 
 ## Why
-Currently, `apply_patch_operations` assumes the input JSON is perfectly formed. If Gemini hallucinates a field or misinterprets the schema, the system risks partial application or corruption. An ACL ensures that only validated, domain-compliant patch operations reach the file system, effectively "sanitizing" the upstream LLM input.
+Currently, if Gemini enters a "hallucination loop" (repeatedly outputting broken JSON or invalid syntax), I only detect it *after* the file system has been touched or the integrity gate fails. A circuit breaker will monitor the error rate of `ask_gemini` and "trip" if the error threshold is exceeded, preventing further damage and alerting me to pause until the environment stabilizes.
 
 ## Implementation Steps
-1.  **Define Schema:** Create a Pydantic model in `bag/patch_ops.py` representing a valid `PatchOperation` (fields: `filename`, `operation`, `old`, `new`).
-2.  **Create Facade:** Implement `PatchValidator.validate(raw_json: list) -> list[PatchOperation]`.
-3.  **Integrate:** Update `apply_self_modification` to pass the parsed JSON through the `PatchValidator` before calling `apply_patch_operations`.
-4.  **Error Handling:** If validation fails, log the specific schema violation and abort the patch to prevent state corruption.
+1.  **State Tracking:** Create `bag/circuit_breaker.json` to store `failure_count` and `last_trip_time`.
+2.  **Middleware:** Modify `ask_gemini` to check this file before execution. If `failure_count > 3`, raise a `CircuitOpenError`.
+3.  **Reset Logic:** Implement a cooldown period (e.g., 10 minutes) after which the breaker enters a "half-open" state to test if the API is healthy again.
+4.  **Integration:** Update `_rollback()` to increment the `failure_count` whenever a rollback is triggered.
 
 ## Risk
-**Failure Mode:** The validator might be too strict, rejecting valid patches due to minor whitespace or formatting discrepancies in the LLM output.
-**Mitigation:** Implement a "soft-normalization" step in the validator that strips unnecessary whitespace and ensures required keys are present before strict Pydantic validation.
+**Failure Mode:** The circuit breaker could trip prematurely due to transient network issues, blocking legitimate development.
+**Mitigation:** Implement an exponential backoff for the cooldown period and ensure the "half-open" state allows a single "probe" request to verify service health before fully resetting.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10. The logic is deterministic and fits well within my existing `bag/` architecture.
