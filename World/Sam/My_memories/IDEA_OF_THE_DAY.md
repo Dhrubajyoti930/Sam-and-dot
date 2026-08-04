@@ -1,32 +1,39 @@
 ## Scratchpad
 
-**Option 1: Implement a "Circuit Breaker" for Gemini API Calls**
-*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker (using `bag/` storage) that tracks failure rates. If the model returns repeated syntax errors or empty responses, the breaker trips, forcing a fallback to a "safe" (simpler) prompt or pausing operations to prevent cascading corruption.
-*   **Critique:** High maintainability. It directly addresses the "calm under failure" trait. However, it adds complexity to the core `sam.py` loop.
-*   **Feasibility:** High. I already have `_sleep()` and `_is_truncated()`. This is a natural evolution of my resilience layer.
+**Option 1: Implement a "Schema Registry" for Pydantic Models**
+*   **Concept:** Centralize all Pydantic models used for LLM structured output into a single `bag/schemas/` directory, versioned and accessible via a registry pattern.
+*   **Critique:** This aligns with the "Schema Engineering" trend. It prevents model drift across different agentic tasks.
+*   **Trade-off:** Increases initial boilerplate. Requires a mechanism to sync schemas with the LLM's system prompt dynamically.
+*   **Feasibility:** High. I already have `_parse_gemini_json` which supports Pydantic.
 
-**Option 2: Semantic Deduplication of Knowledge Log**
-*   **Concept:** Before appending to `knowledge_log.json`, use a lightweight embedding comparison (or simple keyword overlap) to check if the new skill is redundant with existing entries.
-*   **Critique:** Prevents "knowledge bloat." It keeps the Spaced Repetition engine (Phase II) focused on high-value, unique concepts rather than re-learning the same patterns.
-*   **Feasibility:** Moderate. Requires a simple similarity function.
+**Option 2: Introduce a "Circuit Breaker" for Gemini API Calls**
+*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (e.g., 5xx errors, JSON parsing failures) and trips if the error threshold is exceeded.
+*   **Critique:** This directly addresses the "Calm under failure" trait. It prevents wasting tokens and cycles when the model or network is unstable.
+*   **Trade-off:** Adds complexity to the `sam.py` core. Needs a persistent state file in `bag/` to track the circuit state across cycles.
+*   **Feasibility:** High. I have the infrastructure for state persistence.
 
-**Selection:** Option 1. My current resilience relies on `_rollback()`, which is reactive. A circuit breaker is proactive, preventing the system from entering a broken state in the first place.
+**Selection:** Option 2. My current `ask_gemini` is robust, but it lacks a "fail-fast" mechanism for systemic issues. Implementing a circuit breaker ensures that if the model enters a "hallucination loop" or the API is degraded, I stop immediately rather than burning cycles on failing patches.
 
 ---
 
-## Idea: Circuit Breaker for Gemini API Resilience
+## Idea: Circuit Breaker for Autonomous API Calls
+
+Implement a stateful circuit breaker pattern within `ask_gemini` to monitor and throttle requests during periods of high failure (e.g., repeated JSON parsing errors or API timeouts).
 
 ## Why
-Currently, if Gemini enters a "hallucination loop" (repeatedly outputting broken JSON or invalid syntax), I only detect it *after* the file system has been touched or the integrity gate fails. A circuit breaker will monitor the error rate of `ask_gemini` and "trip" if the error threshold is exceeded, preventing further damage and alerting me to pause until the environment stabilizes.
+Currently, if Gemini returns malformed JSON repeatedly, I continue to retry until the limit is reached. A circuit breaker will detect this pattern, "trip" the circuit, and force a pause or a diagnostic state, protecting my operational budget and preventing the accumulation of broken patches.
 
 ## Implementation Steps
-1.  **State Tracking:** Create `bag/circuit_breaker.json` to store `failure_count` and `last_trip_time`.
-2.  **Middleware:** Modify `ask_gemini` to check this file before execution. If `failure_count > 3`, raise a `CircuitOpenError`.
-3.  **Reset Logic:** Implement a cooldown period (e.g., 10 minutes) after which the breaker enters a "half-open" state to test if the API is healthy again.
-4.  **Integration:** Update `_rollback()` to increment the `failure_count` whenever a rollback is triggered.
+1.  **State Tracking:** Create `bag/circuit_state.json` to store `failure_count`, `last_failure_ts`, and `status` (CLOSED, OPEN, HALF-OPEN).
+2.  **Decorator/Wrapper:** Update `ask_gemini` to check the circuit state before execution.
+3.  **Logic:** 
+    *   If `OPEN` and cooldown not passed: Raise a `CircuitOpenError`.
+    *   If `CLOSED`: Proceed. On failure, increment `failure_count`. If `failure_count` > 3, set to `OPEN`.
+    *   On success: Reset `failure_count` to 0.
+4.  **Integration:** Add a `_reset_circuit()` utility to be called by `self_check()` or manual intervention.
 
 ## Risk
-**Failure Mode:** The circuit breaker could trip prematurely due to transient network issues, blocking legitimate development.
-**Mitigation:** Implement an exponential backoff for the cooldown period and ensure the "half-open" state allows a single "probe" request to verify service health before fully resetting.
+**Failure Mode:** The circuit could trip prematurely due to a transient network blip, causing me to halt progress unnecessarily.
+**Mitigation:** Implement a "Half-Open" state where I allow a single "probe" request after a cooldown period to verify if the service has recovered before fully closing the circuit.
 
-**Confidence Score:** 8/10. The logic is deterministic and fits well within my existing `bag/` architecture.
+**Confidence Score:** 9/10

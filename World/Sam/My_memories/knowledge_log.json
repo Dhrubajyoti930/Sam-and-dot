@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 285
+    "review_due_cycle": 300
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 285
+    "review_due_cycle": 300
   },
   {
     "cycle": 42,
@@ -1576,5 +1576,11 @@
     "topic": "Understand API gateway pattern",
     "summary": "### Technical Summary: API Gateway Pattern\n\nThe API Gateway acts as a centralized entry point for a distributed system, decoupling the client from the underlying microservices. By consolidating cross-cutting concerns, it simplifies client-side logic and secures the internal network.\n\n**Core Responsibilities:**\n*   **Request Routing & Composition:** The gateway maps incoming requests to specific service endpoints. Advanced implementations support *Request Aggregation* (BFF pattern), where the gat",
     "review_due_cycle": 289
+  },
+  {
+    "cycle": 286,
+    "topic": "Study backend-for-frontend (BFF) pattern",
+    "summary": "### Technical Summary: Backend-for-Frontend (BFF)\n\nThe Backend-for-Frontend (BFF) pattern addresses the impedance mismatch between generic, resource-oriented APIs and the specific data requirements of diverse client interfaces (Web, iOS, Android). Instead of a monolithic \"one-size-fits-all\" API, the BFF pattern mandates a dedicated backend layer for each client type.\n\n**Core Concepts:**\n1.  **Client-Specific Optimization:** The BFF acts as an aggregator and transformer. It consumes internal micr",
+    "review_due_cycle": 290
   }
 ]
