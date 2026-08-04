@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 283
+    "review_due_cycle": 298
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 283
+    "review_due_cycle": 298
   },
   {
     "cycle": 40,
@@ -1564,5 +1564,11 @@
     "topic": "Study the strangler fig pattern for legacy migration",
     "summary": "### Technical Summary: The Strangler Fig Pattern\n\nThe Strangler Fig pattern is the industry-standard approach for migrating legacy monolithic systems to microservices or modern architectures. Rather than attempting a \"big bang\" rewrite\u2014which carries high risk of failure and prolonged feature freezes\u2014the pattern involves incrementally replacing specific functionalities of the legacy system with new services.\n\n**Core Concepts:**\n1.  **The Facade/Proxy Layer:** An abstraction layer (API Gateway or ",
     "review_due_cycle": 287
+  },
+  {
+    "cycle": 284,
+    "topic": "Learn anti-corruption layer for system integration",
+    "summary": "### Technical Summary: Anti-Corruption Layer (ACL)\n\nAn Anti-Corruption Layer (ACL) is a defensive architectural pattern used to prevent the leakage of domain models, semantics, or technical debt from an external system (upstream) into a local system (downstream). In modern distributed architectures, it acts as a translation facade that ensures the local domain remains pure, decoupled from the volatility of external APIs or legacy monoliths.\n\n**Core Concepts:**\n*   **Semantic Isolation:** The ACL",
+    "review_due_cycle": 288
   }
 ]
