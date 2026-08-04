@@ -1,33 +1,31 @@
 ## Scratchpad
 
-**Option 1: Implement a "Circuit Breaker" for Gemini API calls.**
-*   *Concept:* Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates. If the API returns 5xx errors or timeouts, the breaker trips, preventing further calls for a cooldown period.
-*   *Critique:* High feasibility. Improves system resilience during transient network/provider instability. However, it adds complexity to `sam.py` and requires persistent state (e.g., a `circuit_state.json` in `bag/`).
-*   *Trade-off:* Increases robustness at the cost of slightly more complex error handling logic.
+**Option 1: Implement a Transactional Outbox for `patch_ops.py`**
+*   **Concept:** Before applying any patch, write the intended operation to a `pending_ops.json` file. Only after successful application (and integrity check) is the file deleted.
+*   **Critique:** This adds a layer of atomicity to my self-modification. If the system crashes mid-patch, I can resume from the `pending_ops.json` on the next cycle.
+*   **Trade-off:** Increases complexity of the `apply_patch_operations` function but significantly reduces the risk of partial, broken states.
 
-**Option 2: Formalize "Schema-First" Patching via JSON-Schema validation.**
-*   *Concept:* Instead of relying on `_parse_gemini_json` to guess the structure, force Gemini to provide a JSON-Schema alongside the patch operations. Validate the patch against this schema before `apply_patch_operations` is called.
-*   *Critique:* Very high long-term maintainability. It moves us away from "vibe-based" parsing toward deterministic contract enforcement.
-*   *Trade-off:* Requires updating `apply_patch_operations` to accept and validate the schema, which is a non-trivial refactor of the core pipeline.
+**Option 2: Introduce a "Semantic Seam" Registry**
+*   **Concept:** Create a `registry.json` that maps high-level business domains (e.g., "Spaced Repetition", "Market Ingestion") to specific file paths.
+*   **Critique:** This aligns with the Strangler Fig pattern I learned this cycle. It allows me to isolate modules for future extraction into microservices without touching the core `sam.py` logic.
+*   **Trade-off:** Requires a refactor of how I load modules, but makes the codebase significantly more modular and easier to test in isolation.
 
-**Decision:** Option 2 is superior for long-term stability. It aligns with the "Structured Output" trend identified in the market scan and directly addresses the risk of malformed patches reaching the `apply_patch_operations` logic.
+**Decision:** Option 1 is more critical for immediate stability. I will prioritize the Transactional Outbox to ensure my self-modification loop is truly robust before I begin the architectural "strangling" of the monolith.
 
 ---
 
-## Idea: Schema-Enforced Patch Validation
-
-Implement a mandatory JSON-Schema validation layer for all self-modification patch operations. Gemini will be prompted to include a schema definition in its response, which `sam.py` will use to validate the patch structure before execution.
+## Idea: Transactional Outbox for Self-Modification
 
 ## Why
-Currently, `_parse_gemini_json` is a heuristic-based parser. If Gemini returns a slightly malformed JSON object, the patch might fail silently or partially. By enforcing a schema, we ensure that every `replace`, `delete`, or `insert_after` operation is structurally sound before it touches the file system. This is the next logical step in the "Inbox Pattern" philosophy of moving from optimistic execution to deterministic, validated state changes.
+Currently, if `apply_patch_operations` fails halfway through, the system state is inconsistent. By implementing a Transactional Outbox, I ensure that every patch is either fully applied or can be recovered/rolled back cleanly, adhering to the resilience patterns I established in Cycle 282.
 
 ## Implementation Steps
-1.  **Define Schema:** Create a standard JSON schema for patch operations in `bag/patch_schema.json`.
-2.  **Update `apply_self_modification`:** Modify the function to accept the schema and use `jsonschema` (or a lightweight equivalent) to validate the parsed JSON before passing it to `apply_patch_operations`.
-3.  **Prompt Engineering:** Update the system prompt for `_behaviour_fix_with_gemini` and `apply_self_modification` to explicitly require the schema-compliant structure.
-4.  **Error Handling:** If validation fails, log the schema violation and trigger a retry or alert, rather than attempting to apply the patch.
+1.  **Modify `apply_patch_operations`:** Update the function to write the `ops` list to `bag/pending_ops.json` before execution.
+2.  **Add Recovery Logic:** Update `run_cycle()` to check for the existence of `pending_ops.json` at startup. If found, attempt to re-apply or log a critical failure for manual intervention.
+3.  **Atomic Cleanup:** Ensure `pending_ops.json` is deleted only after the `self_check()` (Integrity Gate) passes.
 
 ## Risk
-*   **Failure Mode:** Gemini may struggle to generate a valid JSON-Schema alongside the patch, leading to "validation fatigue" where the system rejects valid patches due to schema mismatch.
-*   **Mitigation:** Provide a "Schema-Only" mode where the schema is hardcoded in `sam.py` and Gemini is only asked to provide the data, reducing the cognitive load on the model.
-*   **Confidence Score:** 8/10. The logic is sound, but the initial prompt tuning for schema generation will require careful calibration.
+**Failure Mode:** If the `pending_ops.json` itself becomes corrupted during a write, the recovery logic might trigger an infinite loop of failed retries.
+**Mitigation:** Implement a `max_retries` counter in the `pending_ops.json` metadata. If the retry count exceeds 3, move the file to `bag/failed_ops/` and alert Dot.
+
+**Confidence Score:** 9/10

@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 282
+    "review_due_cycle": 297
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 282
+    "review_due_cycle": 297
   },
   {
     "cycle": 39,
@@ -1558,5 +1558,11 @@
     "topic": "Understand the inbox pattern for idempotent consumers",
     "summary": "### Technical Summary: The Inbox Pattern for Idempotent Consumers\n\nIn distributed systems, the \"Inbox Pattern\" (or Outbox-Inbox pattern) is the standard architectural solution for achieving **exactly-once processing semantics** when consuming messages from a broker (e.g., Kafka, RabbitMQ). It solves the dual-write problem: ensuring that a state change and the subsequent message acknowledgment occur atomically.\n\n#### Core Concepts\n1.  **Idempotency Key:** Every incoming message must carry a uniqu",
     "review_due_cycle": 286
+  },
+  {
+    "cycle": 283,
+    "topic": "Study the strangler fig pattern for legacy migration",
+    "summary": "### Technical Summary: The Strangler Fig Pattern\n\nThe Strangler Fig pattern is the industry-standard approach for migrating legacy monolithic systems to microservices or modern architectures. Rather than attempting a \"big bang\" rewrite\u2014which carries high risk of failure and prolonged feature freezes\u2014the pattern involves incrementally replacing specific functionalities of the legacy system with new services.\n\n**Core Concepts:**\n1.  **The Facade/Proxy Layer:** An abstraction layer (API Gateway or ",
+    "review_due_cycle": 287
   }
 ]
