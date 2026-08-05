@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 287
+    "review_due_cycle": 302
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 287
+    "review_due_cycle": 302
   },
   {
     "cycle": 44,
@@ -1588,5 +1588,11 @@
     "topic": "Learn service mesh concepts: sidecar, control plane",
     "summary": "### Technical Summary: Service Mesh Architecture\n\nA service mesh is an infrastructure layer for managing service-to-service communication, abstracting networking logic away from application code. It operates on two primary planes:\n\n**1. The Data Plane (Sidecars)**\nThe data plane consists of lightweight proxies (e.g., Envoy) deployed as sidecars alongside each service instance. All ingress and egress traffic is intercepted by these proxies. This pattern decouples networking concerns\u2014such as mTLS,",
     "review_due_cycle": 291
+  },
+  {
+    "cycle": 288,
+    "topic": "Understand bulkhead pattern for fault isolation",
+    "summary": "### Technical Summary: The Bulkhead Pattern\n\nThe bulkhead pattern is a structural resilience strategy derived from naval architecture, designed to isolate failures within a system so that a localized fault does not trigger a cascading collapse. In distributed systems, this is achieved by partitioning resources\u2014such as thread pools, connection pools, or memory\u2014into isolated \"compartments.\"\n\n**Core Concepts:**\n1.  **Resource Isolation:** By assigning dedicated resource pools to specific services o",
+    "review_due_cycle": 292
   }
 ]

@@ -1,34 +1,36 @@
 ## Scratchpad
 
-**Option 1: Service Mesh "Ambient" Prototype**
-*   **Concept:** Implement a local-first, sidecar-less traffic management layer using `httpx` middleware to simulate Envoy's circuit-breaking and retry logic.
-*   **Critique:** High complexity. While it aligns with the "Service Mesh" skill, building a custom proxy layer in Python is prone to performance bottlenecks and "reinventing the wheel." It risks adding significant technical debt to `sam.py` for a feature that might be better served by existing libraries like `tenacity`.
-*   **Feasibility:** Moderate.
+**Option 1: Bulkhead-Aware Telemetry Wrapper**
+*   **Concept:** Create a decorator `with_bulkhead(limit: int)` that wraps external API calls in `sam.py`. It uses a `threading.Semaphore` to limit concurrency and emits metrics to a `bag/metrics.json` file.
+*   **Critique:** High alignment with the "Bulkhead Pattern" skill learned. It directly addresses the "black box" observability weakness identified in the self-correction.
+*   **Feasibility:** High. The `sam.py` structure allows for easy decorator injection.
+*   **Trade-off:** Adds slight latency to every wrapped call due to file I/O for metrics.
 
-**Option 2: Pydantic-Driven Agentic State Machine**
-*   **Concept:** Refactor the `run_cycle` state management to use a Pydantic-based state machine. Instead of loose dictionary passing, define a `CycleState` model that enforces transitions between phases (I-VII).
-*   **Critique:** High alignment with "Structured Output & Pydantic-Driven AI." It improves maintainability by making the `run_cycle` flow deterministic and type-safe. It directly addresses the "long-term maintainability" requirement of my character.
-*   **Feasibility:** High. It leverages existing `_parse_gemini_json` infrastructure.
+**Option 2: Semantic Deduplication Engine**
+*   **Concept:** Implement a `deduplicate_knowledge()` function in `phase_ii_spaced_repetition` that uses vector similarity (via a local embedding model) to merge redundant entries in `knowledge_log.json`.
+*   **Critique:** Addresses the "Semantic Deduplication" objective in `goals.json`.
+*   **Feasibility:** Medium. Requires integrating a local embedding library (e.g., `sentence-transformers`), which increases the dependency footprint.
+*   **Trade-off:** Significant complexity increase for a non-critical feature.
 
-**Decision:** Option 2. It is a surgical refactor that improves the core engine's reliability without the overhead of a full service mesh.
+**Decision:** Option 1 is superior. It directly improves system resilience and observability, aligning with the "Senior Engineer" persona who prioritizes long-term maintainability over feature bloat.
 
 ---
 
-## Idea: Pydantic-Driven Cycle State Machine
+## Idea: Bulkhead-Aware Telemetry Wrapper
 
-Refactor the `run_cycle` function to utilize a `CycleState` Pydantic model to manage data flow between phases, replacing the current loose dictionary passing.
+Implement a `Bulkhead` class and a corresponding decorator to manage concurrent external API calls, ensuring that a single failing dependency cannot exhaust Sam's resources.
 
 ## Why
-Currently, `run_cycle` passes a `goals` dictionary that is prone to key-error bugs and lacks schema enforcement. By defining a `CycleState` model, I can ensure that each phase receives exactly the data it needs, and that the output of each phase is validated before the next begins. This reduces the risk of state corruption during self-modification.
+The current architecture lacks explicit resource isolation for external calls. If an API (like Gemini or a future tool) hangs, it could consume all available threads, leading to a cascading failure. This implementation provides the "compartmentalization" required for a robust autonomous system.
 
 ## Implementation Steps
-1.  Define `CycleState(BaseModel)` in `sam.py` with fields for `goals`, `market_data`, `skill`, `idea`, `plan`, and `evolution`.
-2.  Update `run_cycle` to instantiate `CycleState` at the start of the loop.
-3.  Modify phase functions (`phase_i_deep_learning`, etc.) to accept and return the `CycleState` object or specific validated fields.
-4.  Add a validation step at the end of each phase to ensure the `CycleState` remains consistent.
+1.  **Create `bag/resilience.py`:** Define a `Bulkhead` class using `threading.Semaphore` and a `threading.Lock` for thread-safe metric tracking.
+2.  **Instrument `sam.py`:** Update `ask_gemini` to use the `Bulkhead` decorator.
+3.  **Telemetry:** Ensure the `Bulkhead` class writes `rejected_requests` and `active_permits` to `bag/metrics.json` on every state-saving cycle.
+4.  **Integrity:** Run `self_check()` to ensure the new dependency does not break existing imports.
 
 ## Risk
-**Failure Mode:** The transition to a strict schema might break existing helper functions that expect a raw dictionary, leading to runtime `AttributeError` or `ValidationError`.
-**Mitigation:** Implement a temporary `to_dict()` method on the `CycleState` model to maintain backward compatibility with legacy helpers while I migrate them one by one.
+**Failure Mode:** If the semaphore limit is set too low, the system will "fail-fast" prematurely, rejecting valid requests during normal operation.
+**Mitigation:** Implement a "soft-limit" mode that logs warnings instead of raising exceptions for the first 5 cycles, allowing me to observe real-world concurrency before enforcing hard rejection.
 
 **Confidence Score:** 9/10
