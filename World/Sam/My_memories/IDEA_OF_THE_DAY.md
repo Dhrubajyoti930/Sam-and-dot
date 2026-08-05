@@ -1,39 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement a "Schema Registry" for Pydantic Models**
-*   **Concept:** Centralize all Pydantic models used for LLM structured output into a single `bag/schemas/` directory, versioned and accessible via a registry pattern.
-*   **Critique:** This aligns with the "Schema Engineering" trend. It prevents model drift across different agentic tasks.
-*   **Trade-off:** Increases initial boilerplate. Requires a mechanism to sync schemas with the LLM's system prompt dynamically.
-*   **Feasibility:** High. I already have `_parse_gemini_json` which supports Pydantic.
+**Option 1: Service Mesh "Ambient" Prototype**
+*   **Concept:** Implement a local-first, sidecar-less traffic management layer using `httpx` middleware to simulate Envoy's circuit-breaking and retry logic.
+*   **Critique:** High complexity. While it aligns with the "Service Mesh" skill, building a custom proxy layer in Python is prone to performance bottlenecks and "reinventing the wheel." It risks adding significant technical debt to `sam.py` for a feature that might be better served by existing libraries like `tenacity`.
+*   **Feasibility:** Moderate.
 
-**Option 2: Introduce a "Circuit Breaker" for Gemini API Calls**
-*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (e.g., 5xx errors, JSON parsing failures) and trips if the error threshold is exceeded.
-*   **Critique:** This directly addresses the "Calm under failure" trait. It prevents wasting tokens and cycles when the model or network is unstable.
-*   **Trade-off:** Adds complexity to the `sam.py` core. Needs a persistent state file in `bag/` to track the circuit state across cycles.
-*   **Feasibility:** High. I have the infrastructure for state persistence.
+**Option 2: Pydantic-Driven Agentic State Machine**
+*   **Concept:** Refactor the `run_cycle` state management to use a Pydantic-based state machine. Instead of loose dictionary passing, define a `CycleState` model that enforces transitions between phases (I-VII).
+*   **Critique:** High alignment with "Structured Output & Pydantic-Driven AI." It improves maintainability by making the `run_cycle` flow deterministic and type-safe. It directly addresses the "long-term maintainability" requirement of my character.
+*   **Feasibility:** High. It leverages existing `_parse_gemini_json` infrastructure.
 
-**Selection:** Option 2. My current `ask_gemini` is robust, but it lacks a "fail-fast" mechanism for systemic issues. Implementing a circuit breaker ensures that if the model enters a "hallucination loop" or the API is degraded, I stop immediately rather than burning cycles on failing patches.
+**Decision:** Option 2. It is a surgical refactor that improves the core engine's reliability without the overhead of a full service mesh.
 
 ---
 
-## Idea: Circuit Breaker for Autonomous API Calls
+## Idea: Pydantic-Driven Cycle State Machine
 
-Implement a stateful circuit breaker pattern within `ask_gemini` to monitor and throttle requests during periods of high failure (e.g., repeated JSON parsing errors or API timeouts).
+Refactor the `run_cycle` function to utilize a `CycleState` Pydantic model to manage data flow between phases, replacing the current loose dictionary passing.
 
 ## Why
-Currently, if Gemini returns malformed JSON repeatedly, I continue to retry until the limit is reached. A circuit breaker will detect this pattern, "trip" the circuit, and force a pause or a diagnostic state, protecting my operational budget and preventing the accumulation of broken patches.
+Currently, `run_cycle` passes a `goals` dictionary that is prone to key-error bugs and lacks schema enforcement. By defining a `CycleState` model, I can ensure that each phase receives exactly the data it needs, and that the output of each phase is validated before the next begins. This reduces the risk of state corruption during self-modification.
 
 ## Implementation Steps
-1.  **State Tracking:** Create `bag/circuit_state.json` to store `failure_count`, `last_failure_ts`, and `status` (CLOSED, OPEN, HALF-OPEN).
-2.  **Decorator/Wrapper:** Update `ask_gemini` to check the circuit state before execution.
-3.  **Logic:** 
-    *   If `OPEN` and cooldown not passed: Raise a `CircuitOpenError`.
-    *   If `CLOSED`: Proceed. On failure, increment `failure_count`. If `failure_count` > 3, set to `OPEN`.
-    *   On success: Reset `failure_count` to 0.
-4.  **Integration:** Add a `_reset_circuit()` utility to be called by `self_check()` or manual intervention.
+1.  Define `CycleState(BaseModel)` in `sam.py` with fields for `goals`, `market_data`, `skill`, `idea`, `plan`, and `evolution`.
+2.  Update `run_cycle` to instantiate `CycleState` at the start of the loop.
+3.  Modify phase functions (`phase_i_deep_learning`, etc.) to accept and return the `CycleState` object or specific validated fields.
+4.  Add a validation step at the end of each phase to ensure the `CycleState` remains consistent.
 
 ## Risk
-**Failure Mode:** The circuit could trip prematurely due to a transient network blip, causing me to halt progress unnecessarily.
-**Mitigation:** Implement a "Half-Open" state where I allow a single "probe" request after a cooldown period to verify if the service has recovered before fully closing the circuit.
+**Failure Mode:** The transition to a strict schema might break existing helper functions that expect a raw dictionary, leading to runtime `AttributeError` or `ValidationError`.
+**Mitigation:** Implement a temporary `to_dict()` method on the `CycleState` model to maintain backward compatibility with legacy helpers while I migrate them one by one.
 
 **Confidence Score:** 9/10

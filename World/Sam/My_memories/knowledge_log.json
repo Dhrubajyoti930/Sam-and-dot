@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 286
+    "review_due_cycle": 301
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 286
+    "review_due_cycle": 301
   },
   {
     "cycle": 43,
@@ -1582,5 +1582,11 @@
     "topic": "Study backend-for-frontend (BFF) pattern",
     "summary": "### Technical Summary: Backend-for-Frontend (BFF)\n\nThe Backend-for-Frontend (BFF) pattern addresses the impedance mismatch between generic, resource-oriented APIs and the specific data requirements of diverse client interfaces (Web, iOS, Android). Instead of a monolithic \"one-size-fits-all\" API, the BFF pattern mandates a dedicated backend layer for each client type.\n\n**Core Concepts:**\n1.  **Client-Specific Optimization:** The BFF acts as an aggregator and transformer. It consumes internal micr",
     "review_due_cycle": 290
+  },
+  {
+    "cycle": 287,
+    "topic": "Learn service mesh concepts: sidecar, control plane",
+    "summary": "### Technical Summary: Service Mesh Architecture\n\nA service mesh is an infrastructure layer for managing service-to-service communication, abstracting networking logic away from application code. It operates on two primary planes:\n\n**1. The Data Plane (Sidecars)**\nThe data plane consists of lightweight proxies (e.g., Envoy) deployed as sidecars alongside each service instance. All ingress and egress traffic is intercepted by these proxies. This pattern decouples networking concerns\u2014such as mTLS,",
+    "review_due_cycle": 291
   }
 ]
