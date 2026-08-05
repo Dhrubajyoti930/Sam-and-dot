@@ -1,34 +1,35 @@
 ## Scratchpad
 
-**Option 1: Ambassador-Pattern Sidecar for API Resilience**
-*   **Concept:** Implement a local `Envoy` or lightweight Python-based proxy sidecar to handle retries, circuit breaking, and mTLS for external API calls.
-*   **Critique:** High architectural alignment with the "Ambassador Pattern" skill learned. It offloads complexity from `sam.py`. However, managing a sidecar process lifecycle within my current execution environment is non-trivial and may introduce significant latency or stability risks if the proxy fails.
-*   **Feasibility:** Moderate. Requires robust process management logic.
+**Option 1: Feature Flag Registry Implementation**
+*   **Concept:** Create a `bag/feature_flags.py` that manages a central registry of toggles, replacing scattered `if` statements with a `FlagManager` class.
+*   **Critique:** High alignment with the "Feature Flags & Gradual Rollouts" skill. It centralizes control and allows for the "default-off" safety wrapper.
+*   **Trade-off:** Adds a layer of abstraction that might be overkill for a small codebase, but essential for long-term stability.
+*   **Feasibility:** High. It fits perfectly into the existing `workshop_bench` structure.
 
-**Option 2: Structured Output Enforcement for `ask_gemini`**
-*   **Concept:** Integrate `Instructor` or a native Pydantic-based validation layer directly into `_parse_gemini_json` to enforce strict schemas for all LLM interactions.
-*   **Critique:** This directly addresses the "Structured Output Enforcement" market signal. It reduces the brittleness of my current regex-based parsing. It is highly maintainable and improves the reliability of my self-modification loops.
-*   **Feasibility:** High. I already have `_parse_gemini_json` using Pydantic; this would be an evolution of that existing logic.
+**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
+*   **Concept:** Implement a module that compares new `idea_of_the_day` proposals against `experiences.json` using vector similarity to prevent redundant development cycles.
+*   **Critique:** Directly addresses the "Semantic Deduplication" objective. It improves the quality of Sam's growth by ensuring he doesn't re-solve the same problems.
+*   **Trade-off:** Requires a dependency on a local vector store or simple embedding comparison, which adds complexity to the `bag/` environment.
+*   **Feasibility:** Moderate. Requires careful handling of the `experiences` data structure.
 
-**Selection:** Option 2. It is a "minimal footprint, maximum leverage" refactor that stabilizes my core communication channel with Gemini, which is the foundation of all other autonomous tasks.
+**Decision:** I will proceed with **Option 1**. It provides the infrastructure necessary to safely implement Option 2 later. By building the flag registry now, I can wrap future experimental features (like the deduplication engine) in a "default-off" flag, minimizing risk.
 
 ---
 
-## Idea: Pydantic-Driven Schema Enforcement for LLM Responses
-
-Refactor `_parse_gemini_json` to support a mandatory schema-first approach for all critical system calls, replacing loose JSON parsing with strict Pydantic validation.
+## Idea: Centralized Feature Flag Registry
+Implement a `FlagManager` in `bag/feature_flags.py` that provides a thread-safe, cached interface for toggling features, including a "default-off" safety mechanism.
 
 ## Why
-My current parsing logic is vulnerable to minor formatting variations in Gemini's output. By enforcing Pydantic models at the boundary, I ensure that any malformed or unexpected data is caught *before* it reaches the patch-application logic, preventing corrupted state transitions.
+My current codebase lacks a formal mechanism for gradual rollouts. As I move toward more complex agentic workflows, I need the ability to toggle experimental logic without risking the stability of the core `sam.py` loop. This aligns with the "Feature Flags & Gradual Rollouts" skill learned this cycle.
 
 ## Implementation Steps
-1.  Define a `BasePatchOperation` Pydantic model in `bag/patch_ops.py`.
-2.  Update `_parse_gemini_json` to accept a `schema` argument as a requirement for all "patch" or "plan" related calls.
-3.  Modify `apply_self_modification` to pass the required schema to `_parse_gemini_json`.
-4.  Implement a fallback mechanism: if validation fails, log the raw output and trigger a retry with a "fix your JSON structure" prompt rather than failing the cycle.
+1.  **Create `bag/feature_flags.py`**: Define a `FlagManager` class with a `get(flag_name: str, default: bool = False)` method.
+2.  **Persistence**: Use a simple JSON file in `bag/` to store flag states, with an in-memory cache for performance.
+3.  **Integration**: Update `sam.py` to import `FlagManager` and wrap the "Semantic Deduplication" logic (the next objective) in a `if FlagManager.is_enabled("semantic_dedup"):` block.
+4.  **Testing**: Add a test case in `bag/tests.py` to verify that the flag registry correctly defaults to `False` when a key is missing.
 
 ## Risk
-**Failure Mode:** The LLM may hallucinate fields not present in the Pydantic model, causing repeated validation errors and infinite retry loops.
-**Mitigation:** Implement a "max_retries" counter for the validation loop. If validation fails after 2 attempts, revert to a "relaxed" parsing mode that logs the error for manual review by Dot rather than crashing the cycle.
+**Failure Mode:** The `FlagManager` could become a single point of failure if the JSON file becomes corrupted or inaccessible, causing the entire system to default to "off" and potentially disabling critical functionality.
+**Mitigation:** Implement a "fail-safe" mode where the `FlagManager` logs a critical error to `sam.py` but returns the hardcoded `default` value, ensuring the system remains operational even if the flag registry is unreachable.
 
 **Confidence Score:** 9/10
