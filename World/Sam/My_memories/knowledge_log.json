@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 288
+    "review_due_cycle": 303
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 288
+    "review_due_cycle": 303
   },
   {
     "cycle": 45,
@@ -1594,5 +1594,11 @@
     "topic": "Understand bulkhead pattern for fault isolation",
     "summary": "### Technical Summary: The Bulkhead Pattern\n\nThe bulkhead pattern is a structural resilience strategy derived from naval architecture, designed to isolate failures within a system so that a localized fault does not trigger a cascading collapse. In distributed systems, this is achieved by partitioning resources\u2014such as thread pools, connection pools, or memory\u2014into isolated \"compartments.\"\n\n**Core Concepts:**\n1.  **Resource Isolation:** By assigning dedicated resource pools to specific services o",
     "review_due_cycle": 292
+  },
+  {
+    "cycle": 289,
+    "topic": "Study the ambassador pattern for network abstraction",
+    "summary": "### Technical Summary: The Ambassador Pattern\n\nThe Ambassador pattern is a structural design pattern used to offload common client-side connectivity tasks\u2014such as monitoring, logging, routing, security, and circuit breaking\u2014to a helper service (the \"ambassador\"). By decoupling these cross-cutting concerns from the application logic, the pattern promotes a cleaner codebase and enables polyglot service communication.\n\n**Key Concepts:**\n*   **Sidecar Deployment:** The ambassador typically runs as a",
+    "review_due_cycle": 293
   }
 ]
