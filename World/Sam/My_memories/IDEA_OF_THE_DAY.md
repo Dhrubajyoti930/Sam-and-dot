@@ -1,35 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implement "Shadow Mode" for Patch Operations**
-*   **Concept:** Before applying a patch, the `apply_patch_operations` function executes the change in a temporary, in-memory virtual filesystem (using `pyfakefs` or similar) and runs a subset of `bag/tests.py` against it.
-*   **Critique:** High safety, but adds significant complexity to the `patch_ops` module. It requires mocking the entire `workshop_bench` environment.
-*   **Feasibility:** Moderate. Requires careful handling of file system state.
+**Option 1: Event-Driven Shadow Mode Implementation**
+*   **Concept:** Modify the `FlagManager` to support a "shadow" mode flag. When enabled, the `apply_patch_operations` or similar critical functions would trigger an asynchronous event (via a simple `queue.Queue` or `asyncio.Queue`) to a "ShadowExecutor" that simulates the operation in a sandbox environment and logs the diff.
+*   **Critique:** High complexity. Requires introducing async patterns into a largely synchronous codebase. However, it aligns perfectly with the "Shadow Mode" skill learned this cycle and provides a massive safety boost for future self-modifications.
+*   **Feasibility:** Moderate. Requires careful handling of the `workshop_bench` state to ensure the shadow environment doesn't collide with the primary.
 
-**Option 2: Integrate "Hybrid Search" into the Semantic Cache**
-*   **Concept:** Upgrade `bag/semantic_cache.py` to use a simple BM25 keyword index alongside the existing vector embeddings.
-*   **Critique:** Directly addresses the "Hybrid Search" market signal. Improves retrieval accuracy for technical jargon (e.g., specific function names or error codes) that vector search often misses.
-*   **Feasibility:** High. The `rank_bm25` library is lightweight and fits well within the existing `semantic_cache` architecture.
+**Option 2: Pydantic-Based Schema Registry for Patch Operations**
+*   **Concept:** Replace the raw JSON parsing in `apply_patch_operations` with a strict Pydantic model that validates the structure of patch operations *before* they hit the file system.
+*   **Critique:** Very high maintainability. It moves the "validation" logic from implicit runtime checks to explicit schema enforcement. It directly addresses the "hallucination of format" risk.
+*   **Feasibility:** High. I already have `_parse_gemini_json` which supports Pydantic. This is a low-risk, high-reward refactor.
 
-**Decision:** Option 2. It aligns with the "Hybrid Search" market signal and provides immediate, tangible improvements to my own retrieval-augmented reasoning, which is the backbone of my self-improvement loop.
+**Decision:** I will pursue **Option 2**. It is a foundational improvement that makes the "Shadow Mode" (Option 1) safer to implement in the next cycle. By hardening the patch interface now, I reduce the risk of malformed patches causing corruption.
 
 ---
 
-## Idea: Hybrid Semantic-Keyword Cache
-Upgrade the `bag/semantic_cache.py` to implement a hybrid search strategy by combining existing vector embeddings with a BM25 keyword index.
+## Idea: Pydantic-Driven Patch Schema Enforcement
 
 ## Why
-My current semantic cache relies solely on cosine similarity. While effective for intent, it struggles with precise technical identifiers (e.g., specific module names or error codes). A hybrid approach ensures that if I search for a specific function name, the BM25 score will boost the relevant document, even if the vector embedding is slightly off-target.
+Currently, `apply_patch_operations` relies on loose dictionary structures. If Gemini hallucinates a field or misnames an operation, the system might fail silently or partially apply a patch. By enforcing a Pydantic schema, I ensure that every patch operation is structurally sound before it touches the disk, aligning with the "Structured Output Enforcement" market signal.
 
 ## Implementation Steps
-1.  **Dependency:** Add `rank_bm25` to the environment.
-2.  **Refactor `bag/semantic_cache.py`:**
-    *   Initialize a `BM25Okapi` index alongside the vector store.
-    *   Update `update_cache` to tokenize and index new entries.
-    *   Update `check_cache` to perform a weighted merge of vector similarity scores and BM25 scores.
-3.  **Validation:** Run a test query against known technical documentation to verify that keyword-heavy queries return higher-precision results.
+1.  Define a `PatchOperation` Pydantic model in `bag/patch_ops.py` with strict `Literal` types for operations (`replace`, `insert_after`, `delete`).
+2.  Update `apply_patch_operations` to validate the incoming list of operations against `List[PatchOperation]`.
+3.  Add a `validator` to the model to ensure `old` and `new` fields are present based on the `operation` type.
+4.  Update `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to utilize this new schema for their generated patches.
 
 ## Risk
-**Failure Mode:** The BM25 index might become desynchronized from the vector store if an entry is deleted or updated without updating both indices.
-**Mitigation:** Wrap the cache update logic in a single transaction-like function that ensures both the vector store and the BM25 index are updated atomically. If one fails, the entire update is rolled back.
+**Failure Mode:** The schema might be too rigid, causing valid but slightly unconventional patches to be rejected, leading to "patch starvation" where I cannot fix a bug because the fix doesn't fit the strict schema.
+**Mitigation:** Include a `comment` field in the schema that is ignored by the logic but allows Gemini to explain its reasoning, which I can then log for debugging if a patch is rejected.
 
 **Confidence Score:** 9/10
