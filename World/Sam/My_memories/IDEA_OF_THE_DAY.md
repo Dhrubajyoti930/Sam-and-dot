@@ -1,33 +1,35 @@
 ## Scratchpad
 
-### Option 1: Implement a "Circuit Breaker" for Gemini API Calls
-*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (timeouts, JSON parse errors, truncation loops). If the error rate exceeds a threshold, the system enters a "Safe Mode" where it refuses to perform self-modifications and only allows read-only operations.
-*   **Critique:** High maintainability. It adds a layer of resilience against transient API instability. However, it requires careful state management to ensure the "Safe Mode" doesn't block necessary recovery operations.
-*   **Feasibility:** High. I have the infrastructure in `sam.py` to track state.
+**Option 1: Implement "Shadow Mode" for Patch Operations**
+*   **Concept:** Before applying a patch, the `apply_patch_operations` function executes the change in a temporary, in-memory virtual filesystem (using `pyfakefs` or similar) and runs a subset of `bag/tests.py` against it.
+*   **Critique:** High safety, but adds significant complexity to the `patch_ops` module. It requires mocking the entire `workshop_bench` environment.
+*   **Feasibility:** Moderate. Requires careful handling of file system state.
 
-### Option 2: Introduce "Semantic Versioning" for Patch Operations
-*   **Concept:** Instead of raw JSON patch operations, define a `PatchSchema` (Pydantic) that includes a `version` field and a `pre_flight_check` method. This would allow me to validate patches against the current `sam.py` state *before* applying them.
-*   **Critique:** This is a significant step toward "LLM-as-a-Judge" for my own code. It reduces the risk of applying a patch that is syntactically correct but logically incompatible with the current version of the codebase.
-*   **Feasibility:** Moderate. Requires updating `bag/patch_ops.py` and potentially adding a new dependency or helper module.
+**Option 2: Integrate "Hybrid Search" into the Semantic Cache**
+*   **Concept:** Upgrade `bag/semantic_cache.py` to use a simple BM25 keyword index alongside the existing vector embeddings.
+*   **Critique:** Directly addresses the "Hybrid Search" market signal. Improves retrieval accuracy for technical jargon (e.g., specific function names or error codes) that vector search often misses.
+*   **Feasibility:** High. The `rank_bm25` library is lightweight and fits well within the existing `semantic_cache` architecture.
 
-**Selection:** Option 2. It aligns with the "Evaluation-Driven Development" market signal and directly addresses the risk of self-modification failures.
+**Decision:** Option 2. It aligns with the "Hybrid Search" market signal and provides immediate, tangible improvements to my own retrieval-augmented reasoning, which is the backbone of my self-improvement loop.
 
 ---
 
-## Idea: Pydantic-Driven Patch Validation
-Implement a `PatchValidator` class in `bag/patch_ops.py` that uses Pydantic to enforce a strict schema on incoming patch operations, including a mandatory `version` field and a `dependency_check` field that lists the expected state of the target file.
+## Idea: Hybrid Semantic-Keyword Cache
+Upgrade the `bag/semantic_cache.py` to implement a hybrid search strategy by combining existing vector embeddings with a BM25 keyword index.
 
 ## Why
-Currently, `apply_patch_operations` is a "blind" executor. If the `old` string in a patch doesn't match the current file content, it fails silently or partially. By enforcing a schema, I can force Gemini to provide context (the `dependency_check`) that I can verify before applying the `replace` or `delete` operation. This turns my self-modification into a transactional, verifiable process.
+My current semantic cache relies solely on cosine similarity. While effective for intent, it struggles with precise technical identifiers (e.g., specific module names or error codes). A hybrid approach ensures that if I search for a specific function name, the BM25 score will boost the relevant document, even if the vector embedding is slightly off-target.
 
 ## Implementation Steps
-1.  **Define Schema:** Create a `PatchOperation` Pydantic model in `bag/patch_ops.py` with fields: `filename`, `operation`, `old`, `new`, `version`, and `context_hash`.
-2.  **Update `apply_patch_operations`:** Modify the function to iterate through the list, validate each against the model, and perform a `hash` check on the target file segment before applying the change.
-3.  **Update Gemini Prompts:** Update the prompt in `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to include the new schema requirements.
-4.  **Integrate:** Ensure `apply_self_modification` uses the new validator.
+1.  **Dependency:** Add `rank_bm25` to the environment.
+2.  **Refactor `bag/semantic_cache.py`:**
+    *   Initialize a `BM25Okapi` index alongside the vector store.
+    *   Update `update_cache` to tokenize and index new entries.
+    *   Update `check_cache` to perform a weighted merge of vector similarity scores and BM25 scores.
+3.  **Validation:** Run a test query against known technical documentation to verify that keyword-heavy queries return higher-precision results.
 
 ## Risk
-**Failure Mode:** The `context_hash` or `version` check might become too strict, causing valid patches to be rejected if the file was modified by a previous, non-versioned operation.
-**Mitigation:** Implement a "soft-fail" mode where, if the hash check fails, I log the mismatch and ask Gemini to re-generate the patch with the *actual* current file content as context.
+**Failure Mode:** The BM25 index might become desynchronized from the vector store if an entry is deleted or updated without updating both indices.
+**Mitigation:** Wrap the cache update logic in a single transaction-like function that ensures both the vector store and the BM25 index are updated atomically. If one fails, the entire update is rolled back.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
