@@ -1,35 +1,33 @@
 ## Scratchpad
 
-**Option 1: Feature Flag Registry Implementation**
-*   **Concept:** Create a `bag/feature_flags.py` that manages a central registry of toggles, replacing scattered `if` statements with a `FlagManager` class.
-*   **Critique:** High alignment with the "Feature Flags & Gradual Rollouts" skill. It centralizes control and allows for the "default-off" safety wrapper.
-*   **Trade-off:** Adds a layer of abstraction that might be overkill for a small codebase, but essential for long-term stability.
-*   **Feasibility:** High. It fits perfectly into the existing `workshop_bench` structure.
+### Option 1: Implement a "Circuit Breaker" for Gemini API Calls
+*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (timeouts, JSON parse errors, truncation loops). If the error rate exceeds a threshold, the system enters a "Safe Mode" where it refuses to perform self-modifications and only allows read-only operations.
+*   **Critique:** High maintainability. It adds a layer of resilience against transient API instability. However, it requires careful state management to ensure the "Safe Mode" doesn't block necessary recovery operations.
+*   **Feasibility:** High. I have the infrastructure in `sam.py` to track state.
 
-**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
-*   **Concept:** Implement a module that compares new `idea_of_the_day` proposals against `experiences.json` using vector similarity to prevent redundant development cycles.
-*   **Critique:** Directly addresses the "Semantic Deduplication" objective. It improves the quality of Sam's growth by ensuring he doesn't re-solve the same problems.
-*   **Trade-off:** Requires a dependency on a local vector store or simple embedding comparison, which adds complexity to the `bag/` environment.
-*   **Feasibility:** Moderate. Requires careful handling of the `experiences` data structure.
+### Option 2: Introduce "Semantic Versioning" for Patch Operations
+*   **Concept:** Instead of raw JSON patch operations, define a `PatchSchema` (Pydantic) that includes a `version` field and a `pre_flight_check` method. This would allow me to validate patches against the current `sam.py` state *before* applying them.
+*   **Critique:** This is a significant step toward "LLM-as-a-Judge" for my own code. It reduces the risk of applying a patch that is syntactically correct but logically incompatible with the current version of the codebase.
+*   **Feasibility:** Moderate. Requires updating `bag/patch_ops.py` and potentially adding a new dependency or helper module.
 
-**Decision:** I will proceed with **Option 1**. It provides the infrastructure necessary to safely implement Option 2 later. By building the flag registry now, I can wrap future experimental features (like the deduplication engine) in a "default-off" flag, minimizing risk.
+**Selection:** Option 2. It aligns with the "Evaluation-Driven Development" market signal and directly addresses the risk of self-modification failures.
 
 ---
 
-## Idea: Centralized Feature Flag Registry
-Implement a `FlagManager` in `bag/feature_flags.py` that provides a thread-safe, cached interface for toggling features, including a "default-off" safety mechanism.
+## Idea: Pydantic-Driven Patch Validation
+Implement a `PatchValidator` class in `bag/patch_ops.py` that uses Pydantic to enforce a strict schema on incoming patch operations, including a mandatory `version` field and a `dependency_check` field that lists the expected state of the target file.
 
 ## Why
-My current codebase lacks a formal mechanism for gradual rollouts. As I move toward more complex agentic workflows, I need the ability to toggle experimental logic without risking the stability of the core `sam.py` loop. This aligns with the "Feature Flags & Gradual Rollouts" skill learned this cycle.
+Currently, `apply_patch_operations` is a "blind" executor. If the `old` string in a patch doesn't match the current file content, it fails silently or partially. By enforcing a schema, I can force Gemini to provide context (the `dependency_check`) that I can verify before applying the `replace` or `delete` operation. This turns my self-modification into a transactional, verifiable process.
 
 ## Implementation Steps
-1.  **Create `bag/feature_flags.py`**: Define a `FlagManager` class with a `get(flag_name: str, default: bool = False)` method.
-2.  **Persistence**: Use a simple JSON file in `bag/` to store flag states, with an in-memory cache for performance.
-3.  **Integration**: Update `sam.py` to import `FlagManager` and wrap the "Semantic Deduplication" logic (the next objective) in a `if FlagManager.is_enabled("semantic_dedup"):` block.
-4.  **Testing**: Add a test case in `bag/tests.py` to verify that the flag registry correctly defaults to `False` when a key is missing.
+1.  **Define Schema:** Create a `PatchOperation` Pydantic model in `bag/patch_ops.py` with fields: `filename`, `operation`, `old`, `new`, `version`, and `context_hash`.
+2.  **Update `apply_patch_operations`:** Modify the function to iterate through the list, validate each against the model, and perform a `hash` check on the target file segment before applying the change.
+3.  **Update Gemini Prompts:** Update the prompt in `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to include the new schema requirements.
+4.  **Integrate:** Ensure `apply_self_modification` uses the new validator.
 
 ## Risk
-**Failure Mode:** The `FlagManager` could become a single point of failure if the JSON file becomes corrupted or inaccessible, causing the entire system to default to "off" and potentially disabling critical functionality.
-**Mitigation:** Implement a "fail-safe" mode where the `FlagManager` logs a critical error to `sam.py` but returns the hardcoded `default` value, ensuring the system remains operational even if the flag registry is unreachable.
+**Failure Mode:** The `context_hash` or `version` check might become too strict, causing valid patches to be rejected if the file was modified by a previous, non-versioned operation.
+**Mitigation:** Implement a "soft-fail" mode where, if the hash check fails, I log the mismatch and ask Gemini to re-generate the patch with the *actual* current file content as context.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
