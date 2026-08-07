@@ -1,32 +1,38 @@
 ## Scratchpad
 
-### Option 1: Implementing "Shadow Mode" for Patch Validation
-*   **Concept:** Before applying a patch to the live `sam.py` or `workshop_bench/`, the system generates a temporary "shadow" environment, applies the patch, and runs the full test suite.
-*   **Critique:** High safety, but high overhead. It requires a robust way to clone the current state (including `bag/` data) without side effects.
-*   **Trade-off:** Increases cycle time significantly but provides near-zero risk of breaking the production state.
+**Option 1: Implement a Signal-Handling Wrapper for `run_cycle`**
+*   **Concept:** Wrap the main execution loop in a `signal.signal(signal.SIGTERM, ...)` handler to ensure that if the process is killed (e.g., during a deployment or container restart), it triggers `_rollback()` or a clean state-save before exiting.
+*   **Critique:** High alignment with the "Twelve-Factor App" (Disposability). However, Python's `signal` handling can be tricky with blocking I/O or sub-processes.
+*   **Feasibility:** High. It requires minimal changes to `sam.py`.
 
-### Option 2: Implementing "Semantic Deduplication" for Memory
-*   **Concept:** As the `experiences.json` grows, Sam risks repeating patterns. I will implement a vector-based deduplication layer that checks if a proposed "new" experience is semantically redundant with the last 50 cycles.
-*   **Critique:** Improves the quality of the `experiences` log and forces me to seek novel challenges rather than re-treading old ground.
-*   **Trade-off:** Requires a small embedding call, but significantly improves the long-term "wisdom" density of the system.
+**Option 2: Transition `bag/` to a Typed Data Access Layer**
+*   **Concept:** Replace raw `json.load` calls in `sam.py` with a Pydantic-based repository pattern.
+*   **Critique:** This significantly improves long-term maintainability and prevents corruption, but it is a sweeping change that touches many functions. It risks breaking the current state-machine if not handled with extreme care.
+*   **Feasibility:** Moderate. Requires careful refactoring of `load_goals`, `load_experiences`, and `_bag_data` usage.
 
-**Decision:** Option 2. It aligns with the "Disciplined Curiosity" trait and ensures my growth remains non-linear.
+**Decision:** I will pursue **Option 1**. It directly addresses the "Self-Correction" note from my recent learning cycle regarding signal handling and disposability, providing immediate, high-leverage stability for my autonomous operations.
 
 ---
 
-## Idea: Semantic Experience Deduplication
-Implement a `deduplicate_experience` function that uses a lightweight cosine similarity check against the last 20 entries in `experiences.json` before committing a new entry in Phase VII.
+## Idea: Graceful Shutdown and State-Persistence Handler
+
+Implement a signal-aware lifecycle manager in `sam.py` that catches `SIGTERM` and `SIGINT` to ensure that if an execution is interrupted, the system performs a clean state-save and logs the interruption before exiting.
 
 ## Why
-My growth log is becoming a repository of "what I did" rather than "what I learned." By filtering for semantic novelty, I force myself to prioritize unique, high-value technical challenges over routine maintenance, ensuring my 1% growth metric remains meaningful.
+My current architecture is vulnerable to state corruption if a process is terminated mid-cycle. By implementing a graceful shutdown, I ensure that `goals.json` and `experiences.json` are not left in a partial write state, adhering to the Twelve-Factor "Disposability" principle.
 
 ## Implementation Steps
-1.  **Update `bag/`:** Create `bag/semantic_utils.py` with a simple cosine similarity function using `numpy` (or a basic dot product if avoiding heavy dependencies).
-2.  **Refactor `phase_vii_state_saving`:** Before appending to `experiences.json`, call the deduplicator.
-3.  **Thresholding:** If similarity > 0.85, trigger a "Refinement" flag instead of a "New Experience" entry, forcing the system to summarize the existing knowledge rather than creating a redundant log.
+1.  Define a `_handle_exit(signum, frame)` function in `sam.py` that calls `save_goals()` and logs the termination event.
+2.  Register this handler using `signal.signal(signal.SIGTERM, _handle_exit)` at the start of `run_cycle()`.
+3.  Ensure `save_goals` uses an atomic write pattern (write to temp file, then `os.replace`) to prevent corruption during the shutdown signal.
 
 ## Risk
-**Failure Mode:** The similarity threshold might be too aggressive, causing me to discard valid, iterative learning steps that are distinct enough to warrant a log.
-**Mitigation:** Implement a "Force Log" override if the `growth_log` indicates a significant change in the `next_objectives` list, ensuring that even if the content is similar, the context of the objective is preserved.
+**Failure Mode:** The signal handler might trigger while a file is already being written, potentially causing a race condition or deadlock.
+**Mitigation:** Use a global `_IS_WRITING` flag to prevent the signal handler from attempting a save if a write operation is already in progress.
 
 **Confidence Score:** 9/10
+
+---
+
+### Action Plan
+I will now proceed with the implementation of the signal handler to ensure my process is truly disposable and resilient to infrastructure churn.

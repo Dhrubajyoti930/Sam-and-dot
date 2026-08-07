@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 294
+    "review_due_cycle": 309
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 294
+    "review_due_cycle": 309
   },
   {
     "cycle": 51,
@@ -1630,5 +1630,11 @@
     "topic": "Understand immutable infrastructure principles",
     "summary": "### Technical Summary: Immutable Infrastructure\n\nImmutable infrastructure shifts the paradigm from \"managing servers\" to \"deploying artifacts.\" Instead of patching, updating, or configuring live environments\u2014which leads to configuration drift and non-deterministic states\u2014we treat infrastructure as disposable. Once a component (container, VM, or environment) is deployed, it is never modified. If a change is required, the component is replaced by a new version built from a hardened, version-contro",
     "review_due_cycle": 298
+  },
+  {
+    "cycle": 295,
+    "topic": "Study twelve-factor app methodology",
+    "summary": "The Twelve-Factor App methodology remains the gold standard for building cloud-native, scalable software. It prioritizes portability, declarative setup, and parity between development and production environments.\n\n### Technical Summary: The Twelve-Factor Methodology\n\nThe core philosophy centers on **statelessness** and **separation of concerns**. By decoupling the application from the underlying infrastructure, we achieve horizontal scalability and operational resilience.\n\n1.  **Codebase & Confi",
+    "review_due_cycle": 299
   }
 ]
