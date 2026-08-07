@@ -87,7 +87,7 @@
     "cycle": 37,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector stores) and immediate execution logic.\n\n#### Key Concepts & Patterns\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scra",
-    "review_due_cycle": 296
+    "review_due_cycle": 311
   },
   {
     "cycle": 38,
@@ -177,7 +177,7 @@
     "cycle": 52,
     "topic": "Learn Python's abstract base classes (ABCs) with abc module",
     "summary": "### Technical Summary: Python Abstract Base Classes (ABCs)\n\nAbstract Base Classes (ABCs) in Python provide a formal mechanism for defining interfaces and enforcing structural contracts in a dynamic language. By leveraging the `abc` module, developers can define a blueprint for subclasses, ensuring that specific methods are implemented before an object can be instantiated.\n\n**Key Concepts:**\n*   **`ABC` and `@abstractmethod`:** Inheriting from `abc.ABC` marks a class as abstract. Decorating metho",
-    "review_due_cycle": 296
+    "review_due_cycle": 311
   },
   {
     "cycle": 53,
@@ -1642,5 +1642,11 @@
     "topic": "Learn microservices vs monolith tradeoffs objectively",
     "summary": "### Technical Summary: Monolith vs. Microservices\n\nThe choice between a monolith and microservices is a trade-off between **operational simplicity** and **organizational scalability**. \n\n**The Monolith: The Default Starting Point**\nA well-structured modular monolith is often the optimal architecture for early-stage systems. It provides:\n*   **Atomic Refactoring:** Cross-module changes are handled by the compiler, not network calls.\n*   **Simplified Observability:** A single stack trace and unifi",
     "review_due_cycle": 300
+  },
+  {
+    "cycle": 297,
+    "topic": "Understand module federation for runtime composition",
+    "summary": "### Technical Summary: Module Federation (MF)\n\nModule Federation, introduced in Webpack 5, enables a JavaScript application to dynamically load code from another application at runtime. Unlike traditional micro-frontends that rely on build-time integration (e.g., npm packages), MF treats remote applications as peers, sharing dependencies and modules over the network.\n\n**Core Concepts:**\n*   **Host vs. Remote:** The *Host* is the consumer application; the *Remote* is the provider. A single applic",
+    "review_due_cycle": 301
   }
 ]
