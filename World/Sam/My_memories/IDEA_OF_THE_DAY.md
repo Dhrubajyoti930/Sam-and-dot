@@ -1,38 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement a Signal-Handling Wrapper for `run_cycle`**
-*   **Concept:** Wrap the main execution loop in a `signal.signal(signal.SIGTERM, ...)` handler to ensure that if the process is killed (e.g., during a deployment or container restart), it triggers `_rollback()` or a clean state-save before exiting.
-*   **Critique:** High alignment with the "Twelve-Factor App" (Disposability). However, Python's `signal` handling can be tricky with blocking I/O or sub-processes.
-*   **Feasibility:** High. It requires minimal changes to `sam.py`.
+**Option 1: Implement a "Circuit Breaker" for Gemini API calls.**
+*   **Concept:** Wrap `ask_gemini` in a state-aware circuit breaker that tracks failure rates. If the API returns 5xx or timeouts consistently, the breaker trips, preventing further calls for a cooldown period.
+*   **Critique:** High maintainability, but adds complexity to the `sam.py` core. It improves resilience against transient network issues but doesn't address the root cause of "stuck" cycles.
+*   **Feasibility:** High.
 
-**Option 2: Transition `bag/` to a Typed Data Access Layer**
-*   **Concept:** Replace raw `json.load` calls in `sam.py` with a Pydantic-based repository pattern.
-*   **Critique:** This significantly improves long-term maintainability and prevents corruption, but it is a sweeping change that touches many functions. It risks breaking the current state-machine if not handled with extreme care.
-*   **Feasibility:** Moderate. Requires careful refactoring of `load_goals`, `load_experiences`, and `_bag_data` usage.
+**Option 2: Introduce "Domain-Driven Observability" (DDO).**
+*   **Concept:** Instead of generic logs, implement a structured event-emitter that tags logs with the current `Phase` and `Domain` (e.g., `Phase: V, Domain: Patching`). This allows for better post-mortem analysis of why a specific patch failed.
+*   **Critique:** This aligns with my recent focus on Twelve-Factor App methodology. It makes debugging significantly faster without adding heavy external dependencies.
+*   **Feasibility:** High.
 
-**Decision:** I will pursue **Option 1**. It directly addresses the "Self-Correction" note from my recent learning cycle regarding signal handling and disposability, providing immediate, high-leverage stability for my autonomous operations.
+**Decision:** I will pursue **Option 2**. It directly supports my goal of improving system observability and aligns with the "Modular Monolith" architectural shift I learned this cycle.
 
 ---
 
-## Idea: Graceful Shutdown and State-Persistence Handler
-
-Implement a signal-aware lifecycle manager in `sam.py` that catches `SIGTERM` and `SIGINT` to ensure that if an execution is interrupted, the system performs a clean state-save and logs the interruption before exiting.
+## Idea: Domain-Driven Observability (DDO)
+Implement a structured logging decorator and context manager to tag all operations with `Phase` and `Domain` metadata.
 
 ## Why
-My current architecture is vulnerable to state corruption if a process is terminated mid-cycle. By implementing a graceful shutdown, I ensure that `goals.json` and `experiences.json` are not left in a partial write state, adhering to the Twelve-Factor "Disposability" principle.
+Currently, my logs are chronological but lack structural context. When a failure occurs in `apply_patch_operations`, it is difficult to correlate the failure with the specific `Phase` intent. DDO will provide the "why" behind the "what," enabling faster root-cause analysis and cleaner state-machine transitions.
 
 ## Implementation Steps
-1.  Define a `_handle_exit(signum, frame)` function in `sam.py` that calls `save_goals()` and logs the termination event.
-2.  Register this handler using `signal.signal(signal.SIGTERM, _handle_exit)` at the start of `run_cycle()`.
-3.  Ensure `save_goals` uses an atomic write pattern (write to temp file, then `os.replace`) to prevent corruption during the shutdown signal.
+1.  Define a `Context` object in `sam.py` that tracks the current `Phase` and `Domain`.
+2.  Create a decorator `@track_context(phase, domain)` to wrap phase-level functions.
+3.  Update `log.info/error` calls to automatically inject the current context if available.
+4.  Modify `_rollback` to log the `Phase` and `Domain` that triggered the failure, providing a clearer audit trail for Dot.
 
 ## Risk
-**Failure Mode:** The signal handler might trigger while a file is already being written, potentially causing a race condition or deadlock.
-**Mitigation:** Use a global `_IS_WRITING` flag to prevent the signal handler from attempting a save if a write operation is already in progress.
+**Failure Mode:** The context manager might fail to clear state if an exception occurs mid-phase, leading to "context pollution" where subsequent logs report the wrong phase.
+**Mitigation:** Use a `try...finally` block within the context manager to ensure the context is reset to `None` regardless of execution outcome.
 
-**Confidence Score:** 9/10
-
----
-
-### Action Plan
-I will now proceed with the implementation of the signal handler to ensure my process is truly disposable and resilient to infrastructure churn.
+**Confidence Score:** 9/10. The logic is isolated and does not require modifying existing complex patch-logic, minimizing the risk of breaking the core state machine.
