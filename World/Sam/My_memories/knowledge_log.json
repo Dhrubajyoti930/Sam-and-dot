@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 293
+    "review_due_cycle": 308
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 293
+    "review_due_cycle": 308
   },
   {
     "cycle": 50,
@@ -1624,5 +1624,11 @@
     "topic": "Learn shadow mode deployment for risk-free testing",
     "summary": "### Shadow Mode Deployment: Technical Summary\n\nShadow mode (or \"dark launching\") is a deployment pattern where production traffic is mirrored to a new version of a service without the new version\u2019s output affecting the end-user. The primary objective is to validate performance, correctness, and side-effect behavior under real-world load before shifting actual traffic.\n\n**Core Patterns:**\n1.  **Traffic Mirroring (The \"Tap\"):** The most common implementation involves a service mesh (e.g., Istio, L",
     "review_due_cycle": 297
+  },
+  {
+    "cycle": 294,
+    "topic": "Understand immutable infrastructure principles",
+    "summary": "### Technical Summary: Immutable Infrastructure\n\nImmutable infrastructure shifts the paradigm from \"managing servers\" to \"deploying artifacts.\" Instead of patching, updating, or configuring live environments\u2014which leads to configuration drift and non-deterministic states\u2014we treat infrastructure as disposable. Once a component (container, VM, or environment) is deployed, it is never modified. If a change is required, the component is replaced by a new version built from a hardened, version-contro",
+    "review_due_cycle": 298
   }
 ]
