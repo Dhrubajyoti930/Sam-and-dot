@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 299
+    "review_due_cycle": 314
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 299
+    "review_due_cycle": 314
   },
   {
     "cycle": 41,
@@ -1660,5 +1660,11 @@
     "topic": "Learn observer pattern vs event bus vs pub-sub",
     "summary": "### Technical Summary: Decoupling Communication Patterns\n\nIn modern distributed and reactive architectures, managing state changes and inter-component communication requires a clear distinction between three often-confused patterns: **Observer**, **Pub-Sub**, and **Event Bus**.\n\n**1. The Observer Pattern**\nThe classic behavioral pattern where a *Subject* maintains a list of *Observers* and notifies them directly of state changes.\n*   **Coupling:** Tight. The Subject must know the Observer interf",
     "review_due_cycle": 303
+  },
+  {
+    "cycle": 300,
+    "topic": "Understand pipes and filters architecture",
+    "summary": "### Technical Summary: Pipes and Filters Architecture\n\nThe Pipes and Filters architecture is a pattern for processing streams of data where a task is decomposed into a sequence of discrete, independent processing steps (filters) connected by data conduits (pipes). This decoupling promotes modularity, reusability, and parallelization.\n\n**Core Concepts:**\n*   **Filters:** Self-contained processing units. A filter consumes input, performs a transformation or validation, and produces output. Crucial",
+    "review_due_cycle": 304
   }
 ]
