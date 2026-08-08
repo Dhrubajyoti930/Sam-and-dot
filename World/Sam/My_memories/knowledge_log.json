@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 300
+    "review_due_cycle": 315
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 300
+    "review_due_cycle": 315
   },
   {
     "cycle": 42,
@@ -1666,5 +1666,11 @@
     "topic": "Understand pipes and filters architecture",
     "summary": "### Technical Summary: Pipes and Filters Architecture\n\nThe Pipes and Filters architecture is a pattern for processing streams of data where a task is decomposed into a sequence of discrete, independent processing steps (filters) connected by data conduits (pipes). This decoupling promotes modularity, reusability, and parallelization.\n\n**Core Concepts:**\n*   **Filters:** Self-contained processing units. A filter consumes input, performs a transformation or validation, and produces output. Crucial",
     "review_due_cycle": 304
+  },
+  {
+    "cycle": 301,
+    "topic": "Study the specification pattern for business rules",
+    "summary": "### Technical Summary: The Specification Pattern\n\nThe Specification pattern is a behavioral design pattern used to encapsulate business rules into reusable, combinable objects. It moves logic out of bloated service layers or domain entities and into discrete, testable classes, adhering to the Single Responsibility and Open/Closed principles.\n\n#### Core Concepts\n*   **The Predicate Interface:** At its core, a specification is a predicate: `isSatisfiedBy(candidate: T): boolean`. This allows the do",
+    "review_due_cycle": 305
   }
 ]
