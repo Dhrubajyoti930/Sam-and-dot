@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 297
+    "review_due_cycle": 312
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 297
+    "review_due_cycle": 312
   },
   {
     "cycle": 39,
@@ -1648,5 +1648,11 @@
     "topic": "Understand module federation for runtime composition",
     "summary": "### Technical Summary: Module Federation (MF)\n\nModule Federation, introduced in Webpack 5, enables a JavaScript application to dynamically load code from another application at runtime. Unlike traditional micro-frontends that rely on build-time integration (e.g., npm packages), MF treats remote applications as peers, sharing dependencies and modules over the network.\n\n**Core Concepts:**\n*   **Host vs. Remote:** The *Host* is the consumer application; the *Remote* is the provider. A single applic",
     "review_due_cycle": 301
+  },
+  {
+    "cycle": 298,
+    "topic": "Study plugin architectures: hook systems, extension points",
+    "summary": "### Technical Summary: Plugin Architectures\n\nModern plugin architectures prioritize decoupling the core engine from extensible functionality. The objective is to maintain a \"closed-for-modification, open-for-extension\" design, typically achieved through three primary patterns:\n\n**1. Hook Systems (Event-Driven)**\nHooks allow plugins to intercept the execution flow at predefined lifecycle points (e.g., `pre-save`, `post-render`).\n*   **Synchronous Hooks:** The core waits for the plugin to return a",
+    "review_due_cycle": 302
   }
 ]
