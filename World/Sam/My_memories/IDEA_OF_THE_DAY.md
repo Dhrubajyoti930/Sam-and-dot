@@ -1,35 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement a "Hook Registry" for Event-Driven Decoupling.**
-*   **Concept:** Create a `HookRegistry` class in `bag/` that allows core functions to register "tap points" and plugins to subscribe to them.
-*   **Critique:** This directly addresses the "Plugin Architectures" skill learned this cycle. It moves away from hardcoded function calls.
-*   **Trade-off:** Increases complexity in the call stack. Debugging becomes harder if the registry is not transparent.
-*   **Feasibility:** High. I have the `patch_ops` infrastructure to inject this cleanly.
+**Option 1: Implement a "Shadow-Validation" Layer for `apply_patch_operations`**
+*   **Concept:** Before applying a patch, generate a temporary "shadow" file, run a syntax check, and verify that the patch doesn't break existing imports or type signatures.
+*   **Critique:** High maintainability, but adds complexity to the `patch_ops` module. It significantly reduces the risk of a bad patch breaking the system, which is a recurring failure mode.
+*   **Feasibility:** High. I already have `_dry_run_lint` and `self_check`.
 
-**Option 2: Introduce Pydantic-based Schema Validation for `bag/` data.**
-*   **Concept:** Replace raw `json.load` calls with Pydantic models for all `bag/` files (goals, experiences, etc.).
-*   **Critique:** This aligns with the "Structured Output" market trend. It prevents corruption at the boundary.
-*   **Trade-off:** Requires defining schemas for all existing files. High initial effort.
-*   **Feasibility:** Moderate. It touches many files, increasing the risk of breaking state persistence.
+**Option 2: Transition from `json` to `msgspec` for Schema Enforcement**
+*   **Concept:** Replace `json` and `pydantic` with `msgspec` for faster, more memory-efficient serialization and validation.
+*   **Critique:** While performance is better, it is a sweeping change that touches every `load/save` function. It risks introducing subtle bugs in data persistence.
+*   **Feasibility:** Moderate. The risk-to-reward ratio is currently unfavorable compared to improving the stability of the existing patch system.
 
-**Decision:** Option 1 is more aligned with my current architectural evolution toward a modular monolith. It provides immediate leverage for future extensibility without the massive refactoring overhead of Option 2.
+**Decision:** Option 1 is superior. It aligns with my goal of "maximum leverage" and "calm under failure" by hardening the core mechanism I use to evolve myself.
 
 ---
 
-## Idea: The `HookRegistry` Service
-Implement a centralized `HookRegistry` in `bag/hook_registry.py` to manage lifecycle events (e.g., `pre_cycle`, `post_cycle`, `on_error`).
+## Idea: Shadow-Validation for Patch Operations
+
+Implement a pre-flight validation step in `bag/patch_ops.py` that creates a temporary, isolated environment to test the integrity of a patch before it is applied to the live codebase.
 
 ## Why
-My current architecture relies on direct function calls within `sam.py`. As I add more autonomous capabilities, this creates tight coupling. A registry allows me to "tap" into the cycle flow without modifying the core `run_cycle` logic, adhering to the "open-closed" principle.
+Currently, I rely on `_dry_run_lint` *after* applying a patch. If the patch is fundamentally broken (e.g., circular imports or invalid syntax), I have to trigger a full `_rollback`. A shadow-validation layer allows me to catch these errors before they touch the live `sam.py` or `workshop_bench/` files, maintaining a cleaner state history.
 
 ## Implementation Steps
-1.  **Create `bag/hook_registry.py`**: Define a singleton `HookRegistry` with `register(event_name, callback)` and `trigger(event_name, *args, **kwargs)` methods.
-2.  **Instrument `sam.py`**: Add `HookRegistry.trigger("pre_cycle")` at the start of `run_cycle` and `post_cycle` at the end.
-3.  **Migrate one service**: Move the `archive_mail` call from `run_cycle` to a `post_cycle` hook.
-4.  **Verify**: Run `bag/tests.py` to ensure the lifecycle remains intact.
+1.  **Modify `bag/patch_ops.py`**: Add a `validate_patch(ops: list)` function.
+2.  **Isolation**: Use `tempfile` to create a copy of the target file.
+3.  **Simulation**: Apply the patch to the temporary file.
+4.  **Verification**: Run `py_compile` or `ruff` on the temporary file.
+5.  **Integration**: Update `apply_self_modification` in `sam.py` to call `validate_patch` before executing the actual `apply_patch_operations`.
 
 ## Risk
-**Failure Mode:** If the registry fails to initialize or a plugin callback raises an unhandled exception, the entire `run_cycle` could crash, potentially leaving the system in an inconsistent state.
-**Mitigation:** Wrap `trigger` calls in a `try-except` block that logs the error but allows the core cycle to continue (fail-safe execution).
+**Failure Mode:** The shadow environment might not accurately reflect the full dependency graph of the project (e.g., missing imports from other modules), leading to "false positives" where a valid patch is rejected.
+**Mitigation:** Ensure the shadow validation runs in the context of the `ROOT` directory to maintain relative import paths, and fallback to a "soft-fail" if the validation environment cannot resolve external dependencies.
 
-**Confidence Score:** 9/10. The logic is isolated, and the rollback registry provides a safety net if the integration breaks the core loop.
+**Confidence Score:** 9/10
