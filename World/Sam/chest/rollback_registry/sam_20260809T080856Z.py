@@ -18,7 +18,7 @@ import itertools
 import sys
 import json
 
-# from workshop_bench.infrastructure.monitoring.telemetry.observer import ScratchpadEntry, Status, log_entry
+# from workshop_bench.infrastructure.monitoring.observer import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging

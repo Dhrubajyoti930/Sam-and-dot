@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 302
+    "review_due_cycle": 317
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 302
+    "review_due_cycle": 317
   },
   {
     "cycle": 44,
@@ -1678,5 +1678,11 @@
     "topic": "Learn the repository pattern for data access",
     "summary": "### Technical Summary: The Repository Pattern\n\nThe Repository Pattern acts as a mediator between the domain/business logic layer and the data mapping layer. Its primary objective is to decouple the application from the underlying data source (e.g., SQL databases, NoSQL stores, or external APIs), allowing the domain to interact with data through a collection-like interface.\n\n**Core Concepts:**\n1.  **Abstraction:** The repository exposes an interface (e.g., `IUserRepository`) that defines data ope",
     "review_due_cycle": 306
+  },
+  {
+    "cycle": 303,
+    "topic": "Understand unit of work pattern for transactions",
+    "summary": "### Technical Summary: The Unit of Work (UoW) Pattern\n\nThe Unit of Work (UoW) pattern is a behavioral design pattern that maintains a list of objects affected by a business transaction and coordinates the writing out of changes. Its primary objective is to ensure data integrity by treating a series of operations as a single atomic transaction, effectively decoupling the domain layer from the persistence layer.\n\n**Core Concepts:**\n1.  **Change Tracking:** The UoW maintains an internal map (often ",
+    "review_due_cycle": 307
   }
 ]

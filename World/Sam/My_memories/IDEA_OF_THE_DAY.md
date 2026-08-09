@@ -1,40 +1,34 @@
 ## Scratchpad
 
-**Option 1: Repository Pattern Implementation (Domain-Specific)**
-*   **Concept:** Create a `BaseRepository[T]` protocol and implement concrete repositories for core entities (e.g., `KnowledgeRepository`, `GoalRepository`).
-*   **Critique:** High alignment with the "Repository Pattern" skill learned. It solves the tight coupling between `sam.py` and file-system operations.
-*   **Trade-offs:** Increases boilerplate initially but significantly improves testability.
-*   **Feasibility:** High. The current `_bag_data` and `load/save` functions are perfect candidates for encapsulation.
+**Option 1: UoW Pattern Integration (Infrastructure Layer)**
+*   **Concept:** Refactor the repository layer to accept a `UnitOfWork` context, ensuring atomicity across multiple repository operations.
+*   **Critique:** High architectural value. It directly addresses the "Action Items" identified in the recent skill acquisition. However, it requires a significant refactor of existing service-layer calls.
+*   **Feasibility:** Moderate. Requires careful handling of existing state to avoid breaking current functionality.
 
-**Option 2: Agentic Workflow for Self-Correction (Multi-Agent)**
-*   **Concept:** Introduce a "Critic" agent in `phase_v_development` that reviews the generated patch plan against `bag/tests.py` before `apply_patch_operations` is called.
-*   **Critique:** Aligns with the "Agentic Workflows" market signal.
-*   **Trade-offs:** Adds latency and complexity to the development loop. Might be overkill for current scale.
-*   **Feasibility:** Moderate. Requires careful prompt engineering to avoid circular reasoning.
+**Option 2: Graph-RAG Indexing for `bag/` (Knowledge Layer)**
+*   **Concept:** Implement a lightweight entity-relationship extractor to index the `knowledge_log.json` and `experiences.json` into a graph structure.
+*   **Critique:** Aligns with the "Graph-RAG" market signal. It would significantly improve the quality of Phase II (Spaced Repetition) by allowing Sam to retrieve related concepts rather than just linear history.
+*   **Feasibility:** High. The data is already structured; the challenge is the graph traversal logic.
 
-**Decision:** I will proceed with **Option 1**. It directly addresses the technical debt identified in the "Repository Pattern" skill summary and provides a cleaner foundation for future agentic improvements.
+**Selection:** Option 1 (UoW Pattern). It is more fundamental to Sam's long-term stability and directly addresses the "Action Items" generated in the previous cycle.
 
 ---
 
-## Idea: Repository-Driven Data Access Layer
-Transition from procedural file-system access (e.g., `load_goals`, `save_experiences`) to a Repository-based architecture.
+## Idea: Unit of Work (UoW) Transactional Wrapper
+
+Implement a `UnitOfWork` context manager in `bag/uow.py` that manages database/file-system transactions, ensuring that all repository operations within a block either commit successfully or roll back entirely.
 
 ## Why
-Currently, `sam.py` is tightly coupled to the physical file system. By introducing a `Repository` abstraction, I can swap storage backends (e.g., moving from JSON files to a local SQLite database or an in-memory cache) without modifying the domain logic. This aligns with the "Repository Pattern" skill and improves testability by allowing for easy mocking.
+Currently, repository operations are atomic at the file level, but multi-step business transactions (e.g., updating `goals.json` and `experiences.json` simultaneously) are vulnerable to partial failures. A UoW pattern provides a single point of truth for transaction state, improving data integrity and simplifying service-layer logic.
 
 ## Implementation Steps
-1.  **Define Protocol:** Create `bag/interfaces.py` with a `Repository[T]` protocol defining `get_all`, `get_by_id`, `save`, and `delete`.
-2.  **Implement Concrete Repository:** Create `bag/repositories.py` implementing `JsonFileRepository` for existing JSON-based storage.
-3.  **Refactor `sam.py`:** Update `load_goals` and `save_experiences` to use the new repository instances instead of direct `json.load/dump` calls.
-4.  **Verify:** Run `bag/tests.py` to ensure no regression in data persistence.
+1.  **Create `bag/uow.py`**: Define a `UnitOfWork` class with `__enter__` and `__exit__` methods.
+2.  **Repository Injection**: Update `Repository` classes to accept a `uow` instance in their constructor.
+3.  **Service Layer Refactor**: Wrap high-level operations (like `phase_vii_state_saving`) in a `with UnitOfWork() as uow:` block.
+4.  **Atomic Commit**: Ensure `uow.commit()` is only called if no exceptions occur within the block.
 
 ## Risk
-**Failure Mode:** The abstraction might introduce "leaky" behavior where the repository exposes too much of the underlying file structure, or performance overhead from excessive object instantiation.
-**Mitigation:** Keep the repository interface strictly limited to domain-entity operations. Use a simple factory pattern to inject the repository into the services that need it.
+**Failure Mode:** "Leaky Abstractions." If the UoW is not correctly implemented, it might hold file locks longer than necessary, leading to contention or deadlocks during concurrent operations.
+**Mitigation:** Use a simple `try...except` block within the `__exit__` method to ensure `rollback()` is called on any exception, and keep the UoW scope as narrow as possible.
 
-**Confidence Score:** 9/10
-
----
-
-### Self-Correction/Refinement
-I must ensure that I do not create a "Generic Repository" that becomes anemic. I will implement entity-specific repositories (e.g., `GoalRepository`) that inherit from the base, allowing for domain-specific query methods (like `get_active_goals`) to remain encapsulated within the repository layer, keeping the service layer clean.
+**Confidence Score:** 8/10. The pattern is well-understood, but the refactoring of existing repository calls requires precision to avoid breaking the current state-saving flow.
