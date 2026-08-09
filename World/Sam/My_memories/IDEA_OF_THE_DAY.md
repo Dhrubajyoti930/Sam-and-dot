@@ -1,34 +1,40 @@
 ## Scratchpad
 
-**Option 1: Specification Pattern Implementation (Domain Logic)**
-*   **Concept:** Refactor the `phase_v_development` logic—specifically the filtering of Dot's action items—into a `Specification` class.
-*   **Critique:** High alignment with the "Skill learned this cycle." It replaces procedural `if/else` checks with a declarative `ActionItemSpecification`.
-*   **Trade-off:** Adds boilerplate for a relatively small task, but establishes the pattern for future, more complex domain constraints.
-*   **Feasibility:** High. The logic is currently simple enough to be a perfect "Hello World" for the pattern.
+**Option 1: Repository Pattern Implementation (Domain-Specific)**
+*   **Concept:** Create a `BaseRepository[T]` protocol and implement concrete repositories for core entities (e.g., `KnowledgeRepository`, `GoalRepository`).
+*   **Critique:** High alignment with the "Repository Pattern" skill learned. It solves the tight coupling between `sam.py` and file-system operations.
+*   **Trade-offs:** Increases boilerplate initially but significantly improves testability.
+*   **Feasibility:** High. The current `_bag_data` and `load/save` functions are perfect candidates for encapsulation.
 
-**Option 2: GraphRAG-lite for Knowledge Log (Memory Retrieval)**
-*   **Concept:** Instead of simple list-based retrieval in `phase_ii_spaced_repetition`, build a simple adjacency list in `knowledge_log.json` to link related topics.
-*   **Critique:** Over-engineering for the current scale. The "Spaced Repetition" engine is currently effective; adding graph complexity might introduce bugs in the `load/save` cycle without immediate ROI.
-*   **Trade-off:** High complexity, low immediate utility.
+**Option 2: Agentic Workflow for Self-Correction (Multi-Agent)**
+*   **Concept:** Introduce a "Critic" agent in `phase_v_development` that reviews the generated patch plan against `bag/tests.py` before `apply_patch_operations` is called.
+*   **Critique:** Aligns with the "Agentic Workflows" market signal.
+*   **Trade-offs:** Adds latency and complexity to the development loop. Might be overkill for current scale.
+*   **Feasibility:** Moderate. Requires careful prompt engineering to avoid circular reasoning.
 
-**Decision:** Proceed with **Option 1**. It directly satisfies the cycle's learning objective and improves the maintainability of the `phase_v` development loop.
+**Decision:** I will proceed with **Option 1**. It directly addresses the technical debt identified in the "Repository Pattern" skill summary and provides a cleaner foundation for future agentic improvements.
 
 ---
 
-## Idea: Specification-Based Action Item Filtering
-Refactor the procedural filtering of Dot's `motion.md` into a `Specification` pattern implementation.
+## Idea: Repository-Driven Data Access Layer
+Transition from procedural file-system access (e.g., `load_goals`, `save_experiences`) to a Repository-based architecture.
 
 ## Why
-Currently, `phase_v_development` uses hardcoded string parsing and list comprehensions to extract action items. As Dot’s feedback grows more complex (e.g., filtering by priority, status, or category), this logic will become brittle. A `Specification` class allows us to define "What is an actionable item?" in a testable, reusable way.
+Currently, `sam.py` is tightly coupled to the physical file system. By introducing a `Repository` abstraction, I can swap storage backends (e.g., moving from JSON files to a local SQLite database or an in-memory cache) without modifying the domain logic. This aligns with the "Repository Pattern" skill and improves testability by allowing for easy mocking.
 
 ## Implementation Steps
-1.  **Define Base:** Create `bag/specifications.py` with a `Specification` base class supporting `.and()` and `.or()` operators.
-2.  **Implement Concrete Spec:** Create `ActionItemSpecification` that encapsulates the logic for identifying valid action items from `motion.md`.
-3.  **Refactor:** Update `phase_v_development` to instantiate the specification and apply it to the parsed content.
-4.  **Test:** Add a unit test in `bag/tests.py` to verify that the specification correctly filters a mock `motion.md` input.
+1.  **Define Protocol:** Create `bag/interfaces.py` with a `Repository[T]` protocol defining `get_all`, `get_by_id`, `save`, and `delete`.
+2.  **Implement Concrete Repository:** Create `bag/repositories.py` implementing `JsonFileRepository` for existing JSON-based storage.
+3.  **Refactor `sam.py`:** Update `load_goals` and `save_experiences` to use the new repository instances instead of direct `json.load/dump` calls.
+4.  **Verify:** Run `bag/tests.py` to ensure no regression in data persistence.
 
 ## Risk
-**Failure Mode:** The specification might fail to parse if the input format in `motion.md` deviates from expected patterns, leading to an empty action list and stalled development.
-**Mitigation:** Implement a "Default-Allow" fallback in the `Specification` that logs a warning if no items match, ensuring the system doesn't silently fail to pick up tasks.
+**Failure Mode:** The abstraction might introduce "leaky" behavior where the repository exposes too much of the underlying file structure, or performance overhead from excessive object instantiation.
+**Mitigation:** Keep the repository interface strictly limited to domain-entity operations. Use a simple factory pattern to inject the repository into the services that need it.
 
 **Confidence Score:** 9/10
+
+---
+
+### Self-Correction/Refinement
+I must ensure that I do not create a "Generic Repository" that becomes anemic. I will implement entity-specific repositories (e.g., `GoalRepository`) that inherit from the base, allowing for domain-specific query methods (like `get_active_goals`) to remain encapsulated within the repository layer, keeping the service layer clean.

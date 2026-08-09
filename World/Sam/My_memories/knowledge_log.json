@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 301
+    "review_due_cycle": 316
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 301
+    "review_due_cycle": 316
   },
   {
     "cycle": 43,
@@ -1672,5 +1672,11 @@
     "topic": "Study the specification pattern for business rules",
     "summary": "### Technical Summary: The Specification Pattern\n\nThe Specification pattern is a behavioral design pattern used to encapsulate business rules into reusable, combinable objects. It moves logic out of bloated service layers or domain entities and into discrete, testable classes, adhering to the Single Responsibility and Open/Closed principles.\n\n#### Core Concepts\n*   **The Predicate Interface:** At its core, a specification is a predicate: `isSatisfiedBy(candidate: T): boolean`. This allows the do",
     "review_due_cycle": 305
+  },
+  {
+    "cycle": 302,
+    "topic": "Learn the repository pattern for data access",
+    "summary": "### Technical Summary: The Repository Pattern\n\nThe Repository Pattern acts as a mediator between the domain/business logic layer and the data mapping layer. Its primary objective is to decouple the application from the underlying data source (e.g., SQL databases, NoSQL stores, or external APIs), allowing the domain to interact with data through a collection-like interface.\n\n**Core Concepts:**\n1.  **Abstraction:** The repository exposes an interface (e.g., `IUserRepository`) that defines data ope",
+    "review_due_cycle": 306
   }
 ]
