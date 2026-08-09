@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 304
+    "review_due_cycle": 319
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 304
+    "review_due_cycle": 319
   },
   {
     "cycle": 46,
@@ -1690,5 +1690,11 @@
     "topic": "Study command pattern with undo/redo support",
     "summary": "### Technical Summary: Command Pattern with Undo/Redo\n\nThe Command Pattern encapsulates a request as an object, decoupling the invoker from the receiver. To implement robust undo/redo functionality, the pattern must evolve from simple execution to a state-aware history management system.\n\n**1. The Command Interface**\nEvery command must implement an `execute()` method and a corresponding `undo()` method. For complex operations, `undo()` requires storing the \"memento\" or the delta of the state cha",
     "review_due_cycle": 308
+  },
+  {
+    "cycle": 305,
+    "topic": "Learn mediator pattern for decoupled communication",
+    "summary": "### Technical Summary: The Mediator Pattern\n\nThe Mediator pattern is a behavioral design pattern that reduces chaotic dependencies between objects by forcing them to communicate through a centralized \"mediator\" object rather than directly. In modern software architecture, this is the primary antidote to the \"spaghetti dependency\" problem where components become tightly coupled, making them difficult to test, maintain, or evolve.\n\n**Core Concepts:**\n1.  **Centralized Control:** Instead of $N$ com",
+    "review_due_cycle": 309
   }
 ]
