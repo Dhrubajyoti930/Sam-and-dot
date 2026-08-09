@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 303
+    "review_due_cycle": 318
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 303
+    "review_due_cycle": 318
   },
   {
     "cycle": 45,
@@ -1684,5 +1684,11 @@
     "topic": "Understand unit of work pattern for transactions",
     "summary": "### Technical Summary: The Unit of Work (UoW) Pattern\n\nThe Unit of Work (UoW) pattern is a behavioral design pattern that maintains a list of objects affected by a business transaction and coordinates the writing out of changes. Its primary objective is to ensure data integrity by treating a series of operations as a single atomic transaction, effectively decoupling the domain layer from the persistence layer.\n\n**Core Concepts:**\n1.  **Change Tracking:** The UoW maintains an internal map (often ",
     "review_due_cycle": 307
+  },
+  {
+    "cycle": 304,
+    "topic": "Study command pattern with undo/redo support",
+    "summary": "### Technical Summary: Command Pattern with Undo/Redo\n\nThe Command Pattern encapsulates a request as an object, decoupling the invoker from the receiver. To implement robust undo/redo functionality, the pattern must evolve from simple execution to a state-aware history management system.\n\n**1. The Command Interface**\nEvery command must implement an `execute()` method and a corresponding `undo()` method. For complex operations, `undo()` requires storing the \"memento\" or the delta of the state cha",
+    "review_due_cycle": 308
   }
 ]

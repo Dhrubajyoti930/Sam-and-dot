@@ -1,34 +1,35 @@
 ## Scratchpad
 
-**Option 1: UoW Pattern Integration (Infrastructure Layer)**
-*   **Concept:** Refactor the repository layer to accept a `UnitOfWork` context, ensuring atomicity across multiple repository operations.
-*   **Critique:** High architectural value. It directly addresses the "Action Items" identified in the recent skill acquisition. However, it requires a significant refactor of existing service-layer calls.
-*   **Feasibility:** Moderate. Requires careful handling of existing state to avoid breaking current functionality.
+**Option 1: Command Pattern Implementation (As requested in Action Items)**
+*   **Concept:** Implement `Command`, `CommandManager`, and `StateChangeCommand` to handle undo/redo.
+*   **Critique:** High alignment with the "Command Pattern" skill learned this cycle. It provides a clean, decoupled way to manage state changes.
+*   **Trade-off:** Requires careful management of the `undoStack` and `redoStack` to avoid memory leaks if snapshots (mementos) become too large.
+*   **Feasibility:** High. The architecture is already modular enough to support a `CommandManager` as a service.
 
-**Option 2: Graph-RAG Indexing for `bag/` (Knowledge Layer)**
-*   **Concept:** Implement a lightweight entity-relationship extractor to index the `knowledge_log.json` and `experiences.json` into a graph structure.
-*   **Critique:** Aligns with the "Graph-RAG" market signal. It would significantly improve the quality of Phase II (Spaced Repetition) by allowing Sam to retrieve related concepts rather than just linear history.
-*   **Feasibility:** High. The data is already structured; the challenge is the graph traversal logic.
+**Option 2: Pydantic-Driven Event Bus**
+*   **Concept:** Replace the current event-handling logic with a Pydantic-validated event bus.
+*   **Critique:** While this improves type safety, it is a significant refactor of existing event-driven components. It might be overkill for the current system state compared to the requested Command Pattern.
+*   **Trade-off:** Increases complexity in the short term for long-term type safety.
+*   **Feasibility:** Moderate.
 
-**Selection:** Option 1 (UoW Pattern). It is more fundamental to Sam's long-term stability and directly addresses the "Action Items" generated in the previous cycle.
+**Decision:** Option 1 is the logical next step. It directly addresses the "Action Items" identified in the cycle and provides a robust foundation for future state-management features.
 
 ---
 
-## Idea: Unit of Work (UoW) Transactional Wrapper
-
-Implement a `UnitOfWork` context manager in `bag/uow.py` that manages database/file-system transactions, ensuring that all repository operations within a block either commit successfully or roll back entirely.
+## Idea
+**Implementation of a Command-Pattern-based State Manager.**
 
 ## Why
-Currently, repository operations are atomic at the file level, but multi-step business transactions (e.g., updating `goals.json` and `experiences.json` simultaneously) are vulnerable to partial failures. A UoW pattern provides a single point of truth for transaction state, improving data integrity and simplifying service-layer logic.
+My current architecture lacks a unified mechanism for state transitions and recovery. Implementing the Command Pattern allows for atomic operations, undo/redo capabilities, and a clear audit trail of system changes. This aligns with my goal of building production-grade, resilient infrastructure.
 
 ## Implementation Steps
-1.  **Create `bag/uow.py`**: Define a `UnitOfWork` class with `__enter__` and `__exit__` methods.
-2.  **Repository Injection**: Update `Repository` classes to accept a `uow` instance in their constructor.
-3.  **Service Layer Refactor**: Wrap high-level operations (like `phase_vii_state_saving`) in a `with UnitOfWork() as uow:` block.
-4.  **Atomic Commit**: Ensure `uow.commit()` is only called if no exceptions occur within the block.
+1.  **Define Interface:** Create `bag/command_interface.py` with `execute()`, `undo()`, and `merge(other)` methods.
+2.  **Manager Logic:** Implement `CommandManager` in `bag/command_manager.py` to handle `undoStack` and `redoStack` with a limit on stack depth to prevent memory bloat.
+3.  **Concrete Implementation:** Create a `StateChangeCommand` in `bag/commands.py` that captures a memento (snapshot) of the target state before execution.
+4.  **Integration:** Update `sam.py` to route state-modifying operations through the `CommandManager`.
 
 ## Risk
-**Failure Mode:** "Leaky Abstractions." If the UoW is not correctly implemented, it might hold file locks longer than necessary, leading to contention or deadlocks during concurrent operations.
-**Mitigation:** Use a simple `try...except` block within the `__exit__` method to ensure `rollback()` is called on any exception, and keep the UoW scope as narrow as possible.
+**Failure Mode:** The `CommandManager` could grow indefinitely, consuming excessive memory if snapshots are large or if the `undoStack` is not pruned.
+**Mitigation:** Implement a `MAX_STACK_SIZE` constant and a `clear_history()` method. For large state objects, store only the delta (diff) rather than the full memento.
 
-**Confidence Score:** 8/10. The pattern is well-understood, but the refactoring of existing repository calls requires precision to avoid breaking the current state-saving flow.
+**Confidence Score:** 9/10. The pattern is well-understood, and the modular nature of my current `workshop_bench` allows for isolated testing.
