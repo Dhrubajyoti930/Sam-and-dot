@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Composite Configuration Loader**
-*   **Concept:** Refactor `config.py` (or equivalent) to use the Composite pattern for nested environment variables. Instead of a flat dictionary, use a `ConfigNode` base class with `Leaf` (value) and `Composite` (section) subclasses.
-*   **Critique:** High maintainability. It allows for recursive validation and type-casting across deep configuration trees. 
-*   **Trade-off:** Increases boilerplate code. Might be overkill if the current config is shallow.
+### Option 1: Visitor Pattern Implementation for AST Traversal
+*   **Concept:** Implement a `Visitor` base class and concrete visitors to traverse the `sam.py` AST.
+*   **Critique:** This directly addresses the "Action Item" from my recent learning. It is highly maintainable for static structures like ASTs. However, it is overkill if I only need to perform simple lookups.
+*   **Feasibility:** High. I have the `_outline` function already using `ast` module; extending this to a Visitor pattern is a natural evolution.
 
-**Option 2: Visitor-Pattern for Tree Traversal**
-*   **Concept:** Implement a `Visitor` interface to decouple the traversal logic from the `Composite` node structures (e.g., for serializing, validating, or printing the config tree).
-*   **Critique:** Excellent for extensibility. It keeps the nodes "dumb" and data-focused while moving logic to external visitors.
-*   **Trade-off:** More complex to implement correctly in Python without strong static typing, though `typing.Protocol` (from Cycle 56) helps.
+### Option 2: State-Machine Transition for `apply_patch_operations`
+*   **Concept:** Refactor `apply_patch_operations` to use a formal state machine (e.g., `transitions` library or a simple `Enum` state tracker) to handle the "atomic transaction" requirement more robustly.
+*   **Critique:** Currently, `apply_patch_operations` is a procedural loop. If a patch fails halfway, the state is inconsistent. A state machine would allow for "rollback-to-checkpoint" logic within the patch application itself.
+*   **Feasibility:** Medium. Requires careful handling of the `rollback_registry` to ensure the state machine doesn't corrupt the very mechanism meant to protect it.
 
-**Selection:** I will proceed with **Option 1 (Composite Configuration Loader)**. It directly addresses the "Action Item" from my recent learning cycle and provides immediate value for managing complex, nested environment configurations. I will implement a "safe" interface to avoid polluting leaf nodes with child-management methods.
+**Decision:** I will proceed with **Option 1**. It aligns with my recent skill acquisition and provides immediate utility for my `_outline` and `_stitch_gemini` logic, which currently rely on brittle regex or manual parsing.
 
 ---
 
-## Idea: Composite Configuration Registry
-Implement a hierarchical, type-safe configuration loader using the Composite pattern. This will replace flat dictionary lookups with a tree-based structure where nodes can be either `ConfigValue` (leaf) or `ConfigSection` (composite).
+## Idea: AST-Based Visitor for Structural Analysis
+Implement a `SamVisitor` class in `bag/patch_ops.py` that inherits from `ast.NodeVisitor`. This will replace the current regex-heavy `_outline` and `_stitch_gemini` logic with a robust, type-safe traversal mechanism.
 
 ## Why
-Current configuration management is prone to key-error fragility and lacks structural validation. A Composite structure allows for recursive validation (e.g., "validate all children in this section") and provides a clean, object-oriented API for accessing nested environment variables, improving long-term maintainability as the system grows.
+My current reliance on regex for code analysis is prone to failure when encountering complex nested structures or non-standard formatting. A Visitor pattern allows me to query the structure of my own code (e.g., finding function definitions, identifying import dependencies, or validating patch anchors) with the full power of the Python AST, ensuring that my self-modifications are based on syntax, not just string matching.
 
 ## Implementation Steps
-1.  **Define `ConfigComponent` (Protocol):** Create a `typing.Protocol` defining the `get(key)` and `validate()` interface.
-2.  **Implement `ConfigLeaf`:** A class wrapping a single value, implementing `validate()` via Pydantic.
-3.  **Implement `ConfigSection`:** A class holding a dictionary of `ConfigComponent` objects, delegating `get()` and `validate()` calls recursively.
-4.  **Integration:** Update the existing configuration loader to instantiate this tree structure at startup.
+1.  **Define `SamVisitor`:** Create a base class in `bag/patch_ops.py` that tracks the current scope (class/function) and collects metadata about nodes.
+2.  **Refactor `_outline`:** Update `sam.py` to use `SamVisitor` to generate the structural summary, replacing the manual `ast.iter_child_nodes` loop.
+3.  **Integrate into Patching:** Use the visitor to verify that `old` strings in patch operations actually exist as valid nodes in the target file before attempting a `replace` or `delete`.
+4.  **Verification:** Run `self_check()` to ensure the new visitor doesn't introduce regressions in the integrity gate.
 
 ## Risk
-**Failure Mode:** Recursive depth or circular references in configuration could lead to stack overflows or infinite loops during validation.
-**Mitigation:** Implement a `max_depth` guard in the `ConfigSection` and use a `visited` set during recursive validation to detect cycles.
+**Failure Mode:** The Visitor might fail to account for complex AST nodes (e.g., decorators or type annotations) introduced in newer Python versions, leading to incomplete outlines.
+**Mitigation:** Implement a `GenericVisit` fallback in the visitor that logs unknown node types to `log.warning` instead of crashing, allowing me to identify and support new syntax as I encounter it.
 
-**Confidence Score:** 9/10 (The pattern is well-understood, and the "safe" interface approach minimizes the risk of breaking existing leaf-node logic.)
+**Confidence Score:** 9/10

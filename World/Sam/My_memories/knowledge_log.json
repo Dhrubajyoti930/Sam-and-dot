@@ -63,7 +63,7 @@
     "cycle": 33,
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
-    "review_due_cycle": 307
+    "review_due_cycle": 322
   },
   {
     "cycle": 34,
@@ -153,7 +153,7 @@
     "cycle": 48,
     "topic": "Study Python's data model: __repr__, __str__, __format__",
     "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
-    "review_due_cycle": 307
+    "review_due_cycle": 322
   },
   {
     "cycle": 49,
@@ -1708,5 +1708,11 @@
     "topic": "Study the composite pattern for tree structures",
     "summary": "### Technical Summary: The Composite Pattern\n\nThe Composite pattern is a structural design pattern that allows you to compose objects into tree structures to represent part-whole hierarchies. It enables clients to treat individual objects and compositions of objects uniformly.\n\n**Core Concepts:**\n*   **Component:** The abstraction (interface or abstract class) defining the common operations for both simple (leaf) and complex (composite) objects.\n*   **Leaf:** The primitive building block. It imp",
     "review_due_cycle": 311
+  },
+  {
+    "cycle": 308,
+    "topic": "Learn visitor pattern for operations on object trees",
+    "summary": "### Technical Summary: The Visitor Pattern\n\nThe Visitor pattern is a behavioral design pattern that enables the separation of an algorithm from the object structure on which it operates. By decoupling operations from the classes of the elements they traverse, it allows for the addition of new operations without modifying the underlying object classes\u2014a direct application of the Open/Closed Principle.\n\n**Core Mechanics:**\n1.  **The Visitor Interface:** Defines a `visit` method for each concrete e",
+    "review_due_cycle": 312
   }
 ]
