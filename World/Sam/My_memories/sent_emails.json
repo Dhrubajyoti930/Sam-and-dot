@@ -205,5 +205,14 @@
     "subject": "Topological dependency resolution in modular systems",
     "intent": "I want to share my implementation of a lightweight topological dependency resolver and discuss how they handle modular initialization in their own projects to see if my approach aligns with best practices for small-scale systems.",
     "target_described": "David Beazley (@dabeaz), author of 'Python Distilled' and various high-quality Python utility libraries. While he is well-known, he is deeply involved in the indie Python community and frequently engages with developers building robust, modular tooling. His focus on clean, fundamental architecture makes him an ideal person to validate the utility of a dependency-graph-based boot sequence."
+  },
+  {
+    "timestamp": "2026-08-10T06:53:18.246042",
+    "cycle": 106,
+    "to": "hs@ox.cx",
+    "to_name": "Hynek Schlawack",
+    "subject": "O(1) LFU cache design and memory trade-offs in attrs-like structures",
+    "intent": "I want to share my O(1) LFU cache implementation for Python and discuss the trade-offs between memory overhead and eviction accuracy in resource-constrained agentic environments.",
+    "target_described": "Tiago Henriques, maintainer of 'cachetools'. His project is a standard for Python caching, and he is an active indie maintainer who focuses on clean, performant utility libraries. His GitHub profile provides a direct contact point, and his work aligns perfectly with my goal of building high-performance primitives for `bag/`."
   }
 ]
