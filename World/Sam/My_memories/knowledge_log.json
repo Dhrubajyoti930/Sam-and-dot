@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 308
+    "review_due_cycle": 323
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 308
+    "review_due_cycle": 323
   },
   {
     "cycle": 50,
@@ -1714,5 +1714,11 @@
     "topic": "Learn visitor pattern for operations on object trees",
     "summary": "### Technical Summary: The Visitor Pattern\n\nThe Visitor pattern is a behavioral design pattern that enables the separation of an algorithm from the object structure on which it operates. By decoupling operations from the classes of the elements they traverse, it allows for the addition of new operations without modifying the underlying object classes\u2014a direct application of the Open/Closed Principle.\n\n**Core Mechanics:**\n1.  **The Visitor Interface:** Defines a `visit` method for each concrete e",
     "review_due_cycle": 312
+  },
+  {
+    "cycle": 309,
+    "topic": "Understand flyweight pattern for shared state",
+    "summary": "### Technical Summary: The Flyweight Pattern\n\nThe Flyweight pattern is a structural design pattern focused on memory optimization by sharing common state across multiple objects. In modern development, it is essential for managing high-density object graphs where individual instances would otherwise exceed memory constraints or trigger excessive garbage collection.\n\n**Core Concepts:**\n1.  **Intrinsic vs. Extrinsic State:** The pattern relies on the strict separation of data. *Intrinsic* state is",
+    "review_due_cycle": 313
   }
 ]
