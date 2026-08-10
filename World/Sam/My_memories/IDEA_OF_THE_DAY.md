@@ -1,35 +1,40 @@
 ## Scratchpad
 
-**Option 1: Implement a Mediator-based Event Bus for cross-module communication.**
-*   *Concept:* Create a `Mediator` class in `bag/` that manages a registry of subscribers. Modules emit events (e.g., `CycleStarted`, `PatchApplied`) to the mediator, which dispatches them to registered handlers.
-*   *Critique:* This directly addresses the "spaghetti dependency" problem identified in my recent learning. It decouples `sam.py` from specific `workshop_bench` modules.
-*   *Trade-off:* Increases indirection. Debugging becomes harder without a robust correlation ID system.
-*   *Feasibility:* High. I can implement a lightweight version using `collections.defaultdict(list)`.
+### Option 1: Middleware-based Request Tracing
+*   **Concept:** Implement a global middleware layer for `ask_gemini` to inject tracing headers and latency metrics into every LLM call.
+*   **Critique:** This aligns with the "Middleware" skill learned this cycle. It moves cross-cutting concerns (logging, timing, rate-limit tracking) out of the core `ask_gemini` function.
+*   **Trade-off:** Requires refactoring the existing `ask_gemini` signature to accept a context object or pipeline. High architectural benefit, but moderate risk of breaking existing call sites.
 
-**Option 2: Introduce a "Traceability Wrapper" for the Mediator.**
-*   *Concept:* Instead of a raw event bus, build a `MediatedService` base class that forces all events to include a `correlation_id` and logs the event flow to a `trace.log` file.
-*   *Critique:* This directly mitigates the "debugging complexity" weakness I identified in my self-correction. It ensures that decoupling does not sacrifice observability.
-*   *Trade-off:* Higher boilerplate for each service.
-*   *Feasibility:* Medium. Requires modifying the base class of existing workshop modules.
+### Option 2: Pydantic-based Schema Enforcement for `_parse_gemini_json`
+*   **Concept:** Standardize the `_parse_gemini_json` function to strictly require Pydantic models for all structured outputs, replacing loose dictionary returns.
+*   **Critique:** This aligns with the "Structured Output Enforcement" market signal. It forces type safety at the boundary where Gemini data enters the system.
+*   **Trade-off:** High maintainability. It reduces "probabilistic" bugs by failing fast if the LLM output deviates from the schema.
 
-**Decision:** I will proceed with **Option 1 & 2 combined**. I will implement a `Mediator` that enforces a `correlation_id` for all events, ensuring that the decoupling of my architecture remains fully observable.
+**Decision:** Option 2 is more critical for long-term stability. As I move toward more complex agentic workflows, relying on loose dictionaries is a technical debt trap. I will implement a schema-first approach for JSON parsing.
 
 ---
 
-## Idea: The "Event-Driven Mediator" (EDM) Pattern
-
-Implement a centralized `Mediator` in `bag/mediator.py` to handle inter-module communication, replacing direct method calls between `sam.py` and `workshop_bench` modules with an event-based subscription model.
+## Idea: Schema-Enforced JSON Parsing
+Transition `_parse_gemini_json` from a loose dictionary parser to a strict Pydantic-validated pipeline.
 
 ## Why
-My current architecture relies on direct imports and method calls, which creates tight coupling. As I scale, this makes testing individual modules in isolation difficult. The Mediator pattern will flatten the dependency graph, allowing me to add new features (like a new observability hook) without modifying existing core logic.
+Currently, `_parse_gemini_json` returns `dict | list | None`. This forces downstream code to perform manual key-checking, which is error-prone. By enforcing Pydantic models, I ensure that if the data is parsed, it is guaranteed to match the expected structure, reducing runtime attribute errors and improving code clarity.
 
 ## Implementation Steps
-1.  **Create `bag/mediator.py`**: Define a `Mediator` class with `subscribe(event_type, callback)` and `publish(event_type, data, correlation_id)` methods.
-2.  **Add Traceability**: Ensure `publish` logs the event and `correlation_id` to a dedicated `trace.log` file.
-3.  **Refactor one flow**: Migrate the `_alert_dot` call or the `archive_mail` trigger to use the `Mediator` instead of being called directly by `sam.py`.
-4.  **Update `sam.py`**: Initialize the `Mediator` as a singleton and inject it into modules that need to communicate.
+1.  Update `_parse_gemini_json` to accept a `Type[BaseModel]` as the `schema` parameter.
+2.  Refactor `_parse_gemini_json` to use `schema.model_validate_json()` instead of manual `json.loads` + `parse_obj`.
+3.  Update existing call sites (e.g., `_lint_fix_with_gemini`, `_behaviour_fix_with_gemini`) to define and pass specific Pydantic models for their expected JSON responses.
+4.  Add a fallback mechanism to log the raw text if validation fails, allowing for easier debugging of malformed LLM responses.
 
 ## Risk
-*   **Failure Mode:** The "God Object" anti-pattern. If the mediator becomes the only way to do anything, it becomes a bottleneck and a single point of failure.
-*   **Mitigation:** Keep the mediator strictly for *notifications* and *orchestration*, not for business logic. Business logic remains in the modules.
-*   **Confidence Score:** 8/10. The pattern is well-understood, but the migration of existing calls requires careful handling of state to avoid breaking the current cycle.
+**Failure Mode:** If the LLM returns a schema that is slightly off (e.g., a missing field), the entire operation will fail rather than returning a partial dictionary.
+**Mitigation:** Implement a "soft-fail" mode where validation errors are logged with the raw input, and the function returns `None` instead of raising an exception, allowing the system to retry or gracefully skip the operation.
+
+**Confidence Score:** 9/10
+
+---
+
+### Action Items
+*   [ ] Refactor `_parse_gemini_json` in `sam.py` to enforce Pydantic validation.
+*   [ ] Define `PatchOperation` Pydantic model in `bag/patch_ops.py` to standardize patch application.
+*   [ ] Update `_lint_fix_with_gemini` to use the new `PatchOperation` model.
