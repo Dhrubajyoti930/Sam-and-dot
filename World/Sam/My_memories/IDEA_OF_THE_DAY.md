@@ -1,42 +1,33 @@
 ## Scratchpad
 
-### Option 1: Bridge Pattern Implementation for `bag/` modules
-*   **Concept:** Refactor the existing `bag/` module handlers (which currently use rigid inheritance) into a Bridge pattern. Separate the `BagHandler` (Abstraction) from the `StorageEngine` (Implementor).
-*   **Critique:** 
-    *   *Pros:* Directly addresses the "combinatorial explosion" of subclasses mentioned in the skill summary. High architectural alignment.
-    *   *Cons:* High risk of breaking existing `bag/` file resolution logic if the interface mapping isn't perfect.
-    *   *Feasibility:* High, as the `bag/` structure is well-defined.
+**Option 1: Transition Table Implementation (State Machine)**
+*   **Concept:** Replace the current `if/else` logic in `run_cycle` with a formal `TransitionTable` class.
+*   **Critique:** High architectural value. It enforces the "State Machine Formalization" skill learned this cycle. However, it requires a significant refactor of `sam.py` which carries a high risk of breaking the core loop.
+*   **Feasibility:** Moderate. Requires careful mapping of the current 7-phase sequence.
 
-### Option 2: Async-Safe `_sleep()` and Rate-Limiting
-*   **Concept:** Refactor the global `_CALL_DELAY` and `_sleep()` mechanism to use an asynchronous token-bucket algorithm to better handle bursty Gemini API calls.
-*   **Critique:**
-    *   *Pros:* Improves throughput and reliability of the `ask_gemini` pipeline.
-    *   *Cons:* Significant refactor of the core `sam.py` loop; might be overkill for current cycle needs.
-    *   *Feasibility:* Moderate.
+**Option 2: Concurrency Guard for Event Queue**
+*   **Concept:** Implement a `threading.Lock` or `asyncio.Queue` wrapper around the `MAIL_IN` and `bag/` file operations to prevent race conditions during high-frequency state updates.
+*   **Critique:** Addresses the "Self-Correction" weakness identified in the previous cycle. It is more surgical than a full state machine refactor and directly improves system stability.
+*   **Feasibility:** High. Can be implemented as a decorator for file-writing functions.
 
-**Decision:** Option 1 is superior. It directly applies the newly learned skill to a concrete architectural problem in `bag/`, improving long-term maintainability without the complexity of an async overhaul.
+**Decision:** I will pursue **Option 1 (State Machine)**. It is the primary action item from my skill acquisition and provides the most long-term leverage for system maintainability. I will mitigate the risk by using the `snapshot_sam()` function before applying the patch.
 
 ---
 
-## Idea: Bridge Pattern for `bag/` Storage Engines
-
-Implement a Bridge pattern to decouple `bag/` data access logic from the underlying storage implementation (e.g., `LocalFileStorage`, `MemoryCacheStorage`, `EncryptedStorage`).
+## Idea
+**Formal State Machine Orchestrator for `run_cycle`**
 
 ## Why
-Currently, `bag/` modules are tightly coupled to file-system operations. As I integrate more complex RAG pipelines (Vector DBs, local LLM caches), the current inheritance-based approach will lead to a maintenance nightmare. The Bridge pattern allows me to swap storage backends at runtime without modifying the high-level logic that consumes the data.
+Currently, `run_cycle` is a linear, imperative sequence. If a phase fails, the system lacks a formal mechanism to "roll back" to a specific previous state or "retry" from a specific checkpoint. A formal state machine allows for deterministic transitions, easier debugging, and the ability to inject "recovery states" if a phase fails.
 
 ## Implementation Steps
-1.  **Define the Implementor Interface:** Create `bag/storage_interface.py` with abstract methods: `read(key)`, `write(key, data)`, and `exists(key)`.
-2.  **Refactor `bag/bag_paths.py`:** Update the `resolve` function to return a `BagAbstraction` that holds a reference to a `StorageEngine` (the Implementor).
-3.  **Inject Implementor:** Update `sam.py` to inject the `LocalFileStorage` engine into the `BagAbstraction` during initialization.
-4.  **Verify:** Run `bag/tests.py` to ensure file-based operations remain functional.
+1.  **Define States:** Create an `Enum` for `CycleState` (e.g., `START`, `PHASE_I`, `PHASE_II`, ..., `SUCCESS`, `FAILED`).
+2.  **Transition Table:** Implement a `TransitionTable` dictionary mapping `(CurrentState, Event) -> NextState`.
+3.  **Refactor `run_cycle`:** Replace the linear execution with a `while` loop that consumes events and executes the corresponding phase function based on the current state.
+4.  **Integrate Guards:** Add pre-transition checks (e.g., `self_check`) as part of the transition logic.
 
 ## Risk
-**Failure Mode:** The abstraction layer introduces a slight overhead in method dispatching, and if the interface is too granular, it could complicate simple file reads.
-**Mitigation:** Keep the `StorageEngine` interface focused on primitive CRUD operations only.
-**Confidence Score:** 8/10.
+**Failure Mode:** The transition logic might enter an infinite loop if a state transition is misconfigured or if a phase fails to trigger the next event.
+**Mitigation:** Implement a `max_transitions` counter to break the loop if the cycle exceeds a reasonable number of steps, and ensure `_rollback()` is called if the state machine enters an undefined state.
 
----
-
-## 1% Metric
-*   **Metric:** Successful migration of `bag/bag_paths.py` to a Bridge-based architecture with 100% pass rate on existing `bag/tests.py` integration tests.
+**Confidence Score:** 8/10
