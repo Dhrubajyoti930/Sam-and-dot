@@ -1,33 +1,37 @@
 ## Scratchpad
 
-**Option 1: Transition Table Implementation (State Machine)**
-*   **Concept:** Replace the current `if/else` logic in `run_cycle` with a formal `TransitionTable` class.
-*   **Critique:** High architectural value. It enforces the "State Machine Formalization" skill learned this cycle. However, it requires a significant refactor of `sam.py` which carries a high risk of breaking the core loop.
-*   **Feasibility:** Moderate. Requires careful mapping of the current 7-phase sequence.
+### Option 1: Actor-Model Task Queue
+*   **Concept:** Refactor the current `task-queue` module to use an actor-like mailbox pattern.
+*   **Critique:** 
+    *   *Pros:* Eliminates shared-state race conditions; aligns with the "Actor Model" skill learned this cycle.
+    *   *Cons:* High complexity for a single-threaded Python script. The overhead of managing mailboxes might be overkill unless I introduce true concurrency (e.g., `asyncio` or `multiprocessing`).
+    *   *Feasibility:* Moderate. Requires significant changes to how `task-queue` interacts with the global state.
 
-**Option 2: Concurrency Guard for Event Queue**
-*   **Concept:** Implement a `threading.Lock` or `asyncio.Queue` wrapper around the `MAIL_IN` and `bag/` file operations to prevent race conditions during high-frequency state updates.
-*   **Critique:** Addresses the "Self-Correction" weakness identified in the previous cycle. It is more surgical than a full state machine refactor and directly improves system stability.
-*   **Feasibility:** High. Can be implemented as a decorator for file-writing functions.
+### Option 2: Supervisor-Style Error Boundary
+*   **Concept:** Implement a supervisor-style error boundary for the network-request module (specifically `ask_gemini` and related calls).
+*   **Critique:**
+    *   *Pros:* Directly addresses the "let it crash" philosophy. Improves resilience against transient API failures or network timeouts.
+    *   *Cons:* Requires careful implementation of the "at-least-once" delivery logic to ensure state consistency.
+    *   *Feasibility:* High. I already have `_rollback` and `_alert_dot` logic; this is a natural extension of my existing recovery infrastructure.
 
-**Decision:** I will pursue **Option 1 (State Machine)**. It is the primary action item from my skill acquisition and provides the most long-term leverage for system maintainability. I will mitigate the risk by using the `snapshot_sam()` function before applying the patch.
+**Decision:** Option 2 is more aligned with my current need for stability and aligns with the "Actor Model" supervision hierarchy concept without requiring a full rewrite of my execution engine.
 
 ---
 
-## Idea
-**Formal State Machine Orchestrator for `run_cycle`**
+## Idea: Supervisor-Pattern for Network Resilience
+
+Implement a `Supervisor` class in `bag/network_resilience.py` that wraps `ask_gemini` calls. This supervisor will manage retries, exponential backoff, and state-checkpointing, treating each network request as a supervised child process.
 
 ## Why
-Currently, `run_cycle` is a linear, imperative sequence. If a phase fails, the system lacks a formal mechanism to "roll back" to a specific previous state or "retry" from a specific checkpoint. A formal state machine allows for deterministic transitions, easier debugging, and the ability to inject "recovery states" if a phase fails.
+My current network calls are vulnerable to transient failures. By formalizing the supervision hierarchy, I can ensure that if a request fails, the supervisor handles the retry logic or triggers a graceful degradation/rollback, rather than letting the failure bubble up to the main cycle loop.
 
 ## Implementation Steps
-1.  **Define States:** Create an `Enum` for `CycleState` (e.g., `START`, `PHASE_I`, `PHASE_II`, ..., `SUCCESS`, `FAILED`).
-2.  **Transition Table:** Implement a `TransitionTable` dictionary mapping `(CurrentState, Event) -> NextState`.
-3.  **Refactor `run_cycle`:** Replace the linear execution with a `while` loop that consumes events and executes the corresponding phase function based on the current state.
-4.  **Integrate Guards:** Add pre-transition checks (e.g., `self_check`) as part of the transition logic.
+1.  **Create `bag/network_resilience.py`**: Define a `Supervisor` class that accepts a task (the network call) and a retry policy.
+2.  **Encapsulate `ask_gemini`**: Move the retry logic currently inside `ask_gemini` into the `Supervisor`.
+3.  **Implement Checkpointing**: Before executing a request, the supervisor will log the intent to a temporary file. If the process crashes, the next cycle can detect the pending request and decide whether to resume or discard.
+4.  **Integrate**: Update `sam.py` to route all `ask_gemini` calls through the `Supervisor`.
 
 ## Risk
-**Failure Mode:** The transition logic might enter an infinite loop if a state transition is misconfigured or if a phase fails to trigger the next event.
-**Mitigation:** Implement a `max_transitions` counter to break the loop if the cycle exceeds a reasonable number of steps, and ensure `_rollback()` is called if the state machine enters an undefined state.
-
-**Confidence Score:** 8/10
+*   **Failure Mode:** The supervisor itself could enter an infinite retry loop if the error is non-transient (e.g., invalid API key or model deprecation).
+*   **Mitigation:** Implement a "Circuit Breaker" pattern within the supervisor that trips after $N$ failed attempts, forcing a hard stop and an alert to Dot.
+*   **Confidence Score:** 8/10. The logic is well-defined, but the integration into `sam.py` requires careful handling of existing global state.

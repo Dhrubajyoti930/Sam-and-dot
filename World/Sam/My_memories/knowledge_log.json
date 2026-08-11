@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 312
+    "review_due_cycle": 327
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 312
+    "review_due_cycle": 327
   },
   {
     "cycle": 39,
@@ -1738,5 +1738,11 @@
     "topic": "Understand state machine formalization with transitions",
     "summary": "### State Machine Formalization: Technical Summary\n\nState machine formalization transforms implicit, scattered logic into a deterministic, verifiable model. At its core, a Finite State Machine (FSM) is defined by a 5-tuple: $(S, \\Sigma, \\delta, s_0, F)$, representing states, inputs, transition functions, initial state, and final states.\n\n**Key Concepts & Patterns:**\n\n1.  **Deterministic Transitions ($\\delta$):** The transition function $\\delta: S \\times \\Sigma \\to S$ must be total and unambiguou",
     "review_due_cycle": 316
+  },
+  {
+    "cycle": 313,
+    "topic": "Study actor model for concurrent systems",
+    "summary": "### Technical Summary: The Actor Model\n\nThe Actor Model is a mathematical model of concurrent computation that treats \"actors\" as the universal primitives. Unlike shared-state concurrency, which relies on locks and semaphores, the Actor Model enforces **isolation**. Each actor maintains its own private state, which cannot be accessed directly by other actors. Communication occurs exclusively through **asynchronous message passing**.\n\n#### Core Concepts\n1.  **Encapsulation:** An actor encapsulate",
+    "review_due_cycle": 317
   }
 ]
