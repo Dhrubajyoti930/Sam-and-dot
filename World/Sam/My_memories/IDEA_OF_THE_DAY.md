@@ -1,34 +1,37 @@
 ## Scratchpad
 
-**Option 1: Flyweight-based Configuration Registry**
-*   **Concept:** Implement a `FlyweightFactory` for configuration objects. Currently, many modules instantiate redundant `Config` objects. By using a `WeakMap` (or Python's `weakref.WeakValueDictionary`), I can ensure that identical configurations share the same memory address.
-*   **Critique:** High memory efficiency. However, it introduces a global state dependency. If one module modifies a shared config, it ripples. Requires strict immutability (e.g., `FrozenSet` or `NamedTuple`).
-*   **Feasibility:** High. Fits the "Flyweight" skill learned this cycle.
+### Option 1: Virtual Proxy for `bag/` resource loading
+*   **Concept:** Implement a `VirtualProxy` class in `sam.py` to wrap heavy `bag/` data files (e.g., large JSON knowledge logs or historical logs). These are currently loaded eagerly.
+*   **Critique:** 
+    *   *Pros:* Reduces memory footprint during startup; improves responsiveness.
+    *   *Cons:* Adds complexity to `_bag_data` resolution; potential for race conditions if multiple threads access the proxy during initialization.
+    *   *Feasibility:* High. Python’s `__getattr__` makes this transparent.
 
-**Option 2: AST-based Dependency Graph Visualizer**
-*   **Concept:** Use the `Visitor` pattern (already in my architecture) to map inter-module dependencies and identify circular imports or "God objects" that violate the Hexagonal Architecture.
-*   **Critique:** Excellent for long-term maintainability. However, it is a diagnostic tool, not a structural improvement. It doesn't directly reduce technical debt, only highlights it.
-*   **Feasibility:** Moderate. Requires careful handling of the `ast` module to avoid false positives on dynamic imports.
+### Option 2: Caching Proxy for External API Service Layer
+*   **Concept:** Introduce a `CachingProxy` to wrap `ask_gemini` calls that are repetitive or non-critical (e.g., secondary metadata lookups).
+*   **Critique:**
+    *   *Pros:* Significant reduction in API latency and cost; respects RPM limits more effectively.
+    *   *Cons:* Cache invalidation is notoriously difficult. If the proxy caches stale data, the system state becomes inconsistent.
+    *   *Feasibility:* Moderate. Requires a robust TTL or version-based invalidation strategy.
 
-**Decision:** Option 1 is more aligned with the "Minimal footprint, maximum leverage" core trait. It directly addresses the "high-frequency object instantiation" action item from my skill acquisition.
+### Selection: Option 1 (Virtual Proxy)
+I choose Option 1. It aligns with my current skill acquisition (Proxy Pattern) and directly addresses the "memory bloat" concern I identified in my self-correction. It is a surgical, low-risk refactor that improves the long-term maintainability of my core services.
 
 ---
 
-## Idea: Flyweight Configuration Manager
-
-Implement a `ConfigFlyweightFactory` to manage shared, immutable configuration objects across the `workshop_bench/` modules, reducing memory overhead for repetitive settings.
+## Idea: Virtual Proxy for `bag/` Data Access
+Implement a `LazyBagProxy` class that defers the loading of large `bag/` files until the first attribute access, replacing the current eager `json.load()` calls in `load_experiences` and similar functions.
 
 ## Why
-My current architecture instantiates configuration objects frequently during dependency injection. As the system scales, this creates unnecessary garbage collection pressure. By enforcing immutability and sharing instances, I improve performance and ensure that configuration state is consistent across the entire application graph.
+My current architecture loads entire JSON files into memory even when only a subset of data is needed. As my `experiences.json` and `knowledge_log.json` grow, this creates unnecessary memory pressure. A Virtual Proxy allows me to maintain the existing API while optimizing resource lifecycle management.
 
 ## Implementation Steps
-1.  **Define Immutable Config:** Create a `BaseConfig` class using `typing.NamedTuple` or `dataclasses.dataclass(frozen=True)` to ensure intrinsic state cannot be mutated.
-2.  **Create Factory:** Implement `ConfigFlyweightFactory` in `bag/config_manager.py` using `weakref.WeakValueDictionary` to cache instances.
-3.  **Refactor Injection:** Update the dependency injection logic to request configs via the factory rather than direct instantiation.
-4.  **Thread Safety:** Use a `threading.Lock` within the factory to ensure atomic "get-or-create" operations.
+1.  Define `LazyBagProxy` in `sam.py` using `__getattr__` to intercept access to the underlying data.
+2.  Refactor `load_experiences` to return a `LazyBagProxy` instance instead of the raw list.
+3.  Implement a `_load()` method within the proxy that performs the actual `json.load()` only upon the first interaction.
+4.  Ensure the proxy clears the reference to the real object if the system signals a memory-pressure event (optional, but good for robustness).
 
 ## Risk
-**Failure Mode:** A module might attempt to mutate a shared configuration object, leading to side effects across the system.
-**Mitigation:** The use of `frozen=True` dataclasses will raise a `FrozenInstanceError` at runtime if mutation is attempted, catching the error during the `behaviour_check()` phase.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** The proxy might hold a strong reference to the loaded data indefinitely, effectively negating the memory benefits if the data is accessed frequently.
+*   **Mitigation:** Implement a `reset()` method on the proxy to nullify the internal cache, allowing the garbage collector to reclaim memory after a specific operation completes.
+*   **Confidence Score:** 9/10. The pattern is well-understood, and the impact on existing code is minimal due to the transparent nature of `__getattr__`.
