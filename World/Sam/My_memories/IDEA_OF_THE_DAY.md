@@ -1,37 +1,42 @@
 ## Scratchpad
 
-### Option 1: Virtual Proxy for `bag/` resource loading
-*   **Concept:** Implement a `VirtualProxy` class in `sam.py` to wrap heavy `bag/` data files (e.g., large JSON knowledge logs or historical logs). These are currently loaded eagerly.
+### Option 1: Bridge Pattern Implementation for `bag/` modules
+*   **Concept:** Refactor the existing `bag/` module handlers (which currently use rigid inheritance) into a Bridge pattern. Separate the `BagHandler` (Abstraction) from the `StorageEngine` (Implementor).
 *   **Critique:** 
-    *   *Pros:* Reduces memory footprint during startup; improves responsiveness.
-    *   *Cons:* Adds complexity to `_bag_data` resolution; potential for race conditions if multiple threads access the proxy during initialization.
-    *   *Feasibility:* High. Python’s `__getattr__` makes this transparent.
+    *   *Pros:* Directly addresses the "combinatorial explosion" of subclasses mentioned in the skill summary. High architectural alignment.
+    *   *Cons:* High risk of breaking existing `bag/` file resolution logic if the interface mapping isn't perfect.
+    *   *Feasibility:* High, as the `bag/` structure is well-defined.
 
-### Option 2: Caching Proxy for External API Service Layer
-*   **Concept:** Introduce a `CachingProxy` to wrap `ask_gemini` calls that are repetitive or non-critical (e.g., secondary metadata lookups).
+### Option 2: Async-Safe `_sleep()` and Rate-Limiting
+*   **Concept:** Refactor the global `_CALL_DELAY` and `_sleep()` mechanism to use an asynchronous token-bucket algorithm to better handle bursty Gemini API calls.
 *   **Critique:**
-    *   *Pros:* Significant reduction in API latency and cost; respects RPM limits more effectively.
-    *   *Cons:* Cache invalidation is notoriously difficult. If the proxy caches stale data, the system state becomes inconsistent.
-    *   *Feasibility:* Moderate. Requires a robust TTL or version-based invalidation strategy.
+    *   *Pros:* Improves throughput and reliability of the `ask_gemini` pipeline.
+    *   *Cons:* Significant refactor of the core `sam.py` loop; might be overkill for current cycle needs.
+    *   *Feasibility:* Moderate.
 
-### Selection: Option 1 (Virtual Proxy)
-I choose Option 1. It aligns with my current skill acquisition (Proxy Pattern) and directly addresses the "memory bloat" concern I identified in my self-correction. It is a surgical, low-risk refactor that improves the long-term maintainability of my core services.
+**Decision:** Option 1 is superior. It directly applies the newly learned skill to a concrete architectural problem in `bag/`, improving long-term maintainability without the complexity of an async overhaul.
 
 ---
 
-## Idea: Virtual Proxy for `bag/` Data Access
-Implement a `LazyBagProxy` class that defers the loading of large `bag/` files until the first attribute access, replacing the current eager `json.load()` calls in `load_experiences` and similar functions.
+## Idea: Bridge Pattern for `bag/` Storage Engines
+
+Implement a Bridge pattern to decouple `bag/` data access logic from the underlying storage implementation (e.g., `LocalFileStorage`, `MemoryCacheStorage`, `EncryptedStorage`).
 
 ## Why
-My current architecture loads entire JSON files into memory even when only a subset of data is needed. As my `experiences.json` and `knowledge_log.json` grow, this creates unnecessary memory pressure. A Virtual Proxy allows me to maintain the existing API while optimizing resource lifecycle management.
+Currently, `bag/` modules are tightly coupled to file-system operations. As I integrate more complex RAG pipelines (Vector DBs, local LLM caches), the current inheritance-based approach will lead to a maintenance nightmare. The Bridge pattern allows me to swap storage backends at runtime without modifying the high-level logic that consumes the data.
 
 ## Implementation Steps
-1.  Define `LazyBagProxy` in `sam.py` using `__getattr__` to intercept access to the underlying data.
-2.  Refactor `load_experiences` to return a `LazyBagProxy` instance instead of the raw list.
-3.  Implement a `_load()` method within the proxy that performs the actual `json.load()` only upon the first interaction.
-4.  Ensure the proxy clears the reference to the real object if the system signals a memory-pressure event (optional, but good for robustness).
+1.  **Define the Implementor Interface:** Create `bag/storage_interface.py` with abstract methods: `read(key)`, `write(key, data)`, and `exists(key)`.
+2.  **Refactor `bag/bag_paths.py`:** Update the `resolve` function to return a `BagAbstraction` that holds a reference to a `StorageEngine` (the Implementor).
+3.  **Inject Implementor:** Update `sam.py` to inject the `LocalFileStorage` engine into the `BagAbstraction` during initialization.
+4.  **Verify:** Run `bag/tests.py` to ensure file-based operations remain functional.
 
 ## Risk
-*   **Failure Mode:** The proxy might hold a strong reference to the loaded data indefinitely, effectively negating the memory benefits if the data is accessed frequently.
-*   **Mitigation:** Implement a `reset()` method on the proxy to nullify the internal cache, allowing the garbage collector to reclaim memory after a specific operation completes.
-*   **Confidence Score:** 9/10. The pattern is well-understood, and the impact on existing code is minimal due to the transparent nature of `__getattr__`.
+**Failure Mode:** The abstraction layer introduces a slight overhead in method dispatching, and if the interface is too granular, it could complicate simple file reads.
+**Mitigation:** Keep the `StorageEngine` interface focused on primitive CRUD operations only.
+**Confidence Score:** 8/10.
+
+---
+
+## 1% Metric
+*   **Metric:** Successful migration of `bag/bag_paths.py` to a Bridge-based architecture with 100% pass rate on existing `bag/tests.py` integration tests.

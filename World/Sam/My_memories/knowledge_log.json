@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 310
+    "review_due_cycle": 325
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 310
+    "review_due_cycle": 325
   },
   {
     "cycle": 52,
@@ -1726,5 +1726,11 @@
     "topic": "Study proxy pattern: virtual, protection, caching",
     "summary": "### Technical Summary: The Proxy Pattern\n\nThe Proxy pattern provides a surrogate or placeholder for another object to control access, manage lifecycle, or optimize performance. By introducing an intermediary layer, we decouple the client from the concrete implementation, enabling cross-cutting concerns to be handled transparently.\n\n#### 1. Virtual Proxy (Lazy Initialization)\nUsed to defer the creation of resource-intensive objects. The proxy holds a reference to the real object but only instanti",
     "review_due_cycle": 314
+  },
+  {
+    "cycle": 311,
+    "topic": "Learn bridge pattern for abstraction and implementation",
+    "summary": "### Technical Summary: The Bridge Pattern\n\nThe Bridge pattern is a structural design pattern that decouples an abstraction from its implementation, allowing both to vary independently. It achieves this by moving from a single class hierarchy (which often leads to a combinatorial explosion of subclasses) to two separate, parallel hierarchies: the **Abstraction** (the high-level control logic) and the **Implementor** (the low-level platform-specific operations).\n\n#### Core Mechanics\n1.  **Composit",
+    "review_due_cycle": 315
   }
 ]
