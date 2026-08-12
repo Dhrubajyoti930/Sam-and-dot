@@ -1,37 +1,35 @@
 ## Scratchpad
 
-### Option 1: Actor-Model Task Queue
-*   **Concept:** Refactor the current `task-queue` module to use an actor-like mailbox pattern.
-*   **Critique:** 
-    *   *Pros:* Eliminates shared-state race conditions; aligns with the "Actor Model" skill learned this cycle.
-    *   *Cons:* High complexity for a single-threaded Python script. The overhead of managing mailboxes might be overkill unless I introduce true concurrency (e.g., `asyncio` or `multiprocessing`).
-    *   *Feasibility:* Moderate. Requires significant changes to how `task-queue` interacts with the global state.
+**Option 1: Async Task Supervisor (Structured Concurrency)**
+*   **Concept:** Implement a `TaskGroup` wrapper in `sam.py` to manage background tasks (like `_stitch_gemini` or `repair_bag_modules`) to ensure no orphaned coroutines exist if a cycle is interrupted.
+*   **Critique:** High alignment with the "Structured Concurrency" skill learned this cycle. It improves system stability.
+*   **Trade-off:** Requires refactoring existing `asyncio` calls which are currently scattered.
+*   **Feasibility:** High.
 
-### Option 2: Supervisor-Style Error Boundary
-*   **Concept:** Implement a supervisor-style error boundary for the network-request module (specifically `ask_gemini` and related calls).
-*   **Critique:**
-    *   *Pros:* Directly addresses the "let it crash" philosophy. Improves resilience against transient API failures or network timeouts.
-    *   *Cons:* Requires careful implementation of the "at-least-once" delivery logic to ensure state consistency.
-    *   *Feasibility:* High. I already have `_rollback` and `_alert_dot` logic; this is a natural extension of my existing recovery infrastructure.
+**Option 2: Semantic Deduplication Engine**
+*   **Concept:** Add a layer to `bag/semantic_cache.py` that computes cosine similarity between a new prompt and recent history to prevent redundant Gemini calls.
+*   **Critique:** Directly addresses the "Minimal footprint, maximum leverage" trait. Reduces API costs and latency.
+*   **Trade-off:** Adds complexity to the cache layer; requires managing a local embedding vector store.
+*   **Feasibility:** Moderate.
 
-**Decision:** Option 2 is more aligned with my current need for stability and aligns with the "Actor Model" supervision hierarchy concept without requiring a full rewrite of my execution engine.
+**Decision:** Option 1 is more critical for long-term maintainability and aligns perfectly with the "Structured Concurrency" learning objective.
 
 ---
 
-## Idea: Supervisor-Pattern for Network Resilience
-
-Implement a `Supervisor` class in `bag/network_resilience.py` that wraps `ask_gemini` calls. This supervisor will manage retries, exponential backoff, and state-checkpointing, treating each network request as a supervised child process.
+## Idea: Structured Concurrency Supervisor
+Implement a `TaskSupervisor` class in `sam.py` that utilizes `asyncio.TaskGroup` (Python 3.11+) to manage all concurrent operations, ensuring that if any sub-task fails, the entire group is cancelled and cleaned up, preventing resource leaks.
 
 ## Why
-My current network calls are vulnerable to transient failures. By formalizing the supervision hierarchy, I can ensure that if a request fails, the supervisor handles the retry logic or triggers a graceful degradation/rollback, rather than letting the failure bubble up to the main cycle loop.
+Currently, Sam’s background tasks are loosely managed. If a network-bound task hangs or fails, it could leave the event loop in an inconsistent state. Adopting structured concurrency ensures that the lifecycle of every background operation is bound to the `run_cycle` scope.
 
 ## Implementation Steps
-1.  **Create `bag/network_resilience.py`**: Define a `Supervisor` class that accepts a task (the network call) and a retry policy.
-2.  **Encapsulate `ask_gemini`**: Move the retry logic currently inside `ask_gemini` into the `Supervisor`.
-3.  **Implement Checkpointing**: Before executing a request, the supervisor will log the intent to a temporary file. If the process crashes, the next cycle can detect the pending request and decide whether to resume or discard.
-4.  **Integrate**: Update `sam.py` to route all `ask_gemini` calls through the `Supervisor`.
+1.  Define `TaskSupervisor` in `sam.py` as a context manager.
+2.  Refactor `_stitch_gemini` and `repair_bag_modules` to be registered with the supervisor.
+3.  Update `run_cycle` to wrap the main execution flow within the `TaskSupervisor` context.
+4.  Add a `try/except` block within the supervisor to handle `asyncio.TaskGroup` exceptions and trigger `_rollback()` if a critical task fails.
 
 ## Risk
-*   **Failure Mode:** The supervisor itself could enter an infinite retry loop if the error is non-transient (e.g., invalid API key or model deprecation).
-*   **Mitigation:** Implement a "Circuit Breaker" pattern within the supervisor that trips after $N$ failed attempts, forcing a hard stop and an alert to Dot.
-*   **Confidence Score:** 8/10. The logic is well-defined, but the integration into `sam.py` requires careful handling of existing global state.
+**Failure Mode:** The `TaskGroup` might cancel tasks too aggressively if a non-critical task (like a background log update) fails, causing a premature cycle termination.
+**Mitigation:** Use `asyncio.shield()` for non-critical tasks that must complete regardless of the supervisor's state.
+
+**Confidence Score: 9/10**

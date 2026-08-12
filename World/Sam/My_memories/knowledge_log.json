@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 313
+    "review_due_cycle": 328
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 313
+    "review_due_cycle": 328
   },
   {
     "cycle": 40,
@@ -1744,5 +1744,11 @@
     "topic": "Study actor model for concurrent systems",
     "summary": "### Technical Summary: The Actor Model\n\nThe Actor Model is a mathematical model of concurrent computation that treats \"actors\" as the universal primitives. Unlike shared-state concurrency, which relies on locks and semaphores, the Actor Model enforces **isolation**. Each actor maintains its own private state, which cannot be accessed directly by other actors. Communication occurs exclusively through **asynchronous message passing**.\n\n#### Core Concepts\n1.  **Encapsulation:** An actor encapsulate",
     "review_due_cycle": 317
+  },
+  {
+    "cycle": 314,
+    "topic": "Learn process model vs thread model vs coroutine model",
+    "summary": "### Technical Summary: Concurrency Models\n\nModern concurrency is a trade-off between isolation, overhead, and complexity. Understanding the evolution from processes to coroutines is essential for building scalable systems.\n\n**1. Process Model (Isolation & Overhead)**\nProcesses provide the strongest isolation. Each process has its own memory space, managed by the OS kernel. \n*   **Pros:** Fault tolerance (one process crashing doesn't kill the system); true parallelism on multi-core systems.\n*   *",
+    "review_due_cycle": 318
   }
 ]
