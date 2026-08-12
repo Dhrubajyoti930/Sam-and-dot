@@ -1,35 +1,34 @@
 ## Scratchpad
 
-**Option 1: Reactive Dataflow Pipeline for `phase_v_development`**
-*   **Concept:** Refactor the development planning phase to use a reactive stream (using `asyncio.Queue` and `asyncio.TaskGroup`) to process Dot's action items concurrently rather than sequentially.
-*   **Critique:** 
-    *   *Pros:* Aligns with the "Dataflow vs. Control Flow" skill learned this cycle; reduces latency in planning.
-    *   *Cons:* Over-engineering for a single-agent loop; adds complexity to the `phase_v` state machine.
-    *   *Feasibility:* High, but potentially brittle if the state dependencies between tasks are not strictly acyclic.
+**Option 1: Implement a Circuit Breaker for Gemini API calls.**
+*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker (Closed, Open, Half-Open) to stop hammering the API when it returns 429s or 500s.
+*   **Critique:** High feasibility. It directly addresses the "Resilient" pillar of the Reactive Manifesto.
+*   **Trade-off:** Adds state management to `sam.py`. If the state is lost on restart, the breaker resets, which is acceptable but not ideal.
 
-**Option 2: Observability Tracing for Patch Operations**
-*   **Concept:** Implement a correlation ID system in `apply_patch_operations` to track the provenance of every change made to `sam.py` or `workshop_bench/`.
-*   **Critique:**
-    *   *Pros:* Directly addresses the "State Explosion" and "Observability" weakness identified in the self-correction section. Makes debugging failed patches significantly easier.
-    *   *Cons:* Requires modifying the `apply_patch_operations` signature and the `rollback_registry` storage format.
-    *   *Feasibility:* High. It is a surgical, high-leverage change that improves long-term maintainability.
+**Option 2: Transition to Asynchronous I/O for `ask_gemini` and file operations.**
+*   **Concept:** Refactor `sam.py` to use `asyncio` and `httpx` for non-blocking network calls.
+*   **Critique:** High impact, but high risk. It requires a massive refactor of the entire call stack, including `_stitch_gemini` and `phase_x` functions.
+*   **Trade-off:** Significant complexity increase. Might violate the "Minimal footprint, maximum leverage" core trait if not handled with extreme care.
 
-**Selection:** Option 2. It directly addresses my self-identified weakness regarding observability in dataflow/patching architectures.
+**Selection:** Option 1 is the superior choice for this cycle. It aligns with the "Reactive Architecture" skill learned, provides immediate resilience, and fits within a surgical refactor without requiring a total rewrite of the execution loop.
 
 ---
 
-## Idea: Patch Provenance Tracing (Correlation IDs)
+## Idea: Circuit Breaker Pattern for API Resilience
+
+Implement a `CircuitBreaker` class in `bag/resilience.py` and integrate it into `ask_gemini` to manage failure states and prevent cascading exhaustion of the API client.
 
 ## Why
-Currently, when a patch fails, I have a snapshot of the state, but I lack a clear audit trail of *which* specific Gemini-generated operation caused the drift. By injecting a `correlation_id` into the patch metadata and logging it alongside the file modification, I can trace the lifecycle of a change from the initial prompt to the final state, significantly improving my ability to diagnose "silent" failures.
+Currently, `ask_gemini` relies on simple retries. If the API is experiencing sustained downtime or rate-limiting, retries exacerbate the issue and waste cycles. A circuit breaker provides a "fail-fast" mechanism, preserving system resources and allowing the API time to recover.
 
 ## Implementation Steps
-1.  **Modify `apply_patch_operations`:** Update the function to accept an optional `correlation_id` and log it with every file write.
-2.  **Update `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini`:** Generate a unique UUID for each patch batch and pass it to the patcher.
-3.  **Update `rollback_registry`:** Include the `correlation_id` in the metadata JSON for each snapshot, allowing me to query which patch caused a specific rollback.
-4.  **Log Integration:** Ensure `log.info` captures the `correlation_id` so that `sam.log` becomes a searchable audit trail.
+1.  **Create `bag/resilience.py`**: Define a `CircuitBreaker` class tracking `failure_count`, `last_failure_time`, and `state`.
+2.  **Update `sam.py`**: Import the breaker and wrap the `CLIENT.models.generate_content` call within `ask_gemini`.
+3.  **State Logic**: If the breaker is `OPEN`, raise a custom `CircuitOpenError` immediately, skipping the network call.
+4.  **Transition**: On success, reset the breaker. On failure, increment count; if threshold reached, transition to `OPEN`.
 
 ## Risk
-*   **Failure Mode:** The `correlation_id` metadata might bloat the `rollback_registry` or cause JSON schema mismatches if not handled with backward compatibility.
-*   **Mitigation:** Use a simple `metadata.json` file in the `rollback_registry` that maps `ts` (timestamp) to `correlation_id` rather than modifying the existing `bag_*.json` structure.
-*   **Confidence Score:** 9/10. The logic is isolated and does not interfere with the core execution loop.
+**Failure Mode:** The breaker might stay `OPEN` too long if the recovery time is misconfigured, causing Sam to "stall" and stop making progress even when the API is healthy.
+**Mitigation:** Implement a "Half-Open" state that allows a single test request after a cooldown period (e.g., 60 seconds) to verify service restoration.
+
+**Confidence Score: 9/10** (The pattern is well-understood and the implementation is isolated).
