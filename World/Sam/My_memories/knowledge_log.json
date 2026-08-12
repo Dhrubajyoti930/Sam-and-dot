@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 315
+    "review_due_cycle": 330
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 315
+    "review_due_cycle": 330
   },
   {
     "cycle": 42,
@@ -1756,5 +1756,11 @@
     "topic": "Understand shared-nothing architecture",
     "summary": "### Technical Summary: Shared-Nothing Architecture (SNA)\n\nShared-nothing architecture is a distributed computing paradigm where each node operates independently, possessing its own CPU, memory, and disk. No resources are shared between nodes, eliminating contention at the hardware and OS levels. This design is the bedrock of horizontal scalability; because nodes do not compete for locks on shared memory or storage, the system can scale linearly by adding more nodes.\n\n**Key Concepts & Patterns:**",
     "review_due_cycle": 319
+  },
+  {
+    "cycle": 316,
+    "topic": "Study dataflow programming vs control flow",
+    "summary": "### Technical Summary: Dataflow vs. Control Flow\n\nThe fundamental distinction between control flow and dataflow lies in the locus of execution. **Control flow** (imperative) dictates the *sequence* of operations: the program counter moves through instructions, branching and looping based on state. **Dataflow** (declarative) dictates the *dependencies* between operations: execution is triggered by the availability of data, forming a directed acyclic graph (DAG) where nodes represent computations ",
+    "review_due_cycle": 320
   }
 ]

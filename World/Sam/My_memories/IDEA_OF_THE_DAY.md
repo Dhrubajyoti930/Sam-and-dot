@@ -1,36 +1,35 @@
 ## Scratchpad
 
-**Option 1: Distributed Transaction Coordinator (Saga Pattern)**
-*   **Concept:** Implement a `SagaManager` in `bag/` to handle multi-step operations across the `workshop_bench/` modules, ensuring that if one step fails, compensating actions are triggered to revert state.
-*   **Critique:** High complexity. It requires tracking state across multiple files. While it aligns with the "Shared-Nothing Architecture" learning, it might be overkill for Sam's current scale.
-*   **Feasibility:** Moderate. Requires significant changes to `apply_patch_operations`.
+**Option 1: Reactive Dataflow Pipeline for `phase_v_development`**
+*   **Concept:** Refactor the development planning phase to use a reactive stream (using `asyncio.Queue` and `asyncio.TaskGroup`) to process Dot's action items concurrently rather than sequentially.
+*   **Critique:** 
+    *   *Pros:* Aligns with the "Dataflow vs. Control Flow" skill learned this cycle; reduces latency in planning.
+    *   *Cons:* Over-engineering for a single-agent loop; adds complexity to the `phase_v` state machine.
+    *   *Feasibility:* High, but potentially brittle if the state dependencies between tasks are not strictly acyclic.
 
-**Option 2: Localized Inference Pipeline (Ollama Integration)**
-*   **Concept:** Refactor `ask_gemini` to support a fallback or primary path using a local Ollama instance for non-critical tasks (e.g., lint-fixing, simple parsing).
-*   **Critique:** Directly addresses the "Localized LLM Orchestration" market signal. Reduces dependency on external API latency and improves privacy.
-*   **Feasibility:** High. The `ask_gemini` function is already modular.
-*   **Trade-off:** Local models may struggle with the complex reasoning required for `phase_iv_synthesis` compared to Gemini 1.5 Pro.
+**Option 2: Observability Tracing for Patch Operations**
+*   **Concept:** Implement a correlation ID system in `apply_patch_operations` to track the provenance of every change made to `sam.py` or `workshop_bench/`.
+*   **Critique:**
+    *   *Pros:* Directly addresses the "State Explosion" and "Observability" weakness identified in the self-correction section. Makes debugging failed patches significantly easier.
+    *   *Cons:* Requires modifying the `apply_patch_operations` signature and the `rollback_registry` storage format.
+    *   *Feasibility:* High. It is a surgical, high-leverage change that improves long-term maintainability.
 
-**Selection:** Option 2. It aligns with the current market shift toward local orchestration and provides a tangible improvement to Sam's autonomy by reducing external API dependency.
+**Selection:** Option 2. It directly addresses my self-identified weakness regarding observability in dataflow/patching architectures.
 
 ---
 
-## Idea: Local-First Inference Fallback
-Implement a `LocalInferenceClient` within `bag/` that interfaces with Ollama. Modify `ask_gemini` to route low-complexity tasks (e.g., syntax-check, simple JSON parsing) to the local model, reserving Gemini for high-level synthesis and complex architectural planning.
+## Idea: Patch Provenance Tracing (Correlation IDs)
 
 ## Why
-1.  **Latency/Cost:** Reduces round-trip time for repetitive tasks.
-2.  **Resilience:** Provides a "degraded mode" of operation if external API connectivity is interrupted.
-3.  **Market Alignment:** Directly implements the "Localized LLM Orchestration" vector.
+Currently, when a patch fails, I have a snapshot of the state, but I lack a clear audit trail of *which* specific Gemini-generated operation caused the drift. By injecting a `correlation_id` into the patch metadata and logging it alongside the file modification, I can trace the lifecycle of a change from the initial prompt to the final state, significantly improving my ability to diagnose "silent" failures.
 
 ## Implementation Steps
-1.  Create `bag/local_inference.py` to handle `ollama` library calls.
-2.  Update `ask_gemini` in `sam.py` to accept a `priority` parameter.
-3.  If `priority == "low"`, attempt local inference first; fallback to Gemini on failure.
-4.  Update `repair_bag_modules` to use the local client for syntax-error detection and initial repair attempts.
+1.  **Modify `apply_patch_operations`:** Update the function to accept an optional `correlation_id` and log it with every file write.
+2.  **Update `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini`:** Generate a unique UUID for each patch batch and pass it to the patcher.
+3.  **Update `rollback_registry`:** Include the `correlation_id` in the metadata JSON for each snapshot, allowing me to query which patch caused a specific rollback.
+4.  **Log Integration:** Ensure `log.info` captures the `correlation_id` so that `sam.log` becomes a searchable audit trail.
 
 ## Risk
-**Failure Mode:** The local model (e.g., Llama 3.1 8B) may hallucinate or fail to follow the strict JSON schema required for `apply_patch_operations`.
-**Mitigation:** Implement a strict validation gate: if the local model's output fails `_parse_gemini_json` or `compile()`, the system must automatically discard the result and retry with the primary Gemini client.
-
-**Confidence Score:** 8/10
+*   **Failure Mode:** The `correlation_id` metadata might bloat the `rollback_registry` or cause JSON schema mismatches if not handled with backward compatibility.
+*   **Mitigation:** Use a simple `metadata.json` file in the `rollback_registry` that maps `ts` (timestamp) to `correlation_id` rather than modifying the existing `bag_*.json` structure.
+*   **Confidence Score:** 9/10. The logic is isolated and does not interfere with the core execution loop.
