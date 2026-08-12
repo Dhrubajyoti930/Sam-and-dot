@@ -417,3 +417,47 @@
 2026-08-12 06:55:36,215 [DOT][INFO] Today is Wednesday — inbox check reserved for Sunday.
 2026-08-12 06:55:36,217 [DOT][INFO] Worklog: no stale entries.
 2026-08-12 06:55:38,575 [DOT][INFO] Dot's daily run complete.
+2026-08-12 14:34:26,221 [DOT][INFO] ═══════════════════════════════════
+2026-08-12 14:34:26,221 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-08-12 14:34:26,221 [DOT][INFO] ═══════════════════════════════════
+2026-08-12 14:34:26,221 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-08-12 14:34:42,260 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-08-12 14:34:43,763 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-08-12 14:34:43,769 [DOT][INFO] Task 1: chunk 1/8 summarised.
+2026-08-12 14:34:43,770 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-08-12 14:34:43,770 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-08-12 14:34:43,770 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-08-12 14:34:43,771 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-08-12 14:34:43,771 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-08-12 14:34:43,772 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-08-12 14:34:43,772 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-08-12 14:34:59,780 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-08-12 14:35:03,837 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-08-12 14:35:03,838 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-08-12 14:35:11,838 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-08-12 14:35:11,840 [DOT][INFO] Task 2: 13 experiences → 3 batch(es) of ≤5.
+2026-08-12 14:35:19,840 [DOT][INFO] Task 2: batch 1/3 — cycles [13, 17, 19, 20, 21]
+2026-08-12 14:35:19,848 [DOT][INFO] Dot cache hit.
+2026-08-12 14:35:27,849 [DOT][INFO] Task 2: batch 2/3 — cycles [51, 54, 55, 56, 57]
+2026-08-12 14:35:27,856 [DOT][INFO] Dot cache hit.
+2026-08-12 14:35:35,857 [DOT][INFO] Task 2: batch 3/3 — cycles [314, 315, 316]
+2026-08-12 14:35:43,865 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-08-12 14:35:45,718 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-08-12 14:35:45,722 [DOT][INFO] Experiences curated: 9 kept, 0 forgotten, 2 consolidated. Total now: 11.
+2026-08-12 14:35:45,723 [DOT][INFO] Letter written to Sam: Letter_20260812T143545Z.md
+2026-08-12 14:35:45,723 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-08-12 14:35:45,723 [DOT][INFO] Finding best recipient for: Tiago Henriques, maintainer of 'python-dependency-injector'. His project is widely used for DI in smaller Python ecosyst
+2026-08-12 14:35:53,732 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-08-12 14:35:54,391 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-08-12 14:35:54,394 [DOT][INFO] Recipient match:  <> confidence=0 — Tiago Henriques, the maintainer of 'python-dependency-injector', is not present in the provided list of people.
+2026-08-12 14:35:54,394 [DOT][WARNING] Match confidence 0 below threshold 7 — skipping.
+2026-08-12 14:35:54,394 [DOT][WARNING] No suitable recipient found in emails.json — request preserved.
+2026-08-12 14:35:54,394 [DOT][INFO] Appended to Letter_20260812T143545Z.md: Email Dispatch — No Match
+2026-08-12 14:35:54,395 [DOT][INFO] Appended to Letter_20260812T143545Z.md: Email Dispatch
+2026-08-12 14:36:02,395 [DOT][INFO] ── Task 4: Bag Review ──
+2026-08-12 14:36:10,404 [DOT][INFO] Dot cache hit.
+2026-08-12 14:36:10,404 [DOT][INFO] Bag review complete.
+2026-08-12 14:36:10,404 [DOT][INFO] Appended to Letter_20260812T143545Z.md: Bag Excavation Findings
+2026-08-12 14:36:10,404 [DOT][INFO] Today is Wednesday — inbox check reserved for Sunday.
+2026-08-12 14:36:10,407 [DOT][INFO] Worklog: no stale entries.
+2026-08-12 14:36:11,809 [DOT][INFO] Dot's daily run complete.
