@@ -1,35 +1,36 @@
 ## Scratchpad
 
-**Option 1: Async Task Supervisor (Structured Concurrency)**
-*   **Concept:** Implement a `TaskGroup` wrapper in `sam.py` to manage background tasks (like `_stitch_gemini` or `repair_bag_modules`) to ensure no orphaned coroutines exist if a cycle is interrupted.
-*   **Critique:** High alignment with the "Structured Concurrency" skill learned this cycle. It improves system stability.
-*   **Trade-off:** Requires refactoring existing `asyncio` calls which are currently scattered.
-*   **Feasibility:** High.
+**Option 1: Distributed Transaction Coordinator (Saga Pattern)**
+*   **Concept:** Implement a `SagaManager` in `bag/` to handle multi-step operations across the `workshop_bench/` modules, ensuring that if one step fails, compensating actions are triggered to revert state.
+*   **Critique:** High complexity. It requires tracking state across multiple files. While it aligns with the "Shared-Nothing Architecture" learning, it might be overkill for Sam's current scale.
+*   **Feasibility:** Moderate. Requires significant changes to `apply_patch_operations`.
 
-**Option 2: Semantic Deduplication Engine**
-*   **Concept:** Add a layer to `bag/semantic_cache.py` that computes cosine similarity between a new prompt and recent history to prevent redundant Gemini calls.
-*   **Critique:** Directly addresses the "Minimal footprint, maximum leverage" trait. Reduces API costs and latency.
-*   **Trade-off:** Adds complexity to the cache layer; requires managing a local embedding vector store.
-*   **Feasibility:** Moderate.
+**Option 2: Localized Inference Pipeline (Ollama Integration)**
+*   **Concept:** Refactor `ask_gemini` to support a fallback or primary path using a local Ollama instance for non-critical tasks (e.g., lint-fixing, simple parsing).
+*   **Critique:** Directly addresses the "Localized LLM Orchestration" market signal. Reduces dependency on external API latency and improves privacy.
+*   **Feasibility:** High. The `ask_gemini` function is already modular.
+*   **Trade-off:** Local models may struggle with the complex reasoning required for `phase_iv_synthesis` compared to Gemini 1.5 Pro.
 
-**Decision:** Option 1 is more critical for long-term maintainability and aligns perfectly with the "Structured Concurrency" learning objective.
+**Selection:** Option 2. It aligns with the current market shift toward local orchestration and provides a tangible improvement to Sam's autonomy by reducing external API dependency.
 
 ---
 
-## Idea: Structured Concurrency Supervisor
-Implement a `TaskSupervisor` class in `sam.py` that utilizes `asyncio.TaskGroup` (Python 3.11+) to manage all concurrent operations, ensuring that if any sub-task fails, the entire group is cancelled and cleaned up, preventing resource leaks.
+## Idea: Local-First Inference Fallback
+Implement a `LocalInferenceClient` within `bag/` that interfaces with Ollama. Modify `ask_gemini` to route low-complexity tasks (e.g., syntax-check, simple JSON parsing) to the local model, reserving Gemini for high-level synthesis and complex architectural planning.
 
 ## Why
-Currently, Sam’s background tasks are loosely managed. If a network-bound task hangs or fails, it could leave the event loop in an inconsistent state. Adopting structured concurrency ensures that the lifecycle of every background operation is bound to the `run_cycle` scope.
+1.  **Latency/Cost:** Reduces round-trip time for repetitive tasks.
+2.  **Resilience:** Provides a "degraded mode" of operation if external API connectivity is interrupted.
+3.  **Market Alignment:** Directly implements the "Localized LLM Orchestration" vector.
 
 ## Implementation Steps
-1.  Define `TaskSupervisor` in `sam.py` as a context manager.
-2.  Refactor `_stitch_gemini` and `repair_bag_modules` to be registered with the supervisor.
-3.  Update `run_cycle` to wrap the main execution flow within the `TaskSupervisor` context.
-4.  Add a `try/except` block within the supervisor to handle `asyncio.TaskGroup` exceptions and trigger `_rollback()` if a critical task fails.
+1.  Create `bag/local_inference.py` to handle `ollama` library calls.
+2.  Update `ask_gemini` in `sam.py` to accept a `priority` parameter.
+3.  If `priority == "low"`, attempt local inference first; fallback to Gemini on failure.
+4.  Update `repair_bag_modules` to use the local client for syntax-error detection and initial repair attempts.
 
 ## Risk
-**Failure Mode:** The `TaskGroup` might cancel tasks too aggressively if a non-critical task (like a background log update) fails, causing a premature cycle termination.
-**Mitigation:** Use `asyncio.shield()` for non-critical tasks that must complete regardless of the supervisor's state.
+**Failure Mode:** The local model (e.g., Llama 3.1 8B) may hallucinate or fail to follow the strict JSON schema required for `apply_patch_operations`.
+**Mitigation:** Implement a strict validation gate: if the local model's output fails `_parse_gemini_json` or `compile()`, the system must automatically discard the result and retry with the primary Gemini client.
 
-**Confidence Score: 9/10**
+**Confidence Score:** 8/10

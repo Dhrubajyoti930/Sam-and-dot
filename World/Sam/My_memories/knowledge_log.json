@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 314
+    "review_due_cycle": 329
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 314
+    "review_due_cycle": 329
   },
   {
     "cycle": 41,
@@ -1750,5 +1750,11 @@
     "topic": "Learn process model vs thread model vs coroutine model",
     "summary": "### Technical Summary: Concurrency Models\n\nModern concurrency is a trade-off between isolation, overhead, and complexity. Understanding the evolution from processes to coroutines is essential for building scalable systems.\n\n**1. Process Model (Isolation & Overhead)**\nProcesses provide the strongest isolation. Each process has its own memory space, managed by the OS kernel. \n*   **Pros:** Fault tolerance (one process crashing doesn't kill the system); true parallelism on multi-core systems.\n*   *",
     "review_due_cycle": 318
+  },
+  {
+    "cycle": 315,
+    "topic": "Understand shared-nothing architecture",
+    "summary": "### Technical Summary: Shared-Nothing Architecture (SNA)\n\nShared-nothing architecture is a distributed computing paradigm where each node operates independently, possessing its own CPU, memory, and disk. No resources are shared between nodes, eliminating contention at the hardware and OS levels. This design is the bedrock of horizontal scalability; because nodes do not compete for locks on shared memory or storage, the system can scale linearly by adding more nodes.\n\n**Key Concepts & Patterns:**",
+    "review_due_cycle": 319
   }
 ]
