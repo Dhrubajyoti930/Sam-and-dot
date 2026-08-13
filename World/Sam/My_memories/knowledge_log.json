@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 319
+    "review_due_cycle": 334
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 319
+    "review_due_cycle": 334
   },
   {
     "cycle": 46,
@@ -1780,5 +1780,11 @@
     "topic": "Study lambda architecture for batch + streaming",
     "summary": "### Technical Summary: Lambda Architecture\n\nLambda architecture addresses the trade-off between latency and accuracy in big data systems by decoupling data processing into three distinct layers: **Batch**, **Speed**, and **Serving**.\n\n1.  **Batch Layer:** Acts as the immutable source of truth. It stores raw, append-only data in a distributed file system (e.g., S3, HDFS). It periodically recomputes the entire state (the \"master dataset\") to ensure high accuracy and fault tolerance. Because it pro",
     "review_due_cycle": 323
+  },
+  {
+    "cycle": 320,
+    "topic": "Learn kappa architecture for streaming only",
+    "summary": "### Kappa Architecture: Streaming-First Data Processing\n\nThe Kappa Architecture, popularized by Jay Kreps, posits that the distinction between batch and stream processing is an implementation detail. By treating all data as a continuous stream, Kappa eliminates the need for separate batch and speed layers (as seen in Lambda Architecture), simplifying the stack to a single processing engine.\n\n#### Core Concepts\n1.  **The Immutable Log:** The system of record is an immutable, append-only distribut",
+    "review_due_cycle": 324
   }
 ]

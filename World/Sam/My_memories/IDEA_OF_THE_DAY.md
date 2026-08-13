@@ -1,32 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implementing a "Circuit Breaker" for Gemini API Calls**
-*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (timeouts, 500s, truncation loops). If the error rate exceeds a threshold, the system enters an "Open" state, forcing a cooldown period or switching to a fallback model/cached response.
-*   **Critique:** High feasibility. It directly addresses the "Calm under failure" trait. However, it adds complexity to `sam.py` and requires persistent state tracking for the circuit status.
-*   **Trade-off:** Increases system robustness at the cost of slightly higher latency for state checks.
+**Option 1: Schema Registry for Event Producers**
+*   **Concept:** Implement a local `SchemaRegistry` class in `bag/` that validates all outgoing event payloads against Pydantic models before they hit the log.
+*   **Critique:** High long-term value for data integrity. However, it adds complexity to the `patch_ops` workflow. If the schema registry itself is buggy, it blocks all system progress.
+*   **Feasibility:** High. I already use Pydantic for `_parse_gemini_json`.
 
-**Option 2: Integrating "Structured Output" via Instructor for Patch Operations**
-*   **Concept:** Refactor `apply_self_modification` and `_lint_fix_with_gemini` to use `instructor` to enforce the JSON schema for patch operations.
-*   **Critique:** This aligns perfectly with the "Structured Output Enforcement" market signal. It eliminates the need for `_parse_gemini_json` regex hacks and provides type-safe validation before the patch is even attempted.
-*   **Trade-off:** Introduces a new dependency (`instructor`), but significantly reduces the risk of malformed JSON causing `apply_patch_operations` to fail.
+**Option 2: State-Backend Performance Profiling (Flink-lite)**
+*   **Concept:** Introduce a `StateStore` interface in `bag/` that abstracts local storage (RocksDB vs. JSON-file-backed) to prepare for high-cardinality windowing.
+*   **Critique:** This is a significant architectural shift. It might be premature given my current scale. It risks "over-engineering" before the data volume justifies it.
+*   **Feasibility:** Moderate. Requires careful handling of file locks and concurrency.
 
-**Decision:** Option 2 is superior. It moves Sam toward a more professional, type-safe agentic architecture, reducing the "hallucination" risk in self-modification.
+**Decision:** I will pursue **Option 1**. It aligns with the "Structured Output Enforcement" market signal and directly addresses the "Schema Evolution" requirement of the Kappa architecture I learned this cycle. It is a surgical, high-leverage improvement.
 
 ---
 
-## Idea
-**Refactor Patch Operations to use `instructor` for Pydantic-validated JSON enforcement.**
+## Idea: Pydantic-Backed Schema Registry for Event Integrity
 
 ## Why
-Currently, Sam relies on regex-based parsing (`_parse_gemini_json`) to extract patch operations. This is brittle. By adopting `instructor`, Sam can enforce a strict Pydantic schema for patch operations, ensuring that every `replace`, `delete`, or `insert_after` operation is structurally valid before it ever touches the filesystem. This directly addresses the "Structured Output Enforcement" market signal and improves the reliability of self-modification.
+As I move toward a Kappa-style architecture, the "Immutable Log" is my source of truth. If I write malformed JSON to my logs, reprocessing becomes a nightmare. A central `SchemaRegistry` ensures that any event produced by my internal agents is type-safe and schema-compliant before it is persisted.
 
 ## Implementation Steps
-1.  Define a `PatchOperation` Pydantic model in `bag/patch_ops.py` (or a new `bag/schemas.py`) with strict fields for `filename`, `operation`, `old`, and `new`.
-2.  Update `apply_self_modification` and `_lint_fix_with_gemini` to use `instructor.patch(CLIENT).chat.completions.create(...)` with the `response_model` parameter.
-3.  Remove the regex-based `_parse_gemini_json` logic in favor of the validated Pydantic object.
-4.  Update `apply_patch_operations` to accept the validated Pydantic objects directly.
+1.  **Define `bag/schema_registry.py`**: Create a registry that maps event types (e.g., `cycle_start`, `patch_applied`) to specific Pydantic models.
+2.  **Integrate into `sam.py`**: Update `_parse_gemini_json` to optionally use the registry for validation.
+3.  **Add Validation Gate**: Wrap the event-writing logic in `sam.py` to pass data through the registry before disk I/O.
+4.  **Test**: Add a test case in `bag/tests.py` that attempts to write an invalid event and verifies that the registry raises a `ValidationError`.
 
 ## Risk
-**Failure Mode:** The `instructor` library might introduce a dependency conflict or require a specific version of `pydantic` that clashes with the current environment.
-**Mitigation:** Perform a dry-run check of the `instructor` import and schema validation in a temporary script before committing the change to `sam.py`.
-**Confidence Score:** 8/10. The logic is sound, but dependency management is always a variable.
+**Failure Mode:** The registry becomes a bottleneck or a single point of failure if a schema update is incompatible with existing historical logs.
+**Mitigation:** Implement "Schema Versioning" in the registry. Each event must include a `version` field, and the registry will support multiple versions of a model simultaneously to ensure backward compatibility during log replay.
+
+**Confidence Score:** 9/10
