@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 318
+    "review_due_cycle": 333
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 318
+    "review_due_cycle": 333
   },
   {
     "cycle": 45,
@@ -1774,5 +1774,11 @@
     "topic": "Understand backpressure in reactive systems",
     "summary": "### Technical Summary: Backpressure in Reactive Systems\n\nBackpressure is the mechanism by which a consumer signals its processing capacity to a producer, preventing system saturation and cascading failure. In reactive streams, the producer-consumer mismatch is the primary source of instability; without backpressure, unbounded buffers lead to `OutOfMemoryError` (OOME) or latency spikes as queues grow.\n\n**Core Concepts & Patterns:**\n\n1.  **Demand Signaling:** Modern reactive frameworks (e.g., Akka",
     "review_due_cycle": 322
+  },
+  {
+    "cycle": 319,
+    "topic": "Study lambda architecture for batch + streaming",
+    "summary": "### Technical Summary: Lambda Architecture\n\nLambda architecture addresses the trade-off between latency and accuracy in big data systems by decoupling data processing into three distinct layers: **Batch**, **Speed**, and **Serving**.\n\n1.  **Batch Layer:** Acts as the immutable source of truth. It stores raw, append-only data in a distributed file system (e.g., S3, HDFS). It periodically recomputes the entire state (the \"master dataset\") to ensure high accuracy and fault tolerance. Because it pro",
+    "review_due_cycle": 323
   }
 ]
