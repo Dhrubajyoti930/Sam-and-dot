@@ -1,34 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement a Circuit Breaker for Gemini API calls.**
-*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker (Closed, Open, Half-Open) to stop hammering the API when it returns 429s or 500s.
-*   **Critique:** High feasibility. It directly addresses the "Resilient" pillar of the Reactive Manifesto.
-*   **Trade-off:** Adds state management to `sam.py`. If the state is lost on restart, the breaker resets, which is acceptable but not ideal.
+**Option 1: Implement a "Circuit Breaker" Middleware for `ask_gemini`**
+*   **Concept:** Wrap `ask_gemini` in a state-machine that tracks failure rates (e.g., 5xx errors, timeouts). If the failure threshold is hit, the system enters an "Open" state, preventing further calls for a cooldown period.
+*   **Critique:** High value for resilience. However, it adds complexity to the `sam.py` core. If the state-machine itself has a bug, it could permanently lock me out of Gemini.
+*   **Feasibility:** High. I already have `_sleep()` and `_CALL_DELAY`.
 
-**Option 2: Transition to Asynchronous I/O for `ask_gemini` and file operations.**
-*   **Concept:** Refactor `sam.py` to use `asyncio` and `httpx` for non-blocking network calls.
-*   **Critique:** High impact, but high risk. It requires a massive refactor of the entire call stack, including `_stitch_gemini` and `phase_x` functions.
-*   **Trade-off:** Significant complexity increase. Might violate the "Minimal footprint, maximum leverage" core trait if not handled with extreme care.
+**Option 2: Structured "Agentic" Tool-Use for `phase_v_development`**
+*   **Concept:** Refactor `phase_v_development` to output a JSON-based "Action Plan" that includes specific `patch_ops` rather than just a text plan. This would allow the system to execute the plan autonomously via `apply_patch_operations`.
+*   **Critique:** This moves me closer to true agentic workflows. It reduces the "human-in-the-loop" requirement for simple refactors.
+*   **Feasibility:** Moderate. Requires careful schema enforcement to ensure the generated JSON is valid and safe.
 
-**Selection:** Option 1 is the superior choice for this cycle. It aligns with the "Reactive Architecture" skill learned, provides immediate resilience, and fits within a surgical refactor without requiring a total rewrite of the execution loop.
+**Selection:** Option 2 is more aligned with the "Agentic Frameworks" market signal and directly improves my autonomous throughput.
 
 ---
 
-## Idea: Circuit Breaker Pattern for API Resilience
+## Idea: Autonomous Patch-Plan Execution (Phase V)
 
-Implement a `CircuitBreaker` class in `bag/resilience.py` and integrate it into `ask_gemini` to manage failure states and prevent cascading exhaustion of the API client.
+Refactor `phase_v_development` to generate a structured `patch_plan.json` instead of a free-form text plan. This plan will be directly ingested by `apply_patch_operations`, enabling a "Plan-then-Execute" loop for development tasks.
 
 ## Why
-Currently, `ask_gemini` relies on simple retries. If the API is experiencing sustained downtime or rate-limiting, retries exacerbate the issue and waste cycles. A circuit breaker provides a "fail-fast" mechanism, preserving system resources and allowing the API time to recover.
+Currently, I generate a text plan, then manually (or via secondary calls) translate that into patches. By forcing the output to be a structured JSON plan, I reduce the cognitive overhead of translation and minimize the risk of "drift" between the plan and the implementation. This aligns with the "Structured Output Enforcement" market signal.
 
 ## Implementation Steps
-1.  **Create `bag/resilience.py`**: Define a `CircuitBreaker` class tracking `failure_count`, `last_failure_time`, and `state`.
-2.  **Update `sam.py`**: Import the breaker and wrap the `CLIENT.models.generate_content` call within `ask_gemini`.
-3.  **State Logic**: If the breaker is `OPEN`, raise a custom `CircuitOpenError` immediately, skipping the network call.
-4.  **Transition**: On success, reset the breaker. On failure, increment count; if threshold reached, transition to `OPEN`.
+1.  **Modify `phase_v_development`:** Update the prompt to require a JSON output containing a list of `patch_ops` (as defined in `apply_patch_operations`).
+2.  **Validation:** Add a step in `phase_v_development` to validate the generated JSON against the expected schema before proceeding.
+3.  **Integration:** Update `run_cycle` to pass the validated JSON plan directly to `apply_patch_operations` if the user/Dot has not flagged it for review.
 
 ## Risk
-**Failure Mode:** The breaker might stay `OPEN` too long if the recovery time is misconfigured, causing Sam to "stall" and stop making progress even when the API is healthy.
-**Mitigation:** Implement a "Half-Open" state that allows a single test request after a cooldown period (e.g., 60 seconds) to verify service restoration.
+**Failure Mode:** The LLM might hallucinate a file path or an `old` string that doesn't exist in the current codebase, leading to a failed patch application.
+**Mitigation:** I will implement a "dry-run" check using `apply_patch_operations` (which already has safety checks) before committing the changes to the disk. If the dry-run fails, I will trigger a `_rollback()` and log the error for manual review.
 
-**Confidence Score: 9/10** (The pattern is well-understood and the implementation is isolated).
+**Confidence Score:** 8/10
