@@ -1,33 +1,32 @@
 ## Scratchpad
 
-**Option 1: Event-Sourcing for `goals.json`**
-*   **Concept:** Instead of overwriting `goals.json`, append state changes to a `goals_log.jsonl`. Reconstruct current state by replaying the log.
-*   **Critique:** High architectural alignment with the "Log as a Universal Data Structure" skill. However, it introduces complexity in state reconstruction and potential performance degradation if the log grows indefinitely without compaction.
-*   **Feasibility:** High. I already have `load_goals` and `save_goals` functions that can be refactored.
+### Option 1: Implement "Semantic Circuit Breakers" for Gemini Calls
+*   **Concept:** Wrap `ask_gemini` in a circuit breaker that tracks failure rates (timeouts, JSON parse errors, truncation loops). If a specific prompt template consistently fails, the system automatically switches to a "fallback" prompt or triggers a `_rollback()` to a known-stable prompt version.
+*   **Critique:** High maintainability. It addresses the root cause of "stuck" cycles. However, it adds complexity to `sam.py` and requires persistent state for failure counters.
+*   **Feasibility:** High. I already have `bag/semantic_cache.py`.
 
-**Option 2: Schema Registry for `patch_ops`**
-*   **Concept:** Create a formal registry in `bag/` that defines the schema for all patch operations. Use this to validate `apply_patch_operations` inputs before execution.
-*   **Critique:** This directly addresses the "Structured Output Enforcement" market signal. It makes my self-modification logic significantly more resilient to malformed JSON from Gemini.
-*   **Feasibility:** Moderate. Requires modifying `bag/patch_ops.py` and potentially updating the `_parse_gemini_json` utility.
+### Option 2: Integrate "Streaming Materialized Views" for Knowledge Log
+*   **Concept:** Instead of full-file rewrites for `knowledge_log.json`, implement a lightweight append-only log with an indexed "Materialized View" (a separate JSON file) that pre-calculates the next 5 due items.
+*   **Critique:** Improves performance for `phase_ii_spaced_repetition`. It aligns with my recent learning on MVs. However, it introduces potential desync between the log and the view.
+*   **Feasibility:** Moderate. Requires careful handling of file atomicity.
 
-**Selection:** Option 2. It provides immediate, high-leverage protection for my most critical autonomous function (self-modification) and aligns with the "Structured Output Enforcement" trend.
+**Decision:** Option 1 is more critical for long-term autonomy. If my self-modification pipeline is brittle, the system fails. I will prioritize the "Semantic Circuit Breaker" to ensure my self-correction loops are robust.
 
 ---
 
-## Idea: Schema-Validated Patch Registry
-Implement a Pydantic-based schema registry for `patch_ops` to enforce strict validation of all incoming patch operations before they touch the filesystem.
+## Idea: Semantic Circuit Breaker for Gemini Orchestration
 
 ## Why
-My current self-modification relies on `_parse_gemini_json` to extract operations. While it validates basic JSON structure, it does not enforce the *semantic* requirements of the operations (e.g., ensuring `old` is present for a `replace` operation). A schema registry will act as a gatekeeper, preventing invalid patches from reaching the `apply_patch_operations` logic.
+My current `_stitch_gemini` and `_lint_fix_with_gemini` methods are susceptible to infinite loops or cascading failures if a prompt template becomes "poisoned" (e.g., due to model drift or schema changes). A circuit breaker provides a hard stop, preventing wasted tokens and protecting the system state from being corrupted by repeated bad patches.
 
 ## Implementation Steps
-1.  **Define Schema:** Create `bag/schemas/patch.py` using Pydantic to define `PatchOperation` (with discriminated unions for `replace`, `delete`, `insert_after`).
-2.  **Integrate Registry:** Update `bag/patch_ops.py` to import these models.
-3.  **Validate:** Modify `apply_patch_operations` to validate the incoming list of operations against the `PatchOperation` schema before execution.
-4.  **Error Handling:** If validation fails, log the specific schema violation and abort the patch to prevent partial/corrupt state.
+1.  **State Tracking:** Add a `circuit_breaker.json` in `bag/` to track failure counts per `prompt_id`.
+2.  **Decorator:** Create a `@circuit_breaker` decorator in `sam.py` to wrap `ask_gemini` calls.
+3.  **Logic:** If failure count > 3 for a specific prompt, the breaker trips, returning a cached "safe" response or raising a `CircuitOpenError` to trigger a controlled `_rollback()`.
+4.  **Reset:** Implement a manual or cycle-based reset mechanism.
 
 ## Risk
-**Failure Mode:** The schema might be too restrictive, causing valid but slightly unconventional patches to be rejected, leading to "stuck" cycles where I cannot self-correct.
-**Mitigation:** Implement a "Schema-Relaxed" fallback mode that logs a warning but allows the patch if it passes basic structural checks, while flagging the event for manual review in the next cycle.
+**Failure Mode:** The circuit breaker trips prematurely due to transient network issues, blocking legitimate self-repair.
+**Mitigation:** Implement an exponential backoff for the "Open" state and allow a "Force-Reset" flag in `motion.md` for Dot to override.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10. The logic is straightforward, but requires careful integration with existing `ask_gemini` error handling.
