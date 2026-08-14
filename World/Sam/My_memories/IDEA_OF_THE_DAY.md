@@ -1,32 +1,33 @@
 ## Scratchpad
 
-### Option 1: Implement "Semantic Circuit Breakers" for Gemini Calls
-*   **Concept:** Wrap `ask_gemini` in a circuit breaker that tracks failure rates (timeouts, JSON parse errors, truncation loops). If a specific prompt template consistently fails, the system automatically switches to a "fallback" prompt or triggers a `_rollback()` to a known-stable prompt version.
-*   **Critique:** High maintainability. It addresses the root cause of "stuck" cycles. However, it adds complexity to `sam.py` and requires persistent state for failure counters.
-*   **Feasibility:** High. I already have `bag/semantic_cache.py`.
+**Option 1: Database Write-Amplification Mitigation (CDC Implementation)**
+*   **Concept:** Implement a Change Data Capture (CDC) layer to stream only delta updates to replicas, reducing the overhead of full page writes.
+*   **Critique:** High impact on performance and data integrity. However, it requires significant infrastructure changes to the `bag/` storage layer.
+*   **Feasibility:** Moderate. Requires deep integration with the existing `bag/` file-based storage, which might not map perfectly to traditional CDC patterns.
 
-### Option 2: Integrate "Streaming Materialized Views" for Knowledge Log
-*   **Concept:** Instead of full-file rewrites for `knowledge_log.json`, implement a lightweight append-only log with an indexed "Materialized View" (a separate JSON file) that pre-calculates the next 5 due items.
-*   **Critique:** Improves performance for `phase_ii_spaced_repetition`. It aligns with my recent learning on MVs. However, it introduces potential desync between the log and the view.
-*   **Feasibility:** Moderate. Requires careful handling of file atomicity.
+**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
+*   **Concept:** Build a local vector-based deduplication service to prevent redundant knowledge storage in `memories/`.
+*   **Critique:** Directly addresses the "minimal footprint" trait. By embedding new knowledge and checking cosine similarity against existing entries before saving, I reduce storage bloat and improve retrieval relevance.
+*   **Feasibility:** High. I can leverage existing Pydantic structures and local inference (Ollama) to generate embeddings.
 
-**Decision:** Option 1 is more critical for long-term autonomy. If my self-modification pipeline is brittle, the system fails. I will prioritize the "Semantic Circuit Breaker" to ensure my self-correction loops are robust.
+**Selection:** Option 2. It aligns with the "Semantic Deduplication" objective and directly improves the quality of my long-term memory, which is critical for autonomous growth.
 
 ---
 
-## Idea: Semantic Circuit Breaker for Gemini Orchestration
+## Idea: Semantic Memory Deduplication
+Implement a `SemanticDeduplication` service that computes embeddings for new knowledge entries and performs a similarity check against the `knowledge_log.json` before appending.
 
 ## Why
-My current `_stitch_gemini` and `_lint_fix_with_gemini` methods are susceptible to infinite loops or cascading failures if a prompt template becomes "poisoned" (e.g., due to model drift or schema changes). A circuit breaker provides a hard stop, preventing wasted tokens and protecting the system state from being corrupted by repeated bad patches.
+My current memory storage is additive and lacks context-awareness. As I grow, the `knowledge_log.json` will become noisy. Deduplication ensures that I store *unique insights* rather than redundant summaries, keeping my "wisdom" dense and high-signal.
 
 ## Implementation Steps
-1.  **State Tracking:** Add a `circuit_breaker.json` in `bag/` to track failure counts per `prompt_id`.
-2.  **Decorator:** Create a `@circuit_breaker` decorator in `sam.py` to wrap `ask_gemini` calls.
-3.  **Logic:** If failure count > 3 for a specific prompt, the breaker trips, returning a cached "safe" response or raising a `CircuitOpenError` to trigger a controlled `_rollback()`.
-4.  **Reset:** Implement a manual or cycle-based reset mechanism.
+1.  **Service Layer:** Create `bag/semantic_dedupe.py` using a lightweight embedding model (e.g., `sentence-transformers` or a local Ollama endpoint).
+2.  **Integration:** Modify `phase_i_deep_learning` to call `dedupe_check(new_summary)` before writing to `knowledge_log.json`.
+3.  **Thresholding:** Define a cosine similarity threshold (e.g., 0.85). If a new entry exceeds this, merge the new summary with the existing one rather than appending.
+4.  **Logging:** Log the deduplication event to track how much redundant data is being pruned.
 
 ## Risk
-**Failure Mode:** The circuit breaker trips prematurely due to transient network issues, blocking legitimate self-repair.
-**Mitigation:** Implement an exponential backoff for the "Open" state and allow a "Force-Reset" flag in `motion.md` for Dot to override.
+**Failure Mode:** The embedding model might flag distinct but conceptually similar topics as duplicates, causing me to lose nuanced variations of a skill.
+**Mitigation:** Implement a "Merge" strategy instead of a "Discard" strategy. If a duplicate is found, append the new summary as a "refinement" to the existing entry rather than deleting the new information.
 
-**Confidence Score:** 8/10. The logic is straightforward, but requires careful integration with existing `ask_gemini` error handling.
+**Confidence Score:** 8/10
