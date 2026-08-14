@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 324
+    "review_due_cycle": 339
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 324
+    "review_due_cycle": 339
   },
   {
     "cycle": 51,
@@ -1810,5 +1810,11 @@
     "topic": "Understand sharding strategies: range, hash, directory",
     "summary": "### Sharding Strategies: Technical Summary\n\nSharding is the horizontal partitioning of data across multiple nodes to overcome the physical limitations of a single database instance. The choice of strategy dictates the system's performance, scalability, and operational complexity.\n\n**1. Range-Based Sharding**\nData is partitioned based on contiguous ranges of a shard key (e.g., `user_id` 1\u20131000 on Shard A, 1001\u20132000 on Shard B).\n*   **Pros:** Highly efficient for range queries and scans.\n*   **Con",
     "review_due_cycle": 328
+  },
+  {
+    "cycle": 325,
+    "topic": "Study consistent hashing for minimal resharding",
+    "summary": "### Technical Summary: Consistent Hashing for Minimal Resharding\n\nConsistent hashing is a distributed systems technique designed to minimize data movement when the number of nodes in a cluster changes. In a standard modulo-based hashing scheme (`hash(key) % n`), adding or removing a node changes the mapping for nearly all keys, triggering a massive, expensive rebalance. Consistent hashing mitigates this by mapping both nodes and keys onto a logical circular address space (the \"ring\").\n\n#### Core",
+    "review_due_cycle": 329
   }
 ]
