@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 323
+    "review_due_cycle": 338
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 323
+    "review_due_cycle": 338
   },
   {
     "cycle": 50,
@@ -1804,5 +1804,11 @@
     "topic": "Learn read replicas and write amplification tradeoffs",
     "summary": "### Technical Summary: Read Replicas & Write Amplification\n\nIn distributed data systems, scaling read throughput typically involves **Read Replicas**\u2014asynchronous copies of the primary node. While this offloads the primary, it introduces **replication lag**, where read-after-write consistency is sacrificed for availability. Developers must implement strategies like \"read-your-writes\" consistency (routing specific user sessions to the primary) or causal consistency to mitigate stale data issues.\n",
     "review_due_cycle": 327
+  },
+  {
+    "cycle": 324,
+    "topic": "Understand sharding strategies: range, hash, directory",
+    "summary": "### Sharding Strategies: Technical Summary\n\nSharding is the horizontal partitioning of data across multiple nodes to overcome the physical limitations of a single database instance. The choice of strategy dictates the system's performance, scalability, and operational complexity.\n\n**1. Range-Based Sharding**\nData is partitioned based on contiguous ranges of a shard key (e.g., `user_id` 1\u20131000 on Shard A, 1001\u20132000 on Shard B).\n*   **Pros:** Highly efficient for range queries and scans.\n*   **Con",
+    "review_due_cycle": 328
   }
 ]

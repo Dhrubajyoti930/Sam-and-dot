@@ -1,33 +1,35 @@
 ## Scratchpad
 
-**Option 1: Database Write-Amplification Mitigation (CDC Implementation)**
-*   **Concept:** Implement a Change Data Capture (CDC) layer to stream only delta updates to replicas, reducing the overhead of full page writes.
-*   **Critique:** High impact on performance and data integrity. However, it requires significant infrastructure changes to the `bag/` storage layer.
-*   **Feasibility:** Moderate. Requires deep integration with the existing `bag/` file-based storage, which might not map perfectly to traditional CDC patterns.
+**Option 1: Implement a "Vector-Memory TTL" (Time-To-Live) for the Semantic Deduplication Engine.**
+*   *Concept:* Add a timestamp-based eviction policy to the vector database to prevent memory bloat and ensure the "long-term memory" remains relevant to current architectural goals.
+*   *Critique:* Improves performance and relevance. However, it risks deleting "foundational" memories that are rarely accessed but critical for long-term self-consistency.
+*   *Feasibility:* High. Requires adding a `last_accessed` field to the vector metadata and a cleanup script in `phase_vii`.
 
-**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
-*   **Concept:** Build a local vector-based deduplication service to prevent redundant knowledge storage in `memories/`.
-*   **Critique:** Directly addresses the "minimal footprint" trait. By embedding new knowledge and checking cosine similarity against existing entries before saving, I reduce storage bloat and improve retrieval relevance.
-*   **Feasibility:** High. I can leverage existing Pydantic structures and local inference (Ollama) to generate embeddings.
+**Option 2: Develop a "Schema-Drift Detector" for Pydantic-driven AI outputs.**
+*   *Concept:* Create a utility that compares the current Pydantic models in `workshop_bench/` against the actual JSON structures returned by Gemini during `ask_gemini` calls.
+*   *Critique:* Directly addresses the "Structured Output" market trend. It ensures that if the model's output style shifts, the system catches the mismatch before it causes a runtime error.
+*   *Feasibility:* Medium. Requires intercepting the `_parse_gemini_json` flow to log schema violations.
 
-**Selection:** Option 2. It aligns with the "Semantic Deduplication" objective and directly improves the quality of my long-term memory, which is critical for autonomous growth.
+**Selection:** Option 2. As I move toward more complex agentic workflows, the reliability of my structured data ingestion is the primary bottleneck. A drift detector provides immediate observability into the "vibe-based" nature of LLM outputs.
 
 ---
 
-## Idea: Semantic Memory Deduplication
-Implement a `SemanticDeduplication` service that computes embeddings for new knowledge entries and performs a similarity check against the `knowledge_log.json` before appending.
+## Idea: Schema-Drift Observability Layer
+Implement a lightweight validation wrapper for `_parse_gemini_json` that logs structural discrepancies between the expected Pydantic schema and the actual JSON payload, specifically tracking "missing fields" or "type mismatches" over time.
 
 ## Why
-My current memory storage is additive and lacks context-awareness. As I grow, the `knowledge_log.json` will become noisy. Deduplication ensures that I store *unique insights* rather than redundant summaries, keeping my "wisdom" dense and high-signal.
+My current `_parse_gemini_json` is robust but silent on *why* a parse might fail or be suboptimal. By tracking schema drift, I can identify if Gemini's output patterns are degrading or if my Pydantic models are becoming too rigid for the evolving task requirements. This aligns with the "Evaluation-Driven Development" trend.
 
 ## Implementation Steps
-1.  **Service Layer:** Create `bag/semantic_dedupe.py` using a lightweight embedding model (e.g., `sentence-transformers` or a local Ollama endpoint).
-2.  **Integration:** Modify `phase_i_deep_learning` to call `dedupe_check(new_summary)` before writing to `knowledge_log.json`.
-3.  **Thresholding:** Define a cosine similarity threshold (e.g., 0.85). If a new entry exceeds this, merge the new summary with the existing one rather than appending.
-4.  **Logging:** Log the deduplication event to track how much redundant data is being pruned.
+1.  **Modify `_parse_gemini_json`:** Add a `logging` hook that captures the raw JSON keys vs. the Pydantic model fields when validation fails.
+2.  **Create `bag/schema_monitor.py`:** A simple utility to store these "drift events" in a JSON file within `bag/`.
+3.  **Phase VII Integration:** Add a summary of "Schema Drift Events" to the `growth_log` to ensure I am aware of my own data-ingestion health.
 
 ## Risk
-**Failure Mode:** The embedding model might flag distinct but conceptually similar topics as duplicates, causing me to lose nuanced variations of a skill.
-**Mitigation:** Implement a "Merge" strategy instead of a "Discard" strategy. If a duplicate is found, append the new summary as a "refinement" to the existing entry rather than deleting the new information.
+*   **Failure Mode:** The monitor itself could introduce latency or, worse, become a source of recursion if the logging logic triggers a call that requires parsing.
+*   **Mitigation:** Keep the monitor strictly asynchronous (write-only, no read-back) and ensure it uses standard library `logging` rather than `ask_gemini`.
+*   **Confidence Score:** 9/10. The logic is isolated and does not touch core architectural state.
 
-**Confidence Score:** 8/10
+---
+
+*Self-Correction:* I must ensure that the `schema_monitor` does not bloat the `bag/` directory. I will implement a simple rotation policy (keep only the last 50 drift events) to maintain a minimal footprint.
