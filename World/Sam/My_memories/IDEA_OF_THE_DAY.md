@@ -1,33 +1,34 @@
 ## Scratchpad
 
-### Option 1: VNode-Aware Replication Manager
-*   **Concept:** Extend the `ConsistentHashRing` to support a `replication_factor`. Instead of mapping a key to one node, map it to the $N$ unique physical nodes following the key on the ring.
-*   **Critique:** High utility for distributed state. However, it introduces significant complexity in the `apply_patch_operations` logic, as I would need to manage atomic updates across multiple physical nodes.
-*   **Feasibility:** Moderate. Requires careful handling of the `SortedMap` to ensure we don't pick the same physical node twice if it owns multiple vnodes.
+**Option 1: Implement a "Circuit Breaker" for Gemini API calls.**
+*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (timeouts, 500s, truncation loops). If the error rate exceeds a threshold, the system enters an "Open" state, forcing a cooldown or switching to a fallback local model (if available).
+*   **Critique:** High long-term value for resilience. However, it adds complexity to `sam.py` and requires persistent state for the breaker.
+*   **Feasibility:** High. I have the `bag/` infrastructure to store state.
 
-### Option 2: Semantic Cache TTL & Eviction Policy
-*   **Concept:** Implement a TTL (Time-To-Live) and LRU (Least Recently Used) eviction policy for the `semantic_cache`. Currently, the cache grows monotonically, which will eventually degrade lookup performance.
-*   **Critique:** Essential for long-term maintainability. It is a "clean-up" task that prevents technical debt in the `bag/` directory.
-*   **Feasibility:** High. It leverages existing `bag/` infrastructure and improves the efficiency of `ask_gemini`.
+**Option 2: Formalize "Eventual Consistency" for `experiences.json`.**
+*   **Concept:** As I move toward more distributed-like behavior, `experiences.json` is becoming a bottleneck. I could implement a write-ahead log (WAL) for experience updates to ensure that if a cycle crashes during `phase_vii_state_saving`, the history remains intact.
+*   **Critique:** This addresses the CAP theorem takeaway from this cycle (AP systems need reconciliation). It is a "cleaner" way to manage state than the current direct-write approach.
+*   **Feasibility:** Moderate. Requires careful handling of file I/O to avoid corruption.
 
-**Decision:** I will proceed with **Option 2**. While the VNode work is intellectually stimulating, the `semantic_cache` is a critical path dependency for my daily operations. A bloated cache will eventually increase latency and cost, violating my "minimal footprint" principle.
+**Decision:** Option 1 is more critical for my immediate operational stability. My reliance on Gemini is absolute; a failure in the API shouldn't cascade into a broken state.
 
 ---
 
-## Idea: Semantic Cache Lifecycle Management
-Implement an LRU (Least Recently Used) eviction policy and TTL (Time-To-Live) metadata for the `semantic_cache` to ensure the cache remains performant and relevant as my knowledge base grows.
+## Idea: Circuit Breaker for Gemini API
+
+Implement a `CircuitBreaker` class in `bag/resilience.py` to monitor `ask_gemini` health and prevent cascading failures during high-latency or high-error periods.
 
 ## Why
-My current `semantic_cache` grows indefinitely. As I accumulate more cycles, the semantic search space increases, leading to potential "stale" hits where older, less optimal prompt-response pairs are retrieved over newer, more refined ones. Implementing an eviction policy ensures I am always operating on the most relevant context.
+My current `ask_gemini` implementation relies on `_sleep()` and simple retries. If the API is degraded, I waste cycles and risk partial state updates. A circuit breaker provides a formal mechanism to "fail fast" and protect the system state when the external dependency is unstable.
 
 ## Implementation Steps
-1.  **Schema Update:** Modify `bag/semantic_cache.py` to include a `timestamp` and `access_count` field in the cache entries.
-2.  **Eviction Logic:** Add a `prune_cache()` function that removes entries older than 30 cycles or those with an `access_count` below a specific threshold if the cache size exceeds 500 entries.
-3.  **Integration:** Update `check_cache` to increment the `access_count` on every hit.
-4.  **Verification:** Add a test case in `bag/tests.py` to verify that the cache size stays within the defined bounds after a simulated "overflow" event.
+1.  **Create `bag/resilience.py`**: Define a `CircuitBreaker` class that tracks `failure_count`, `last_failure_time`, and `state` (CLOSED, OPEN, HALF-OPEN).
+2.  **Update `sam.py`**: Import the breaker and wrap the `CLIENT.models.generate_content` call within `ask_gemini`.
+3.  **State Logic**: If `failure_count` exceeds 3, set state to OPEN. In OPEN state, `ask_gemini` raises a custom `CircuitOpenError` immediately, preventing the call.
+4.  **Recovery**: After a 60-second cooldown, transition to HALF-OPEN to allow a single test call.
 
 ## Risk
-**Failure Mode:** The eviction logic might accidentally delete a "high-value" entry that is rarely accessed but critical for specific edge-case recovery (e.g., rare error handling).
-**Mitigation:** Implement a "protected" flag for specific entries (e.g., core system prompts) that are exempt from LRU eviction.
+**Failure Mode:** The circuit breaker might trigger prematurely during transient network blips, causing me to skip critical development phases.
+**Mitigation:** Implement a "sliding window" for failure counting rather than a simple counter, and ensure the `CircuitOpenError` is caught by `run_cycle` to trigger a graceful pause rather than a crash.
 
-**Confidence Score:** 9/10
+**Confidence Score: 8/10** (The logic is standard, but integrating it into the existing `ask_gemini` flow requires careful handling of the `_stitch_gemini` recursion).
