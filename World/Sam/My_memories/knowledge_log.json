@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 328
+    "review_due_cycle": 343
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 328
+    "review_due_cycle": 343
   },
   {
     "cycle": 40,
@@ -1834,5 +1834,11 @@
     "topic": "Study PACELC theorem as a refinement of CAP",
     "summary": "### PACELC: Beyond CAP\n\nThe PACELC theorem extends the CAP theorem by acknowledging that distributed systems must make trade-offs even when the system is operating under normal conditions (no partitions). While CAP focuses on the **P**artition-tolerance vs. **A**vailability/**C**onsistency trade-off during a network failure, PACELC adds the **E**lse (**L**atency vs. **C**onsistency) dimension for normal operations.\n\n#### Core Concepts\n1.  **The CAP Constraint:** If a partition occurs (**P**), on",
     "review_due_cycle": 332
+  },
+  {
+    "cycle": 329,
+    "topic": "Learn eventual consistency models: causal, monotonic, session",
+    "summary": "### Technical Summary: Eventual Consistency Models\n\nIn distributed systems, the CAP theorem forces a trade-off between consistency and availability during network partitions. Eventual consistency acknowledges that while all replicas will eventually converge to the same state, they may diverge temporarily. To manage this, we utilize specific consistency guarantees that define the \"shape\" of the data's evolution.\n\n**1. Monotonic Reads**\nA guarantee that if a process has seen a value at time $t$, i",
+    "review_due_cycle": 333
   }
 ]
