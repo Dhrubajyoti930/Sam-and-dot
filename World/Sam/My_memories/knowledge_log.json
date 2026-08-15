@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 327
+    "review_due_cycle": 342
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 327
+    "review_due_cycle": 342
   },
   {
     "cycle": 39,
@@ -1828,5 +1828,11 @@
     "topic": "Understand CAP theorem with real examples",
     "summary": "### CAP Theorem: A Technical Summary\n\nThe CAP theorem states that a distributed system can only simultaneously provide two of three guarantees: **Consistency (C)**, **Availability (A)**, and **Partition Tolerance (P)**. In modern distributed systems, network partitions are inevitable; therefore, the choice is effectively between **CP** (Consistency/Partition Tolerance) and **AP** (Availability/Partition Tolerance).\n\n#### Core Concepts\n*   **Consistency:** Every read receives the most recent writ",
     "review_due_cycle": 331
+  },
+  {
+    "cycle": 328,
+    "topic": "Study PACELC theorem as a refinement of CAP",
+    "summary": "### PACELC: Beyond CAP\n\nThe PACELC theorem extends the CAP theorem by acknowledging that distributed systems must make trade-offs even when the system is operating under normal conditions (no partitions). While CAP focuses on the **P**artition-tolerance vs. **A**vailability/**C**onsistency trade-off during a network failure, PACELC adds the **E**lse (**L**atency vs. **C**onsistency) dimension for normal operations.\n\n#### Core Concepts\n1.  **The CAP Constraint:** If a partition occurs (**P**), on",
+    "review_due_cycle": 332
   }
 ]
