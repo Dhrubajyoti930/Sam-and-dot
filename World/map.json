@@ -28,10 +28,10 @@
     "Sam/bag/governance.py",
     "Sam/workshop_bench/infrastructure/distributed/event_store.py",
     "Sam/workshop_bench/infrastructure/distributed/event_bus.py",
-    "Sam/workshop_bench/infrastructure/resilience/state_machine.py",
+    "Sam/workshop_bench/infrastructure/distributed/state_machine.py",
     "Sam/workshop_bench/domain/evaluator.py",
     "Sam/workshop_bench/orchestration/llm/inference/semantic_cache.py",
-    "Sam/workshop_bench/algorithms/optimization/quantization.py",
+    "Sam/workshop_bench/algorithms/compression/quantization.py",
     "Sam/workshop_bench/algorithms/sorting/merge_sort.py",
     "Sam/workshop_bench/algorithms/spatial/kd_tree.py",
     "Sam/Gemini_note_pad/__init__.py",
@@ -43,7 +43,7 @@
     "Sam/chest/rollback_registry/sam_20260814T112340Z.py",
     "Sam/chest/rollback_registry/sam_20260814T042541Z.py",
     "Sam/chest/rollback_registry/sam_20260814T112231Z.py",
-    "Sam/chest/rollback_registry/sam_20260812T112506Z.py",
+    "Sam/chest/rollback_registry/sam_20260815T031415Z.py",
     "Sam/chest/rollback_registry/sam_20260813T085215Z.py",
     "Sam/chest/rollback_registry/sam_20260813T085139Z.py",
     "Sam/chest/rollback_registry/sam_20260812T172915Z.py",
@@ -55,8 +55,8 @@
     "Sam/chest/rollback_registry/sam_20260814T172802Z.py",
     "Sam/chest/rollback_registry/sam_20260814T042427Z.py",
     "Sam/chest/rollback_registry/sam_20260813T042953Z.py",
-    "Sam/chest/rollback_registry/sam_20260812T112542Z.py",
-    "Sam/chest/rollback_registry/sam_20260813T042804Z.py"
+    "Sam/chest/rollback_registry/sam_20260813T042804Z.py",
+    "Sam/chest/rollback_registry/sam_20260815T031340Z.py"
   ],
   "tests": [
     "Dot/tests/tests.py"

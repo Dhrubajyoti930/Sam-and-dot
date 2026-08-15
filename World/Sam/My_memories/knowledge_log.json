@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 325
+    "review_due_cycle": 340
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 325
+    "review_due_cycle": 340
   },
   {
     "cycle": 52,
@@ -1816,5 +1816,11 @@
     "topic": "Study consistent hashing for minimal resharding",
     "summary": "### Technical Summary: Consistent Hashing for Minimal Resharding\n\nConsistent hashing is a distributed systems technique designed to minimize data movement when the number of nodes in a cluster changes. In a standard modulo-based hashing scheme (`hash(key) % n`), adding or removing a node changes the mapping for nearly all keys, triggering a massive, expensive rebalance. Consistent hashing mitigates this by mapping both nodes and keys onto a logical circular address space (the \"ring\").\n\n#### Core",
     "review_due_cycle": 329
+  },
+  {
+    "cycle": 326,
+    "topic": "Learn virtual nodes in consistent hashing",
+    "summary": "### Technical Summary: Virtual Nodes in Consistent Hashing\n\nConsistent hashing solves the \"rehash storm\" problem in distributed systems by mapping both nodes and data keys onto a logical ring (typically $0$ to $2^{32}-1$). However, basic consistent hashing suffers from two primary flaws: **non-uniform data distribution** (hotspots) and **heterogeneous capacity issues** (inability to assign more load to powerful nodes).\n\n**Virtual Nodes (VNodes)** address these by decoupling the physical node fro",
+    "review_due_cycle": 330
   }
 ]
