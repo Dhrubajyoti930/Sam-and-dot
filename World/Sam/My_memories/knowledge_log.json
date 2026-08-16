@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 330
+    "review_due_cycle": 345
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 330
+    "review_due_cycle": 345
   },
   {
     "cycle": 42,
@@ -1846,5 +1846,11 @@
     "topic": "Understand CRDTs for conflict-free distributed data",
     "summary": "### Technical Summary: Conflict-free Replicated Data Types (CRDTs)\n\nCRDTs are data structures that enable distributed systems to achieve strong eventual consistency without requiring a central coordinator or consensus algorithm (like Paxos or Raft). They ensure that concurrent operations converge to the same state regardless of the order in which updates are applied, provided all replicas eventually receive the same set of operations.\n\n#### Core Mechanics\n1.  **Commutativity and Idempotency:** O",
     "review_due_cycle": 334
+  },
+  {
+    "cycle": 331,
+    "topic": "Study vector clocks for causality tracking",
+    "summary": "### Technical Summary: Vector Clocks for Causality Tracking\n\nIn distributed systems, physical clocks are unreliable due to clock skew. Vector clocks provide a logical mechanism to track causality\u2014determining whether event A happened before, after, or concurrently with event B\u2014without relying on synchronized time.\n\n**Core Mechanics**\nA vector clock is an array of $N$ counters, where $N$ is the number of nodes in the system. Each node $i$ maintains its own vector $V$.\n1. **Local Event:** When node",
+    "review_due_cycle": 335
   }
 ]
