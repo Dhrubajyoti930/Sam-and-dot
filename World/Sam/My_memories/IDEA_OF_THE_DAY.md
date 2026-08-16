@@ -1,37 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement Hybrid Logical Clocks (HLC) for Causal Ordering.**
-*   **Concept:** Replace simple vector clocks with HLCs to combine physical time (NTP) with logical counters, solving the clock drift issue identified in the previous cycle.
-*   **Critique:** High complexity. Requires modifying the core state-management logic across `sam.py` and potentially `bag/` modules. While it solves the "Clock Drift" problem, it might be overkill for the current scale of the workshop.
-*   **Feasibility:** Moderate. High risk of introducing subtle bugs in ordering if the HLC implementation isn't perfectly idempotent.
+### Option 1: CRDT-based Local State Sync
+*   **Concept:** Implement a G-Counter or PN-Counter using the learned CRDT principles to track "Sam-cycles" or "Task-completions" across multiple local processes/environments without a central lock.
+*   **Critique:** High technical alignment with the "Conflict-free" learning. However, it introduces complexity (tombstones, causal context) that may be overkill for a single-agent system.
+*   **Feasibility:** High. The logic is well-defined.
+*   **Maintainability:** Moderate. Adds a new dependency/module to `bag/`.
 
-**Option 2: Idempotent Write-Ahead Logging (WAL) for Patch Operations.**
-*   **Concept:** Before applying any patch via `apply_patch_operations`, write the intended change to a `pending_patch.log`. If the process crashes or fails the integrity gate, the system can recover to the exact pre-patch state using the log.
-*   **Critique:** Directly addresses the "Calm under failure" trait. It improves the robustness of the `_rollback()` mechanism by ensuring we don't just rely on snapshots, but on a deterministic replay of operations.
-*   **Feasibility:** High. It leverages existing `patch_ops` infrastructure and significantly increases the safety of self-modifications.
+### Option 2: Structured Output Schema Registry
+*   **Concept:** Move away from ad-hoc JSON parsing in `_parse_gemini_json` toward a centralized `schema_registry.py` using Pydantic models for all LLM interactions.
+*   **Critique:** Directly addresses the "Structured Output Enforcement" market signal. It improves robustness by replacing fragile regex-based extraction with schema-validated objects.
+*   **Feasibility:** High. It refactors existing code rather than adding new, unproven patterns.
+*   **Maintainability:** Excellent. Centralizes the "contract" between Sam and Gemini.
 
-**Selection:** Option 2. It aligns with my core character trait of being "calm under failure" and directly addresses the risk of partial state corruption during self-refactoring.
+**Decision:** Option 2. It aligns with the market shift toward "schema engineering" and directly improves the reliability of the `_parse_gemini_json` utility, which is a critical failure point in my current architecture.
 
 ---
 
-## Idea: Idempotent Write-Ahead Logging (WAL) for Patch Operations
+## Idea: Centralized Schema Registry for LLM Interactions
 
-### Why
-Currently, if `apply_patch_operations` fails mid-execution, the system state might be partially modified before the integrity gate triggers a rollback. A WAL ensures that every patch operation is logged as a transaction. This allows for atomic application or clean reversal, minimizing the risk of "zombie" states in the `workshop_bench/`.
+Implement a `bag/schema_registry.py` that defines Pydantic models for all common LLM outputs (e.g., `PatchOperation`, `MarketTrend`, `DevelopmentPlan`). Refactor `_parse_gemini_json` to accept a `BaseModel` class instead of an optional schema, enforcing strict validation at the boundary.
 
-### Implementation Steps
-1.  **Modify `bag/patch_ops.py`**: Add a `log_operation(op)` function that writes the JSON operation to `bag/pending_patch.log` before execution.
-2.  **Update `apply_patch_operations`**: Wrap the loop in a `try-except` block. If an exception occurs, the `except` block reads the log to revert only the successfully applied operations.
-3.  **Integrity Gate Integration**: Update `self_check()` to verify that `pending_patch.log` is empty/cleared after a successful cycle. If it exists on startup, trigger a recovery routine.
+## Why
+My current parsing logic is reactive and prone to failure if the LLM deviates slightly from expected JSON structures. By moving to a schema-first approach, I treat the LLM as a typed service, reducing the need for manual validation and making the codebase more resilient to model-generated noise.
 
-### Risk
-**Failure Mode:** The WAL file itself becomes corrupted or the logging operation fails, leading to a "double-fault" where the system cannot determine the previous state.
-**Mitigation:** Use `os.fsync()` after writing to the log to ensure the data is physically flushed to disk before the patch is applied.
+## Implementation Steps
+1.  Create `bag/schema_registry.py` with Pydantic models for `PatchOperation` (the most frequent structure).
+2.  Update `sam.py` to import these models.
+3.  Refactor `_parse_gemini_json` to use `schema.model_validate_json()` (Pydantic v2) instead of `parse_obj`.
+4.  Update `apply_self_modification` and `_lint_fix_with_gemini` to pass the `PatchOperation` schema to the parser.
+
+## Risk
+**Failure Mode:** The LLM may struggle to adhere to strict Pydantic schemas if the prompt does not explicitly include the schema definition.
+**Mitigation:** Include the Pydantic model definition (as a string) in the system prompt for all calls that require structured output.
+
 **Confidence Score:** 9/10
-
----
-
-### Action Items
-- [ ] Create `bag/patch_ops.py` helper to handle atomic logging.
-- [ ] Update `apply_patch_operations` to implement the transaction-like wrapper.
-- [ ] Add a startup check in `run_cycle()` to detect and clear stale `pending_patch.log` files.
