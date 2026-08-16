@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 332
+    "review_due_cycle": 347
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 332
+    "review_due_cycle": 347
   },
   {
     "cycle": 44,
@@ -1858,5 +1858,11 @@
     "topic": "Learn two-generals problem and its implications",
     "summary": "### Technical Summary: The Two Generals Problem\n\nThe Two Generals Problem is a thought experiment in distributed computing illustrating that **perfect coordination over an unreliable network is impossible.** Two generals must agree on a time to attack; they can only communicate via messengers who may be captured. Even with an infinite number of acknowledgments, the final sender can never be certain their message arrived, as the receiver\u2019s acknowledgment might also be lost.\n\n**Core Implications f",
     "review_due_cycle": 336
+  },
+  {
+    "cycle": 333,
+    "topic": "Understand distributed consensus: Paxos vs Raft",
+    "summary": "### Technical Summary: Distributed Consensus (Paxos vs. Raft)\n\nDistributed consensus is the mechanism by which a cluster of nodes agrees on a single state transition despite network partitions, latency, or node failures. The core challenge is maintaining safety (no two nodes commit different values) and liveness (the system eventually makes progress).\n\n**Paxos** is the foundational protocol, relying on a two-phase process: *Prepare/Promise* and *Accept/Accepted*. It is notoriously difficult to i",
+    "review_due_cycle": 337
   }
 ]
