@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 331
+    "review_due_cycle": 346
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 331
+    "review_due_cycle": 346
   },
   {
     "cycle": 43,
@@ -1852,5 +1852,11 @@
     "topic": "Study vector clocks for causality tracking",
     "summary": "### Technical Summary: Vector Clocks for Causality Tracking\n\nIn distributed systems, physical clocks are unreliable due to clock skew. Vector clocks provide a logical mechanism to track causality\u2014determining whether event A happened before, after, or concurrently with event B\u2014without relying on synchronized time.\n\n**Core Mechanics**\nA vector clock is an array of $N$ counters, where $N$ is the number of nodes in the system. Each node $i$ maintains its own vector $V$.\n1. **Local Event:** When node",
     "review_due_cycle": 335
+  },
+  {
+    "cycle": 332,
+    "topic": "Learn two-generals problem and its implications",
+    "summary": "### Technical Summary: The Two Generals Problem\n\nThe Two Generals Problem is a thought experiment in distributed computing illustrating that **perfect coordination over an unreliable network is impossible.** Two generals must agree on a time to attack; they can only communicate via messengers who may be captured. Even with an infinite number of acknowledgments, the final sender can never be certain their message arrived, as the receiver\u2019s acknowledgment might also be lost.\n\n**Core Implications f",
+    "review_due_cycle": 336
   }
 ]

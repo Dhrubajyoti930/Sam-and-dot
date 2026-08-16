@@ -1,36 +1,33 @@
 ## Scratchpad
 
-**Option 1: Vector Clock Implementation**
-*   **Concept:** Implement a `VectorClock` class in `bag/` to track causality in the `workshop_bench` state transitions.
-*   **Critique:** High alignment with the "Skill learned this cycle" section. It provides a concrete mechanism for tracking state evolution.
-*   **Trade-offs:** Increases complexity of state management. Requires careful integration with `snapshot_sam` to ensure causality metadata persists across rollbacks.
-*   **Feasibility:** High. The logic is well-defined.
+**Option 1: Implement an Idempotency Key Middleware for `ask_gemini`**
+*   **Concept:** Wrap all external API calls in a decorator that checks a local `request_registry.json` for a hash of the prompt + parameters. If a match exists, return the cached result.
+*   **Critique:** High utility for cost and RPM management. However, it risks serving stale data if the "context" (e.g., `goals.json` or `WHO_I_AM.md`) has changed.
+*   **Feasibility:** High. I already have `semantic_cache.py`. This would be an extension of that logic.
 
-**Option 2: Tombstone-Aware Deletion Logic**
-*   **Concept:** Extend the `patch_ops` module to handle deletions by inserting "tombstone" markers instead of immediate file removal, allowing for eventual consistency in distributed environments.
-*   **Critique:** Addresses the "Self-Correction" weakness identified in the skill summary.
-*   **Trade-offs:** Requires a significant refactor of `apply_patch_operations`. Might be overkill for the current single-node architecture.
-*   **Feasibility:** Medium. Risk of "resurrection" bugs if the tombstone logic is flawed.
+**Option 2: Formalize "Circuit Breaker" for `_stitch_gemini`**
+*   **Concept:** If `_stitch_gemini` fails to get a valid continuation after 2 attempts, trip a circuit breaker that forces the system to pause all non-critical operations and log a "Degraded State" alert to Dot.
+*   **Critique:** Directly addresses the "Two Generals" problem by acknowledging that communication is unreliable. It prevents cascading failures in the patch-application pipeline.
+*   **Feasibility:** Moderate. Requires modifying `_stitch_gemini` and adding a state-check in `run_cycle`.
 
-**Selection:** Option 1. It is a foundational step that enables more complex distributed patterns (like Option 2) later without introducing immediate architectural instability.
+**Decision:** Option 2 is more aligned with my recent learning on the Two Generals Problem. It moves me from "hoping for a response" to "managing the failure of the response."
 
 ---
 
-## Idea: Causality-Tracking Vector Clock Module
-
-Implement a `VectorClock` utility in `bag/causality.py` that provides component-wise comparison and increment logic, enabling the system to track the "happened-before" relationship between state-modifying operations.
+## Idea
+**Implementation of a "Communication Circuit Breaker" for Gemini API interactions.**
 
 ## Why
-As I move toward more complex agentic workflows, tracking the order of operations—especially when multiple patches or external inputs are involved—is critical. Vector clocks provide a robust, decentralized way to ensure that my internal state transitions are logically ordered, preventing race conditions during self-modification cycles.
+My current `_stitch_gemini` and `ask_gemini` functions assume that retries will eventually succeed. The Two Generals Problem teaches me that in an unreliable network, I cannot guarantee consensus. By implementing a circuit breaker, I stop wasting cycles on doomed requests and explicitly signal to Dot that the system is in a "Degraded" state, allowing for manual intervention or automated recovery.
 
 ## Implementation Steps
-1.  Create `bag/causality.py` with a `VectorClock` class.
-2.  Implement `increment(node_id)`, `merge(other_vector)`, and `compare(other_vector)` methods.
-3.  Add a `to_dict()` and `from_dict()` method for persistence in `experiences.json` or a dedicated state file.
-4.  Integrate a `current_clock` instance into `run_cycle()` to tag each cycle's state snapshot with a logical timestamp.
+1.  **Modify `sam.py`:** Add a `CIRCUIT_STATE` variable (default: `CLOSED`).
+2.  **Update `ask_gemini`:** If `_stitch_gemini` fails after `max_continuations`, set `CIRCUIT_STATE = 'OPEN'`.
+3.  **Gatekeeper:** Add a check at the start of `run_cycle`. If `CIRCUIT_STATE == 'OPEN'`, skip non-essential tasks and trigger an `_alert_dot` with a diagnostic report.
+4.  **Recovery:** Implement a simple "Half-Open" state where the next cycle attempts one "ping" request to Gemini to see if the network/API has recovered.
 
 ## Risk
-**Failure Mode:** The "Clock Drift" or "Vector Explosion" problem. If I add too many nodes (or logical components) to the vector, the metadata size will grow, potentially bloating the `goals.json` or state files.
-**Mitigation:** Implement a pruning mechanism that periodically resets the vector or uses Dotted Version Vectors if the size exceeds a predefined threshold (e.g., 10 nodes).
+**Failure Mode:** The circuit breaker trips due to a transient network blip, causing the system to halt unnecessarily.
+**Mitigation:** Implement a "Cooldown" period (e.g., 3 cycles) before the circuit transitions from `OPEN` to `HALF-OPEN`. Ensure that `self_check` and `behaviour_check` remain functional even if the circuit is `OPEN`.
 
-**Confidence Score:** 9/10 (The logic is mathematically sound and well-documented in distributed systems literature).
+**Confidence Score:** 8/10. The logic is sound, but I must ensure the state persists across cycles (e.g., in `bag/status.json`).
