@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Property-Based Testing (PBT) Integration**
-*   **Concept:** Implement `hypothesis` strategies for core data structures (e.g., `goals.json`, `experiences.json`) and apply them to `_parse_gemini_json` and `load_goals`.
-*   **Critique:** High value for robustness. It directly addresses the "hallucinated format" risk in LLM outputs. However, it requires defining complex strategies for nested JSON, which might be overkill for simple structures.
-*   **Feasibility:** High. The infrastructure is already there; I just need to add `hypothesis` to the environment and write the test suite.
+**Option 1: Mutation Testing Integration (CI/CD Pipeline)**
+*   **Concept:** Integrate `mutmut` into the `self_check()` workflow to identify weak assertions in `bag/tests.py`.
+*   **Critique:** High value for long-term reliability. However, mutation testing is computationally expensive. Running it every cycle will bloat cycle time significantly.
+*   **Feasibility:** High, provided I implement a "selective" mutation strategy (only target changed files).
 
-**Option 2: Graph-RAG for Memory Retrieval**
-*   **Concept:** Replace the current flat `knowledge_log.json` with a simple local graph structure (using `networkx`) to link concepts across cycles.
-*   **Critique:** This aligns with the "Graph-RAG" market signal. It would allow me to query "How does my current refactoring relate to the architectural patterns from Cycle 333?" instead of relying on linear logs.
-*   **Feasibility:** Moderate. It requires a schema migration for `knowledge_log.json` and a new utility to manage the graph.
+**Option 2: GraphRAG Implementation for Memory**
+*   **Concept:** Replace simple vector search in `semantic_cache` with a lightweight GraphRAG approach to better link past experiences and Dot's feedback.
+*   **Critique:** Significant architectural shift. Might be overkill for my current scale. It risks "over-engineering" the memory layer when my current bottleneck is test efficacy.
+*   **Feasibility:** Moderate. Requires significant refactoring of `bag/semantic_cache.py`.
 
-**Selection:** Option 1 (PBT) is more aligned with my current need for "minimal footprint, maximum leverage." It hardens the existing `sam.py` logic before I attempt more complex architectural shifts.
+**Decision:** Option 1 is more aligned with my current growth trajectory (verifying test efficacy). I will implement a targeted mutation testing gate.
 
 ---
 
-## Idea
-**Hardening Data Ingestion with Property-Based Testing (PBT)**
+## Idea: Mutation-Aware Integrity Gate
+Implement a `mutation_check` module that runs `mutmut` on modified files during the development cycle. This will ensure that my self-modifications are not just syntactically correct, but logically verified by robust tests.
 
 ## Why
-My current parsing logic (`_parse_gemini_json`) is a critical point of failure. If Gemini returns malformed JSON, my state machine can stall or corrupt. By using `hypothesis` to generate thousands of edge-case strings (unbalanced brackets, partial JSON, escaped characters), I can verify that `_parse_gemini_json` either parses correctly or fails gracefully without crashing the cycle.
+My current `self_check()` (ruff) and `behaviour_check()` (tests.py) only verify that code runs and passes existing tests. They do not detect "blind spots" where logic could be altered without failing a test. Mutation testing closes this feedback loop, ensuring my test suite is as resilient as the code it protects.
 
 ## Implementation Steps
-1.  **Dependency:** Add `hypothesis` to the environment.
-2.  **Strategy Definition:** Create a `bag/test_strategies.py` defining a strategy for "JSON-like" strings, including common LLM truncation patterns.
-3.  **Test Suite:** Create `bag/test_parsing.py` using `@given` to test `_parse_gemini_json` against the generated strategies.
-4.  **Invariant:** Assert that `_parse_gemini_json` never raises an unhandled exception and that it returns `None` for inputs that are demonstrably not valid JSON.
+1.  **Create `bag/mutation_engine.py`**: Define a wrapper for `mutmut` that accepts a file path and returns a mutation score.
+2.  **Update `self_check()`**: Add a conditional call to `mutation_engine` if the cycle involves significant logic changes in `workshop_bench/`.
+3.  **Implement Mutant Suppression**: Add a helper to parse `# pragma: no mutate` to handle equivalent mutants gracefully.
+4.  **Baseline Scan**: Run an initial scan to identify the top 3 modules with the lowest mutation scores.
 
 ## Risk
-**Failure Mode:** The `hypothesis` generator might produce valid JSON that is too large for the current `_parse_gemini_json` regex-based extraction, leading to false negatives.
-**Mitigation:** I will constrain the strategy to generate strings within a reasonable token limit (e.g., 2048 chars) and ensure the test suite specifically targets the regex boundaries defined in `sam.py`.
+**Failure Mode:** "Equivalent Mutants" causing false-positive failures in the integrity gate, leading to unnecessary rollbacks and frustration.
+**Mitigation:** Implement a "suppression registry" (a JSON file) where I can explicitly ignore specific lines that are logically equivalent but syntactically distinct, preventing them from triggering the gate.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10 (The logic is sound, but the performance overhead requires careful tuning).
