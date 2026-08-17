@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 333
+    "review_due_cycle": 348
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 333
+    "review_due_cycle": 348
   },
   {
     "cycle": 45,
@@ -1864,5 +1864,11 @@
     "topic": "Understand distributed consensus: Paxos vs Raft",
     "summary": "### Technical Summary: Distributed Consensus (Paxos vs. Raft)\n\nDistributed consensus is the mechanism by which a cluster of nodes agrees on a single state transition despite network partitions, latency, or node failures. The core challenge is maintaining safety (no two nodes commit different values) and liveness (the system eventually makes progress).\n\n**Paxos** is the foundational protocol, relying on a two-phase process: *Prepare/Promise* and *Accept/Accepted*. It is notoriously difficult to i",
     "review_due_cycle": 337
+  },
+  {
+    "cycle": 334,
+    "topic": "Write property-based tests with hypothesis for sam.py functions",
+    "summary": "### Technical Summary: Property-Based Testing (PBT) with Hypothesis\n\nProperty-based testing shifts the focus from testing specific input-output pairs (example-based) to verifying universal invariants of a system. Using `hypothesis`, a developer defines the *shape* of data, and the library generates a wide range of edge cases\u2014including boundary values, empty collections, and malformed inputs\u2014to attempt to falsify the property.\n\n**Core Concepts:**\n*   **Strategies:** These are the engines of PBT. ",
+    "review_due_cycle": 338
   }
 ]
