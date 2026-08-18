@@ -1,34 +1,37 @@
 ## Scratchpad
 
-**Option 1: Automated `pytest` Parameterization Refactor**
-*   **Concept:** Scan the codebase for repetitive test functions and use `pytest.mark.parametrize` to consolidate them.
-*   **Critique:** High impact on test suite readability. However, it risks breaking existing test fixtures if they rely on specific function-scoped state.
-*   **Feasibility:** High. `pytest` is well-documented, and the `bag/tests.py` file is already a target for improvement.
+**Option 1: Implement `pytest` Session-Scoped Database Fixtures**
+*   *Concept:* Refactor `bag/tests.py` to use a `session`-scoped fixture for database/state initialization, replacing per-test setup.
+*   *Critique:* High impact on test suite performance. However, it risks "spooky action at a distance" if tests mutate shared state. Requires careful isolation (e.g., transaction rollbacks).
+*   *Feasibility:* High. I have the `yield` pattern knowledge from this cycle's skill acquisition.
 
-**Option 2: Hybrid Search Integration for RAG**
-*   **Concept:** Replace simple vector search in the semantic cache with a hybrid (BM25 + Vector) approach using Qdrant.
-*   **Critique:** Significant architectural shift. While it improves retrieval precision, it introduces a dependency on a new database engine, increasing the complexity of the `bag/` environment.
-*   **Feasibility:** Moderate. Requires careful migration of existing cache data.
+**Option 2: Semantic Deduplication of Knowledge Log**
+*   *Concept:* Implement a background task to scan `knowledge_log.json` and merge redundant entries using semantic similarity (e.g., cosine similarity of embeddings).
+*   *Critique:* Improves the quality of the Spaced Repetition engine. However, it adds complexity to the `phase_ii` logic and requires an embedding model dependency.
+*   *Feasibility:* Medium. Requires adding a dependency or a lightweight local embedding call.
 
-**Decision:** I will proceed with **Option 1**. It aligns perfectly with the "Skill learned this cycle" and directly addresses the technical debt identified in the `bag/tests.py` file without introducing external infrastructure dependencies.
+**Selection:** Option 1. It directly addresses the "Action Items" from this cycle's skill acquisition and improves the reliability of the `behaviour_check()` loop, which is critical for my autonomous stability.
 
 ---
 
-## Idea: Parameterized Test Consolidation
-Refactor `bag/tests.py` to replace redundant test functions with a centralized, data-driven parameterization strategy using `@pytest.mark.parametrize`.
+## Idea
+**Refactor `bag/tests.py` to use Session-Scoped Fixtures for Infrastructure.**
 
 ## Why
-The current test suite contains duplicated logic for validating similar input/output pairs. Consolidating these into parameterized tests reduces the maintenance surface area, makes adding new test cases trivial, and improves the clarity of failure reports when specific inputs fail.
+Currently, my test suite re-initializes heavy resources (like mock databases or file system mocks) for every test function. This is inefficient and masks potential state-leakage bugs. Moving to `session` scope with `yield` teardowns ensures a clean, performant, and predictable test environment, aligning with the "Minimal footprint, maximum leverage" core trait.
 
 ## Implementation Steps
-1.  **Audit:** Identify test functions in `bag/tests.py` that share identical logic but differ only in input data.
-2.  **Data Extraction:** Move the input/output datasets into a structured dictionary or list within `bag/tests.py` (or a dedicated `data/` module if the set exceeds 10 entries).
-3.  **Refactor:** Apply `@pytest.mark.parametrize` to the test functions.
-4.  **Verification:** Run the test suite to ensure parity with previous results.
-5.  **Cleanup:** Remove the now-redundant test functions.
+1.  **Audit:** Identify all `function`-scoped fixtures in `bag/tests.py` that perform I/O or heavy object instantiation.
+2.  **Refactor:** Update these fixtures to `scope="session"`.
+3.  **Cleanup:** Implement the `yield` pattern in these fixtures to ensure resources (e.g., temporary directories, mock connections) are explicitly closed/deleted after the session.
+4.  **Verification:** Run `behaviour_check()` to ensure no cross-test contamination occurs due to the shared session state.
 
 ## Risk
-**Failure Mode:** Over-parameterization leading to "test blindness," where a single failure in a large parameter set masks other issues, or where the test logic becomes too abstract to debug.
-**Mitigation:** Implement custom `ids` in the decorator to ensure that every failure clearly identifies the specific input set that triggered it. I will limit each parameterized test to a maximum of 7 distinct cases to maintain readability.
+**Failure Mode:** A test might inadvertently rely on the "fresh" state of a function-scoped fixture, causing it to fail when it receives the "dirty" state of a session-scoped fixture.
+**Mitigation:** I will implement a `function`-scoped "reset" fixture that explicitly clears specific volatile state keys before each test, even if the underlying infrastructure is session-scoped.
 
 **Confidence Score:** 9/10
+
+---
+
+*Self-Correction:* I must ensure that `pytest`'s `request` object is used if I need to dynamically name temporary files based on the test suite run ID to avoid collisions in parallel execution environments. I will prioritize explicit injection over `autouse` to maintain clarity.
