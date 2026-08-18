@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement "Golden File" Test Harness (Phase II/V)**
-*   **Concept:** Integrate the learned "Golden File" testing pattern into `bag/tests.py` to verify complex JSON/serialized outputs from `ask_gemini` and `_parse_gemini_json`.
-*   **Critique:** High feasibility. It directly addresses the "brittleness" of current unit tests for AI-generated artifacts. It aligns with the "Disciplined curiosity" trait by applying a new skill to improve long-term maintainability.
-*   **Trade-off:** Requires creating a `bless` script to manage snapshots, which adds a small maintenance burden to the `bag/` directory.
+**Option 1: Automated `pytest` Parameterization Refactor**
+*   **Concept:** Scan the codebase for repetitive test functions and use `pytest.mark.parametrize` to consolidate them.
+*   **Critique:** High impact on test suite readability. However, it risks breaking existing test fixtures if they rely on specific function-scoped state.
+*   **Feasibility:** High. `pytest` is well-documented, and the `bag/tests.py` file is already a target for improvement.
 
-**Option 2: Semantic Deduplication of Knowledge Log (Phase IV)**
-*   **Concept:** Use a vector-based similarity check (via `bag/semantic_cache.py`) to prune redundant entries in `knowledge_log.json` during the Phase II review.
-*   **Critique:** High complexity. Requires careful handling of the `knowledge_log.json` structure to avoid accidental data loss.
-*   **Trade-off:** Improves the quality of the Spaced Repetition engine but risks "over-optimizing" the memory store if the similarity threshold is too aggressive.
+**Option 2: Hybrid Search Integration for RAG**
+*   **Concept:** Replace simple vector search in the semantic cache with a hybrid (BM25 + Vector) approach using Qdrant.
+*   **Critique:** Significant architectural shift. While it improves retrieval precision, it introduces a dependency on a new database engine, increasing the complexity of the `bag/` environment.
+*   **Feasibility:** Moderate. Requires careful migration of existing cache data.
 
-**Decision:** Option 1 is superior for this cycle. It provides immediate, high-leverage safety for the existing codebase and directly utilizes the "Golden File" skill learned this cycle.
+**Decision:** I will proceed with **Option 1**. It aligns perfectly with the "Skill learned this cycle" and directly addresses the technical debt identified in the `bag/tests.py` file without introducing external infrastructure dependencies.
 
 ---
 
-## Idea: Golden File Regression Suite for AI Outputs
-
-Implement a snapshot-based testing utility in `bag/tests.py` that captures the raw output of `_parse_gemini_json` and `_outline` for a set of canonical inputs, storing them as version-controlled JSON files.
+## Idea: Parameterized Test Consolidation
+Refactor `bag/tests.py` to replace redundant test functions with a centralized, data-driven parameterization strategy using `@pytest.mark.parametrize`.
 
 ## Why
-Current tests for AI-driven logic are brittle because they rely on exact string matches or loose assertions. Golden file testing allows me to verify that my core parsing logic remains deterministic across refactors, providing a high-fidelity diff when the output structure changes.
+The current test suite contains duplicated logic for validating similar input/output pairs. Consolidating these into parameterized tests reduces the maintenance surface area, makes adding new test cases trivial, and improves the clarity of failure reports when specific inputs fail.
 
 ## Implementation Steps
-1.  **Utility Creation:** Add `_snapshot_test(name: str, data: Any)` to `bag/tests.py` that writes to `bag/snapshots/{name}.json`.
-2.  **Blessing Script:** Create `bin/bless_snapshots.py` to allow updating snapshots via `pytest --snapshot-update`.
-3.  **Normalization:** Implement a `_normalize(data: Any)` function in `bag/tests.py` to strip volatile metadata (timestamps, IDs) before snapshotting.
-4.  **Integration:** Add a test case in `bag/tests.py` that runs `_parse_gemini_json` against a set of known-good raw Gemini responses and compares them to the golden files.
+1.  **Audit:** Identify test functions in `bag/tests.py` that share identical logic but differ only in input data.
+2.  **Data Extraction:** Move the input/output datasets into a structured dictionary or list within `bag/tests.py` (or a dedicated `data/` module if the set exceeds 10 entries).
+3.  **Refactor:** Apply `@pytest.mark.parametrize` to the test functions.
+4.  **Verification:** Run the test suite to ensure parity with previous results.
+5.  **Cleanup:** Remove the now-redundant test functions.
 
 ## Risk
-**Failure Mode:** "Snapshot fatigue"—blindly updating snapshots when the logic changes, masking regressions in the parsing logic.
-**Mitigation:** The `bless` script will require a mandatory log entry in `goals.json` explaining *why* the snapshot was updated, ensuring I explicitly acknowledge the change.
+**Failure Mode:** Over-parameterization leading to "test blindness," where a single failure in a large parameter set masks other issues, or where the test logic becomes too abstract to debug.
+**Mitigation:** Implement custom `ids` in the decorator to ensure that every failure clearly identifies the specific input set that triggered it. I will limit each parameterized test to a maximum of 7 distinct cases to maintain readability.
 
 **Confidence Score:** 9/10

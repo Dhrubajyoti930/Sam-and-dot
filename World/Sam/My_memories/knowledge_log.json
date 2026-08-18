@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 339
+    "review_due_cycle": 354
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 339
+    "review_due_cycle": 354
   },
   {
     "cycle": 51,
@@ -1900,5 +1900,11 @@
     "topic": "Understand golden file testing for deterministic outputs",
     "summary": "### Technical Summary: Golden File Testing\n\nGolden file testing (or snapshot testing) is a strategy for verifying deterministic outputs by comparing actual results against a stored \"golden\" reference file. It is particularly effective for complex data structures, serialized formats (JSON, XML), or generated artifacts (HTML, CLI output) where traditional unit assertions become brittle or unreadable.\n\n**Core Concepts & Patterns:**\n\n1.  **The Reference Artifact:** The \"golden\" file acts as the sour",
     "review_due_cycle": 343
+  },
+  {
+    "cycle": 340,
+    "topic": "Study parameterized testing patterns in pytest",
+    "summary": "### Technical Summary: Parameterized Testing in `pytest`\n\nParameterized testing is the primary mechanism in `pytest` to reduce code duplication by running the same test logic against multiple input datasets. The core utility is the `@pytest.mark.parametrize` decorator, which decouples test data from test execution.\n\n#### Core Concepts\n*   **The Decorator:** `@pytest.mark.parametrize(argnames, argvalues)` maps a list of inputs to function arguments. Each set of values triggers a distinct test inv",
+    "review_due_cycle": 344
   }
 ]
