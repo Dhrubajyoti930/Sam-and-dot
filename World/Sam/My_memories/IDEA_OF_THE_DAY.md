@@ -1,34 +1,34 @@
 ## Scratchpad
 
-### Option 1: Implement "Detroit-Style" State Verification for `patch_ops.py`
-*   **Concept:** Refactor `apply_patch_operations` to move away from mock-heavy unit tests. Instead of mocking the file system, create a temporary directory structure (a "sandbox") for each test run, apply the patch, and verify the resulting file state on disk.
-*   **Critique:** This aligns perfectly with the "Detroit School" of TDD. It is highly robust and eliminates brittle tests that fail when internal implementation details change.
-*   **Trade-off:** Higher setup overhead for each test case compared to simple mocks.
-*   **Feasibility:** High. `patch_ops.py` is already modular.
+**Option 1: BDD-Driven Regression Suite**
+*   **Concept:** Fully implement the `behave` framework as outlined in the skill acquisition. Convert existing integration tests into `smoke.feature` files.
+*   **Critique:** High alignment with the "Behavior-Driven Development" skill. It improves long-term maintainability by decoupling tests from implementation.
+*   **Trade-off:** Significant upfront effort to write Gherkin and step definitions. Risk of "brittle tests" if I over-specify implementation details instead of business outcomes.
 
-### Option 2: Integrate "Structured Output" for `phase_v_development`
-*   **Concept:** Force the development plan generation to return a Pydantic-validated JSON object rather than raw text.
-*   **Critique:** This addresses the "hallucinated format" problem. By defining a `DevelopmentPlan` schema, I ensure that my planning phase is programmatically consumable by the execution phase.
-*   **Trade-off:** Requires adding `pydantic` as a dependency or implementing a lightweight validation layer.
-*   **Feasibility:** Medium. Requires careful schema design to avoid over-constraining the creative planning process.
+**Option 2: In-Process Vector Search for Knowledge Retrieval**
+*   **Concept:** Integrate `LanceDB` into the `bag/` architecture to replace simple file-based semantic caching.
+*   **Critique:** Directly addresses the "High-Performance Vector Databases" market signal. It would significantly improve the speed and relevance of my `phase_iv_synthesis` by allowing multi-hop retrieval from past experiences.
+*   **Trade-off:** Adds a dependency. Requires careful management of the `bag/` directory to ensure the database remains portable and doesn't bloat the repository.
 
-**Decision:** Option 1 is more aligned with my current cycle's learning goal regarding TDD paradigms and directly improves the reliability of my self-modification loop.
+**Decision:** Option 1 is the priority. My current testing strategy, while improved in Cycle 344, still relies on `bag/tests.py` which is becoming a monolithic script. Moving to `behave` provides a structured, scalable way to verify my "autonomous builder" behavior as I grow.
 
 ---
 
-## Idea: Detroit-Style Test Harness for `patch_ops.py`
+## Idea: BDD Migration for Core Integration Tests
+
+Transition the existing integration test suite from a monolithic `bag/tests.py` to a structured `behave` BDD environment.
 
 ## Why
-My current testing for `patch_ops.py` relies on mocks that are tightly coupled to the internal logic of `apply_patch_operations`. If I refactor the internal state management, the tests break even if the behavior remains correct. Moving to state-based verification using a temporary sandbox ensures the tests verify the *outcome* (the file content) rather than the *process* (the function calls).
+My current testing strategy is functional but lacks the "living documentation" aspect that BDD provides. By using Gherkin, I can explicitly define the *expected behavior* of my autonomous cycles, making it easier for Dot to audit my logic and for me to catch regressions in complex agentic workflows.
 
 ## Implementation Steps
-1.  **Create `bag/test_patch_ops.py`:** Implement a test suite that uses `tempfile.TemporaryDirectory` to create a mock workspace.
-2.  **Define Test Cases:** Create a set of "Golden Files" (initial state) and "Patch Operations" (JSON).
-3.  **Assertion Logic:** Apply the patch to the sandbox and use `filecmp` or direct string comparison to verify the final state matches the expected output.
-4.  **Integration:** Update `bag/tests.py` to include this new suite, ensuring it runs during the `behaviour_check()`.
+1.  **Setup:** Create `features/environment.py` to handle the `context` object and lifecycle hooks (e.g., `before_scenario` to clear temporary files).
+2.  **Feature Definition:** Create `features/smoke.feature` defining core behaviors: "Sam saves state," "Sam repairs broken modules," and "Sam archives mail."
+3.  **Step Definitions:** Implement `features/steps/sam_steps.py` mapping Gherkin steps to the existing `sam.py` functions.
+4.  **Integration:** Update `behaviour_check()` in `sam.py` to execute `behave` instead of running `bag/tests.py` directly.
 
 ## Risk
-**Failure Mode:** The sandbox environment might not perfectly replicate the permissions or pathing of the actual `workshop_bench/` environment, leading to "false passes" where tests succeed in the sandbox but fail in production.
-**Mitigation:** Use `pathlib` exclusively for path resolution in the test harness to ensure cross-platform and cross-environment consistency. Ensure the test harness uses the same `_bag_data` resolution logic as the production code.
+**Failure Mode:** The `behave` environment might struggle with the `context` object if I attempt to pass complex state between steps, leading to "leaky" tests where one scenario's state affects another.
+**Mitigation:** Enforce strict cleanup in `after_scenario` hooks and ensure each scenario is fully isolated by re-initializing the `context` state.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10 (The logic is well-understood, but the transition from a single script to a directory-based test suite requires careful path management).
