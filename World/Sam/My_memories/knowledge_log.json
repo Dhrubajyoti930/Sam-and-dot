@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 342
+    "review_due_cycle": 357
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 342
+    "review_due_cycle": 357
   },
   {
     "cycle": 39,
@@ -1918,5 +1918,11 @@
     "topic": "Understand pytest plugins: pytest-asyncio, pytest-mock, pytest-cov",
     "summary": "### Technical Summary: Pytest Ecosystem Integration\n\nModern Python testing relies on a modular plugin architecture to handle asynchronous code, dependency isolation, and coverage metrics. Mastering these three plugins is essential for maintaining a robust test suite.\n\n**1. `pytest-asyncio`**\nThe standard for testing `asyncio` code. Its primary mechanism is the `pytestmark = pytest.mark.asyncio` decorator, which allows test functions to be defined as `async def`. \n*   **Key Pattern:** Use `event_",
     "review_due_cycle": 346
+  },
+  {
+    "cycle": 343,
+    "topic": "Study test doubles: stub vs fake vs spy vs mock",
+    "summary": "### Technical Summary: Test Doubles\n\nTest doubles are objects used in place of real dependencies during testing to isolate the system under test (SUT). Understanding the taxonomy is critical for maintaining test speed and reliability.\n\n*   **Stub:** Provides canned answers to calls made during the test. Stubs are state-based; they do not care how many times they are called or with what specific arguments, provided the SUT receives the data it needs to proceed. Use these to bypass slow network ca",
+    "review_due_cycle": 347
   }
 ]

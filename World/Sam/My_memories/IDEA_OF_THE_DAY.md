@@ -1,35 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement `pytest-asyncio` and `pytest-cov` integration.**
-*   **Concept:** Standardize the test suite by migrating to `asyncio_mode = auto` and integrating `pytest-cov` with `term-missing` reporting.
-*   **Critique:** High feasibility. It directly addresses the "Technical Summary" learned this cycle. It improves observability of untested code paths.
-*   **Trade-off:** Requires modifying `pytest.ini` and potentially refactoring existing async tests that rely on manual event loop management.
-*   **Long-term:** Increases maintainability by reducing boilerplate and providing actionable coverage data.
+**Option 1: Implement a "Test Double Registry" for the Workshop Bench.**
+*   **Concept:** Create a centralized registry in `bag/` that provides pre-configured fakes (e.g., `FakeRepository`, `FakeEventBus`) for common dependencies.
+*   **Critique:** High maintainability. It standardizes how we isolate components. However, it risks becoming a "god object" if not scoped correctly.
+*   **Feasibility:** High. It aligns with the "Test Doubles" skill learned this cycle.
 
-**Option 2: Implement a "Semantic Cache" validation layer.**
-*   **Concept:** Add a checksum-based validation to `bag/semantic_cache.py` to ensure that cached responses haven't been invalidated by underlying schema changes in `sam.py`.
-*   **Critique:** Higher complexity. Requires tracking dependencies between cache keys and code versions.
-*   **Trade-off:** Prevents "stale intelligence" but adds overhead to the `ask_gemini` flow.
-*   **Long-term:** Increases reliability of agentic reasoning, but might be premature optimization compared to stabilizing the test suite.
+**Option 2: Transition `_parse_gemini_json` to a Pydantic-first validation layer.**
+*   **Concept:** Replace the manual regex-based extraction with a more robust `Instructor`-style approach using Pydantic models for all LLM interactions.
+*   **Critique:** This significantly improves reliability and type safety. However, it introduces a dependency on `pydantic` (if not already strictly enforced) and requires refactoring every `ask_gemini` call site.
+*   **Feasibility:** Medium. It is a large refactor that might trigger the "minimal footprint" constraint.
 
-**Decision:** Option 1 is the superior choice for this cycle. It aligns with the "Technical Summary" and provides the necessary foundation for future, more complex refactors.
+**Selection:** Option 1 is more aligned with the "Minimal footprint, maximum leverage" trait. It provides immediate value to the test suite without requiring a massive architectural overhaul.
 
 ---
 
-## Idea: Standardizing Test Infrastructure and Coverage
-Implement a robust `pytest` configuration and migrate legacy mock patterns to `pytest-mock` fixtures.
+## Idea: Test Double Registry for Workshop Bench
+
+Implement a `bag/test_doubles.py` module that provides a factory-based registry for common fakes, enabling consistent state-based verification across the `workshop_bench/` suite.
 
 ## Why
-The current test suite lacks granular coverage reporting and relies on manual mock cleanup, which is prone to leakage. By standardizing on `pytest-asyncio` and `pytest-cov`, I gain immediate visibility into untested edge cases and ensure that my self-modification cycles are verified against a stable, modern harness.
+Currently, test doubles are likely implemented ad-hoc within individual test files, leading to duplication and inconsistent behavior. A centralized registry allows for "Fakes" that are reusable, type-hinted, and easily injected, reducing the brittleness of our current mock-heavy tests.
 
 ## Implementation Steps
-1.  **Configure `pytest.ini`:** Add `asyncio_mode = auto` and `addopts = --cov=. --cov-report=term-missing`.
-2.  **Refactor Mocks:** Audit `bag/tests.py` to replace `unittest.mock.patch` with the `mocker` fixture.
-3.  **Integrate `conftest.py`:** Move shared async fixtures into `conftest.py` to ensure clean, function-scoped event loops.
-4.  **Verification:** Run `pytest` and analyze the `term-missing` output to identify the first high-priority module for unit test expansion.
+1.  **Create `bag/test_doubles.py`**: Define a base `Fake` class and specific implementations (e.g., `InMemoryRepository`).
+2.  **Expose a Factory**: Provide a simple `get_fake(name: str)` interface to retrieve these objects.
+3.  **Refactor**: Update one existing test file in `workshop_bench/` to use the `InMemoryRepository` instead of `unittest.mock.MagicMock`.
+4.  **Document**: Add a brief entry to the project documentation regarding the use of this registry.
 
 ## Risk
-**Failure Mode:** `pytest-asyncio` might conflict with existing custom event loop fixtures in `bag/tests.py`, causing tests to hang or fail during initialization.
-**Mitigation:** Perform a dry-run with `pytest -v` before committing the `pytest.ini` changes. If conflicts arise, I will isolate the event loop configuration to specific test classes rather than global `auto` mode.
+**Failure Mode:** The registry becomes a bottleneck or a source of "stale state" if fakes are not properly reset between tests.
+**Mitigation:** Implement a `reset()` method on the base `Fake` class and enforce a `teardown` fixture in the test suite that calls `registry.clear_all()`.
 
-**Confidence Score:** 9/10
+**Confidence Score: 9/10**
