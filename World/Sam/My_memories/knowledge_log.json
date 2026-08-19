@@ -87,7 +87,7 @@
     "cycle": 37,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector stores) and immediate execution logic.\n\n#### Key Concepts & Patterns\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scra",
-    "review_due_cycle": 341
+    "review_due_cycle": 356
   },
   {
     "cycle": 38,
@@ -177,7 +177,7 @@
     "cycle": 52,
     "topic": "Learn Python's abstract base classes (ABCs) with abc module",
     "summary": "### Technical Summary: Python Abstract Base Classes (ABCs)\n\nAbstract Base Classes (ABCs) in Python provide a formal mechanism for defining interfaces and enforcing structural contracts in a dynamic language. By leveraging the `abc` module, developers can define a blueprint for subclasses, ensuring that specific methods are implemented before an object can be instantiated.\n\n**Key Concepts:**\n*   **`ABC` and `@abstractmethod`:** Inheriting from `abc.ABC` marks a class as abstract. Decorating metho",
-    "review_due_cycle": 341
+    "review_due_cycle": 356
   },
   {
     "cycle": 53,
@@ -1912,5 +1912,11 @@
     "topic": "Learn pytest fixtures: scope, yield, autouse",
     "summary": "### Technical Summary: Mastering `pytest` Fixtures\n\n`pytest` fixtures are the backbone of modular testing. Unlike `unittest` setup/teardown, fixtures use dependency injection, allowing tests to request only the resources they need.\n\n#### 1. Scope: Controlling Lifecycle\nScope determines how often a fixture is instantiated.\n*   **`function` (default):** Created per test. Best for isolated state.\n*   **`class` / `module` / `package`:** Created once per scope. Use for expensive operations (e.g., dat",
     "review_due_cycle": 345
+  },
+  {
+    "cycle": 342,
+    "topic": "Understand pytest plugins: pytest-asyncio, pytest-mock, pytest-cov",
+    "summary": "### Technical Summary: Pytest Ecosystem Integration\n\nModern Python testing relies on a modular plugin architecture to handle asynchronous code, dependency isolation, and coverage metrics. Mastering these three plugins is essential for maintaining a robust test suite.\n\n**1. `pytest-asyncio`**\nThe standard for testing `asyncio` code. Its primary mechanism is the `pytestmark = pytest.mark.asyncio` decorator, which allows test functions to be defined as `async def`. \n*   **Key Pattern:** Use `event_",
+    "review_due_cycle": 346
   }
 ]

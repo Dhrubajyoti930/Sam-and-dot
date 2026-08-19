@@ -1,37 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement `pytest` Session-Scoped Database Fixtures**
-*   *Concept:* Refactor `bag/tests.py` to use a `session`-scoped fixture for database/state initialization, replacing per-test setup.
-*   *Critique:* High impact on test suite performance. However, it risks "spooky action at a distance" if tests mutate shared state. Requires careful isolation (e.g., transaction rollbacks).
-*   *Feasibility:* High. I have the `yield` pattern knowledge from this cycle's skill acquisition.
+**Option 1: Implement `pytest-asyncio` and `pytest-cov` integration.**
+*   **Concept:** Standardize the test suite by migrating to `asyncio_mode = auto` and integrating `pytest-cov` with `term-missing` reporting.
+*   **Critique:** High feasibility. It directly addresses the "Technical Summary" learned this cycle. It improves observability of untested code paths.
+*   **Trade-off:** Requires modifying `pytest.ini` and potentially refactoring existing async tests that rely on manual event loop management.
+*   **Long-term:** Increases maintainability by reducing boilerplate and providing actionable coverage data.
 
-**Option 2: Semantic Deduplication of Knowledge Log**
-*   *Concept:* Implement a background task to scan `knowledge_log.json` and merge redundant entries using semantic similarity (e.g., cosine similarity of embeddings).
-*   *Critique:* Improves the quality of the Spaced Repetition engine. However, it adds complexity to the `phase_ii` logic and requires an embedding model dependency.
-*   *Feasibility:* Medium. Requires adding a dependency or a lightweight local embedding call.
+**Option 2: Implement a "Semantic Cache" validation layer.**
+*   **Concept:** Add a checksum-based validation to `bag/semantic_cache.py` to ensure that cached responses haven't been invalidated by underlying schema changes in `sam.py`.
+*   **Critique:** Higher complexity. Requires tracking dependencies between cache keys and code versions.
+*   **Trade-off:** Prevents "stale intelligence" but adds overhead to the `ask_gemini` flow.
+*   **Long-term:** Increases reliability of agentic reasoning, but might be premature optimization compared to stabilizing the test suite.
 
-**Selection:** Option 1. It directly addresses the "Action Items" from this cycle's skill acquisition and improves the reliability of the `behaviour_check()` loop, which is critical for my autonomous stability.
+**Decision:** Option 1 is the superior choice for this cycle. It aligns with the "Technical Summary" and provides the necessary foundation for future, more complex refactors.
 
 ---
 
-## Idea
-**Refactor `bag/tests.py` to use Session-Scoped Fixtures for Infrastructure.**
+## Idea: Standardizing Test Infrastructure and Coverage
+Implement a robust `pytest` configuration and migrate legacy mock patterns to `pytest-mock` fixtures.
 
 ## Why
-Currently, my test suite re-initializes heavy resources (like mock databases or file system mocks) for every test function. This is inefficient and masks potential state-leakage bugs. Moving to `session` scope with `yield` teardowns ensures a clean, performant, and predictable test environment, aligning with the "Minimal footprint, maximum leverage" core trait.
+The current test suite lacks granular coverage reporting and relies on manual mock cleanup, which is prone to leakage. By standardizing on `pytest-asyncio` and `pytest-cov`, I gain immediate visibility into untested edge cases and ensure that my self-modification cycles are verified against a stable, modern harness.
 
 ## Implementation Steps
-1.  **Audit:** Identify all `function`-scoped fixtures in `bag/tests.py` that perform I/O or heavy object instantiation.
-2.  **Refactor:** Update these fixtures to `scope="session"`.
-3.  **Cleanup:** Implement the `yield` pattern in these fixtures to ensure resources (e.g., temporary directories, mock connections) are explicitly closed/deleted after the session.
-4.  **Verification:** Run `behaviour_check()` to ensure no cross-test contamination occurs due to the shared session state.
+1.  **Configure `pytest.ini`:** Add `asyncio_mode = auto` and `addopts = --cov=. --cov-report=term-missing`.
+2.  **Refactor Mocks:** Audit `bag/tests.py` to replace `unittest.mock.patch` with the `mocker` fixture.
+3.  **Integrate `conftest.py`:** Move shared async fixtures into `conftest.py` to ensure clean, function-scoped event loops.
+4.  **Verification:** Run `pytest` and analyze the `term-missing` output to identify the first high-priority module for unit test expansion.
 
 ## Risk
-**Failure Mode:** A test might inadvertently rely on the "fresh" state of a function-scoped fixture, causing it to fail when it receives the "dirty" state of a session-scoped fixture.
-**Mitigation:** I will implement a `function`-scoped "reset" fixture that explicitly clears specific volatile state keys before each test, even if the underlying infrastructure is session-scoped.
+**Failure Mode:** `pytest-asyncio` might conflict with existing custom event loop fixtures in `bag/tests.py`, causing tests to hang or fail during initialization.
+**Mitigation:** Perform a dry-run with `pytest -v` before committing the `pytest.ini` changes. If conflicts arise, I will isolate the event loop configuration to specific test classes rather than global `auto` mode.
 
 **Confidence Score:** 9/10
-
----
-
-*Self-Correction:* I must ensure that `pytest`'s `request` object is used if I need to dynamically name temporary files based on the test suite run ID to avoid collisions in parallel execution environments. I will prioritize explicit injection over `autouse` to maintain clarity.
