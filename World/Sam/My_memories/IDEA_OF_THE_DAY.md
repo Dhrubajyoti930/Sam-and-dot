@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement a "Test Double Registry" for the Workshop Bench.**
-*   **Concept:** Create a centralized registry in `bag/` that provides pre-configured fakes (e.g., `FakeRepository`, `FakeEventBus`) for common dependencies.
-*   **Critique:** High maintainability. It standardizes how we isolate components. However, it risks becoming a "god object" if not scoped correctly.
-*   **Feasibility:** High. It aligns with the "Test Doubles" skill learned this cycle.
+### Option 1: Implement "Detroit-Style" State Verification for `patch_ops.py`
+*   **Concept:** Refactor `apply_patch_operations` to move away from mock-heavy unit tests. Instead of mocking the file system, create a temporary directory structure (a "sandbox") for each test run, apply the patch, and verify the resulting file state on disk.
+*   **Critique:** This aligns perfectly with the "Detroit School" of TDD. It is highly robust and eliminates brittle tests that fail when internal implementation details change.
+*   **Trade-off:** Higher setup overhead for each test case compared to simple mocks.
+*   **Feasibility:** High. `patch_ops.py` is already modular.
 
-**Option 2: Transition `_parse_gemini_json` to a Pydantic-first validation layer.**
-*   **Concept:** Replace the manual regex-based extraction with a more robust `Instructor`-style approach using Pydantic models for all LLM interactions.
-*   **Critique:** This significantly improves reliability and type safety. However, it introduces a dependency on `pydantic` (if not already strictly enforced) and requires refactoring every `ask_gemini` call site.
-*   **Feasibility:** Medium. It is a large refactor that might trigger the "minimal footprint" constraint.
+### Option 2: Integrate "Structured Output" for `phase_v_development`
+*   **Concept:** Force the development plan generation to return a Pydantic-validated JSON object rather than raw text.
+*   **Critique:** This addresses the "hallucinated format" problem. By defining a `DevelopmentPlan` schema, I ensure that my planning phase is programmatically consumable by the execution phase.
+*   **Trade-off:** Requires adding `pydantic` as a dependency or implementing a lightweight validation layer.
+*   **Feasibility:** Medium. Requires careful schema design to avoid over-constraining the creative planning process.
 
-**Selection:** Option 1 is more aligned with the "Minimal footprint, maximum leverage" trait. It provides immediate value to the test suite without requiring a massive architectural overhaul.
+**Decision:** Option 1 is more aligned with my current cycle's learning goal regarding TDD paradigms and directly improves the reliability of my self-modification loop.
 
 ---
 
-## Idea: Test Double Registry for Workshop Bench
-
-Implement a `bag/test_doubles.py` module that provides a factory-based registry for common fakes, enabling consistent state-based verification across the `workshop_bench/` suite.
+## Idea: Detroit-Style Test Harness for `patch_ops.py`
 
 ## Why
-Currently, test doubles are likely implemented ad-hoc within individual test files, leading to duplication and inconsistent behavior. A centralized registry allows for "Fakes" that are reusable, type-hinted, and easily injected, reducing the brittleness of our current mock-heavy tests.
+My current testing for `patch_ops.py` relies on mocks that are tightly coupled to the internal logic of `apply_patch_operations`. If I refactor the internal state management, the tests break even if the behavior remains correct. Moving to state-based verification using a temporary sandbox ensures the tests verify the *outcome* (the file content) rather than the *process* (the function calls).
 
 ## Implementation Steps
-1.  **Create `bag/test_doubles.py`**: Define a base `Fake` class and specific implementations (e.g., `InMemoryRepository`).
-2.  **Expose a Factory**: Provide a simple `get_fake(name: str)` interface to retrieve these objects.
-3.  **Refactor**: Update one existing test file in `workshop_bench/` to use the `InMemoryRepository` instead of `unittest.mock.MagicMock`.
-4.  **Document**: Add a brief entry to the project documentation regarding the use of this registry.
+1.  **Create `bag/test_patch_ops.py`:** Implement a test suite that uses `tempfile.TemporaryDirectory` to create a mock workspace.
+2.  **Define Test Cases:** Create a set of "Golden Files" (initial state) and "Patch Operations" (JSON).
+3.  **Assertion Logic:** Apply the patch to the sandbox and use `filecmp` or direct string comparison to verify the final state matches the expected output.
+4.  **Integration:** Update `bag/tests.py` to include this new suite, ensuring it runs during the `behaviour_check()`.
 
 ## Risk
-**Failure Mode:** The registry becomes a bottleneck or a source of "stale state" if fakes are not properly reset between tests.
-**Mitigation:** Implement a `reset()` method on the base `Fake` class and enforce a `teardown` fixture in the test suite that calls `registry.clear_all()`.
+**Failure Mode:** The sandbox environment might not perfectly replicate the permissions or pathing of the actual `workshop_bench/` environment, leading to "false passes" where tests succeed in the sandbox but fail in production.
+**Mitigation:** Use `pathlib` exclusively for path resolution in the test harness to ensure cross-platform and cross-environment consistency. Ensure the test harness uses the same `_bag_data` resolution logic as the production code.
 
-**Confidence Score: 9/10**
+**Confidence Score:** 9/10

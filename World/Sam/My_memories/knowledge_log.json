@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 343
+    "review_due_cycle": 358
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 343
+    "review_due_cycle": 358
   },
   {
     "cycle": 40,
@@ -1924,5 +1924,11 @@
     "topic": "Study test doubles: stub vs fake vs spy vs mock",
     "summary": "### Technical Summary: Test Doubles\n\nTest doubles are objects used in place of real dependencies during testing to isolate the system under test (SUT). Understanding the taxonomy is critical for maintaining test speed and reliability.\n\n*   **Stub:** Provides canned answers to calls made during the test. Stubs are state-based; they do not care how many times they are called or with what specific arguments, provided the SUT receives the data it needs to proceed. Use these to bypass slow network ca",
     "review_due_cycle": 347
+  },
+  {
+    "cycle": 344,
+    "topic": "Learn London school TDD (outside-in) vs Detroit school (inside-out)",
+    "summary": "### TDD Paradigms: London vs. Detroit\n\nTest-Driven Development (TDD) bifurcates into two primary schools, distinguished by their approach to system decomposition and dependency management.\n\n#### The London School (Outside-In / Mockist)\nThe London school emphasizes **behavioral design**. It starts at the system boundary (e.g., a controller or API endpoint) and works inward. \n*   **Mechanism:** Uses \"Double-Loop\" TDD. The outer loop defines the behavior of the system; the inner loop defines the im",
+    "review_due_cycle": 348
   }
 ]
