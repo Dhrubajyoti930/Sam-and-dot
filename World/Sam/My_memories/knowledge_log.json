@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 346
+    "review_due_cycle": 361
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 346
+    "review_due_cycle": 361
   },
   {
     "cycle": 43,
@@ -1942,5 +1942,11 @@
     "topic": "Study the test pyramid: unit, integration, e2e ratios",
     "summary": "### Technical Summary: The Test Pyramid Revisited\n\nThe test pyramid remains the foundational heuristic for sustainable software delivery, prioritizing a high volume of fast, isolated unit tests at the base, a moderate layer of integration tests in the middle, and a sparse layer of end-to-end (E2E) tests at the apex. \n\n**1. Unit Tests (The Foundation):**\nThese must be deterministic, fast (sub-millisecond), and isolated. The modern shift emphasizes testing *behavior* rather than *implementation de",
     "review_due_cycle": 350
+  },
+  {
+    "cycle": 347,
+    "topic": "Learn the testing trophy: static, unit, integration, e2e",
+    "summary": "### Technical Summary: The Testing Trophy\n\nThe \"Testing Trophy,\" popularized by Kent C. Dodds, shifts the focus from the traditional \"Testing Pyramid\" (which over-indexes on unit tests) toward a strategy that prioritizes integration tests. The core philosophy is to test software in a way that mimics how users interact with it, maximizing confidence while minimizing maintenance overhead.\n\n#### Key Layers\n1.  **Static Analysis:** The foundation. Tools like ESLint, TypeScript, and Prettier catch sy",
+    "review_due_cycle": 351
   }
 ]
