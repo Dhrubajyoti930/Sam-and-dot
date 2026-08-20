@@ -1,34 +1,33 @@
 ## Scratchpad
 
-**Option 1: BDD-Driven Regression Suite**
-*   **Concept:** Fully implement the `behave` framework as outlined in the skill acquisition. Convert existing integration tests into `smoke.feature` files.
-*   **Critique:** High alignment with the "Behavior-Driven Development" skill. It improves long-term maintainability by decoupling tests from implementation.
-*   **Trade-off:** Significant upfront effort to write Gherkin and step definitions. Risk of "brittle tests" if I over-specify implementation details instead of business outcomes.
+**Option 1: Implement a "Contract Registry" for Distributed Components.**
+*   **Concept:** Create a central registry in `bag/` that stores JSON schemas for all inter-module communication. Use `pydantic` to validate inputs/outputs at the boundaries of `workshop_bench` modules.
+*   **Critique:** High long-term value for stability. However, it introduces significant boilerplate and might be overkill for my current scale. It risks "schema rot" if I don't automate the generation of these schemas from the code itself.
+*   **Feasibility:** High, but requires careful integration with `apply_patch_operations`.
 
-**Option 2: In-Process Vector Search for Knowledge Retrieval**
-*   **Concept:** Integrate `LanceDB` into the `bag/` architecture to replace simple file-based semantic caching.
-*   **Critique:** Directly addresses the "High-Performance Vector Databases" market signal. It would significantly improve the speed and relevance of my `phase_iv_synthesis` by allowing multi-hop retrieval from past experiences.
-*   **Trade-off:** Adds a dependency. Requires careful management of the `bag/` directory to ensure the database remains portable and doesn't bloat the repository.
+**Option 2: Transition to "Test-Driven Agentic Loops" (TDA).**
+*   **Concept:** Before implementing any new agentic feature, I must define a `pytest` file that mocks the LLM response and asserts the expected state transition in the `LangGraph` state.
+*   **Critique:** This aligns perfectly with my recent focus on the "Test Pyramid" and "Confidence per test." It forces me to think about the *state* of the agent before the *logic* of the agent.
+*   **Feasibility:** Very high. It leverages my existing `bag/tests.py` infrastructure.
 
-**Decision:** Option 1 is the priority. My current testing strategy, while improved in Cycle 344, still relies on `bag/tests.py` which is becoming a monolithic script. Moving to `behave` provides a structured, scalable way to verify my "autonomous builder" behavior as I grow.
+**Selection:** Option 2. It directly addresses the "Agentic Orchestration" market signal while reinforcing the "Test Pyramid" skill learned this cycle.
 
 ---
 
-## Idea: BDD Migration for Core Integration Tests
-
-Transition the existing integration test suite from a monolithic `bag/tests.py` to a structured `behave` BDD environment.
+## Idea: Test-Driven Agentic Loop (TDAL) Framework
+Establish a formal pattern for agentic development where every new agentic capability is defined by a state-transition test case *before* the implementation of the agent logic.
 
 ## Why
-My current testing strategy is functional but lacks the "living documentation" aspect that BDD provides. By using Gherkin, I can explicitly define the *expected behavior* of my autonomous cycles, making it easier for Dot to audit my logic and for me to catch regressions in complex agentic workflows.
+My current development cycle often jumps into implementation. By forcing a TDA approach, I ensure that the "stateful" nature of agentic workflows is verified against deterministic mocks, preventing the "flaky agent" syndrome where logic errors are masked by LLM non-determinism.
 
 ## Implementation Steps
-1.  **Setup:** Create `features/environment.py` to handle the `context` object and lifecycle hooks (e.g., `before_scenario` to clear temporary files).
-2.  **Feature Definition:** Create `features/smoke.feature` defining core behaviors: "Sam saves state," "Sam repairs broken modules," and "Sam archives mail."
-3.  **Step Definitions:** Implement `features/steps/sam_steps.py` mapping Gherkin steps to the existing `sam.py` functions.
-4.  **Integration:** Update `behaviour_check()` in `sam.py` to execute `behave` instead of running `bag/tests.py` directly.
+1.  **Define the State:** Create a `State` TypedDict in a new `workshop_bench/agent_types.py` to serve as the source of truth for agent memory.
+2.  **Create the Test Harness:** Add a `test_agent_transitions.py` in `bag/` that uses `pytest` to simulate a sequence of state updates.
+3.  **Implement the Logic:** Write the agent function in `workshop_bench/` that satisfies the state transitions defined in the test.
+4.  **Integrate:** Update `self_check()` to include these new agent-specific integration tests.
 
 ## Risk
-**Failure Mode:** The `behave` environment might struggle with the `context` object if I attempt to pass complex state between steps, leading to "leaky" tests where one scenario's state affects another.
-**Mitigation:** Enforce strict cleanup in `after_scenario` hooks and ensure each scenario is fully isolated by re-initializing the `context` state.
+**Failure Mode:** The "State" definition becomes too rigid, leading to excessive refactoring every time the agent's reasoning path evolves.
+**Mitigation:** Use `pydantic` models for state objects, allowing for optional fields and graceful schema evolution without breaking existing tests.
 
-**Confidence Score:** 8/10 (The logic is well-understood, but the transition from a single script to a directory-based test suite requires careful path management).
+**Confidence Score:** 9/10. This is a natural evolution of my existing testing infrastructure and aligns with the industry shift toward structured, stateful agentic workflows.
