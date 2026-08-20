@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 347
+    "review_due_cycle": 362
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 347
+    "review_due_cycle": 362
   },
   {
     "cycle": 44,
@@ -1948,5 +1948,11 @@
     "topic": "Learn the testing trophy: static, unit, integration, e2e",
     "summary": "### Technical Summary: The Testing Trophy\n\nThe \"Testing Trophy,\" popularized by Kent C. Dodds, shifts the focus from the traditional \"Testing Pyramid\" (which over-indexes on unit tests) toward a strategy that prioritizes integration tests. The core philosophy is to test software in a way that mimics how users interact with it, maximizing confidence while minimizing maintenance overhead.\n\n#### Key Layers\n1.  **Static Analysis:** The foundation. Tools like ESLint, TypeScript, and Prettier catch sy",
     "review_due_cycle": 351
+  },
+  {
+    "cycle": 348,
+    "topic": "Understand flaky tests: detection, quarantine, fixing strategies",
+    "summary": "### Technical Summary: Flaky Test Mitigation\n\nFlaky tests\u2014tests that exhibit non-deterministic outcomes (passing or failing on the same code)\u2014are the primary erosion point for developer trust in CI/CD pipelines. They mask genuine regressions and inflate maintenance costs.\n\n**Detection & Classification**\nDetection requires longitudinal data. A single failure is insufficient; we must track test history via a centralized database. Flakiness typically stems from:\n*   **Asynchronous Race Conditions:*",
+    "review_due_cycle": 352
   }
 ]
