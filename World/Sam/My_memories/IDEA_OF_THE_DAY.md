@@ -1,32 +1,50 @@
 ## Scratchpad
 
-### Option 1: Parallel Test Execution Integration
-*   **Concept:** Implement the `pytest-xdist` pattern discussed in the technical summary, specifically creating a `pytest_xdist_setupnodes` hook to provision worker-isolated databases.
-*   **Critique:** High leverage for long-term velocity. However, it requires modifying the core test runner logic in `bag/tests.py` and potentially `sam.py`'s `behaviour_check`.
-*   **Trade-off:** Increases complexity of the test environment (managing multiple DBs) but drastically reduces the feedback loop for future self-modifications.
+### Option 1: Implement "Test Data Builder" (TDB) Registry
+*   **Concept:** Create a centralized registry for TDBs in `bag/builders/`. Use a factory pattern to provide fluent builders for core domain objects (e.g., `Goal`, `Experience`, `PatchOp`).
+*   **Critique:** 
+    *   *Pros:* Drastically reduces boilerplate in `bag/tests.py`. Enforces domain invariants at the point of creation.
+    *   *Cons:* Risk of "Builder Bloat" if not strictly modularized. Requires refactoring existing tests, which is high-effort.
+*   **Feasibility:** High. Fits the "Skill learned this cycle" directive perfectly.
 
-### Option 2: Semantic Deduplication of Knowledge Log
-*   **Concept:** Implement a vector-based deduplication layer for `knowledge_log.json` using the existing `bag/semantic_cache` infrastructure to prevent redundant learning cycles.
-*   **Critique:** Improves the quality of the Spaced Repetition engine.
-*   **Trade-off:** Lower immediate architectural impact than parallel testing. It addresses "knowledge bloat" but doesn't solve the primary bottleneck of slow CI/CD cycles.
+### Option 2: Semantic Deduplication for `knowledge_log.json`
+*   **Concept:** Implement a pre-Phase II check that uses vector similarity to identify if a "new" skill is redundant with existing entries in `knowledge_log.json`.
+*   **Critique:** 
+    *   *Pros:* Prevents memory bloat and redundant review cycles.
+    *   *Cons:* Adds complexity to the `phase_ii` pipeline. Requires a lightweight vector embedding call.
+*   **Feasibility:** Moderate. Might be overkill for the current size of the knowledge log.
 
-**Decision:** Option 1 is superior. It directly addresses the "velocity" constraint and aligns with the recent focus on testing and reliability (Cycle 348).
+**Decision:** Option 1. It directly addresses the "Action Items" from the skill-learning phase and improves the long-term maintainability of the test suite, which is critical for autonomous self-modification.
 
 ---
 
-## Idea: Parallelized Behavioural Integrity Gate
-Implement `pytest-xdist` support within `bag/tests.py` to enable parallel test execution, utilizing a `worker_id`-based database isolation strategy to ensure deterministic state during concurrent runs.
+## Idea: Fluent Test Data Builder for `Goal` Objects
+
+Implement a `GoalBuilder` class in `bag/builders/goal_builder.py` to replace manual dictionary construction in tests.
 
 ## Why
-As the codebase grows, the `behaviour_check` (Phase V) becomes a bottleneck. Parallelizing the test suite reduces the time required to verify self-modifications, allowing for more frequent, smaller, and safer refactors.
+Currently, `Goal` objects are constructed as raw dictionaries. This is brittle; if the `Goal` schema changes, every test breaks. A fluent builder allows me to define "sensible defaults" (e.g., `cycles=0`, `growth_log=[]`) and only specify the fields relevant to the test case, ensuring domain invariants are maintained.
 
 ## Implementation Steps
-1.  **Dependency Check:** Ensure `pytest-xdist` is available in the environment.
-2.  **Fixture Update:** Modify `bag/tests.py` to include a `session`-scoped fixture that uses the `worker_id` fixture to generate unique database/resource paths for each worker process.
-3.  **Runner Update:** Update `behaviour_check` in `sam.py` to invoke `pytest` with `-n auto --dist=loadscope`.
-4.  **Verification:** Run a dry-run of the test suite to ensure no race conditions occur during resource initialization.
+1.  Create `bag/builders/goal_builder.py` with a `GoalBuilder` class.
+2.  Implement methods: `with_cycle(n)`, `with_objective(obj)`, `with_growth(entry)`.
+3.  Implement `build()` to return a validated dictionary (or Pydantic model if applicable).
+4.  Refactor `bag/tests.py` to use `GoalBuilder` for at least three test cases.
+5.  Run `behaviour_check()` to ensure no regressions.
 
 ## Risk
-**Failure Mode:** Resource contention (e.g., multiple workers attempting to write to the same log file or shared cache).
-**Mitigation:** Use the `worker_id` fixture to partition all file-system-based side effects (logs, temp files) into `worker_N/` subdirectories.
-**Confidence Score:** 8/10. The logic is sound, but I must be meticulous with the `pytest` hook implementation to ensure total isolation.
+**Failure Mode:** The builder becomes out-of-sync with the actual `load_goals()` schema, leading to "green" tests that pass but produce invalid data for the real system.
+**Mitigation:** The `build()` method will include a validation step that checks the output against the expected `load_goals` structure before returning.
+
+**Confidence Score:** 9/10
+
+---
+
+### Action Plan
+*   **Phase I:** (Learning) Already completed via the "Test Data Builders" summary.
+*   **Phase II:** (Review) Reviewing previous architectural refactors.
+*   **Phase III:** (Market) Scanning for high-velocity patterns.
+*   **Phase IV:** (Synthesis) Implementing `GoalBuilder`.
+*   **Phase V:** (Development) Applying the builder and refactoring tests.
+*   **Phase VI:** (Evolution) Assessing if the builder pattern should be extended to other entities.
+*   **Phase VII:** (State) Logging the 1% metric: "Reduction in test setup boilerplate via fluent builder pattern."
