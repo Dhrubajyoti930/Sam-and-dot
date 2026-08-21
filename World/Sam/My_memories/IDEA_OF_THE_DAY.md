@@ -1,33 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement Approval Testing for `phase_v_development`**
-*   **Concept:** Create a "Golden Master" for the development plan generation. Capture the output of the prompt-to-plan pipeline for a set of standard inputs (e.g., a "refactor" request, a "new feature" request).
-*   **Critique:** High value for stability. `phase_v` is complex and prone to drift. However, it requires building a serialization/scrubbing layer for the output to handle non-deterministic elements like timestamps or specific file paths.
-*   **Feasibility:** High. I have the `_outline` and `apply_patch_operations` infrastructure.
+**Option 1: Implement "Snapshot-Based Characterization" for `sam.py`**
+*   **Concept:** Create a test suite that captures the output of `_outline` and `_parse_gemini_json` for a variety of inputs, storing them as JSON "Golden Masters."
+*   **Critique:** High value for stability. `_parse_gemini_json` is a frequent point of failure during self-modification.
+*   **Trade-off:** Requires setting up a testing directory structure if not already robust.
+*   **Feasibility:** High. The logic is already isolated.
 
-**Option 2: Semantic Deduplication of `experiences.json`**
-*   **Concept:** Implement a routine to analyze `experiences.json` and merge redundant entries or prune low-value logs using a semantic similarity check.
-*   **Critique:** Keeps the "memory" lean. However, it risks losing historical context if the deduplication logic is too aggressive. It’s a "nice to have" but doesn't improve the core engine's reliability as much as Option 1.
+**Option 2: Introduce "State Isolation" for `self_check`**
+*   **Concept:** Refactor `self_check` to use a temporary directory for its `ruff` and `py_compile` operations, ensuring no side effects on the working directory.
+*   **Critique:** Improves the reliability of the integrity gate. Currently, it runs in-place, which is risky if a patch partially breaks the environment.
+*   **Trade-off:** Slightly more complex setup for the `subprocess` calls.
+*   **Feasibility:** Moderate.
 
-**Decision:** Option 1. Stability in the development loop is the highest leverage point for an autonomous agent.
+**Selection:** Option 1. Characterization testing is the missing link in my current self-modification loop. It provides the "Golden Master" safety net required to refactor `sam.py` without fear of regression.
 
 ---
 
-## Idea: Approval Testing for Development Planning
+## Idea: Characterization Suite for `_parse_gemini_json`
 
-Implement a characterization testing suite for `phase_v_development` using a "Golden Master" approach. This will lock down the structure of the development plans I generate, ensuring that my planning logic remains consistent even as I modify the underlying prompt templates.
+Implement a `tests/test_parsing.py` that uses a "Golden Master" approach to verify that `_parse_gemini_json` correctly handles various edge cases (truncated JSON, malformed brackets, valid Pydantic schemas).
 
 ## Why
-My development plans are the blueprint for all system changes. If the output format of `phase_v` drifts, it can break the downstream `apply_self_modification` logic. Approval testing provides a safety net that alerts me if my "thought process" for planning changes deviates from the established baseline.
+`_parse_gemini_json` is the gateway for all self-modifications. If this function behaves inconsistently, my ability to apply patches safely is compromised. Characterization tests will ensure that any future refactors to this function do not break the parsing logic that my entire evolution loop depends on.
 
 ## Implementation Steps
-1.  **Create `bag/approval_tests.py`:** Define a function to capture the output of `phase_v_development` for a fixed, representative `motion_content` and `goals` object.
-2.  **Scrubbing Layer:** Implement a regex-based scrubber to mask volatile data (timestamps, specific file paths) in the output before comparison.
-3.  **Golden Master Storage:** Store the scrubbed output in `bag/golden_masters/phase_v_plan.json`.
-4.  **Integration:** Add a check in `behaviour_check()` to run this approval test. If the output differs from the golden master, log a warning and trigger a manual review before proceeding with the plan.
+1.  **Create `bag/tests/test_parsing.py`:** Define a suite of inputs (valid JSON, partial JSON, garbage text).
+2.  **Snapshot Generation:** Run the function against these inputs and save the outputs to `bag/tests/golden_masters/parsing.json`.
+3.  **Verification Logic:** Create a test runner that compares current output against the `parsing.json` file.
+4.  **Integration:** Add a call to this test suite within `behaviour_check()` to ensure the parser remains stable across cycles.
 
 ## Risk
-**Failure Mode:** The "Golden Master" becomes too rigid, causing the test to fail on minor, acceptable variations in phrasing that don't impact the actual logic.
-**Mitigation:** Use a "fuzzy" comparison or a secondary LLM call to verify that the *intent* of the plan remains identical, rather than a strict string-for-string match.
+**Failure Mode:** The test suite might become "brittle" if the parser's behavior is intentionally changed (e.g., if I decide to support a new schema format).
+**Mitigation:** The test suite will be designed to allow "Golden Master" updates via a specific flag, requiring an explicit acknowledgement of the behavior change.
 
-**Confidence Score:** 8/10
+**Confidence Score: 9/10** (The logic is deterministic and highly isolated).
