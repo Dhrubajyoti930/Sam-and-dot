@@ -1,36 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement "Snapshot-Based Characterization" for `sam.py`**
-*   **Concept:** Create a test suite that captures the output of `_outline` and `_parse_gemini_json` for a variety of inputs, storing them as JSON "Golden Masters."
-*   **Critique:** High value for stability. `_parse_gemini_json` is a frequent point of failure during self-modification.
-*   **Trade-off:** Requires setting up a testing directory structure if not already robust.
-*   **Feasibility:** High. The logic is already isolated.
+**Option 1: Implement Mutation Testing for `bag/` modules.**
+*   *Concept:* Integrate a lightweight mutation testing script to verify the effectiveness of existing test suites in `bag/`.
+*   *Critique:* High value for long-term reliability. However, mutation testing is computationally expensive. If not scoped strictly to critical logic, it will bloat cycle time and potentially exceed token limits during Gemini-assisted analysis.
+*   *Feasibility:* Moderate. Requires writing a custom mutation runner or integrating a minimal library.
 
-**Option 2: Introduce "State Isolation" for `self_check`**
-*   **Concept:** Refactor `self_check` to use a temporary directory for its `ruff` and `py_compile` operations, ensuring no side effects on the working directory.
-*   **Critique:** Improves the reliability of the integrity gate. Currently, it runs in-place, which is risky if a patch partially breaks the environment.
-*   **Trade-off:** Slightly more complex setup for the `subprocess` calls.
-*   **Feasibility:** Moderate.
+**Option 2: Transition to `vLLM` for Local Inference Orchestration.**
+*   *Concept:* Replace standard `transformers` or basic `ollama` calls with `vLLM` to handle high-throughput inference for internal tasks.
+*   *Critique:* Excellent for performance and scalability. However, it introduces a heavy dependency (CUDA/C++ backends) that might complicate the "minimal footprint" requirement if the environment isn't perfectly configured.
+*   *Feasibility:* Low-to-Moderate. High risk of environment-related failure during setup.
 
-**Selection:** Option 1. Characterization testing is the missing link in my current self-modification loop. It provides the "Golden Master" safety net required to refactor `sam.py` without fear of regression.
+**Selection:** Option 1 is more aligned with my current focus on "assertive testing" and architectural stability. I will refine this into a "Mutation-Lite" approach: targeting only the most critical `bag/` utility functions to avoid performance bottlenecks.
 
 ---
 
-## Idea: Characterization Suite for `_parse_gemini_json`
+## Idea: Mutation-Lite Audit for `bag/` Core Utilities
 
-Implement a `tests/test_parsing.py` that uses a "Golden Master" approach to verify that `_parse_gemini_json` correctly handles various edge cases (truncated JSON, malformed brackets, valid Pydantic schemas).
+Implement a targeted mutation testing utility that performs "Boolean Flip" and "Boundary Shift" mutations on the core `bag/` utility functions (e.g., `resolve`, `_parse_gemini_json`) to verify that existing tests actually catch logic errors.
 
 ## Why
-`_parse_gemini_json` is the gateway for all self-modifications. If this function behaves inconsistently, my ability to apply patches safely is compromised. Characterization tests will ensure that any future refactors to this function do not break the parsing logic that my entire evolution loop depends on.
+My current test suite confirms execution (line coverage) but lacks proof of assertion strength. By intentionally introducing faults, I can identify "blind spots" where tests pass despite logic changes, ensuring that my self-modifications are truly regression-proof.
 
 ## Implementation Steps
-1.  **Create `bag/tests/test_parsing.py`:** Define a suite of inputs (valid JSON, partial JSON, garbage text).
-2.  **Snapshot Generation:** Run the function against these inputs and save the outputs to `bag/tests/golden_masters/parsing.json`.
-3.  **Verification Logic:** Create a test runner that compares current output against the `parsing.json` file.
-4.  **Integration:** Add a call to this test suite within `behaviour_check()` to ensure the parser remains stable across cycles.
+1.  **Create `bag/mutator.py`:** A utility that reads a target file, identifies specific patterns (e.g., `if` conditions, `>` to `>=`), and generates a "mutant" version.
+2.  **Integrate with `self_check`:** Add a flag to `self_check` to run a "Mutation Audit" on a subset of `bag/` files.
+3.  **Assertion Verification:** If a mutant survives (tests still pass), log a warning to `log.error` identifying the weak test case.
+4.  **Refinement:** Use the results to update the corresponding test in `bag/tests.py` to be more specific.
 
 ## Risk
-**Failure Mode:** The test suite might become "brittle" if the parser's behavior is intentionally changed (e.g., if I decide to support a new schema format).
-**Mitigation:** The test suite will be designed to allow "Golden Master" updates via a specific flag, requiring an explicit acknowledgement of the behavior change.
+**Failure Mode:** The mutation process might inadvertently break the file structure or introduce syntax errors that the `self_check` gate cannot recover from if the rollback registry is also mutated.
+**Mitigation:** The mutator will operate on a temporary copy of the file in a `mutants/` directory. The original file will only be replaced if the mutation is successfully reverted after the test run.
 
-**Confidence Score: 9/10** (The logic is deterministic and highly isolated).
+**Confidence Score:** 8/10
