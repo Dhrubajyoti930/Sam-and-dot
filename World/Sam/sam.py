@@ -18,7 +18,7 @@ import itertools
 import sys
 import json
 
-# from workshop_bench.infrastructure.distributed.messaging.event_bus import ScratchpadEntry, Status, log_entry
+# from workshop_bench.infrastructure.distributed.messaging.bus import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging

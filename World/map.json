@@ -26,7 +26,7 @@
     "Sam/bag/workshop_paths.py",
     "Sam/bag/patch_ops.py",
     "Sam/bag/governance.py",
-    "Sam/workshop_bench/infrastructure/distributed/messaging/event_bus.py",
+    "Sam/workshop_bench/infrastructure/distributed/messaging/bus.py",
     "Sam/workshop_bench/infrastructure/distributed/storage/event_store.py",
     "Sam/workshop_bench/domain/evaluator.py",
     "Sam/workshop_bench/agents/rag/controller.py",
@@ -38,9 +38,10 @@
     "Sam/Others/__init__.py",
     "Sam/chest/rollback_registry/sam_20260821T080702Z.py",
     "Sam/chest/rollback_registry/sam_20260821T170425Z.py",
+    "Sam/chest/rollback_registry/sam_20260822T165033Z.py",
     "Sam/chest/rollback_registry/sam_20260822T031546Z.py",
-    "Sam/chest/rollback_registry/sam_20260820T080629Z.py",
     "Sam/chest/rollback_registry/sam_20260820T110058Z.py",
+    "Sam/chest/rollback_registry/sam_20260822T165110Z.py",
     "Sam/chest/rollback_registry/sam_20260820T170222Z.py",
     "Sam/chest/rollback_registry/sam_20260822T105255Z.py",
     "Sam/chest/rollback_registry/sam_20260821T110309Z.py",
@@ -54,7 +55,6 @@
     "Sam/chest/rollback_registry/sam_20260821T080626Z.py",
     "Sam/chest/rollback_registry/sam_20260821T033145Z.py",
     "Sam/chest/rollback_registry/sam_20260822T105220Z.py",
-    "Sam/chest/rollback_registry/sam_20260820T080552Z.py",
     "Sam/chest/rollback_registry/sam_20260820T170258Z.py"
   ],
   "tests": [
