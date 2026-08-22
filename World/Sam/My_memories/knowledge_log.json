@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 354
+    "review_due_cycle": 369
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 354
+    "review_due_cycle": 369
   },
   {
     "cycle": 51,
@@ -1990,5 +1990,11 @@
     "topic": "Understand test coverage: line, branch, condition, mutation",
     "summary": "### Technical Summary: Advanced Test Coverage Metrics\n\nTest coverage is a proxy for confidence, but its utility depends on the granularity of the metric. Relying solely on line coverage is a common pitfall; it confirms execution but ignores logic paths.\n\n**1. Line & Branch Coverage**\n*   **Line Coverage:** The baseline. It tracks which executable statements were hit. It is insufficient for complex logic, as it fails to account for implicit branches (e.g., `if` statements without `else` blocks).\n",
     "review_due_cycle": 358
+  },
+  {
+    "cycle": 355,
+    "topic": "Study cyclomatic complexity and its effect on testability",
+    "summary": "### Technical Summary: Cyclomatic Complexity and Testability\n\nCyclomatic complexity ($CC$) measures the number of linearly independent paths through a program's source code. Mathematically defined as $M = E - N + 2P$ (where $E$ is edges, $N$ nodes, and $P$ connected components), it serves as a proxy for cognitive load and, more critically, the minimum number of test cases required to achieve branch coverage.\n\n**The Correlation**\nHigh $CC$ is the primary antagonist of testability. As $CC$ increas",
+    "review_due_cycle": 359
   }
 ]
