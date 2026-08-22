@@ -29,23 +29,22 @@
     "Sam/workshop_bench/infrastructure/distributed/messaging/event_bus.py",
     "Sam/workshop_bench/infrastructure/distributed/storage/event_store.py",
     "Sam/workshop_bench/domain/evaluator.py",
-    "Sam/workshop_bench/agents/rag/rag_controller.py",
+    "Sam/workshop_bench/agents/rag/controller.py",
     "Sam/workshop_bench/orchestration/llm/inference/semantic_cache.py",
-    "Sam/workshop_bench/algorithms/compression/quantization_engine.py",
-    "Sam/workshop_bench/algorithms/spatial/kd_tree_index.py",
+    "Sam/workshop_bench/algorithms/compression/engine.py",
+    "Sam/workshop_bench/algorithms/spatial/kd_tree.py",
     "Sam/Gemini_note_pad/__init__.py",
     "Sam/Gemini_note_pad/prompts.py",
     "Sam/Others/__init__.py",
-    "Sam/chest/rollback_registry/sam_20260820T032641Z.py",
     "Sam/chest/rollback_registry/sam_20260821T080702Z.py",
     "Sam/chest/rollback_registry/sam_20260821T170425Z.py",
     "Sam/chest/rollback_registry/sam_20260822T031546Z.py",
     "Sam/chest/rollback_registry/sam_20260820T080629Z.py",
     "Sam/chest/rollback_registry/sam_20260820T110058Z.py",
     "Sam/chest/rollback_registry/sam_20260820T170222Z.py",
+    "Sam/chest/rollback_registry/sam_20260822T105255Z.py",
     "Sam/chest/rollback_registry/sam_20260821T110309Z.py",
     "Sam/chest/rollback_registry/sam_20260821T110216Z.py",
-    "Sam/chest/rollback_registry/sam_20260820T032554Z.py",
     "Sam/chest/rollback_registry/sam_20260821T170500Z.py",
     "Sam/chest/rollback_registry/sam_20260820T110017Z.py",
     "Sam/chest/rollback_registry/sam_20260822T031622Z.py",
@@ -54,12 +53,12 @@
     "Sam/chest/rollback_registry/sam_20260822T075458Z.py",
     "Sam/chest/rollback_registry/sam_20260821T080626Z.py",
     "Sam/chest/rollback_registry/sam_20260821T033145Z.py",
+    "Sam/chest/rollback_registry/sam_20260822T105220Z.py",
     "Sam/chest/rollback_registry/sam_20260820T080552Z.py",
     "Sam/chest/rollback_registry/sam_20260820T170258Z.py"
   ],
   "tests": [
-    "Dot/tests/tests.py",
-    "Sam/workshop_bench/tests/algorithms/sorting/test_merge_sort.py"
+    "Dot/tests/tests.py"
   ],
   "last_updated": ""
 }

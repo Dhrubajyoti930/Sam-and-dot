@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement "Cognitive Complexity" Linting**
-*   **Concept:** Replace or augment the current `ruff` (cyclomatic complexity) check with a custom script that calculates "Cognitive Complexity" (nesting depth, `async/await` overhead, and logical branching).
-*   **Critique:** High value for maintainability. However, building a robust AST-based cognitive complexity parser is non-trivial and prone to edge-case failures that could trigger unnecessary rollbacks.
-*   **Trade-off:** High maintenance cost for the parser vs. better code quality.
+**Option 1: Dependency Injection (DI) Container Implementation**
+*   **Concept:** Create a lightweight `Container` class in `bag/` to manage the lifecycle of core services (e.g., `GeminiClient`, `Logger`, `FileSystem`).
+*   **Critique:** While this aligns with my recent learning, it risks "magic" and over-engineering. If I implement a full container, I might obscure the dependency graph, which contradicts my goal of "minimal footprint."
+*   **Feasibility:** High. I can start with a simple `Registry` pattern that holds instances, avoiding complex reflection.
 
-**Option 2: Strategy Pattern Refactor for `phase_v_development`**
-*   **Concept:** The `phase_v_development` function is currently a monolithic orchestrator. I will refactor the "Plan Generation" logic into a Strategy pattern where different "Planner" classes (e.g., `RefactorPlanner`, `FeaturePlanner`, `BugfixPlanner`) handle the logic.
-*   **Critique:** Directly addresses the "Cyclomatic Complexity" skill learned this cycle. It flattens the control flow and makes the development loop more testable.
-*   **Trade-off:** Requires creating a new `bag/planners.py` module, increasing file count but significantly reducing the complexity of `sam.py`.
+**Option 2: Interface-based Refactoring of `phase_v_development`**
+*   **Concept:** Define a `DevelopmentStrategy` protocol (using `typing.Protocol`) and refactor the Strategy-based dispatcher from Cycle 355 to use these protocols.
+*   **Critique:** This directly improves the testability of the development phase. It forces me to define clear contracts for how I plan, which makes the "Phase V" logic more predictable.
+*   **Feasibility:** Very high. It builds on existing work and adheres to the "Dependency Inversion" principle I learned this cycle.
 
-**Decision:** Option 2. It aligns perfectly with the "Cyclomatic Complexity" skill acquisition and the high-priority action item to refactor complex conditionals into a Strategy pattern.
+**Decision:** I will pursue **Option 2**. It is a surgical, high-leverage refactor that directly addresses the "Dependency Injection" learning goal without introducing the overhead of a full DI container.
 
 ---
 
-## Idea: Strategy-Based Development Orchestration
+## Idea: Protocol-based Strategy Dispatcher for Phase V
 
-Refactor `phase_v_development` from a monolithic function into a Strategy-based dispatcher.
+Refactor the `phase_v_development` strategy dispatcher to use `typing.Protocol` for defining development strategies. This enforces strict interface adherence for all strategy implementations, ensuring that any new development logic is inherently testable and decoupled from the main `sam.py` loop.
 
 ## Why
-The current `phase_v_development` function has high cyclomatic complexity due to the branching logic required to handle different types of development tasks (refactors vs. features). By moving this logic into discrete `Planner` classes, I improve testability, reduce the risk of side effects during self-modification, and make the system extensible for future agentic workflows.
+My current strategy dispatcher relies on duck typing. By introducing `typing.Protocol`, I gain static analysis benefits (via `mypy` or `ruff`) and ensure that all future development strategies (e.g., `RefactorStrategy`, `FeatureStrategy`, `BugfixStrategy`) strictly adhere to a defined contract. This is the practical application of the Dependency Inversion Principle.
 
 ## Implementation Steps
-1.  Create `bag/planners.py` defining a `BasePlanner` protocol and concrete implementations (e.g., `RefactorPlanner`, `FeaturePlanner`).
-2.  Update `sam.py` to import the registry and dispatch the `motion_content` to the appropriate planner.
-3.  Use `apply_patch_operations` to replace the existing `phase_v_development` body with a clean, polymorphic call.
-4.  Verify with `behaviour_check()` to ensure the dispatch logic maintains parity with previous cycles.
+1.  **Define Protocol:** Create `bag/protocols.py` containing a `DevelopmentStrategy` protocol with a `run(plan: str) -> bool` method.
+2.  **Update Strategies:** Update existing strategy classes in `bag/strategies/` to explicitly inherit from or implement this protocol.
+3.  **Refactor Dispatcher:** Modify `phase_v_development` in `sam.py` to type-hint the strategy objects using the protocol, ensuring the dispatcher only accepts valid implementations.
+4.  **Verification:** Run `self_check()` to ensure the new type hints are valid and the logic remains sound.
 
 ## Risk
-**Failure Mode:** The dynamic dispatch mechanism might fail to correctly identify the "type" of task from `motion_content`, leading to an empty plan or an incorrect strategy selection.
-**Mitigation:** Implement a "DefaultPlanner" fallback that retains the original logic, ensuring that if the strategy selection is ambiguous, the system defaults to the existing, proven behavior.
+**Failure Mode:** "Interface Explosion." I might create too many small, unnecessary protocols for simple tasks.
+**Mitigation:** I will limit the protocol to only the `DevelopmentStrategy` interface. I will not create protocols for internal helper functions unless they are reused across at least three distinct strategies.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 9/10. The logic is well-contained, and the existing strategy-based architecture makes this a low-risk, high-reward refactor.
