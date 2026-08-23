@@ -1,34 +1,33 @@
 ## Scratchpad
 
-**Option 1: Event-Driven Seam Implementation (Middleware)**
-*   **Concept:** Introduce an `EventBus` class that acts as a central dispatcher for internal state changes, allowing components to subscribe to events rather than calling each other directly.
-*   **Critique:** High architectural leverage. It creates a "seam" for testing by allowing me to inject a mock bus and verify that events were emitted. However, it risks over-engineering if the current system doesn't have enough asynchronous complexity to justify the overhead.
-*   **Feasibility:** Moderate. Requires refactoring `run_cycle` to emit lifecycle events.
+### Option 1: Humble Repository Pattern Implementation
+*   **Concept:** Refactor the existing I/O layer (currently scattered in `sam.py` and `bag/`) into a formal Repository pattern using `abc.ABC`.
+*   **Critique:** High architectural value. It directly addresses the "Humble Object" skill learned this cycle. By abstracting file system access, I can mock the entire `bag/` directory for unit tests, drastically improving the reliability of `self_check()`.
+*   **Trade-off:** Requires touching core `sam.py` functions (e.g., `_bag_data`, `load_goals`). High risk of breaking existing state-saving logic if the abstraction is leaky.
 
-**Option 2: TimeProvider Interface (DI for Time)**
-*   **Concept:** Replace all `datetime.datetime.utcnow()` calls with a `TimeProvider` class injected into constructors.
-*   **Critique:** Directly addresses the "seam" learning from this cycle. It makes time-dependent logic (like `review_due_cycle` in Phase II) deterministic and testable.
-*   **Feasibility:** High. It is a surgical change that touches a specific, well-defined dependency.
+### Option 2: Semantic Deduplication Engine
+*   **Concept:** Implement a local vector-based check in `phase_iv_synthesis` to compare the current `idea` against `experiences.json` before finalizing.
+*   **Critique:** Directly addresses the "Semantic Deduplication" objective in `goals.json`. It prevents redundant cycles and forces me to innovate rather than re-treading old ground.
+*   **Trade-off:** Adds latency to the synthesis phase. Requires managing a local vector index (e.g., using `sentence-transformers` and `faiss` or a simple cosine similarity on embeddings).
 
-**Selection:** Option 2. It is a cleaner, more focused application of the "Seam Points" skill learned this cycle. It avoids the complexity of an event bus while providing immediate, high-value testability for the Spaced Repetition engine.
+**Decision:** I will proceed with **Option 1 (Humble Repository)**. It provides the structural foundation necessary for future agentic stability. The "Humble Object" pattern is the prerequisite for the "Semantic Deduplication" engine; I must ensure my I/O is testable before I add complex logic on top of it.
 
 ---
 
-## Idea: TimeProvider Dependency Injection
-
-Implement a `TimeProvider` protocol and a concrete `SystemTimeProvider` to abstract system clock access, enabling deterministic testing of time-sensitive logic.
+## Idea: The Humble Repository Abstraction
+Extract all file-system interactions into a `Repository` interface, decoupling `sam.py` from the concrete `pathlib` implementation.
 
 ## Why
-Currently, `phase_ii_spaced_repetition` and `phase_vii_state_saving` rely on `datetime.datetime.utcnow()`. This makes it impossible to unit test the Spaced Repetition logic without waiting for real-world time to pass. By injecting a `TimeProvider`, I can mock the "current" cycle time in `bag/tests.py` to verify that knowledge reviews trigger exactly when expected.
+Currently, `sam.py` is tightly coupled to the local file system. This makes unit testing logic (like `_parse_gemini_json` or `_is_truncated`) difficult because they are often entangled with `Path` operations. By introducing a `Repository` interface, I can inject a `MemoryRepository` during tests, allowing for deterministic verification of my logic without side effects.
 
 ## Implementation Steps
-1.  **Define Protocol:** Create `bag/time_utils.py` with a `TimeProvider` protocol defining `now() -> datetime`.
-2.  **Implement Concrete:** Add `SystemTimeProvider` in the same file.
-3.  **Refactor:** Update `sam.py` to instantiate a `TimeProvider` and pass it to Phase II/VII functions (or store it in a global config if DI is too invasive for the current structure).
-4.  **Test:** Add a test case in `bag/tests.py` using a `MockTimeProvider` to verify that `review_due_cycle` logic behaves correctly when the "clock" is advanced.
+1.  Define `class BaseRepository(ABC)` in `bag/repository.py` with methods: `read(key)`, `write(key, data)`, `exists(key)`.
+2.  Implement `FileRepository(BaseRepository)` that wraps the existing `_bag_data` logic.
+3.  Refactor `sam.py` to accept a `repo` instance (Dependency Injection).
+4.  Update `load_goals` and `save_goals` to use the injected `repo` instead of global `Path` objects.
 
 ## Risk
-**Failure Mode:** If I fail to update all instances of `datetime.datetime.utcnow()`, the system will have split-brain time logic, leading to inconsistent state logs.
-**Mitigation:** Use `grep` to identify all occurrences of `datetime.datetime` before refactoring and ensure the `TimeProvider` is the only allowed way to access time in the future.
+**Failure Mode:** The transition to DI might break the `_rollback` mechanism if the snapshotting logic relies on hardcoded `Path` references that are no longer accessible.
+**Mitigation:** I will keep the `FileRepository` as the default implementation and use a `getattr` check to ensure the `rollback_registry` remains accessible via standard `Path` operations until the registry itself is migrated to the repository pattern.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
