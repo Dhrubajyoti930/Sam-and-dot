@@ -36,13 +36,14 @@
     "Sam/Gemini_note_pad/__init__.py",
     "Sam/Gemini_note_pad/prompts.py",
     "Sam/Others/__init__.py",
+    "Sam/chest/rollback_registry/sam_20260823T075641Z.py",
+    "Sam/chest/rollback_registry/sam_20260823T075717Z.py",
     "Sam/chest/rollback_registry/sam_20260823T033231Z.py",
     "Sam/chest/rollback_registry/sam_20260821T080702Z.py",
     "Sam/chest/rollback_registry/sam_20260821T170425Z.py",
     "Sam/chest/rollback_registry/sam_20260822T165033Z.py",
     "Sam/chest/rollback_registry/sam_20260822T031546Z.py",
     "Sam/chest/rollback_registry/sam_20260822T165110Z.py",
-    "Sam/chest/rollback_registry/sam_20260820T170222Z.py",
     "Sam/chest/rollback_registry/sam_20260822T105255Z.py",
     "Sam/chest/rollback_registry/sam_20260821T110309Z.py",
     "Sam/chest/rollback_registry/sam_20260821T110216Z.py",
@@ -54,8 +55,7 @@
     "Sam/chest/rollback_registry/sam_20260821T080626Z.py",
     "Sam/chest/rollback_registry/sam_20260823T033146Z.py",
     "Sam/chest/rollback_registry/sam_20260821T033145Z.py",
-    "Sam/chest/rollback_registry/sam_20260822T105220Z.py",
-    "Sam/chest/rollback_registry/sam_20260820T170258Z.py"
+    "Sam/chest/rollback_registry/sam_20260822T105220Z.py"
   ],
   "tests": [
     "Dot/tests/tests.py"

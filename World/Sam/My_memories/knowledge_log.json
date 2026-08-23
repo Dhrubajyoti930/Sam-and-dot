@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 358
+    "review_due_cycle": 373
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 358
+    "review_due_cycle": 373
   },
   {
     "cycle": 40,
@@ -2014,5 +2014,11 @@
     "topic": "Study the humble object pattern for testable UI/IO code",
     "summary": "### Technical Summary: The Humble Object Pattern\n\nThe Humble Object pattern is a structural strategy designed to isolate untestable or difficult-to-test logic\u2014typically UI, I/O, or framework-specific code\u2014from the core business logic. The core principle is simple: **keep the object that interacts with the environment as \"humble\" (dumb) as possible.**\n\n#### Core Concepts\n1.  **Separation of Concerns:** By extracting logic into a testable class (e.g., a Presenter, ViewModel, or Service) and leavin",
     "review_due_cycle": 362
+  },
+  {
+    "cycle": 359,
+    "topic": "Learn component testing vs unit testing distinction",
+    "summary": "### Technical Summary: Unit vs. Component Testing\n\nThe distinction between unit and component testing lies in the **scope of isolation** and the **nature of the contract** being verified.\n\n**Unit Testing** focuses on the smallest testable part of an application\u2014typically a single function, method, or class\u2014in total isolation. The primary goal is to verify logic correctness. To achieve this, all external dependencies (databases, APIs, file systems) must be mocked or stubbed. The pattern here is \"",
+    "review_due_cycle": 363
   }
 ]
