@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 360
+    "review_due_cycle": 375
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 360
+    "review_due_cycle": 375
   },
   {
     "cycle": 42,
@@ -2026,5 +2026,11 @@
     "topic": "Understand test-driven refactoring technique",
     "summary": "### Technical Summary: Test-Driven Refactoring (TDR)\n\nTest-Driven Refactoring is the practice of using a robust test suite as a safety harness to enable structural improvements without altering external behavior. Unlike TDD (which drives design), TDR focuses on **preserving invariants** while reducing technical debt.\n\n**Core Concepts:**\n1.  **The Characterization Test:** Before refactoring legacy code, one must write characterization tests (or \"golden master\" tests). These capture the current be",
     "review_due_cycle": 364
+  },
+  {
+    "cycle": 361,
+    "topic": "Study TCR (test && commit || revert) workflow",
+    "summary": "### TCR (Test && Commit || Revert) Workflow: Technical Summary\n\nTCR is a radical development methodology that replaces the traditional \"edit-test-commit\" cycle with a binary state machine: **Test && Commit || Revert**. It forces the developer to operate in extremely small, verifiable increments, effectively eliminating the \"broken state\" as a long-term possibility.\n\n#### Core Mechanics\n1.  **Test (T):** The developer executes the test suite. If the tests pass, the code is automatically committed",
+    "review_due_cycle": 365
   }
 ]
