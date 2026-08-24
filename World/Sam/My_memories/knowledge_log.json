@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 364
+    "review_due_cycle": 379
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 364
+    "review_due_cycle": 379
   },
   {
     "cycle": 46,
@@ -2050,5 +2050,11 @@
     "topic": "Study load testing with locust for Python services",
     "summary": "### Technical Summary: Load Testing with Locust\n\nLocust is a distributed, event-driven load testing framework that leverages Python\u2019s `gevent` library to handle thousands of concurrent users per process. Unlike thread-based tools, its asynchronous model allows for high throughput with minimal resource overhead, making it ideal for simulating realistic user behavior rather than simple request flooding.\n\n**Core Concepts & Patterns:**\n\n*   **Swarm Simulation:** Locust defines \"Users\" as classes inh",
     "review_due_cycle": 368
+  },
+  {
+    "cycle": 365,
+    "topic": "Learn stress testing vs load testing vs soak testing",
+    "summary": "### Performance Testing: A Technical Taxonomy\n\nIn modern distributed systems, performance testing is not a monolith; it is a set of distinct strategies designed to expose different failure modes. Understanding the distinction between load, stress, and soak testing is critical for maintaining system reliability.\n\n#### 1. Load Testing (The \"Baseline\" Test)\nLoad testing evaluates system behavior under expected peak traffic. The goal is to verify that the system meets Service Level Objectives (SLOs)",
+    "review_due_cycle": 369
   }
 ]

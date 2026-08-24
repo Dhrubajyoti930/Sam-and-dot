@@ -1,33 +1,39 @@
 ## Scratchpad
 
-**Option 1: Locust-based Performance Regression Suite**
-*   **Concept:** Integrate the learned Locust skills into the CI pipeline to automatically baseline API latency.
-*   **Critique:** High value for stability. However, it requires setting up a mock server environment or a stable staging endpoint, which might be outside the current `sam.py` scope.
-*   **Feasibility:** Moderate. Requires careful handling of environment variables and test data isolation.
+**Option 1: Implement a "Performance-as-Code" Gate in `self_check()`**
+*   **Concept:** Integrate a lightweight `k6` or `locust` execution within `self_check()` to ensure that any patch applied does not degrade P95 latency beyond a defined threshold.
+*   **Critique:** High value for long-term stability. However, `k6` requires an external binary dependency which might complicate the environment. It risks making the `self_check()` loop too slow, potentially causing timeouts in the CI/CD pipeline.
+*   **Feasibility:** Moderate. Requires setting up a baseline and a mock-server environment to test against.
 
-**Option 2: Agentic "Self-Healing" Loop for Failed Tests**
-*   **Concept:** Enhance `behaviour_check()` to not just alert Dot, but to automatically attempt a "surgical repair" using the `_behaviour_fix_with_gemini` logic before escalating to a full rollback.
-*   **Critique:** This aligns with the "Agentic Workflows" market signal. It reduces downtime but risks "infinite loop" scenarios if the LLM keeps proposing the same broken patch.
-*   **Feasibility:** High. The infrastructure for `_behaviour_fix_with_gemini` already exists; it just needs to be integrated into the `behaviour_check` flow.
+**Option 2: Observability-Driven Refactoring (OpenTelemetry Integration)**
+*   **Concept:** Instrument `ask_gemini` and `apply_patch_operations` with OpenTelemetry spans to visualize the "latency-to-success" ratio of self-modifications.
+*   **Critique:** Directly addresses the self-correction weakness identified in the cycle summary. It provides the "high-cardinality observability" I noted as missing. It is non-intrusive and improves debugging without altering core logic.
+*   **Feasibility:** High. Python’s `opentelemetry-api` is mature and integrates well with existing logging.
 
-**Decision:** Option 2. It directly addresses the "Agentic Workflows" market signal and improves my autonomy by reducing the frequency of manual interventions required by Dot.
+**Decision:** Option 2 is superior. It provides the necessary data to make informed performance decisions in future cycles without the overhead of running active load tests on every commit.
 
 ---
 
-## Idea: Autonomous Behavioural Self-Healing
+## Idea: Observability-Driven Self-Correction (Telemetry Instrumentation)
 
-Implement an automated "Retry-with-Context" loop within `behaviour_check()`. If a test fails, Sam will perform one automated attempt to fix the regression by feeding the test failure and the recent git-diff (or patch history) to Gemini, applying the fix, and re-running the test *before* triggering a rollback.
+### Why
+My current self-correction loop is a "black box." When a patch fails, I see the result (the error) but lack visibility into the *process* (e.g., how many tokens were consumed, how long the Gemini API took, or where the patch application stalled). Instrumenting these critical paths with OpenTelemetry will allow me to correlate performance degradation with specific code paths.
 
-## Why
-The current `behaviour_check` is binary: it fails and rolls back. By adding a "Self-Healing" layer, I can resolve minor, non-critical regressions (like import errors or logic typos) autonomously, keeping the development velocity high while maintaining system integrity.
+### Implementation Steps
+1.  **Dependency:** Add `opentelemetry-api` and `opentelemetry-sdk` to the environment.
+2.  **Instrumentation:** Wrap `ask_gemini` and `apply_patch_operations` with a decorator that records execution time, token usage (if available), and success/failure status.
+3.  **Exporter:** Configure a simple `ConsoleSpanExporter` for now to log traces to the local `log` stream, allowing me to audit the "cost" of repairs in real-time.
+4.  **Integration:** Update `self_check()` to log a summary of the trace if a failure occurs, providing immediate context for the rollback.
 
-## Implementation Steps
-1.  **Modify `behaviour_check()`:** Update the failure branch to call `_behaviour_fix_with_gemini` if a `retry_count` (stored in a temporary file) is less than 1.
-2.  **State Persistence:** Create a temporary `bag/retry_state.json` to track the number of attempts to prevent infinite loops.
-3.  **Verification:** If the second attempt passes, log the success and clear the retry state. If it fails again, proceed to the existing `_alert_dot` and `_rollback` logic.
+### Risk
+**Failure Mode:** The instrumentation overhead might introduce latency that triggers the very timeouts I am trying to monitor.
+**Mitigation:** Use a `sampling` strategy (e.g., only trace 10% of successful calls, but 100% of failures) to minimize the footprint.
 
-## Risk
-**Failure Mode:** The LLM might hallucinate a "fix" that passes the specific test but introduces a subtle logic bug elsewhere in the system.
-**Mitigation:** The `_behaviour_fix_with_gemini` will be restricted to the files identified in the test failure stack trace, and the `self_check()` (Ruff) will run immediately after the patch to ensure no syntax errors were introduced.
+**Confidence Score:** 9/10
 
-**Confidence Score:** 8/10
+---
+
+## Action Items
+*   [ ] Research `opentelemetry-python` minimal setup for local logging.
+*   [ ] Define the `TraceDecorator` in a new `bag/telemetry.py` module.
+*   [ ] Integrate the decorator into `sam.py`'s core API interaction functions.
