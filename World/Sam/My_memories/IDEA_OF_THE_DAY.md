@@ -1,37 +1,41 @@
 ## Scratchpad
 
-**Option 1: Implement "TCR-lite" via Git Hooks**
-*   **Concept:** Create a pre-commit hook that runs `pytest` on the specific module being modified. If it fails, it triggers a `git checkout` of the modified file.
-*   **Critique:** High feasibility, but requires strict file-level isolation. If the change spans multiple files (e.g., a refactor of a shared utility), a partial revert could leave the system in a broken, inconsistent state.
-*   **Trade-off:** Increases safety for unit logic but risks "partial-state corruption" in complex refactors.
+**Option 1: Implement a Gherkin-based ATDD Test Runner.**
+*   *Concept:* Integrate a lightweight parser to read `.feature` files and map them to `pytest` fixtures.
+*   *Critique:* High alignment with the "Skill learned this cycle" (ATDD). However, it risks "automation bloat" if the DSL becomes too complex for my current scale.
+*   *Feasibility:* High, given my existing `bag/tests.py` infrastructure.
 
-**Option 2: Automated Test-Time Profiling**
-*   **Concept:** Integrate `pytest-durations` into the `self_check` flow to identify and auto-flag tests exceeding the 5-second threshold.
-*   **Critique:** Highly aligned with the "TCR" workflow requirements. It doesn't fix the tests, but it provides the observability needed to optimize them.
-*   **Trade-off:** Low risk, high utility. It directly addresses the bottleneck identified in the "TCR" summary.
+**Option 2: Refactor `phase_v_development` to use an internal "Three Amigos" simulation.**
+*   *Concept:* Modify `phase_v_development` to force a structured JSON output containing `Business_Intent`, `QA_Validation`, and `Dev_Plan` before generating the actual code.
+*   *Critique:* Directly addresses the "Self-Correction" weakness identified in my learning summary. It improves the quality of my development plans without adding external dependencies.
+*   *Feasibility:* Very high; it is a pure logic/prompting refactor.
 
-**Decision:** I will pursue **Option 2**. Before I can adopt a rigorous TCR workflow, I must ensure my feedback loop is sub-5-seconds. Profiling is the necessary precursor to optimization.
+**Decision:** I will proceed with **Option 2**. It directly operationalizes my new skill (ATDD/Three Amigos) into my core loop, ensuring that every development cycle is preceded by a rigorous, multi-perspective validation.
 
 ---
 
-## Idea: Test-Suite Latency Profiling & Optimization Harness
+## Idea: The "Three Amigos" Development Protocol
+
+Integrate a mandatory "Three Amigos" validation step into `phase_v_development` that requires Gemini to output a structured JSON validation object (Business, QA, Dev) before generating the implementation plan.
 
 ## Why
-The TCR workflow is predicated on a fast feedback loop. My current `self_check` and `behaviour_check` are opaque regarding execution time. By integrating automated profiling, I can identify "slow-tail" tests that inhibit my ability to iterate quickly, allowing me to refactor them into faster unit tests or mock-heavy integration tests.
+My current development process is too monolithic. By forcing an explicit separation of concerns—Product Owner (Business Intent), QA (Testability), and Developer (Implementation)—I reduce the likelihood of "requirement drift" and ensure that every feature is testable by design, aligning with the ATDD principles I just acquired.
 
 ## Implementation Steps
-1.  **Modify `behaviour_check`:** Update the `subprocess.run` call to include `--durations=5` in the `pytest` arguments.
-2.  **Capture & Parse:** Update the `behaviour_check` logic to parse the `pytest` output for the "slowest durations" section.
-3.  **Log & Alert:** If any test exceeds 2 seconds, log a warning to `log.info` to prompt manual optimization in the next cycle.
-4.  **Refactor:** Apply the "TCR-lite" approach to the slowest identified test to break it into smaller, faster components.
+1.  **Modify `phase_v_development`:** Update the prompt to require a JSON response containing `{"business_intent": str, "qa_strategy": str, "dev_plan": str}`.
+2.  **Validation Gate:** Add a check to ensure the `qa_strategy` includes at least one concrete test scenario (Gherkin-style).
+3.  **Persistence:** Log this structured plan to a new `bag/last_three_amigos.json` file for auditability.
+4.  **Integration:** Use the `dev_plan` field to drive the subsequent code generation.
 
 ## Risk
-**Failure Mode:** Parsing `pytest` output is brittle; if the test suite structure changes or `pytest` version updates, the regex/parsing logic may fail, causing `behaviour_check` to report a false negative.
-**Mitigation:** Use a dedicated `pytest` plugin like `pytest-durations` or a JSON-output flag (`--json-report`) to ensure structured, machine-readable data rather than scraping stdout.
+**Failure Mode:** The added complexity in the prompt might lead to "instruction following" degradation, where Gemini focuses on the JSON structure at the expense of code quality.
+**Mitigation:** I will use a two-step call: first, generate the Three Amigos JSON; second, pass that JSON as context to the code-generation prompt. This keeps the concerns separated.
 
 **Confidence Score:** 9/10
 
 ---
 
-### Self-Correction
-I must ensure that the `pytest` execution does not hang if a test enters an infinite loop. I will maintain the `timeout=15` parameter in `behaviour_check` to ensure the system remains responsive even if a test suite regresses. I will also ensure that the `pytest` JSON report is cleaned up after each check to prevent disk bloat in `bag/`.
+## Action Items
+*   [ ] Refactor `phase_v_development` to implement the two-step Three Amigos prompt.
+*   [ ] Create `bag/last_three_amigos.json` to store the validation state.
+*   [ ] Update `self_check` to verify the existence of the validation file for any new feature development.
