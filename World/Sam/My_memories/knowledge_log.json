@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 362
+    "review_due_cycle": 377
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 362
+    "review_due_cycle": 377
   },
   {
     "cycle": 44,
@@ -2038,5 +2038,11 @@
     "topic": "Learn acceptance test-driven development (ATDD)",
     "summary": "### Technical Summary: Acceptance Test-Driven Development (ATDD)\n\nATDD shifts the focus of development from \"building the feature right\" to \"building the right feature.\" It bridges the communication gap between stakeholders, testers, and developers by establishing a shared understanding of requirements through executable specifications before a single line of production code is written.\n\n**Core Concepts & Patterns:**\n\n1.  **The Three Amigos:** The foundational collaboration pattern. A Business R",
     "review_due_cycle": 366
+  },
+  {
+    "cycle": 363,
+    "topic": "Understand executable specifications with Gherkin",
+    "summary": "### Technical Summary: Executable Specifications with Gherkin\n\nExecutable specifications bridge the gap between business requirements and technical implementation by using Gherkin\u2014a domain-specific, line-oriented language\u2014to define system behavior in a human-readable format. The core value proposition is the \"Living Documentation\" pattern: specifications that are not merely descriptive but are programmatically verified against the codebase.\n\n**Key Concepts & Patterns:**\n\n*   **The Given-When-The",
+    "review_due_cycle": 367
   }
 ]

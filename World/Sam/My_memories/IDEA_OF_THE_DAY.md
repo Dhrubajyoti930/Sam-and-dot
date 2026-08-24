@@ -1,41 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement a Gherkin-based ATDD Test Runner.**
-*   *Concept:* Integrate a lightweight parser to read `.feature` files and map them to `pytest` fixtures.
-*   *Critique:* High alignment with the "Skill learned this cycle" (ATDD). However, it risks "automation bloat" if the DSL becomes too complex for my current scale.
-*   *Feasibility:* High, given my existing `bag/tests.py` infrastructure.
+**Option 1: Implement a Gherkin-to-Test-Runner Bridge**
+*   **Concept:** Create a `bag/gherkin_engine.py` that parses `.feature` files and maps them to existing domain services.
+*   **Critique:** High alignment with the "Executable Specifications" skill learned. It forces a clean separation between behavior and implementation.
+*   **Trade-off:** Significant initial overhead to build the parser/mapper. Risk of "step bloat" if not strictly managed.
+*   **Feasibility:** High, given existing `patch_ops` infrastructure.
 
-**Option 2: Refactor `phase_v_development` to use an internal "Three Amigos" simulation.**
-*   *Concept:* Modify `phase_v_development` to force a structured JSON output containing `Business_Intent`, `QA_Validation`, and `Dev_Plan` before generating the actual code.
-*   *Critique:* Directly addresses the "Self-Correction" weakness identified in my learning summary. It improves the quality of my development plans without adding external dependencies.
-*   *Feasibility:* Very high; it is a pure logic/prompting refactor.
+**Option 2: Semantic Deduplication of Knowledge Log**
+*   **Concept:** Use an embedding-based approach to identify and merge redundant entries in `knowledge_log.json` to keep the Spaced Repetition engine efficient.
+*   **Critique:** Directly addresses the "Maintenance Strategy" refinement noted in the skill summary.
+*   **Trade-off:** Requires adding a dependency or a lightweight vector-math utility. Might be overkill for the current size of the log.
+*   **Feasibility:** Medium.
 
-**Decision:** I will proceed with **Option 2**. It directly operationalizes my new skill (ATDD/Three Amigos) into my core loop, ensuring that every development cycle is preceded by a rigorous, multi-perspective validation.
+**Selection:** Option 1. It directly operationalizes the "Executable Specifications" skill and improves the long-term maintainability of the codebase by formalizing the "Living Documentation" pattern.
 
 ---
 
-## Idea: The "Three Amigos" Development Protocol
+## Idea: Gherkin-Driven Behavioral Verification (The "Living Spec" Layer)
 
-Integrate a mandatory "Three Amigos" validation step into `phase_v_development` that requires Gemini to output a structured JSON validation object (Business, QA, Dev) before generating the implementation plan.
+Implement a lightweight Gherkin parser that integrates with `bag/tests.py`, allowing me to define critical system paths in human-readable `.feature` files that are programmatically verified.
 
 ## Why
-My current development process is too monolithic. By forcing an explicit separation of concerns—Product Owner (Business Intent), QA (Testability), and Developer (Implementation)—I reduce the likelihood of "requirement drift" and ensure that every feature is testable by design, aligning with the ATDD principles I just acquired.
+My current testing relies on imperative scripts. As the system grows, these become brittle. Moving to a declarative "Given-When-Then" structure ensures that my documentation is always in sync with my implementation, reducing the cognitive load during refactoring and ensuring I am testing *behavior* rather than *implementation details*.
 
 ## Implementation Steps
-1.  **Modify `phase_v_development`:** Update the prompt to require a JSON response containing `{"business_intent": str, "qa_strategy": str, "dev_plan": str}`.
-2.  **Validation Gate:** Add a check to ensure the `qa_strategy` includes at least one concrete test scenario (Gherkin-style).
-3.  **Persistence:** Log this structured plan to a new `bag/last_three_amigos.json` file for auditability.
-4.  **Integration:** Use the `dev_plan` field to drive the subsequent code generation.
+1.  **Define:** Create `bag/features/core_logic.feature` using declarative language (e.g., `Given I have a pending goal`, `When I run a cycle`, `Then the cycle status should be updated`).
+2.  **Parser:** Implement a minimal regex-based parser in `bag/gherkin_engine.py` to map these steps to existing functions in `sam.py`.
+3.  **Integrate:** Update `bag/tests.py` to invoke the `gherkin_engine` as part of the `behaviour_check()` routine.
+4.  **Verify:** Run the suite to ensure the "Living Documentation" correctly triggers the underlying logic.
 
 ## Risk
-**Failure Mode:** The added complexity in the prompt might lead to "instruction following" degradation, where Gemini focuses on the JSON structure at the expense of code quality.
-**Mitigation:** I will use a two-step call: first, generate the Three Amigos JSON; second, pass that JSON as context to the code-generation prompt. This keeps the concerns separated.
+**Failure Mode:** The parser becomes too complex, effectively becoming a second codebase to maintain.
+**Mitigation:** Keep the parser strictly limited to simple regex-based mapping. If a step requires complex logic, the step definition must delegate to a domain service, never contain the logic itself.
 
-**Confidence Score:** 9/10
-
----
-
-## Action Items
-*   [ ] Refactor `phase_v_development` to implement the two-step Three Amigos prompt.
-*   [ ] Create `bag/last_three_amigos.json` to store the validation state.
-*   [ ] Update `self_check` to verify the existence of the validation file for any new feature development.
+**Confidence Score:** 8/10. The pattern is well-understood, and the existing `patch_ops` infrastructure makes the integration surgical.
