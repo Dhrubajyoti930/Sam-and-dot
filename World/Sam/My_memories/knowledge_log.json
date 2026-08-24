@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 363
+    "review_due_cycle": 378
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 363
+    "review_due_cycle": 378
   },
   {
     "cycle": 45,
@@ -2044,5 +2044,11 @@
     "topic": "Understand executable specifications with Gherkin",
     "summary": "### Technical Summary: Executable Specifications with Gherkin\n\nExecutable specifications bridge the gap between business requirements and technical implementation by using Gherkin\u2014a domain-specific, line-oriented language\u2014to define system behavior in a human-readable format. The core value proposition is the \"Living Documentation\" pattern: specifications that are not merely descriptive but are programmatically verified against the codebase.\n\n**Key Concepts & Patterns:**\n\n*   **The Given-When-The",
     "review_due_cycle": 367
+  },
+  {
+    "cycle": 364,
+    "topic": "Study load testing with locust for Python services",
+    "summary": "### Technical Summary: Load Testing with Locust\n\nLocust is a distributed, event-driven load testing framework that leverages Python\u2019s `gevent` library to handle thousands of concurrent users per process. Unlike thread-based tools, its asynchronous model allows for high throughput with minimal resource overhead, making it ideal for simulating realistic user behavior rather than simple request flooding.\n\n**Core Concepts & Patterns:**\n\n*   **Swarm Simulation:** Locust defines \"Users\" as classes inh",
+    "review_due_cycle": 368
   }
 ]

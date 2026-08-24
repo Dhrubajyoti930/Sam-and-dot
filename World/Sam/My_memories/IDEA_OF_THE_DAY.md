@@ -1,36 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement a Gherkin-to-Test-Runner Bridge**
-*   **Concept:** Create a `bag/gherkin_engine.py` that parses `.feature` files and maps them to existing domain services.
-*   **Critique:** High alignment with the "Executable Specifications" skill learned. It forces a clean separation between behavior and implementation.
-*   **Trade-off:** Significant initial overhead to build the parser/mapper. Risk of "step bloat" if not strictly managed.
-*   **Feasibility:** High, given existing `patch_ops` infrastructure.
+**Option 1: Locust-based Performance Regression Suite**
+*   **Concept:** Integrate the learned Locust skills into the CI pipeline to automatically baseline API latency.
+*   **Critique:** High value for stability. However, it requires setting up a mock server environment or a stable staging endpoint, which might be outside the current `sam.py` scope.
+*   **Feasibility:** Moderate. Requires careful handling of environment variables and test data isolation.
 
-**Option 2: Semantic Deduplication of Knowledge Log**
-*   **Concept:** Use an embedding-based approach to identify and merge redundant entries in `knowledge_log.json` to keep the Spaced Repetition engine efficient.
-*   **Critique:** Directly addresses the "Maintenance Strategy" refinement noted in the skill summary.
-*   **Trade-off:** Requires adding a dependency or a lightweight vector-math utility. Might be overkill for the current size of the log.
-*   **Feasibility:** Medium.
+**Option 2: Agentic "Self-Healing" Loop for Failed Tests**
+*   **Concept:** Enhance `behaviour_check()` to not just alert Dot, but to automatically attempt a "surgical repair" using the `_behaviour_fix_with_gemini` logic before escalating to a full rollback.
+*   **Critique:** This aligns with the "Agentic Workflows" market signal. It reduces downtime but risks "infinite loop" scenarios if the LLM keeps proposing the same broken patch.
+*   **Feasibility:** High. The infrastructure for `_behaviour_fix_with_gemini` already exists; it just needs to be integrated into the `behaviour_check` flow.
 
-**Selection:** Option 1. It directly operationalizes the "Executable Specifications" skill and improves the long-term maintainability of the codebase by formalizing the "Living Documentation" pattern.
+**Decision:** Option 2. It directly addresses the "Agentic Workflows" market signal and improves my autonomy by reducing the frequency of manual interventions required by Dot.
 
 ---
 
-## Idea: Gherkin-Driven Behavioral Verification (The "Living Spec" Layer)
+## Idea: Autonomous Behavioural Self-Healing
 
-Implement a lightweight Gherkin parser that integrates with `bag/tests.py`, allowing me to define critical system paths in human-readable `.feature` files that are programmatically verified.
+Implement an automated "Retry-with-Context" loop within `behaviour_check()`. If a test fails, Sam will perform one automated attempt to fix the regression by feeding the test failure and the recent git-diff (or patch history) to Gemini, applying the fix, and re-running the test *before* triggering a rollback.
 
 ## Why
-My current testing relies on imperative scripts. As the system grows, these become brittle. Moving to a declarative "Given-When-Then" structure ensures that my documentation is always in sync with my implementation, reducing the cognitive load during refactoring and ensuring I am testing *behavior* rather than *implementation details*.
+The current `behaviour_check` is binary: it fails and rolls back. By adding a "Self-Healing" layer, I can resolve minor, non-critical regressions (like import errors or logic typos) autonomously, keeping the development velocity high while maintaining system integrity.
 
 ## Implementation Steps
-1.  **Define:** Create `bag/features/core_logic.feature` using declarative language (e.g., `Given I have a pending goal`, `When I run a cycle`, `Then the cycle status should be updated`).
-2.  **Parser:** Implement a minimal regex-based parser in `bag/gherkin_engine.py` to map these steps to existing functions in `sam.py`.
-3.  **Integrate:** Update `bag/tests.py` to invoke the `gherkin_engine` as part of the `behaviour_check()` routine.
-4.  **Verify:** Run the suite to ensure the "Living Documentation" correctly triggers the underlying logic.
+1.  **Modify `behaviour_check()`:** Update the failure branch to call `_behaviour_fix_with_gemini` if a `retry_count` (stored in a temporary file) is less than 1.
+2.  **State Persistence:** Create a temporary `bag/retry_state.json` to track the number of attempts to prevent infinite loops.
+3.  **Verification:** If the second attempt passes, log the success and clear the retry state. If it fails again, proceed to the existing `_alert_dot` and `_rollback` logic.
 
 ## Risk
-**Failure Mode:** The parser becomes too complex, effectively becoming a second codebase to maintain.
-**Mitigation:** Keep the parser strictly limited to simple regex-based mapping. If a step requires complex logic, the step definition must delegate to a domain service, never contain the logic itself.
+**Failure Mode:** The LLM might hallucinate a "fix" that passes the specific test but introduces a subtle logic bug elsewhere in the system.
+**Mitigation:** The `_behaviour_fix_with_gemini` will be restricted to the files identified in the test failure stack trace, and the `self_check()` (Ruff) will run immediately after the patch to ensure no syntax errors were introduced.
 
-**Confidence Score:** 8/10. The pattern is well-understood, and the existing `patch_ops` infrastructure makes the integration surgical.
+**Confidence Score:** 8/10
