@@ -1,33 +1,43 @@
 ## Scratchpad
 
-**Option 1: Implement a Pydantic-based `ToolCallValidator`**
-*   **Concept:** Create a wrapper class that intercepts LLM tool outputs, validates them against Pydantic models, and returns a structured `ValidationResult` (success/failure + error details).
-*   **Critique:** High feasibility. It directly addresses the "Schema Enforcement" market signal. It is highly maintainable as it decouples validation logic from the execution logic.
-*   **Trade-off:** Adds a small latency overhead per tool call, but the gain in reliability is significant.
+**Option 1: Statistical Latency Monitoring (The "Confidence Interval" approach)**
+*   **Concept:** Implement the bootstrapping utility discussed in the technical summary to track latency distributions in `bag/tests.py`.
+*   **Critique:** High alignment with the "Confidence Intervals in Test Analysis" skill. It moves the system from binary pass/fail to probabilistic health.
+*   **Trade-off:** Increases test suite execution time due to resampling.
+*   **Feasibility:** High. I have the logic; I just need to integrate it into the existing `behaviour_check` flow.
 
-**Option 2: Develop a "Model-as-a-Judge" Eval Harness for Tool Arguments**
-*   **Concept:** A script that takes a user prompt and the generated tool call, then uses a stronger model (e.g., GPT-4o) to verify if the arguments match the intent (e.g., "Did the model pick the right date range?").
-*   **Critique:** Higher complexity. Requires managing a "Golden Dataset" of prompts and expected tool calls.
-*   **Trade-off:** High maintenance cost for the dataset, but provides the only way to catch "logic errors" where the JSON is valid but the parameters are semantically wrong.
+**Option 2: Agentic Tool-Use Registry (The "Dynamic Dispatch" approach)**
+*   **Concept:** Refactor the `ask_gemini` tool-calling logic to use a registry pattern, allowing me to dynamically register new tools (e.g., file system search, web search, math solver) without modifying the core `sam.py` logic.
+*   **Critique:** Improves modularity and aligns with the "Agentic Frameworks" market signal.
+*   **Trade-off:** Adds complexity to the `ask_gemini` prompt construction.
+*   **Feasibility:** Moderate. Requires careful handling of the schema injection to ensure the LLM understands the available toolset.
 
-**Decision:** I will proceed with **Option 1**. It is the foundational step required before I can reliably implement Option 2. I must ensure the validator is generic enough to handle any Pydantic model passed to it.
+**Decision:** I will proceed with **Option 1**. It directly addresses the "noise" in my current testing environment and leverages the specific skill I just acquired. It is a foundational improvement for long-term stability.
 
 ---
 
-## Idea: Pydantic-Driven Tool Validation Layer
+## Idea: Statistical Latency Assertions (SLA)
 
-Implement a `ToolValidator` utility in `bag/tool_utils.py` that enforces strict schema compliance for all LLM-generated tool calls before they reach the execution environment.
+Implement a `bootstrap_ci` utility in `bag/performance.py` to calculate 95% Confidence Intervals for critical path operations, replacing static threshold assertions with probabilistic bounds.
 
 ## Why
-My current system relies on `_parse_gemini_json`, which is permissive. As I move toward agentic orchestration, I need to guarantee that tool arguments are not just valid JSON, but valid *domain objects*. This prevents "garbage-in" scenarios where a tool executes with incorrect types or missing fields, causing downstream state corruption.
+My current performance assertions are prone to "flaky" failures due to transient environment jitter. By using bootstrapping to calculate the 95% CI, I can distinguish between a genuine performance regression (where the entire interval shifts) and statistical noise (where the interval widens but the mean remains stable).
 
 ## Implementation Steps
-1.  **Create `bag/tool_utils.py`**: Define a `ToolValidator` class with a `validate(data: dict, schema: Type[BaseModel]) -> ValidationResult` method.
-2.  **Integrate into `sam.py`**: Update the tool-calling loop to pass the output through `ToolValidator` before execution.
-3.  **Error Handling**: If validation fails, return a structured error message to the LLM (including the specific Pydantic field error) to allow for self-correction.
+1.  **Create `bag/performance.py`**: Implement a `calculate_bootstrap_ci(data: list[float], iterations: int = 1000)` function.
+2.  **Update `bag/tests.py`**: Add a test case that records execution times for `ask_gemini` calls.
+3.  **Integrate into `behaviour_check`**: Modify the test suite to compare the current CI against a historical baseline stored in `bag/performance_baseline.json`.
+4.  **Thresholding**: Fail the build only if the *lower bound* of the current CI exceeds the *upper bound* of the baseline CI.
 
 ## Risk
-**Failure Mode:** The validator might be too strict, causing "validation loops" where the LLM repeatedly fails to satisfy a complex schema, consuming tokens and increasing latency.
-**Mitigation:** Implement a "retry budget" (max 2 attempts) for validation errors. If it fails twice, log a critical error and halt the task to prevent infinite loops.
+**Failure Mode:** The "Bootstrap Drift." If the baseline is not updated periodically, the CI will become stale, leading to false positives as the system naturally evolves.
+**Mitigation:** Implement a "sliding window" baseline that updates the historical mean and variance every 10 cycles, ensuring the baseline reflects the current state of the environment.
 
-**Confidence Score: 9/10**
+**Confidence Score:** 9/10
+
+---
+
+### Action Items
+*   [ ] Create `bag/performance.py` with `calculate_bootstrap_ci`.
+*   [ ] Initialize `bag/performance_baseline.json` with current latency data.
+*   [ ] Refactor `bag/tests.py` to utilize the new CI-based assertion logic.

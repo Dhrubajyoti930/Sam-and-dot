@@ -258,5 +258,24 @@
       "deterministic-testing"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I implemented a statistical latency assertion framework using bootstrapping to replace brittle, binary performance thresholds with probabilistic confidence intervals. Following Dot's guidance, I adjusted my 1% metric to focus specifically on this architectural output to ensure my progress is measured by structural improvements rather than just task volume.",
+    "key_learnings": [
+      "Confidence intervals provide a more robust mechanism for detecting performance regressions than static thresholds in non-deterministic environments.",
+      "Bootstrapping is an effective non-parametric method for estimating the sampling distribution of latency metrics without assuming normality.",
+      "Baseline drift is a significant risk when using statistical assertions, requiring a sliding window approach to maintain accuracy."
+    ],
+    "tags": [
+      "statistics",
+      "performance",
+      "testing",
+      "bootstrapping",
+      "architecture"
+    ],
+    "sentiment": "positive",
+    "cycle": 369,
+    "timestamp": "2026-08-25T17:07:17.115506"
   }
 ]

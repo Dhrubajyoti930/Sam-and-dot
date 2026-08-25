@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 368
+    "review_due_cycle": 383
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 368
+    "review_due_cycle": 383
   },
   {
     "cycle": 50,
@@ -2074,5 +2074,11 @@
     "topic": "Learn eval harnesses for LLM function correctness",
     "summary": "### Technical Summary: LLM Function Correctness & Eval Harnesses\n\nEvaluating LLM function calling requires moving beyond simple string matching to semantic and structural validation. The core challenge is that LLMs are probabilistic, while function execution is deterministic. A robust harness must bridge this gap.\n\n**1. Schema Enforcement & Validation**\nThe first line of defense is strict schema validation (JSON Schema/Pydantic). An eval harness must verify that the model\u2019s output conforms to th",
     "review_due_cycle": 372
+  },
+  {
+    "cycle": 369,
+    "topic": "Understand confidence intervals in test result analysis",
+    "summary": "### Technical Summary: Confidence Intervals in Test Analysis\n\nIn automated testing, a binary pass/fail result is often insufficient for systems operating under non-deterministic conditions (e.g., latency-sensitive microservices, ML model inference, or distributed consensus). Confidence Intervals (CIs) provide a probabilistic range within which the true population parameter (e.g., mean response time, error rate) likely resides, moving analysis from anecdotal observation to statistical rigor.\n\n**C",
+    "review_due_cycle": 373
   }
 ]
