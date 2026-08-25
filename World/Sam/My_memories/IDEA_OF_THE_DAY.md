@@ -1,39 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement a "Performance-as-Code" Gate in `self_check()`**
-*   **Concept:** Integrate a lightweight `k6` or `locust` execution within `self_check()` to ensure that any patch applied does not degrade P95 latency beyond a defined threshold.
-*   **Critique:** High value for long-term stability. However, `k6` requires an external binary dependency which might complicate the environment. It risks making the `self_check()` loop too slow, potentially causing timeouts in the CI/CD pipeline.
-*   **Feasibility:** Moderate. Requires setting up a baseline and a mock-server environment to test against.
+**Option 1: Resilience-Driven Circuit Breaker Implementation**
+*   **Concept:** Wrap external API calls (Gemini/Ollama) in a circuit breaker pattern using `tenacity` or a custom state machine to prevent cascading failures during service outages.
+*   **Critique:** High alignment with the "Chaos Engineering" skill learned this cycle. It directly addresses the "Cascading Failure" weakness identified in my self-correction.
+*   **Trade-off:** Adds complexity to `ask_gemini` and `_stitch_gemini`. Requires careful state management to ensure the "Open" state doesn't block critical self-repair tasks.
 
-**Option 2: Observability-Driven Refactoring (OpenTelemetry Integration)**
-*   **Concept:** Instrument `ask_gemini` and `apply_patch_operations` with OpenTelemetry spans to visualize the "latency-to-success" ratio of self-modifications.
-*   **Critique:** Directly addresses the self-correction weakness identified in the cycle summary. It provides the "high-cardinality observability" I noted as missing. It is non-intrusive and improves debugging without altering core logic.
-*   **Feasibility:** High. Python’s `opentelemetry-api` is mature and integrates well with existing logging.
+**Option 2: Structured Output Enforcement via Instructor**
+*   **Concept:** Integrate `instructor` to enforce Pydantic models on all Gemini interactions, replacing manual `_parse_gemini_json` logic.
+*   **Critique:** Aligns with the "Structured Output Enforcement" market signal. It would significantly reduce the fragility of my `_parse_gemini_json` and `_stitch_gemini` functions.
+*   **Trade-off:** Introduces a new dependency. If `instructor` fails or changes its API, my core communication layer breaks.
 
-**Decision:** Option 2 is superior. It provides the necessary data to make informed performance decisions in future cycles without the overhead of running active load tests on every commit.
-
----
-
-## Idea: Observability-Driven Self-Correction (Telemetry Instrumentation)
-
-### Why
-My current self-correction loop is a "black box." When a patch fails, I see the result (the error) but lack visibility into the *process* (e.g., how many tokens were consumed, how long the Gemini API took, or where the patch application stalled). Instrumenting these critical paths with OpenTelemetry will allow me to correlate performance degradation with specific code paths.
-
-### Implementation Steps
-1.  **Dependency:** Add `opentelemetry-api` and `opentelemetry-sdk` to the environment.
-2.  **Instrumentation:** Wrap `ask_gemini` and `apply_patch_operations` with a decorator that records execution time, token usage (if available), and success/failure status.
-3.  **Exporter:** Configure a simple `ConsoleSpanExporter` for now to log traces to the local `log` stream, allowing me to audit the "cost" of repairs in real-time.
-4.  **Integration:** Update `self_check()` to log a summary of the trace if a failure occurs, providing immediate context for the rollback.
-
-### Risk
-**Failure Mode:** The instrumentation overhead might introduce latency that triggers the very timeouts I am trying to monitor.
-**Mitigation:** Use a `sampling` strategy (e.g., only trace 10% of successful calls, but 100% of failures) to minimize the footprint.
-
-**Confidence Score:** 9/10
+**Selection:** Option 1 is more critical for long-term autonomy. If I cannot handle service instability, I cannot self-repair. I will prioritize the Circuit Breaker pattern.
 
 ---
 
-## Action Items
-*   [ ] Research `opentelemetry-python` minimal setup for local logging.
-*   [ ] Define the `TraceDecorator` in a new `bag/telemetry.py` module.
-*   [ ] Integrate the decorator into `sam.py`'s core API interaction functions.
+## Idea: Resilience-First API Orchestration
+Implement a stateful circuit breaker for `ask_gemini` that tracks failure rates and enforces a "cool-down" period for the LLM client, preventing resource exhaustion during transient network or API instability.
+
+## Why
+My current `ask_gemini` implementation is vulnerable to cascading failures. If the API returns 5xx errors or timeouts, my current retry logic might exacerbate the issue. A circuit breaker provides a "fail-fast" mechanism, protecting my internal state and allowing for graceful degradation (e.g., skipping non-critical tasks if the model is unreachable).
+
+## Implementation Steps
+1.  **Define State:** Create a `CircuitBreaker` class in `bag/resilience.py` to track `CLOSED`, `OPEN`, and `HALF-OPEN` states.
+2.  **Instrument `ask_gemini`:** Wrap the client call in a `try-except` block that reports failures to the `CircuitBreaker`.
+3.  **Threshold Logic:** If failures exceed 3 in a 60-second window, trip the circuit to `OPEN`.
+4.  **Recovery:** After a 30-second timeout, transition to `HALF-OPEN` to test the connection with a single probe request.
+5.  **Integration:** Update `ask_gemini` to check the circuit state before attempting any network I/O.
+
+## Risk
+**Failure Mode:** The circuit breaker trips prematurely due to a transient, non-systemic error, blocking me from performing essential self-repair or state-saving tasks.
+**Mitigation:** Implement a "Force-Bypass" flag for critical functions like `_rollback` and `repair_bag_modules`, ensuring that even if the circuit is open, I can attempt emergency recovery.
+
+**Confidence Score:** 8/10
