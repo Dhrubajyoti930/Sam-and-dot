@@ -1,32 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement a "Performance Budget" Enforcement Gate**
-*   **Concept:** Create a `performance_budget.json` and a decorator `@track_latency` that logs execution time to a local time-series file. If a function exceeds the defined threshold, the CI pipeline fails.
-*   **Critique:** High alignment with the "Regression Detection" skill. It forces discipline. However, it adds overhead to every decorated function and requires careful management of the baseline to avoid "flaky" failures due to environment jitter.
-*   **Feasibility:** High.
+**Option 1: Implement a `responses` Callback Factory for Resilience Testing**
+*   **Concept:** Create a utility in `bag/test_utils.py` that generates dynamic `responses` callbacks to simulate non-deterministic API behaviors (latency spikes, 429 rate-limiting, 503 service unavailability).
+*   **Critique:** High alignment with the "Skill learned this cycle" and the "Action Items" identified. It moves testing from static JSON mocks to contract-aware resilience testing.
+*   **Trade-off:** Increases test suite complexity but significantly improves the robustness of the agentic workflows (Phase V).
+*   **Feasibility:** High. The `responses` library is well-documented and fits into the existing `bag/` structure.
 
-**Option 2: Differential Testing for Logic Parity**
-*   **Concept:** Create a `differential_test.py` that runs the same input through two versions of a function (e.g., `old_func` vs `new_func`) and asserts output equality.
-*   **Critique:** Directly addresses the "functional regression" weakness identified in my self-correction. It is more robust than simple unit tests for refactoring-heavy cycles.
-*   **Feasibility:** Medium. Requires maintaining "old" versions of code, which could clutter the `workshop_bench/`.
+**Option 2: Integrate `DeepEval` for Automated LLM Output Validation**
+*   **Concept:** Introduce `DeepEval` into the `behaviour_check()` pipeline to evaluate the quality of LLM-generated code patches before they are applied.
+*   **Critique:** While powerful, it introduces a heavy dependency (`deepeval` and its associated metrics). It might be overkill for Sam’s current "minimal footprint" philosophy.
+*   **Trade-off:** Better quality control vs. increased dependency bloat and potential for "eval-drift."
+*   **Feasibility:** Moderate. Requires setting up a new testing dependency that might conflict with the current lightweight `ruff`/`py_compile` gate.
 
-**Selection:** Option 1. It provides a proactive guardrail for performance, which is a critical missing piece in my current observability stack. I will mitigate the "flaky" risk by using a rolling average baseline rather than a hard-coded constant.
+**Decision:** Option 1 is superior. It directly addresses the "Action Items" from the market scan and enhances the existing `bag/tests.py` infrastructure without introducing heavy external dependencies.
 
 ---
 
-## Idea: Performance Budget Enforcement (The "Speed Gate")
+## Idea: Resilience-Oriented API Mocking Engine
+
+Implement a `ResponseFactory` class within `bag/test_utils.py` that provides a fluent interface for generating dynamic, stateful API mocks using the `responses` library.
 
 ## Why
-My current architecture lacks a mechanism to prevent performance degradation during refactoring. By implementing a performance budget, I shift from reactive debugging to proactive prevention, ensuring that my "1% growth" is not offset by latency creep in core modules.
+My current testing suite relies on static JSON mocks. As I move toward more complex agentic workflows (Phase V), I need to verify that my error-handling logic (retries, circuit breakers) actually triggers under adverse conditions. A factory pattern allows me to inject failure modes (429, 503, timeouts) into tests without cluttering the test files with repetitive boilerplate.
 
 ## Implementation Steps
-1.  **Define Budget:** Create `performance_budget.json` in the root with `{"function_name": {"max_latency_ms": float, "rolling_avg_ms": float}}`.
-2.  **Decorator:** Implement `@track_latency` in `sam.py` that uses `time.perf_counter()` to measure execution time.
-3.  **Persistence:** Update the decorator to append results to `bag/latency_log.json`.
-4.  **Gate:** Add a check in `self_check()` that compares the latest execution time against the budget; if it exceeds the threshold by >2 standard deviations (Z-score), log a warning to `_alert_dot`.
+1.  **Create `bag/test_utils.py`**: Define `ResponseFactory` with methods like `with_status(code)`, `with_delay(seconds)`, and `with_callback(func)`.
+2.  **Refactor `bag/tests.py`**: Update existing network-dependent tests to use the `ResponseFactory` within `@responses.activate` blocks.
+3.  **Add Resilience Test Case**: Create a new test in `bag/tests.py` that specifically asserts that a 429 response triggers a retry mechanism (if implemented) or a graceful failure.
+4.  **Integrate with `self_check`**: Ensure `bag/test_utils.py` is included in the integrity gate.
 
 ## Risk
-**Failure Mode:** "Performance Drift" where the system naturally slows down due to increased complexity, causing the gate to trigger constantly and block progress.
-**Mitigation:** Implement a "Budget Auto-Tune" feature where the threshold is allowed to expand by a small, controlled percentage (e.g., 0.5%) only after a successful, verified cycle, preventing "budget creep" while allowing for legitimate architectural growth.
+**Failure Mode:** The factory might become too abstract, making it difficult to debug why a specific mock is failing to match a request.
+**Mitigation:** Implement strict logging within the `ResponseFactory` that outputs the request signature (URL/Method) whenever a mock mismatch occurs, ensuring visibility into the transport layer.
 
-**Confidence Score: 8/10**
+**Confidence Score:** 9/10
