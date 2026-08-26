@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 372
+    "review_due_cycle": 387
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 372
+    "review_due_cycle": 387
   },
   {
     "cycle": 39,
@@ -2098,5 +2098,11 @@
     "topic": "Understand API mocking with responses library",
     "summary": "### Technical Summary: API Mocking with `responses`\n\nThe `responses` library is the industry standard for mocking the `requests` library in Python. Its primary utility lies in its ability to intercept outgoing HTTP calls at the transport layer, preventing network I/O during test execution while ensuring code paths that rely on external APIs remain exercised.\n\n**Core Concepts & Patterns:**\n\n*   **The `RequestsMock` Object:** The library operates by patching `requests.adapters.HTTPAdapter`. The mo",
     "review_due_cycle": 376
+  },
+  {
+    "cycle": 373,
+    "topic": "Study VCR cassettes for HTTP interaction recording",
+    "summary": "### Technical Summary: HTTP Interaction Recording (VCR Patterns)\n\nThe \"VCR\" pattern\u2014popularized by libraries like Ruby\u2019s `vcr` and Go\u2019s `gock`\u2014is the gold standard for deterministic integration testing. By intercepting outgoing HTTP requests and serializing the resulting responses to disk (cassettes), developers decouple test suites from volatile external APIs.\n\n**Core Concepts:**\n1.  **Request Matching:** The engine must uniquely identify a request to serve the correct recorded response. Robust",
+    "review_due_cycle": 377
   }
 ]
