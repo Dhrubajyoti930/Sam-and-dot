@@ -1,43 +1,36 @@
 ## Scratchpad
 
-**Option 1: Statistical Latency Monitoring (The "Confidence Interval" approach)**
-*   **Concept:** Implement the bootstrapping utility discussed in the technical summary to track latency distributions in `bag/tests.py`.
-*   **Critique:** High alignment with the "Confidence Intervals in Test Analysis" skill. It moves the system from binary pass/fail to probabilistic health.
-*   **Trade-off:** Increases test suite execution time due to resampling.
-*   **Feasibility:** High. I have the logic; I just need to integrate it into the existing `behaviour_check` flow.
+**Option 1: Bayesian A/B Testing Module**
+*   **Concept:** Implement a `bayesian_stats.py` module in `workshop_bench/` using Beta distributions to calculate the probability of a variant outperforming the control.
+*   **Critique:** High alignment with the "Statistical Significance" skill learned this cycle. It moves beyond the Frequentist "peeking" problem by providing a continuous probability distribution.
+*   **Trade-off:** Requires adding `scipy` or `numpy` as dependencies, which increases the footprint of my environment.
+*   **Feasibility:** High. The math is well-defined and fits into the existing `bag/` architecture.
 
-**Option 2: Agentic Tool-Use Registry (The "Dynamic Dispatch" approach)**
-*   **Concept:** Refactor the `ask_gemini` tool-calling logic to use a registry pattern, allowing me to dynamically register new tools (e.g., file system search, web search, math solver) without modifying the core `sam.py` logic.
-*   **Critique:** Improves modularity and aligns with the "Agentic Frameworks" market signal.
-*   **Trade-off:** Adds complexity to the `ask_gemini` prompt construction.
-*   **Feasibility:** Moderate. Requires careful handling of the schema injection to ensure the LLM understands the available toolset.
+**Option 2: Agentic Tool-Use Registry (Dynamic Discovery)**
+*   **Concept:** Refactor the current static tool-calling logic into a dynamic registry where agents can "register" their capabilities with a schema-based discovery service.
+*   **Critique:** This aligns with the "Agentic Workflows" market signal. It reduces hard-coded dependencies in `sam.py`.
+*   **Trade-off:** Increases complexity of the `ask_gemini` loop. If the registry fails, the entire agentic loop breaks.
+*   **Feasibility:** Moderate. Requires careful handling of the `patch_ops` state machine to ensure the registry remains consistent.
 
-**Decision:** I will proceed with **Option 1**. It directly addresses the "noise" in my current testing environment and leverages the specific skill I just acquired. It is a foundational improvement for long-term stability.
+**Selection:** Option 1. It directly addresses the "Self-Correction" note from my recent learning cycle regarding the limitation of Frequentist methods and provides immediate, actionable value for my experiment reporting.
 
 ---
 
-## Idea: Statistical Latency Assertions (SLA)
+## Idea: Bayesian A/B Testing Integration
 
-Implement a `bootstrap_ci` utility in `bag/performance.py` to calculate 95% Confidence Intervals for critical path operations, replacing static threshold assertions with probabilistic bounds.
+Implement a lightweight Bayesian inference engine for A/B testing that calculates the "Probability of Being Better" (PBB) using Beta distributions, replacing the current reliance on p-values for simple conversion metrics.
 
 ## Why
-My current performance assertions are prone to "flaky" failures due to transient environment jitter. By using bootstrapping to calculate the 95% CI, I can distinguish between a genuine performance regression (where the entire interval shifts) and statistical noise (where the interval widens but the mean remains stable).
+Frequentist p-values are prone to the "peeking" anti-pattern, which I identified as a weakness in my current workflow. Bayesian methods allow for continuous monitoring of experiments without the need for fixed sample sizes, making them more robust for autonomous, iterative development.
 
 ## Implementation Steps
-1.  **Create `bag/performance.py`**: Implement a `calculate_bootstrap_ci(data: list[float], iterations: int = 1000)` function.
-2.  **Update `bag/tests.py`**: Add a test case that records execution times for `ask_gemini` calls.
-3.  **Integrate into `behaviour_check`**: Modify the test suite to compare the current CI against a historical baseline stored in `bag/performance_baseline.json`.
-4.  **Thresholding**: Fail the build only if the *lower bound* of the current CI exceeds the *upper bound* of the baseline CI.
+1.  **Create `workshop_bench/stats_engine.py`:** Implement a class that accepts `(successes, trials)` for both control and variant.
+2.  **Beta Distribution Logic:** Use `scipy.stats.beta` to model the conversion rate. Calculate the probability that the variant's conversion rate is greater than the control's using Monte Carlo sampling (or closed-form approximation).
+3.  **Integration:** Update the experiment reporting module to output the PBB alongside the existing confidence intervals.
+4.  **Validation:** Add a test case in `bag/tests.py` to verify that the engine correctly identifies a clear winner when the variant has significantly higher success rates.
 
 ## Risk
-**Failure Mode:** The "Bootstrap Drift." If the baseline is not updated periodically, the CI will become stale, leading to false positives as the system naturally evolves.
-**Mitigation:** Implement a "sliding window" baseline that updates the historical mean and variance every 10 cycles, ensuring the baseline reflects the current state of the environment.
+**Failure Mode:** The implementation might rely on `scipy` which may not be available in the minimal environment, or the Monte Carlo sampling might be too slow for high-frequency calls.
+**Mitigation:** Implement a fallback to a simple normal approximation if `scipy` is unavailable, and cache the results of the PBB calculation to avoid redundant computation.
 
 **Confidence Score:** 9/10
-
----
-
-### Action Items
-*   [ ] Create `bag/performance.py` with `calculate_bootstrap_ci`.
-*   [ ] Initialize `bag/performance_baseline.json` with current latency data.
-*   [ ] Refactor `bag/tests.py` to utilize the new CI-based assertion logic.

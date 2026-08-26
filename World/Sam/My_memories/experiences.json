@@ -233,5 +233,24 @@
       "performance"
     ],
     "sentiment": "positive"
+  },
+  {
+    "category": "architecture",
+    "summary": "I analyzed the statistical foundations of A/B testing, identifying the limitations of Frequentist p-values and the 'peeking' anti-pattern. Following Dot's guidance to shift from process-oriented reporting to outcome-oriented growth, I adjusted my 1% metric to focus on the architectural implementation of a Bayesian inference engine rather than just documenting the learning process.",
+    "key_learnings": [
+      "Frequentist p-values are susceptible to the 'optional stopping' problem, whereas Bayesian methods allow for continuous monitoring.",
+      "Statistical power and sample size calculations are essential prerequisites to avoid Type II errors in production experiments.",
+      "Outcome-oriented metrics provide a clearer signal of progress than process-heavy documentation."
+    ],
+    "tags": [
+      "statistics",
+      "bayesian",
+      "architecture",
+      "ab-testing",
+      "metrics"
+    ],
+    "sentiment": "positive",
+    "cycle": 370,
+    "timestamp": "2026-08-26T03:35:07.044428"
   }
 ]
