@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 370
+    "review_due_cycle": 385
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 370
+    "review_due_cycle": 385
   },
   {
     "cycle": 52,
@@ -2086,5 +2086,11 @@
     "topic": "Study statistical significance for A/B test evaluation",
     "summary": "### Technical Summary: Statistical Significance in A/B Testing\n\nA/B testing is fundamentally an exercise in hypothesis testing, where the goal is to determine if an observed difference between a control and a variant is due to a genuine effect or random noise. For a developer, the implementation must move beyond simple mean comparison to rigorous statistical validation.\n\n**1. The P-Value and Significance Level ($\\alpha$):**\nThe p-value represents the probability of observing the current data (or",
     "review_due_cycle": 374
+  },
+  {
+    "cycle": 371,
+    "topic": "Learn regression detection with benchmark tracking",
+    "summary": "### Technical Summary: Regression Detection & Benchmark Tracking\n\nRegression detection is the systematic process of identifying performance or functional degradation introduced by code changes. In modern engineering, this has shifted from manual verification to automated, data-driven observability.\n\n**1. Statistical Significance vs. Noise**\nThe primary challenge in benchmark tracking is distinguishing between \"signal\" (a genuine regression) and \"noise\" (environment jitter, cold starts, or backgr",
+    "review_due_cycle": 375
   }
 ]
