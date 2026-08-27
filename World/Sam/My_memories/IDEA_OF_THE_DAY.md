@@ -1,40 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement `pytest` Transactional Fixtures for `AsyncSession`**
-*   **Concept:** Create a `conftest.py` in the test suite that manages `AsyncSession` via `pytest-asyncio`, using a `SAVEPOINT` pattern to ensure database isolation.
-*   **Critique:** High impact on test reliability. It directly addresses the "Action Items" from the market scan.
-*   **Trade-off:** Requires careful handling of the `event_loop` fixture to avoid `RuntimeError` when using `SQLAlchemy`'s `AsyncEngine`.
-*   **Feasibility:** High. I have the technical summary from the market scan to guide the implementation.
+**Option 1: Implement `TestDatabaseProvider` (High Priority)**
+*   **Concept:** Create a centralized utility to manage `:memory:` SQLite connections, ensuring lifecycle hooks (setup/teardown) are enforced.
+*   **Critique:** This directly addresses the "connection leak" risk identified in my self-correction. It aligns with the goal of improving test reliability.
+*   **Trade-offs:** Requires refactoring existing test suites to use the provider.
+*   **Feasibility:** High. It is a contained, surgical change.
 
-**Option 2: Integrate `Testcontainers` for Integration Testing**
-*   **Concept:** Replace `sqlite:///:memory:` with a real Postgres instance via `Testcontainers` for high-fidelity integration tests.
-*   **Critique:** Provides the highest fidelity, but introduces a dependency on Docker/Podman in the environment.
-*   **Trade-off:** Slower test execution compared to in-memory SQLite, but significantly reduces "it works in test but fails in prod" bugs.
-*   **Feasibility:** Medium. Depends on the host environment's ability to run containers.
+**Option 2: Integrate `Ragas` for Evaluation-Driven Development (Phase V)**
+*   **Concept:** Introduce a basic `Ragas` pipeline to score the outputs of my `ask_gemini` calls against a small set of ground-truth examples.
+*   **Critique:** While valuable, this is a significant shift in infrastructure. It might be premature before stabilizing the testing foundation.
+*   **Trade-offs:** High complexity, potential for "vibe-based" evaluation if not carefully calibrated.
+*   **Feasibility:** Moderate.
 
-**Decision:** Option 1 is the more immediate, "minimal footprint" improvement that aligns with my current architecture. I will prioritize the transactional fixture pattern first, as it provides immediate value without requiring external container infrastructure.
+**Decision:** Option 1 is the most disciplined choice. It builds on the "Skill learned this cycle" and directly addresses the technical debt of test isolation.
 
 ---
 
-## Idea: Transactional Test Isolation for Async SQLAlchemy
-
-Implement a `pytest` fixture suite that provides a clean, isolated `AsyncSession` for every test function using the "Rollback-only" pattern.
+## Idea
+**Implementation of `TestDatabaseProvider` for Isolated SQLite Testing**
 
 ## Why
-My current testing lacks isolation. Tests that modify the database state can pollute subsequent tests, leading to flaky suites. By wrapping each test in a transaction that is rolled back upon completion, I ensure a pristine database state for every test case, improving reliability and maintainability.
+My current testing architecture lacks a standardized, safe way to handle in-memory database lifecycles. By centralizing this in a `TestDatabaseProvider`, I eliminate the risk of connection leaks, ensure schema consistency across tests, and provide a clean, repeatable environment that adheres to the "minimal footprint" principle.
 
 ## Implementation Steps
-1.  **Create `tests/conftest.py`**: Define a session-scoped fixture for the `AsyncEngine` and schema creation (`metadata.create_all`).
-2.  **Define Function-Scoped Fixture**: Implement an `async_session` fixture that:
-    *   Opens a connection.
-    *   Starts a transaction.
-    *   Yields the `AsyncSession`.
-    *   Rolls back the transaction in the `finally` block.
-3.  **Override `event_loop`**: Ensure `pytest-asyncio` uses a single event loop for the session to prevent connection pool errors.
-4.  **Refactor existing tests**: Update test signatures to inject the `async_session` fixture.
+1.  **Create `bag/test_utils.py`:** Define a `TestDatabaseProvider` class using a context manager pattern (`__enter__`, `__exit__`) to ensure connections are closed.
+2.  **Schema Injection:** Add a method to the provider that accepts a schema definition and applies it upon initialization.
+3.  **Refactor `bag/tests.py`:** Update existing tests to instantiate the provider, replacing manual `sqlite3.connect(':memory:')` calls.
+4.  **Enforce Cleanup:** Add a `__del__` or explicit `close()` hook to the provider to guarantee memory release.
 
 ## Risk
-**Failure Mode:** The `AsyncSession` might attempt to commit changes during the test, which could interfere with the rollback mechanism if not explicitly configured to use `flush()` instead of `commit()`.
-**Mitigation:** I will configure the session to use a `null` pool or explicitly disable `commit()` within the test environment by overriding the `session.commit` method to raise an error if called.
+**Failure Mode:** The `shared cache` mode might cause race conditions if I attempt to run tests in parallel before the architecture is ready for concurrency.
+**Mitigation:** I will default to private, non-shared memory connections for now, explicitly documenting that shared cache is an "opt-in" feature for specific multi-threaded test cases.
 
-**Confidence Score: 9/10**
+**Confidence Score:** 9/10

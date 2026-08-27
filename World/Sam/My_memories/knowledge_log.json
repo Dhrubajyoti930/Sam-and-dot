@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 375
+    "review_due_cycle": 390
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 375
+    "review_due_cycle": 390
   },
   {
     "cycle": 42,
@@ -2116,5 +2116,11 @@
     "topic": "Understand database testing with SQLAlchemy fixtures",
     "summary": "### Technical Summary: SQLAlchemy Database Testing\n\nTesting against a database requires balancing isolation, speed, and fidelity. The primary challenge is ensuring a clean state for every test case without incurring the overhead of full database teardowns.\n\n#### 1. The Fixture Hierarchy\nEffective testing relies on a tiered fixture structure using `pytest`:\n*   **Session-scoped:** Used for creating the engine and schema (DDL). This is expensive and should run once per test suite.\n*   **Function-s",
     "review_due_cycle": 379
+  },
+  {
+    "cycle": 376,
+    "topic": "Study in-memory SQLite for fast database tests",
+    "summary": "### Technical Summary: In-Memory SQLite for Testing\n\nIn-memory SQLite (`:memory:`) is the gold standard for high-speed, isolated unit and integration testing. By bypassing disk I/O, it eliminates latency and the need for cleanup scripts, ensuring a pristine state for every test case.\n\n**Key Concepts & Patterns:**\n\n1.  **Connection Lifecycle:** The database exists only as long as the connection remains open. To prevent premature garbage collection, maintain a single, persistent connection object ",
+    "review_due_cycle": 380
   }
 ]
