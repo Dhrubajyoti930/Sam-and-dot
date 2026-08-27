@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 373
+    "review_due_cycle": 388
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 373
+    "review_due_cycle": 388
   },
   {
     "cycle": 40,
@@ -2104,5 +2104,11 @@
     "topic": "Study VCR cassettes for HTTP interaction recording",
     "summary": "### Technical Summary: HTTP Interaction Recording (VCR Patterns)\n\nThe \"VCR\" pattern\u2014popularized by libraries like Ruby\u2019s `vcr` and Go\u2019s `gock`\u2014is the gold standard for deterministic integration testing. By intercepting outgoing HTTP requests and serializing the resulting responses to disk (cassettes), developers decouple test suites from volatile external APIs.\n\n**Core Concepts:**\n1.  **Request Matching:** The engine must uniquely identify a request to serve the correct recorded response. Robust",
     "review_due_cycle": 377
+  },
+  {
+    "cycle": 374,
+    "topic": "Learn time freezing with freezegun for temporal tests",
+    "summary": "### Technical Summary: Temporal Testing with `freezegun`\n\nTesting time-dependent logic\u2014such as expiration tokens, cron jobs, or scheduled events\u2014is notoriously brittle when relying on system clocks. `freezegun` addresses this by intercepting `datetime`, `time`, and `date` modules at the C-level, effectively \"freezing\" or \"traveling\" through time within a controlled scope.\n\n**Core Concepts & Patterns:**\n\n1.  **The Decorator/Context Manager Pattern:** The primary interface is `@freeze_time('YYYY-M",
+    "review_due_cycle": 378
   }
 ]

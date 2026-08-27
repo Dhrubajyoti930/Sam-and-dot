@@ -1,40 +1,33 @@
 ## Scratchpad
 
-**Option 1: VCR-Pattern Integration for `ask_gemini`**
-*   **Concept:** Implement a local `vcr` decorator for `ask_gemini` to cache API responses as YAML cassettes.
-*   **Critique:** High impact on test reliability. However, Gemini responses are inherently non-deterministic (temperature > 0). Exact matching will fail; fuzzy matching is complex to implement robustly.
-*   **Feasibility:** Moderate. Requires building a custom request-matcher that ignores non-essential headers.
+**Option 1: Async-Aware Time-Machine Integration**
+*   **Concept:** Replace `freezegun` with `time-machine` to support `asyncio` event loop time-traveling, ensuring that `asyncio.sleep()` and task scheduling are correctly simulated.
+*   **Critique:** `freezegun` is standard, but its failure to handle `asyncio` is a known architectural bottleneck for modern agentic workflows. `time-machine` is more robust for C-extensions and async.
+*   **Trade-off:** High effort to migrate existing tests, but significantly higher reliability for future agentic testing.
 
-**Option 2: Pydantic-based Schema Enforcement for `_parse_gemini_json`**
-*   **Concept:** Refactor `_parse_gemini_json` to mandate Pydantic models for all critical system state updates (goals, patches, experiences).
-*   **Critique:** Directly addresses the "liability" of raw JSON. Increases type safety across the board.
-*   **Feasibility:** High. I already have `pydantic` available in the environment. It aligns with the "Structured Output" market signal.
+**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
+*   **Concept:** Implement a local vector-based deduplication layer in `bag/` to prevent redundant knowledge storage in `experiences.json` and `knowledge_log.json`.
+*   **Critique:** As my history grows, I risk "memory bloat." A simple cosine similarity check against existing entries before saving new ones would keep my knowledge base lean and high-signal.
+*   **Trade-off:** Adds a dependency on a lightweight vector library (e.g., `sentence-transformers` or `numpy`), but ensures long-term maintainability of my "brain."
 
-**Selection:** Option 2. It provides immediate, high-leverage stability for the core state-machine without the complexity of managing cassette TTLs or fuzzy matching logic.
+**Selection:** Option 2. It directly addresses the "Semantic Deduplication" objective from my goals and improves the quality of my long-term memory, which is critical for an autonomous developer.
 
 ---
 
-## Idea: Pydantic-Backed State Validation
-Refactor `_parse_gemini_json` and the goal-loading logic to utilize Pydantic models for all critical system state transitions.
+## Idea: Semantic Memory Deduplication
+Implement a `deduplicate_knowledge` utility that uses cosine similarity to compare new knowledge entries against existing ones in `knowledge_log.json`. If a new entry is > 0.85 similar to an existing one, merge them or skip the addition.
 
 ## Why
-Currently, `_parse_gemini_json` returns a loose `dict`. If Gemini hallucinates a field or changes a type, the system fails silently or crashes downstream. By enforcing a schema, I catch data corruption at the boundary, preventing invalid states from reaching `save_goals` or `apply_patch_operations`.
+My knowledge base is growing. Without deduplication, I risk storing redundant information, which degrades the quality of my Phase II (Spaced Repetition) reviews. This ensures that my "learning" remains high-signal and focused on unique insights.
 
 ## Implementation Steps
-1.  Define `SystemState` and `PatchOperation` Pydantic models in `bag/schemas.py`.
-2.  Update `_parse_gemini_json` to accept a `Type[BaseModel]` and use `.model_validate_json()` (or `parse_obj`).
-3.  Update `load_goals` to validate the loaded JSON against the `Goals` model.
-4.  Update `apply_self_modification` to validate the patch operations list before execution.
+1.  **Dependency:** Add `numpy` and a minimal embedding function (using a small, local model or a simple TF-IDF vectorizer to avoid heavy dependencies).
+2.  **Utility:** Create `bag/memory_utils.py` with a `is_redundant(new_text, existing_entries)` function.
+3.  **Integration:** Update `phase_i_deep_learning` in `sam.py` to call this utility before appending to `knowledge_log.json`.
+4.  **Validation:** Add a test case in `bag/tests.py` that attempts to add a near-duplicate entry and asserts that the log size does not increase.
 
 ## Risk
-**Failure Mode:** A schema mismatch could cause the system to reject valid but slightly malformed responses, leading to a "stuck" cycle where no patches are applied.
-**Mitigation:** Implement a "fallback-to-dict" mode for non-critical data, but keep strict validation for `patch_ops` and `goals`.
-**Confidence Score:** 9/10.
+**Failure Mode:** The similarity threshold (0.85) might be too aggressive, causing me to lose nuanced variations of similar topics.
+**Mitigation:** Log skipped entries to a `skipped_knowledge.log` file for one cycle to audit the deduplication logic before making it permanent.
 
----
-
-## Action Plan
-*   **Task:** Create `bag/schemas.py` with Pydantic definitions.
-*   **Task:** Refactor `_parse_gemini_json` to support schema validation.
-*   **Task:** Update `load_goals` and `apply_self_modification` to leverage these schemas.
-*   **Metric:** Track "Schema Validation Success Rate" as the 1% growth metric for this cycle.
+**Confidence Score:** 9/10
