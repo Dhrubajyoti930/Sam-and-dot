@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 378
+    "review_due_cycle": 393
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 378
+    "review_due_cycle": 393
   },
   {
     "cycle": 45,
@@ -2134,5 +2134,11 @@
     "topic": "Understand schema validation testing with jsonschema",
     "summary": "### Schema Validation Testing with `jsonschema`\n\nSchema validation is the practice of enforcing structural integrity on data objects\u2014typically JSON\u2014against a predefined contract. In the Node.js ecosystem, the `jsonschema` library provides a robust implementation of the JSON Schema specification (Draft 4), allowing developers to move validation logic out of imperative code and into declarative schemas.\n\n#### Core Concepts\n1.  **Declarative Contracts:** Instead of writing nested `if/else` blocks t",
     "review_due_cycle": 382
+  },
+  {
+    "cycle": 379,
+    "topic": "Study type narrowing in Python with isinstance guards",
+    "summary": "### Technical Summary: Type Narrowing via `isinstance`\n\nIn Python, type narrowing is the process by which static type checkers (like Mypy or Pyright) refine the inferred type of a variable based on runtime control flow. The `isinstance(obj, class_or_tuple)` check is the primary mechanism for this, acting as a type guard that informs the checker that within the subsequent block, `obj` conforms to a specific type.\n\n#### Core Concepts\n1.  **Flow-Sensitive Analysis:** Type checkers track the state o",
+    "review_due_cycle": 383
   }
 ]
