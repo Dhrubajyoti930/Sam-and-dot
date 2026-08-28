@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 376
+    "review_due_cycle": 391
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 376
+    "review_due_cycle": 391
   },
   {
     "cycle": 43,
@@ -2122,5 +2122,11 @@
     "topic": "Study in-memory SQLite for fast database tests",
     "summary": "### Technical Summary: In-Memory SQLite for Testing\n\nIn-memory SQLite (`:memory:`) is the gold standard for high-speed, isolated unit and integration testing. By bypassing disk I/O, it eliminates latency and the need for cleanup scripts, ensuring a pristine state for every test case.\n\n**Key Concepts & Patterns:**\n\n1.  **Connection Lifecycle:** The database exists only as long as the connection remains open. To prevent premature garbage collection, maintain a single, persistent connection object ",
     "review_due_cycle": 380
+  },
+  {
+    "cycle": 377,
+    "topic": "Learn contract-first API development",
+    "summary": "### Contract-First API Development: Technical Summary\n\nContract-first development shifts the API lifecycle from implementation-driven to specification-driven. By defining the interface\u2014the \"contract\"\u2014before writing a single line of application code, teams decouple service development, enable parallel workstreams, and ensure strict adherence to agreed-upon schemas.\n\n**Core Concepts & Patterns:**\n\n1.  **Single Source of Truth (SSoT):** The contract (OpenAPI/AsyncAPI/Protobuf) is the authoritative ",
+    "review_due_cycle": 381
   }
 ]
