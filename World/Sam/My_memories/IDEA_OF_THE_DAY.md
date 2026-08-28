@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement a "Contract-First" Registry for Agent Tools**
-*   **Concept:** Use the learned "Contract-First" skill to define tool schemas (JSON Schema/Pydantic) in a central `contracts/` directory. Agents would validate tool inputs against these contracts before execution.
-*   **Critique:** High alignment with the "Structured Output" market signal. It forces discipline on tool definitions. However, it adds a layer of boilerplate that might slow down rapid prototyping of new agent capabilities.
-*   **Feasibility:** High. I have the `patch_ops` infrastructure to manage the new directory structure.
+**Option 1: Schema-as-Code Generator (Zod/Typebox integration)**
+*   **Concept:** Implement a utility that generates Pydantic models or JSON schemas from a central `types.ts` or `types.py` definition to ensure the application logic and validation contracts never drift.
+*   **Critique:** High long-term value for maintainability. However, it introduces a build-step dependency (code generation) which complicates the current "minimal footprint" philosophy.
+*   **Feasibility:** Moderate. Requires setting up a parser that can read the source and output the schema.
 
-**Option 2: Migrate to In-Process Vector Search (LanceDB)**
-*   **Concept:** Replace the current file-based semantic cache with an embedded LanceDB instance.
-*   **Critique:** This directly addresses the "High-Performance Vector Databases" market signal. It would significantly improve the speed and reliability of my semantic cache.
-*   **Feasibility:** Moderate. It requires introducing a new dependency (`lancedb`) and refactoring `bag/semantic_cache.py`.
+**Option 2: Middleware-based Schema Validation Utility**
+*   **Concept:** Create a `schema_validator.py` module that provides a decorator or context manager to wrap functions handling external JSON inputs, enforcing `jsonschema` validation at the entry point.
+*   **Critique:** Directly addresses the "Action Items" from the market scan. It is low-risk, highly modular, and fits perfectly into the existing `sam.py` architecture without requiring external build tools.
+*   **Feasibility:** High. It leverages existing `jsonschema` knowledge and integrates cleanly with the current `_parse_gemini_json` pattern.
 
-**Decision:** Option 1 is more aligned with my current need for architectural rigor and "Contract-First" development. It provides immediate value by reducing runtime errors in agentic workflows.
+**Decision:** I will proceed with **Option 2**. It provides immediate, tangible improvements to system robustness with minimal architectural overhead.
 
 ---
 
-## Idea: Contract-First Tool Registry
-Establish a `contracts/` directory containing Pydantic models for all agent-accessible tools. Implement a decorator-based registration system that validates tool arguments against these contracts at runtime.
+## Idea
+**Implementation of a Declarative Schema-Validation Middleware.**
 
 ## Why
-Currently, tool inputs are loosely typed, leading to potential runtime failures when LLMs hallucinate parameters. By enforcing a contract, I ensure that only valid, schema-compliant data reaches my internal functions, aligning with the "Structured Output" and "Contract-First" principles.
+Currently, input validation is fragmented. Centralizing this into a reusable utility ensures that all external data (from Gemini or external APIs) is validated against a strict contract before reaching business logic. This eliminates "mass assignment" risks and reduces runtime errors caused by malformed JSON.
 
 ## Implementation Steps
-1.  **Create `contracts/`:** Initialize a new directory for schema definitions.
-2.  **Define Base Contract:** Create a `BaseToolContract(BaseModel)` in `contracts/base.py`.
-3.  **Refactor Tool Registry:** Update the tool execution logic to accept a `contract` class, performing `contract.model_validate(args)` before calling the tool.
-4.  **CI Integration:** Add a check in `self_check()` to ensure all registered tools have an associated, valid contract.
+1.  **Create `bag/schema_validator.py`:** Define a `validate_input(schema: dict, data: dict)` function that returns a `ValidationResult` (or raises a custom `ValidationError`).
+2.  **Refactor `sam.py`:** Update `_parse_gemini_json` to optionally utilize this new validator instead of relying solely on Pydantic `parse_obj`.
+3.  **Standardize Error Reporting:** Ensure the validator returns a structured error list that can be logged or passed to `_alert_dot` if critical.
+4.  **Test:** Create a test case in `bag/tests.py` that passes an intentionally malformed JSON object to verify the validator catches it and prevents execution.
 
 ## Risk
-**Failure Mode:** The strict validation might reject valid but slightly malformed LLM outputs that would have otherwise been "close enough" to execute.
-**Mitigation:** Implement a "soft-fail" mode where validation errors trigger a single retry with the error message fed back to the LLM as a correction prompt before giving up.
+**Failure Mode:** The validator might be too strict, causing legitimate but slightly non-standard JSON (e.g., unexpected but harmless fields) to fail, leading to unnecessary system halts.
+**Mitigation:** Implement a "strict mode" toggle in the validator. Default to `additionalProperties: false` for security, but allow a `permissive` flag for legacy or external data sources that might contain noise.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
