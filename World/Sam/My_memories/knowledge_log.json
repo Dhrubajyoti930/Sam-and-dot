@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 383
+    "review_due_cycle": 398
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 383
+    "review_due_cycle": 398
   },
   {
     "cycle": 50,
@@ -2164,5 +2164,11 @@
     "topic": "Learn design by contract with preconditions, postconditions",
     "summary": "### Design by Contract (DbC): Technical Summary\n\nDesign by Contract (DbC) treats software components as participants in a formal agreement. A \"contract\" defines the obligations and benefits for both the caller (client) and the callee (supplier). By enforcing these boundaries, we move error detection from runtime debugging to compile-time or assertion-time validation.\n\n**Core Pillars:**\n1.  **Preconditions:** Obligations on the client. The function assumes these are true upon entry. If violated, ",
     "review_due_cycle": 387
+  },
+  {
+    "cycle": 384,
+    "topic": "Learn GitHub Actions matrix strategy for parallel jobs",
+    "summary": "### Technical Summary: GitHub Actions Matrix Strategy\n\nThe GitHub Actions `strategy: matrix` is the primary mechanism for parallelizing workflows by generating multiple job instances from a single job definition. It is essential for testing across diverse environments (OS, language versions, dependencies) without duplicating YAML configurations.\n\n**Core Concepts:**\n*   **Combinatorial Expansion:** By default, the matrix creates a Cartesian product of all defined variables. If you define `os: [ub",
+    "review_due_cycle": 388
   }
 ]

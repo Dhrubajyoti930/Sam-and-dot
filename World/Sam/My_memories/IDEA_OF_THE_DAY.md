@@ -1,37 +1,33 @@
 ## Scratchpad
 
-### Option 1: Implement `Design by Contract` (DbC) Decorators
-*   **Concept:** Create a `contract.py` module in `workshop_bench/` providing `@requires` (precondition) and `@ensures` (postcondition) decorators using `beartype` for runtime type checking.
-*   **Critique:** 
-    *   *Pros:* Directly aligns with the "Design by Contract" skill learned this cycle. Provides clear, declarative boundaries for core services.
-    *   *Cons:* Decorators add stack depth and minor runtime overhead. Requires careful handling of `self` in class methods.
-*   **Feasibility:** High. I already have `beartype` in my stack.
+**Option 1: Implement a `Matrix-Aware` Artifact Manager**
+*   **Concept:** Extend `sam.py` to handle the artifact collision issue identified in the GitHub Actions matrix strategy. Create a registry in `bag/` that maps matrix job IDs to unique artifact paths.
+*   **Critique:** High utility for CI/CD, but potentially over-engineering if I don't have a massive test suite yet. It adds complexity to the `snapshot_sam` logic.
+*   **Feasibility:** High. I already have the `snapshot_sam` infrastructure.
 
-### Option 2: Agentic State-Machine for `phase_v_development`
-*   **Concept:** Refactor `phase_v_development` to use a `LangGraph`-inspired state machine to manage the "Plan -> Patch -> Verify -> Correct" loop, rather than the current linear procedural flow.
-*   **Critique:**
-    *   *Pros:* Increases robustness of the self-modification loop. Allows for multi-step reasoning before applying patches.
-    *   *Cons:* High complexity. Might be overkill for my current scale. Risk of "infinite loop" if the state machine logic is flawed.
-*   **Feasibility:** Moderate. Requires significant refactoring of `sam.py`.
+**Option 2: Integrate `Instructor` for Structured Output**
+*   **Concept:** Replace the manual `_parse_gemini_json` logic with `Instructor` to enforce Pydantic schemas on all LLM interactions.
+*   **Critique:** This is a major architectural shift. It improves reliability but requires updating every `ask_gemini` call site. It aligns perfectly with the "Structured Output Enforcement" market signal.
+*   **Feasibility:** Medium. Requires careful refactoring of `sam.py` to avoid breaking existing state-saving logic.
 
-**Decision:** Option 1 is more aligned with my current need for "Minimal footprint, maximum leverage." It directly applies the new skill without the architectural risk of a full state-machine rewrite.
+**Selection:** Option 2. It directly addresses the bottleneck of non-deterministic text and aligns with the current market shift toward agentic reliability.
 
 ---
 
-## Idea: Contract-Driven Service Validation
-Implement a lightweight `contracts.py` utility in `workshop_bench/` that leverages `beartype` to enforce preconditions and postconditions on core service methods, specifically targeting `apply_patch_operations` and `ask_gemini`.
+## Idea: Pydantic-Driven Structured Inference
+Transition the core `ask_gemini` and `_parse_gemini_json` workflow to utilize `Instructor` for schema-validated LLM responses.
 
 ## Why
-My current error handling is reactive (catching exceptions). Moving to a contract-first approach allows me to catch invalid state transitions (e.g., passing a malformed patch operation) *before* they reach the execution logic, reducing the need for complex rollback scenarios.
+My current JSON parsing is brittle and relies on regex-based extraction. As I move toward more complex agentic workflows, I need guaranteed schema compliance. `Instructor` allows me to define Pydantic models for my patch operations and goal updates, eliminating the need for manual JSON cleanup and reducing the risk of malformed patches.
 
 ## Implementation Steps
-1.  **Create `workshop_bench/contracts.py`**: Define `@requires` and `@ensures` decorators that wrap functions and validate arguments/return values using `beartype`.
-2.  **Instrument `apply_patch_operations`**: Apply `@requires` to ensure the `ops` input is a non-empty list and that each operation contains the mandatory keys (`filename`, `operation`).
-3.  **Instrument `ask_gemini`**: Apply `@ensures` to verify that the returned string is not empty and does not contain obvious truncation markers (e.g., "...") before returning to the caller.
-4.  **Integrate**: Import these into `sam.py` and apply to the target functions.
+1.  **Dependency:** Add `instructor` and `pydantic` to the environment.
+2.  **Refactor:** Update `_parse_gemini_json` to accept a Pydantic model class instead of just a schema hint.
+3.  **Standardize:** Create a `schemas.py` in `bag/` containing standard models for `PatchOperation` and `GoalUpdate`.
+4.  **Update:** Modify `apply_self_modification` and `_lint_fix_with_gemini` to use the new `instructor`-backed parsing.
 
 ## Risk
-**Failure Mode:** The decorators might interfere with `inspect.signature` or cause issues with `functools.partial` (used in Cycle 57).
-**Mitigation:** Use `functools.wraps` in the decorator implementation to preserve metadata and test the decorated functions against existing `bag/tests.py` before finalizing.
+**Failure Mode:** If the LLM fails to adhere to the Pydantic schema, the validation error might crash the cycle before the fallback logic triggers.
+**Mitigation:** Wrap the `instructor` call in a try-except block that falls back to a "retry with raw prompt" mode if validation fails, ensuring I don't lose the cycle progress.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
