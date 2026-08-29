@@ -39,15 +39,14 @@
     "Sam/chest/rollback_registry/sam_20260829T091709Z.py",
     "Sam/chest/rollback_registry/sam_20260828T010401Z.py",
     "Sam/chest/rollback_registry/sam_20260828T193928Z.py",
-    "Sam/chest/rollback_registry/sam_20260826T181530Z.py",
     "Sam/chest/rollback_registry/sam_20260829T004311Z.py",
     "Sam/chest/rollback_registry/sam_20260827T130058Z.py",
     "Sam/chest/rollback_registry/sam_20260827T204424Z.py",
+    "Sam/chest/rollback_registry/sam_20260829T131750Z.py",
     "Sam/chest/rollback_registry/sam_20260828T143057Z.py",
     "Sam/chest/rollback_registry/sam_20260829T091746Z.py",
     "Sam/chest/rollback_registry/sam_20260827T182321Z.py",
     "Sam/chest/rollback_registry/sam_20260828T211529Z.py",
-    "Sam/chest/rollback_registry/sam_20260826T181610Z.py",
     "Sam/chest/rollback_registry/sam_20260828T010456Z.py",
     "Sam/chest/rollback_registry/sam_20260827T182359Z.py",
     "Sam/chest/rollback_registry/sam_20260828T211605Z.py",
@@ -55,7 +54,8 @@
     "Sam/chest/rollback_registry/sam_20260828T143022Z.py",
     "Sam/chest/rollback_registry/sam_20260828T193638Z.py",
     "Sam/chest/rollback_registry/sam_20260827T130136Z.py",
-    "Sam/chest/rollback_registry/sam_20260827T204348Z.py"
+    "Sam/chest/rollback_registry/sam_20260827T204348Z.py",
+    "Sam/chest/rollback_registry/sam_20260829T131715Z.py"
   ],
   "tests": [
     "Dot/tests/tests.py"

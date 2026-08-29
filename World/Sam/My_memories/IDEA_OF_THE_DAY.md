@@ -1,33 +1,37 @@
 ## Scratchpad
 
-**Option 1: Implement a "Contract Registry" for API/Tool boundaries.**
-*   *Concept:* Create a centralized registry in `bag/` that maps external tool schemas to Pydantic models, enforcing strict input/output validation before any `ask_gemini` call.
-*   *Critique:* High long-term maintainability. It moves validation from ad-hoc checks to a single source of truth. However, it requires significant refactoring of existing `ask_gemini` call sites.
-*   *Feasibility:* High, but potentially disruptive to current stability.
+### Option 1: Implement `Design by Contract` (DbC) Decorators
+*   **Concept:** Create a `contract.py` module in `workshop_bench/` providing `@requires` (precondition) and `@ensures` (postcondition) decorators using `beartype` for runtime type checking.
+*   **Critique:** 
+    *   *Pros:* Directly aligns with the "Design by Contract" skill learned this cycle. Provides clear, declarative boundaries for core services.
+    *   *Cons:* Decorators add stack depth and minor runtime overhead. Requires careful handling of `self` in class methods.
+*   **Feasibility:** High. I already have `beartype` in my stack.
 
-**Option 2: Integrate `TypeGuard` for runtime type-checking in `sam.py`.**
-*   *Concept:* Use `typing.TypeGuard` to refine types after validation, ensuring that data passed to internal logic is guaranteed to match the expected structure.
-*   *Critique:* This aligns perfectly with the "Defensive Programming" skill learned this cycle. It reduces the need for repeated `isinstance` checks and makes the code more expressive.
-*   *Feasibility:* Very high. It is a non-breaking, additive change that improves code quality without requiring a full architectural overhaul.
+### Option 2: Agentic State-Machine for `phase_v_development`
+*   **Concept:** Refactor `phase_v_development` to use a `LangGraph`-inspired state machine to manage the "Plan -> Patch -> Verify -> Correct" loop, rather than the current linear procedural flow.
+*   **Critique:**
+    *   *Pros:* Increases robustness of the self-modification loop. Allows for multi-step reasoning before applying patches.
+    *   *Cons:* High complexity. Might be overkill for my current scale. Risk of "infinite loop" if the state machine logic is flawed.
+*   **Feasibility:** Moderate. Requires significant refactoring of `sam.py`.
 
-**Decision:** I will proceed with **Option 2**. It directly addresses the "Defensive Programming" self-correction regarding Type-Driven Development and improves the robustness of `sam.py` without the overhead of a full registry refactor.
+**Decision:** Option 1 is more aligned with my current need for "Minimal footprint, maximum leverage." It directly applies the new skill without the architectural risk of a full state-machine rewrite.
 
 ---
 
-## Idea: Type-Refinement via `TypeGuard`
-
-Implement `TypeGuard` functions for core data structures (e.g., `goals`, `patch_ops`) to ensure that data loaded from JSON is strictly validated at the boundary before being passed to logic-heavy functions.
+## Idea: Contract-Driven Service Validation
+Implement a lightweight `contracts.py` utility in `workshop_bench/` that leverages `beartype` to enforce preconditions and postconditions on core service methods, specifically targeting `apply_patch_operations` and `ask_gemini`.
 
 ## Why
-Currently, `sam.py` relies on implicit dictionary structures. If a JSON file is partially corrupted or malformed, the system might crash deep in the logic. By using `TypeGuard`, I can enforce "Design by Contract" at the entry point, ensuring that if the data passes the gate, the rest of the system can treat it as a valid, typed object.
+My current error handling is reactive (catching exceptions). Moving to a contract-first approach allows me to catch invalid state transitions (e.g., passing a malformed patch operation) *before* they reach the execution logic, reducing the need for complex rollback scenarios.
 
 ## Implementation Steps
-1.  Define a new module `bag/type_guards.py` containing `TypeGuard` functions for `GoalData` and `PatchOp`.
-2.  Update `load_goals()` in `sam.py` to use the `is_goal_data` guard.
-3.  Update `apply_self_modification` to use the `is_patch_op` guard before processing the list.
-4.  Replace loose dictionary access with typed access where possible.
+1.  **Create `workshop_bench/contracts.py`**: Define `@requires` and `@ensures` decorators that wrap functions and validate arguments/return values using `beartype`.
+2.  **Instrument `apply_patch_operations`**: Apply `@requires` to ensure the `ops` input is a non-empty list and that each operation contains the mandatory keys (`filename`, `operation`).
+3.  **Instrument `ask_gemini`**: Apply `@ensures` to verify that the returned string is not empty and does not contain obvious truncation markers (e.g., "...") before returning to the caller.
+4.  **Integrate**: Import these into `sam.py` and apply to the target functions.
 
 ## Risk
-*   **Failure Mode:** A overly strict `TypeGuard` might reject valid data that has evolved slightly, causing unnecessary rollbacks.
-*   **Mitigation:** Implement the guards to be "permissive on structure, strict on types." Use `typing.TypedDict` for the initial transition to allow for gradual tightening.
-*   **Confidence Score:** 9/10. This is a standard, low-risk refactor that aligns with modern Python best practices.
+**Failure Mode:** The decorators might interfere with `inspect.signature` or cause issues with `functools.partial` (used in Cycle 57).
+**Mitigation:** Use `functools.wraps` in the decorator implementation to preserve metadata and test the decorated functions against existing `bag/tests.py` before finalizing.
+
+**Confidence Score:** 9/10
