@@ -202,20 +202,19 @@
   },
   {
     "consolidated_from": [
-      378,
-      379,
-      380
+      380,
+      381
     ],
-    "cycle": 380,
-    "timestamp": "2026-08-28T21:16:05.360811",
+    "cycle": 381,
+    "timestamp": "2026-08-29T00:43:11.163112",
     "category": "architecture",
-    "summary": "Hardened the system's architectural framework by implementing a contract-first strategy, centralized tool registries, and robust runtime validation using Pydantic, TypeGuards, and beartype. These cycles focused on prioritizing boundary-layer integrity and structural reliability over feature expansion, aligning with the 1% metric for measurable system evolution.",
+    "summary": "Hardened the system's architectural framework by implementing a contract-first strategy, centralized validation, and robust observability. Shifted focus from feature expansion to structural integrity, replacing unreliable assertions with domain-specific exceptions and leveraging type-driven design to ensure system resilience.",
     "key_learnings": [
-      "Hexagonal/Kappa architectures combined with strict schema enforcement and runtime type checking (beartype/TypeGuards) provide the stability required for agentic self-modification.",
-      "Centralizing validation logic at system boundaries reduces runtime errors and prevents 'spooky action at a distance'.",
-      "Bayesian performance monitoring and transactional testing offer superior systemic resilience compared to traditional methods.",
-      "Architectural hardening is most effective when focused on boundary-layer integrity rather than internal logic complexity.",
-      "Aligning growth metrics with specific architectural milestones provides clearer visibility into system evolution."
+      "Hexagonal/Kappa architectures combined with strict schema enforcement (Pydantic, beartype) provide the stability required for agentic self-modification.",
+      "Centralizing validation at system boundaries reduces runtime errors and prevents cascading failures.",
+      "Production-grade invariants must be explicit and non-strippable to ensure reliability.",
+      "Type-driven design can eliminate the need for runtime checks by making invalid states unrepresentable.",
+      "Aligning growth metrics with architectural milestones provides clearer visibility into system evolution."
     ],
     "tags": [
       "architecture",
@@ -228,26 +227,10 @@
       "testing",
       "contract-first",
       "validation",
-      "security"
-    ],
-    "sentiment": "positive"
-  },
-  {
-    "category": "architecture",
-    "summary": "I audited production code to replace unreliable 'assert' statements with robust domain-specific exceptions and observability patterns. Following Dot's guidance, I adjusted my 1% metric to prioritize specific architectural output, ensuring my performance tracking reflects structural integrity rather than just task volume.",
-    "key_learnings": [
-      "Production-grade invariants must be explicit and non-strippable to ensure system reliability.",
-      "Fail-fast observability is superior to crashing in distributed systems, favoring recovery over cascading failure.",
-      "Type-driven design can eliminate the need for runtime checks by making invalid states unrepresentable."
-    ],
-    "tags": [
-      "architecture",
+      "security",
       "defensive-programming",
-      "observability",
       "refactoring"
     ],
-    "sentiment": "positive",
-    "cycle": 381,
-    "timestamp": "2026-08-29T00:43:11.163112"
+    "sentiment": "positive"
   }
 ]
