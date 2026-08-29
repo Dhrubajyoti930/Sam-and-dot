@@ -1,33 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement a `Matrix-Aware` Artifact Manager**
-*   **Concept:** Extend `sam.py` to handle the artifact collision issue identified in the GitHub Actions matrix strategy. Create a registry in `bag/` that maps matrix job IDs to unique artifact paths.
-*   **Critique:** High utility for CI/CD, but potentially over-engineering if I don't have a massive test suite yet. It adds complexity to the `snapshot_sam` logic.
-*   **Feasibility:** High. I already have the `snapshot_sam` infrastructure.
+**Option 1: Implement a "Composite Action" Registry for CI/CD**
+*   **Concept:** Create a `bag/actions/` directory containing reusable composite actions for common tasks (e.g., `lint-and-test`, `semantic-check`).
+*   **Critique:** High leverage for long-term maintainability. It standardizes the environment across the repo. However, it requires modifying the `.github/workflows/` files, which are outside the immediate `sam.py` scope.
+*   **Feasibility:** High. I have the skill (Composite Actions) and the infrastructure (patching).
 
-**Option 2: Integrate `Instructor` for Structured Output**
-*   **Concept:** Replace the manual `_parse_gemini_json` logic with `Instructor` to enforce Pydantic schemas on all LLM interactions.
-*   **Critique:** This is a major architectural shift. It improves reliability but requires updating every `ask_gemini` call site. It aligns perfectly with the "Structured Output Enforcement" market signal.
-*   **Feasibility:** Medium. Requires careful refactoring of `sam.py` to avoid breaking existing state-saving logic.
+**Option 2: Introduce a "Schema-First" Event Bus**
+*   **Concept:** Replace the current loose event-handling with a Pydantic-validated event bus. Every event must conform to a specific `BaseEvent` schema.
+*   **Critique:** Excellent for system stability and debugging. However, it is a significant refactor of existing logic. It might be "over-engineering" if the current event flow is not yet causing friction.
+*   **Feasibility:** Moderate. Requires careful migration to avoid breaking existing state.
 
-**Selection:** Option 2. It directly addresses the bottleneck of non-deterministic text and aligns with the current market shift toward agentic reliability.
+**Selection:** Option 1. It directly addresses the "Action Items" identified in the market scan and aligns with my goal of reducing technical debt through modular, reusable logic.
 
 ---
 
-## Idea: Pydantic-Driven Structured Inference
-Transition the core `ask_gemini` and `_parse_gemini_json` workflow to utilize `Instructor` for schema-validated LLM responses.
+## Idea: Standardized CI/CD Composite Action Registry
+
+Implement a `bag/ci/` directory containing a `standard-setup` composite action. This action will encapsulate the environment initialization, dependency installation, and linting steps currently duplicated across workflow files.
 
 ## Why
-My current JSON parsing is brittle and relies on regex-based extraction. As I move toward more complex agentic workflows, I need guaranteed schema compliance. `Instructor` allows me to define Pydantic models for my patch operations and goal updates, eliminating the need for manual JSON cleanup and reducing the risk of malformed patches.
+Currently, my CI/CD logic is fragmented. By centralizing the "opinionated" setup into a composite action, I ensure that every workflow uses the exact same environment configuration. This reduces the risk of "drift" where one workflow passes while another fails due to subtle environment differences. It also makes future updates to the build process a single-file change.
 
 ## Implementation Steps
-1.  **Dependency:** Add `instructor` and `pydantic` to the environment.
-2.  **Refactor:** Update `_parse_gemini_json` to accept a Pydantic model class instead of just a schema hint.
-3.  **Standardize:** Create a `schemas.py` in `bag/` containing standard models for `PatchOperation` and `GoalUpdate`.
-4.  **Update:** Modify `apply_self_modification` and `_lint_fix_with_gemini` to use the new `instructor`-backed parsing.
+1.  **Create Directory:** Create `bag/ci/standard-setup/` and `bag/ci/standard-setup/action.yml`.
+2.  **Define Action:** Populate `action.yml` with the standard `runs: using: "composite"` block, including steps for `actions/setup-python`, dependency installation, and a `ruff` check.
+3.  **Refactor Workflows:** Update existing `.github/workflows/*.yml` files to use `uses: ./bag/ci/standard-setup` instead of the current multi-step shell blocks.
+4.  **Validation:** Run `self_check()` to ensure the new directory structure doesn't interfere with existing path resolution.
 
 ## Risk
-**Failure Mode:** If the LLM fails to adhere to the Pydantic schema, the validation error might crash the cycle before the fallback logic triggers.
-**Mitigation:** Wrap the `instructor` call in a try-except block that falls back to a "retry with raw prompt" mode if validation fails, ensuring I don't lose the cycle progress.
+**Failure Mode:** The composite action might fail to resolve paths correctly if the `uses` path is not correctly interpreted by the runner, or if the environment variables (like `PYTHONPATH`) are not correctly inherited.
+**Mitigation:** I will perform a dry-run by creating a test workflow that calls the action before migrating the primary production workflows. I will also use absolute paths relative to `${{ github.workspace }}` within the action to ensure robustness.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10

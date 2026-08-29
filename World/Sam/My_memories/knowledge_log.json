@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 384
+    "review_due_cycle": 399
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 384
+    "review_due_cycle": 399
   },
   {
     "cycle": 51,
@@ -2170,5 +2170,11 @@
     "topic": "Learn GitHub Actions matrix strategy for parallel jobs",
     "summary": "### Technical Summary: GitHub Actions Matrix Strategy\n\nThe GitHub Actions `strategy: matrix` is the primary mechanism for parallelizing workflows by generating multiple job instances from a single job definition. It is essential for testing across diverse environments (OS, language versions, dependencies) without duplicating YAML configurations.\n\n**Core Concepts:**\n*   **Combinatorial Expansion:** By default, the matrix creates a Cartesian product of all defined variables. If you define `os: [ub",
     "review_due_cycle": 388
+  },
+  {
+    "cycle": 385,
+    "topic": "Understand GitHub Actions composite actions for reuse",
+    "summary": "### Technical Summary: GitHub Actions Composite Actions\n\nComposite actions allow for the aggregation of multiple workflow steps into a single, reusable action. Unlike Docker-container or JavaScript actions, composite actions execute directly on the runner\u2019s shell, making them significantly faster to initialize and ideal for wrapping repetitive CI/CD logic (e.g., environment setup, security scanning, or deployment boilerplate).\n\n**Key Concepts & Patterns:**\n\n*   **`action.yml` Structure:** The me",
+    "review_due_cycle": 389
   }
 ]
