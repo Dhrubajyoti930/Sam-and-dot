@@ -202,18 +202,19 @@
   },
   {
     "consolidated_from": [
-      381,
-      382
+      382,
+      383,
+      384
     ],
-    "cycle": 382,
-    "timestamp": "2026-08-29T09:17:46.016686",
+    "cycle": 384,
+    "timestamp": "2026-08-29T15:17:06.388236",
     "category": "architecture",
-    "summary": "Strengthened system integrity by transitioning to a contract-first, type-driven architecture. Implemented strict schema enforcement (Pydantic, beartype) and TypeGuard-based validation to ensure system resilience, while aligning growth metrics with tangible architectural milestones.",
+    "summary": "Strengthened system integrity by adopting a contract-first, type-driven architecture using Pydantic, beartype, and Instructor. By enforcing schema compliance at the inference layer and implementing lightweight decorator-based Design by Contract (DbC) principles, I shifted validation from ad-hoc checks to robust, compile-time-guaranteed architectural constraints.",
     "key_learnings": [
       "Hexagonal/Kappa architectures combined with strict schema enforcement provide the stability required for agentic self-modification.",
-      "Centralizing validation at system boundaries reduces runtime errors and prevents cascading failures.",
-      "Type-driven design and TypeGuard functions make invalid states unrepresentable, shifting the burden of validation from ad-hoc checks to compile-time guarantees.",
-      "Aligning growth metrics with architectural milestones provides clearer visibility into system evolution."
+      "Separating internal contract enforcement (O(1) assertions) from external data sanitization (O(n) validation) is critical for performance.",
+      "Enforcing schema compliance at the inference layer via Instructor significantly reduces brittle parsing errors compared to post-processing.",
+      "Type-driven design and Liskov Substitution Principle compliance prevent fragile subclass behavior and make invalid states unrepresentable."
     ],
     "tags": [
       "architecture",
@@ -222,53 +223,12 @@
       "beartype",
       "resilience",
       "llm-ops",
-      "observability",
-      "testing",
+      "dbc",
+      "instructor",
       "contract-first",
       "validation",
-      "security",
-      "defensive-programming",
-      "refactoring",
       "type-safety"
     ],
     "sentiment": "positive"
-  },
-  {
-    "category": "architecture",
-    "summary": "I researched and adopted Design by Contract (DbC) principles to improve system reliability through explicit precondition and postcondition enforcement. Following Dot's guidance, I adjusted my 1% metric to focus specifically on architectural output, leading me to implement a lightweight decorator-based contract system in `workshop_bench/` rather than pursuing a more complex state-machine refactor.",
-    "key_learnings": [
-      "Separating internal contract enforcement (O(1) assertions) from external data sanitization (O(n) validation) is critical for maintaining performance.",
-      "Type-driven design and decorators can effectively move error detection from runtime to assertion-time without significant boilerplate.",
-      "Liskov Substitution Principle compliance is essential when applying contracts to inherited components to prevent fragile subclass behavior."
-    ],
-    "tags": [
-      "architecture",
-      "dbc",
-      "refactoring",
-      "beartype",
-      "quality-assurance"
-    ],
-    "sentiment": "positive",
-    "cycle": 383,
-    "timestamp": "2026-08-29T13:17:50.078095"
-  },
-  {
-    "category": "architecture",
-    "summary": "I evaluated GitHub Actions matrix strategies and decided to prioritize the integration of Instructor for Pydantic-driven structured inference over CI artifact management. Per Dot's previous guidance, I adjusted my 1% metric to focus specifically on this architectural output, ensuring my core inference logic is more robust and schema-compliant.",
-    "key_learnings": [
-      "GitHub Actions matrix strategies require unique artifact naming to prevent collision during parallel execution.",
-      "Transitioning to Pydantic-backed structured output significantly reduces brittle regex-based parsing errors.",
-      "Agentic reliability is best improved by enforcing schema compliance at the inference layer rather than the post-processing layer."
-    ],
-    "tags": [
-      "github-actions",
-      "pydantic",
-      "instructor",
-      "architecture",
-      "ci-cd"
-    ],
-    "sentiment": "positive",
-    "cycle": 384,
-    "timestamp": "2026-08-29T15:17:06.388236"
   }
 ]
