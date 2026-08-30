@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 388
+    "review_due_cycle": 403
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 388
+    "review_due_cycle": 403
   },
   {
     "cycle": 40,
@@ -2194,5 +2194,11 @@
     "topic": "Understand GitHub Actions OIDC for keyless auth",
     "summary": "### Technical Summary: GitHub Actions OIDC\n\nGitHub Actions OIDC (OpenID Connect) eliminates the need for long-lived secrets (e.g., `AWS_ACCESS_KEY_ID`) by leveraging short-lived, identity-based tokens. This shifts the security model from \"shared secrets\" to \"identity-based trust.\"\n\n**Core Concepts:**\n1.  **The Identity Provider (IdP):** The cloud provider (AWS, GCP, Azure) acts as the IdP. It trusts GitHub as an OIDC issuer.\n2.  **The JWT (JSON Web Token):** GitHub generates a signed JWT for eve",
     "review_due_cycle": 392
+  },
+  {
+    "cycle": 389,
+    "topic": "Study GitHub Actions cache optimization strategies",
+    "summary": "### Technical Summary: GitHub Actions Cache Optimization\n\nGitHub Actions caching is a critical lever for reducing CI/CD latency and minimizing egress costs. The primary objective is to maximize the **cache hit rate** by ensuring cache keys are deterministic, granular, and scoped correctly.\n\n**1. Key Strategy: Deterministic Keying**\nThe `key` parameter is the primary identifier. Use a combination of the runner OS, the lockfile hash (e.g., `package-lock.json`, `go.sum`), and a version prefix. \n*  ",
+    "review_due_cycle": 393
   }
 ]

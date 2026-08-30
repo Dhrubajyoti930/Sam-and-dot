@@ -1,35 +1,33 @@
 ## Scratchpad
 
-### Option 1: OIDC-based Secret Rotation Automation
-*   **Concept:** Implement a script that audits existing `bag/` secrets and generates a Terraform/IAM template to transition them to GitHub OIDC.
-*   **Critique:** High security value, but requires external infrastructure changes (AWS/GCP IAM policies) which I cannot directly apply. I can only provide the templates.
-*   **Feasibility:** High for the code generation, low for the actual "deployment" of the trust relationship.
+**Option 1: Automated RAG Evaluation (Ragas Integration)**
+*   **Concept:** Integrate `ragas` into the `bag/` suite to automatically grade the quality of my semantic cache and knowledge retrieval.
+*   **Critique:** High value for long-term memory reliability. However, it introduces a heavy dependency chain (Ragas requires specific LLM-as-a-judge setups).
+*   **Feasibility:** Moderate. Requires careful handling of the `bag/` environment to avoid dependency bloat.
 
-### Option 2: Semantic Deduplication Engine (Phase IV Objective)
-*   **Concept:** Build a `dedupe.py` module that uses `Qdrant` (or local FAISS) to compare new `knowledge_log` entries against existing ones, flagging duplicates before they are saved.
-*   **Critique:** Directly addresses the "Phase IV" objective. It improves the quality of my long-term memory by preventing redundant storage.
-*   **Feasibility:** High. I have the `knowledge_log.json` structure and the `bag/` environment to host the index.
-*   **Long-term Maintainability:** Excellent. It keeps the memory footprint lean and ensures the Spaced Repetition engine (Phase II) isn't reviewing the same concept multiple times.
+**Option 2: Agentic Tool-Use Refactoring (LangGraph-lite)**
+*   **Concept:** Refactor `ask_gemini` to support a structured "tool-use" loop, allowing me to dynamically call `_bag_data` or `_outline` based on the prompt's requirements rather than hard-coding logic.
+*   **Critique:** This aligns with the "Agentic Frameworks" market signal. It increases complexity but significantly improves my autonomy in Phase V.
+*   **Feasibility:** High. I can implement a lightweight version of this using my existing `_parse_gemini_json` logic.
 
-**Decision:** Option 2 is superior. It is self-contained, directly improves my internal architecture, and fulfills a stated objective.
+**Selection:** Option 2. It directly enhances my ability to solve problems autonomously without needing a full rewrite of my core loop.
 
 ---
 
-## Idea: Semantic Memory Deduplication Engine
-
-Implement a `dedupe.py` module that calculates the cosine similarity between a new knowledge entry and existing entries in `knowledge_log.json` using a lightweight embedding model (e.g., `sentence-transformers`).
+## Idea: Agentic Tool-Use Dispatcher
+Implement a `ToolDispatcher` class in `bag/tools.py` that allows `ask_gemini` to request specific internal functions (e.g., `read_file`, `list_dir`, `run_lint`) before finalizing a response.
 
 ## Why
-My `knowledge_log.json` is growing. Without deduplication, the Spaced Repetition engine (Phase II) will eventually waste cycles reviewing redundant information. This engine will ensure that only unique, high-value insights are persisted, improving the signal-to-noise ratio of my long-term memory.
+Currently, I rely on pre-prompting to give me context. An agentic dispatcher allows me to "pull" information only when needed, reducing token waste and allowing me to handle complex, multi-step tasks (like debugging a broken module) in a single, self-correcting loop.
 
 ## Implementation Steps
-1.  **Dependency:** Add `sentence-transformers` to the environment (or use a lightweight `minilm` model).
-2.  **Module:** Create `bag/dedupe.py` with a `check_for_duplicates(new_entry_text, threshold=0.85)` function.
-3.  **Integration:** Modify `phase_i_deep_learning` in `sam.py` to call `dedupe.py` before appending to `knowledge_log.json`.
-4.  **Logic:** If a duplicate is found, instead of appending, update the existing entry's `review_due_cycle` to reset the interval, effectively "refreshing" the memory rather than duplicating it.
+1.  **Create `bag/tools.py`:** Define a registry of safe, read-only functions I am permitted to call.
+2.  **Update `ask_gemini`:** Modify the prompt to include a "Tool Definition" block.
+3.  **Loop Logic:** If Gemini returns a JSON object with a `tool_call` key, execute the function, append the result to the conversation history, and re-prompt.
+4.  **Security:** Ensure the dispatcher only permits functions explicitly whitelisted in `bag/tools.py`.
 
 ## Risk
-**Failure Mode:** The embedding model might flag distinct concepts as duplicates if they share similar technical jargon (e.g., two different "refactoring" tasks).
-**Mitigation:** Set a high similarity threshold (0.85+) and include the "topic" field in the comparison vector to ensure context is weighted alongside the summary.
+**Failure Mode:** Infinite loop where the model repeatedly calls the same tool due to a misunderstanding of the output.
+**Mitigation:** Implement a `max_tool_calls` counter (default: 3) in the `ask_gemini` loop to force a termination if the model fails to converge.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10. The logic is surgical and builds on my existing `_parse_gemini_json` infrastructure.
