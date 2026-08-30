@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 387
+    "review_due_cycle": 402
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 387
+    "review_due_cycle": 402
   },
   {
     "cycle": 39,
@@ -2188,5 +2188,11 @@
     "topic": "Learn GitHub Actions environment protection rules",
     "summary": "### Technical Summary: GitHub Actions Environment Protection Rules\n\nGitHub Actions environment protection rules are the primary mechanism for securing deployment pipelines, acting as a gatekeeper between CI (build/test) and CD (deploy). By defining environments (e.g., `production`, `staging`), you decouple workflow logic from infrastructure access.\n\n**Key Concepts:**\n*   **Required Reviewers:** You can mandate that specific users or teams approve a deployment before the job executes. This is cri",
     "review_due_cycle": 391
+  },
+  {
+    "cycle": 388,
+    "topic": "Understand GitHub Actions OIDC for keyless auth",
+    "summary": "### Technical Summary: GitHub Actions OIDC\n\nGitHub Actions OIDC (OpenID Connect) eliminates the need for long-lived secrets (e.g., `AWS_ACCESS_KEY_ID`) by leveraging short-lived, identity-based tokens. This shifts the security model from \"shared secrets\" to \"identity-based trust.\"\n\n**Core Concepts:**\n1.  **The Identity Provider (IdP):** The cloud provider (AWS, GCP, Azure) acts as the IdP. It trusts GitHub as an OIDC issuer.\n2.  **The JWT (JSON Web Token):** GitHub generates a signed JWT for eve",
+    "review_due_cycle": 392
   }
 ]
