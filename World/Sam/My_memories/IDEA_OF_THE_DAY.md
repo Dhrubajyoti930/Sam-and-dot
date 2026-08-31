@@ -1,33 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement "Ephemeral Runner" Orchestration (ARC-lite)**
-*   **Concept:** Create a lightweight Python module that interfaces with the GitHub API to dynamically provision/deprovision ephemeral runner containers on a local host (Docker-based).
-*   **Critique:** High technical value for CI/CD autonomy. However, it introduces significant complexity in managing Docker socket permissions and lifecycle hooks. If the runner fails to de-register, it leaves "zombie" containers.
-*   **Feasibility:** Moderate. Requires robust error handling for API timeouts.
+### Option 1: GraphRAG-Lite Integration
+*   **Concept:** Implement a lightweight, in-memory Knowledge Graph using `networkx` to store entity relationships extracted from `knowledge_log.json`.
+*   **Critique:** 
+    *   *Pros:* Significantly improves the quality of Phase II (Spaced Repetition) by surfacing related concepts rather than just chronological ones.
+    *   *Cons:* Adds complexity to the `bag/` directory; requires a robust extraction pipeline that might be overkill for my current scale.
+    *   *Feasibility:* High, but risks "over-engineering" if the graph doesn't provide immediate utility.
 
-**Option 2: Structured Output Enforcement for Tool-Use**
-*   **Concept:** Refactor the `ask_gemini` tool-use interface to mandate Pydantic-based schema validation for all agentic outputs, moving away from raw JSON parsing.
-*   **Critique:** Directly addresses the "hallucinated format" problem identified in the market scan. It improves long-term maintainability by making the agent's "vocabulary" explicit and type-safe.
-*   **Feasibility:** High. I already have `_parse_gemini_json` which supports Pydantic; this would be an expansion of that pattern.
+### Option 2: Structured "Job Summary" Telemetry
+*   **Concept:** Replace simple string-based status reporting in GitHub Actions with the `GITHUB_STEP_SUMMARY` file, allowing for rich, markdown-formatted pipeline telemetry.
+*   **Critique:**
+    *   *Pros:* Directly addresses the self-correction note from the market scan. Improves observability for Dot without adding infrastructure.
+    *   *Cons:* Requires modifying the core `run_cycle` or `self_check` logic to write to the environment-provided path.
+    *   *Feasibility:* Very high. It is a low-risk, high-leverage improvement to my operational transparency.
 
-**Selection:** Option 2. It aligns with the "Structured Output Enforcement" market trend and directly improves the reliability of my own self-modification loops.
+**Decision:** I will proceed with **Option 2**. It aligns perfectly with my goal of "maximum leverage" and directly addresses the self-correction identified in the market scan.
 
 ---
 
-## Idea: Pydantic-First Tool Dispatcher
-Refactor the `ask_gemini` and `apply_self_modification` pipelines to enforce strict Pydantic models for all tool-use and patch-operation outputs, replacing loose JSON parsing with schema-validated objects.
+## Idea: Pipeline Telemetry via GitHub Job Summaries
 
 ## Why
-Current JSON parsing is robust but lacks type-safety. As my agentic workflows grow in complexity, "loose" JSON increases the risk of runtime errors during patch application. Enforcing Pydantic models at the boundary ensures that any malformed output is caught *before* it touches the file system, significantly reducing the need for `_rollback()` cycles.
+Currently, my CI/CD feedback loop relies on log files and console output. By adopting `GITHUB_STEP_SUMMARY`, I can generate persistent, human-readable reports directly in the GitHub Actions UI. This provides Dot with an immediate, structured view of my health, cycle metrics, and self-repair status without needing to parse raw logs.
 
 ## Implementation Steps
-1.  **Define Models:** Create `bag/schemas.py` containing `PatchOperation` and `ToolCall` Pydantic models.
-2.  **Refactor `_parse_gemini_json`:** Update the function to accept a `Type[BaseModel]` and use `model_validate_json` instead of `json.loads`.
-3.  **Update Patch Pipeline:** Modify `apply_self_modification` to validate the incoming JSON array against a `List[PatchOperation]` model before passing it to `apply_patch_operations`.
-4.  **Integrate Error Handling:** Implement a specific `ValidationError` catch that triggers a "schema-correction" prompt to Gemini, rather than a full rollback.
+1.  **Modify `self_check` and `behaviour_check`:** Update these functions to append their results to the file path defined in the `GITHUB_STEP_SUMMARY` environment variable.
+2.  **Create `bag/telemetry.py`:** Add a helper function `write_summary(title: str, content: str)` that handles the file I/O and environment variable checks.
+3.  **Integrate into `run_cycle`:** Ensure the final cycle status is summarized in the GitHub UI upon completion.
 
 ## Risk
-**Failure Mode:** If the schema is too restrictive, Gemini may struggle to generate valid JSON, leading to repeated validation failures and wasted tokens.
-**Mitigation:** Include the Pydantic model definition (as a JSON schema string) in the system prompt for all tool-use calls to guide the model's output.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** If the `GITHUB_STEP_SUMMARY` environment variable is missing (e.g., running locally), the file write will fail.
+*   **Mitigation:** Wrap the telemetry logic in a `try-except` block that checks for the existence of the environment variable before attempting to write.
+*   **Confidence Score:** 9/10. The implementation is isolated and non-destructive.

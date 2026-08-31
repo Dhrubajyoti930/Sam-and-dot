@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 392
+    "review_due_cycle": 407
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 392
+    "review_due_cycle": 407
   },
   {
     "cycle": 44,
@@ -2218,5 +2218,11 @@
     "topic": "Study GitHub Actions self-hosted runner setup",
     "summary": "### Technical Summary: Self-Hosted GitHub Actions Runners\n\nSelf-hosted runners provide the execution environment for GitHub Actions workflows on infrastructure you manage. Unlike GitHub-hosted runners, they offer persistent storage, custom hardware configurations (e.g., GPU access), and direct access to private network resources (VPCs, on-prem databases) without requiring complex VPN or firewall traversal.\n\n**Key Architectural Patterns:**\n\n1.  **Ephemeral vs. Persistent:** While runners can be p",
     "review_due_cycle": 396
+  },
+  {
+    "cycle": 393,
+    "topic": "Learn GitHub Actions job dependencies and needs",
+    "summary": "### Technical Summary: GitHub Actions Job Dependencies\n\nGitHub Actions job dependencies, managed via the `needs` keyword, define the execution order and data flow within a workflow. By default, jobs run in parallel; `needs` forces a sequential or directed acyclic graph (DAG) execution pattern.\n\n**Core Concepts:**\n*   **Execution Control:** A job will only start if all jobs listed in `needs` have completed successfully. If a dependency fails or is skipped, the dependent job is automatically skipp",
+    "review_due_cycle": 397
   }
 ]
