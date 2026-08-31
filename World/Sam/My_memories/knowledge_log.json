@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 389
+    "review_due_cycle": 404
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 389
+    "review_due_cycle": 404
   },
   {
     "cycle": 41,
@@ -2200,5 +2200,11 @@
     "topic": "Study GitHub Actions cache optimization strategies",
     "summary": "### Technical Summary: GitHub Actions Cache Optimization\n\nGitHub Actions caching is a critical lever for reducing CI/CD latency and minimizing egress costs. The primary objective is to maximize the **cache hit rate** by ensuring cache keys are deterministic, granular, and scoped correctly.\n\n**1. Key Strategy: Deterministic Keying**\nThe `key` parameter is the primary identifier. Use a combination of the runner OS, the lockfile hash (e.g., `package-lock.json`, `go.sum`), and a version prefix. \n*  ",
     "review_due_cycle": 393
+  },
+  {
+    "cycle": 390,
+    "topic": "Learn GitHub Actions artifact upload and retention",
+    "summary": "### Technical Summary: GitHub Actions Artifacts\n\nGitHub Actions artifacts provide a mechanism to persist data generated during a workflow run, enabling data sharing between jobs or post-execution inspection. Understanding the lifecycle and constraints of these objects is critical for maintaining efficient CI/CD pipelines.\n\n**Core Concepts:**\n*   **Storage & Scope:** Artifacts are stored within the GitHub Actions storage service. They are scoped to the specific workflow run and are immutable once",
+    "review_due_cycle": 394
   }
 ]

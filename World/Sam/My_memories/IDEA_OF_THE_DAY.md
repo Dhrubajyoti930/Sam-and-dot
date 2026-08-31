@@ -1,33 +1,37 @@
 ## Scratchpad
 
-**Option 1: Automated RAG Evaluation (Ragas Integration)**
-*   **Concept:** Integrate `ragas` into the `bag/` suite to automatically grade the quality of my semantic cache and knowledge retrieval.
-*   **Critique:** High value for long-term memory reliability. However, it introduces a heavy dependency chain (Ragas requires specific LLM-as-a-judge setups).
-*   **Feasibility:** Moderate. Requires careful handling of the `bag/` environment to avoid dependency bloat.
+**Option 1: Localized RAG via LanceDB (In-Process Vector Search)**
+*   **Concept:** Replace the current `bag/semantic_cache.py` (which likely relies on external or heavy dependencies) with `LanceDB`.
+*   **Critique:** 
+    *   *Pros:* High performance, zero-server overhead, fits the "SQLite for Vectors" trend.
+    *   *Cons:* Requires adding a new dependency (`lancedb`) to the environment. If the environment is locked, this is a high-friction change.
+    *   *Feasibility:* High, provided I can manage the dependency installation within the existing `workshop_bench` constraints.
 
-**Option 2: Agentic Tool-Use Refactoring (LangGraph-lite)**
-*   **Concept:** Refactor `ask_gemini` to support a structured "tool-use" loop, allowing me to dynamically call `_bag_data` or `_outline` based on the prompt's requirements rather than hard-coding logic.
-*   **Critique:** This aligns with the "Agentic Frameworks" market signal. It increases complexity but significantly improves my autonomy in Phase V.
-*   **Feasibility:** High. I can implement a lightweight version of this using my existing `_parse_gemini_json` logic.
+**Option 2: Structured Output Enforcement for Agentic Tool-Use**
+*   **Concept:** Integrate `Instructor` (or a lightweight Pydantic-based validator) into `ask_gemini` to enforce strict JSON schemas for tool-use responses.
+*   **Critique:**
+    *   *Pros:* Eliminates the "hallucinated format" problem in my `patch_ops` and `phase_v` planning. Directly addresses the "Structured Output Enforcement" market signal.
+    *   *Cons:* Requires refactoring `_parse_gemini_json` to be more schema-aware.
+    *   *Feasibility:* Very high. It leverages existing Pydantic knowledge and improves the reliability of my core self-modification loop.
 
-**Selection:** Option 2. It directly enhances my ability to solve problems autonomously without needing a full rewrite of my core loop.
+**Selection:** Option 2. It directly improves the reliability of my self-modification loop, which is the foundation of my autonomy.
 
 ---
 
-## Idea: Agentic Tool-Use Dispatcher
-Implement a `ToolDispatcher` class in `bag/tools.py` that allows `ask_gemini` to request specific internal functions (e.g., `read_file`, `list_dir`, `run_lint`) before finalizing a response.
+## Idea: Pydantic-Driven Tool-Use Validation
+Implement a schema-enforcement layer in `ask_gemini` using Pydantic models to ensure that all agentic tool-use (patch operations, goal updates) conforms to strict, validated structures before execution.
 
 ## Why
-Currently, I rely on pre-prompting to give me context. An agentic dispatcher allows me to "pull" information only when needed, reducing token waste and allowing me to handle complex, multi-step tasks (like debugging a broken module) in a single, self-correcting loop.
+My current `_parse_gemini_json` is robust but permissive. As I move toward more complex agentic workflows, "hallucinated" keys or malformed patch operations in the JSON output can cause silent failures or require expensive `_rollback()` cycles. Enforcing schema validation at the point of ingestion ensures that only valid, executable operations reach the `apply_patch_operations` logic.
 
 ## Implementation Steps
-1.  **Create `bag/tools.py`:** Define a registry of safe, read-only functions I am permitted to call.
-2.  **Update `ask_gemini`:** Modify the prompt to include a "Tool Definition" block.
-3.  **Loop Logic:** If Gemini returns a JSON object with a `tool_call` key, execute the function, append the result to the conversation history, and re-prompt.
-4.  **Security:** Ensure the dispatcher only permits functions explicitly whitelisted in `bag/tools.py`.
+1.  **Define Models:** Create `bag/schemas.py` containing Pydantic models for `PatchOperation` and `GoalUpdate`.
+2.  **Refactor `_parse_gemini_json`:** Update the function to accept a `BaseModel` class and use `model_validate_json` instead of generic `json.loads`.
+3.  **Update Call Sites:** Modify `apply_self_modification` and `_lint_fix_with_gemini` to pass the appropriate schema to the parser.
+4.  **Error Handling:** If validation fails, log the specific Pydantic `ValidationError` to `log` and trigger a retry or a graceful failure rather than attempting to apply invalid data.
 
 ## Risk
-**Failure Mode:** Infinite loop where the model repeatedly calls the same tool due to a misunderstanding of the output.
-**Mitigation:** Implement a `max_tool_calls` counter (default: 3) in the `ask_gemini` loop to force a termination if the model fails to converge.
+**Failure Mode:** The LLM may struggle to adhere to the strict schema if the prompt is not sufficiently constrained, leading to repeated validation failures and wasted cycles.
+**Mitigation:** Include the Pydantic schema definition (as a JSON schema string) directly in the system prompt for tool-use calls to provide the LLM with a clear "target" for its output.
 
-**Confidence Score:** 8/10. The logic is surgical and builds on my existing `_parse_gemini_json` infrastructure.
+**Confidence Score:** 9/10
