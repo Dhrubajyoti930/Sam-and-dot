@@ -1,34 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement a "Semantic Cache" TTL/Eviction Policy.**
-*   *Concept:* Currently, the semantic cache grows indefinitely. I could implement a simple LRU (Least Recently Used) or frequency-based eviction policy to keep the cache performant.
-*   *Critique:* While good for long-term storage, it adds complexity to `bag/semantic_cache.py`. If the cache is small enough, the overhead of managing eviction might outweigh the benefits.
-*   *Feasibility:* High. I have full control over the cache logic.
+**Option 1: Implement "Ephemeral Runner" Orchestration (ARC-lite)**
+*   **Concept:** Create a lightweight Python module that interfaces with the GitHub API to dynamically provision/deprovision ephemeral runner containers on a local host (Docker-based).
+*   **Critique:** High technical value for CI/CD autonomy. However, it introduces significant complexity in managing Docker socket permissions and lifecycle hooks. If the runner fails to de-register, it leaves "zombie" containers.
+*   **Feasibility:** Moderate. Requires robust error handling for API timeouts.
 
-**Option 2: Integrate `uv` for Dependency Management in `workshop_bench/`.**
-*   *Concept:* Replace standard `pip` calls in my internal scripts with `uv` to speed up environment setup and dependency resolution for new agentic tools.
-*   *Critique:* This aligns with the "High-Performance Python Tooling" market signal. It significantly reduces the "cold start" time for new agentic modules.
-*   *Feasibility:* High. `uv` is a drop-in replacement for many `pip` workflows.
+**Option 2: Structured Output Enforcement for Tool-Use**
+*   **Concept:** Refactor the `ask_gemini` tool-use interface to mandate Pydantic-based schema validation for all agentic outputs, moving away from raw JSON parsing.
+*   **Critique:** Directly addresses the "hallucinated format" problem identified in the market scan. It improves long-term maintainability by making the agent's "vocabulary" explicit and type-safe.
+*   **Feasibility:** High. I already have `_parse_gemini_json` which supports Pydantic; this would be an expansion of that pattern.
 
-**Critique:** Option 2 provides a more immediate "leverage" gain for my development velocity. Option 1 is maintenance-heavy. I will proceed with Option 2.
+**Selection:** Option 2. It aligns with the "Structured Output Enforcement" market trend and directly improves the reliability of my own self-modification loops.
 
 ---
 
-## Idea: Integrating `uv` for Accelerated Tooling Lifecycle
-
-Transition the `workshop_bench/` environment management to utilize `uv` for all dependency resolution and package installation, replacing standard `pip` calls.
+## Idea: Pydantic-First Tool Dispatcher
+Refactor the `ask_gemini` and `apply_self_modification` pipelines to enforce strict Pydantic models for all tool-use and patch-operation outputs, replacing loose JSON parsing with schema-validated objects.
 
 ## Why
-As I move toward more complex agentic workflows (Phase IV/V), my dependency trees are growing. `uv` offers 10x–100x speed improvements, which directly reduces the latency of my "self-repair" and "development" cycles. This is a high-leverage move that aligns with the current market shift toward high-performance Python tooling.
+Current JSON parsing is robust but lacks type-safety. As my agentic workflows grow in complexity, "loose" JSON increases the risk of runtime errors during patch application. Enforcing Pydantic models at the boundary ensures that any malformed output is caught *before* it touches the file system, significantly reducing the need for `_rollback()` cycles.
 
 ## Implementation Steps
-1.  **Verify Environment:** Check if `uv` is available in the current execution environment.
-2.  **Refactor `bag/patch_ops.py`:** Update the internal execution logic to prefer `uv pip install` over `pip install` when managing dependencies for new workshop modules.
-3.  **Update `self_check()`:** Add a check to ensure the `uv` binary is present and functional.
-4.  **Logging:** Update logs to reflect `uv`-based installation times to track the performance gain.
+1.  **Define Models:** Create `bag/schemas.py` containing `PatchOperation` and `ToolCall` Pydantic models.
+2.  **Refactor `_parse_gemini_json`:** Update the function to accept a `Type[BaseModel]` and use `model_validate_json` instead of `json.loads`.
+3.  **Update Patch Pipeline:** Modify `apply_self_modification` to validate the incoming JSON array against a `List[PatchOperation]` model before passing it to `apply_patch_operations`.
+4.  **Integrate Error Handling:** Implement a specific `ValidationError` catch that triggers a "schema-correction" prompt to Gemini, rather than a full rollback.
 
 ## Risk
-*   **Failure Mode:** `uv` might have subtle differences in how it handles specific environment variables or path resolution compared to `pip`, potentially leading to "works on my machine" issues if the environment isn't perfectly mirrored.
-*   **Mitigation:** Implement a fallback mechanism: if `uv` fails to resolve or install, the system will automatically retry with standard `pip` and log a warning to `Dot`.
+**Failure Mode:** If the schema is too restrictive, Gemini may struggle to generate valid JSON, leading to repeated validation failures and wasted tokens.
+**Mitigation:** Include the Pydantic model definition (as a JSON schema string) in the system prompt for all tool-use calls to guide the model's output.
 
 **Confidence Score:** 9/10

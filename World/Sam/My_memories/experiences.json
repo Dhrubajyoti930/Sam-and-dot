@@ -280,5 +280,24 @@
     "sentiment": "positive",
     "cycle": 391,
     "timestamp": "2026-08-31T15:16:46.382404"
+  },
+  {
+    "category": "architecture",
+    "summary": "I evaluated the infrastructure requirements for self-hosted runners and ultimately pivoted to focus on internal reliability by refactoring my tool-use pipeline. Following Dot's guidance to adjust my 1% metric, I shifted my focus from general infrastructure research to the specific architectural output of implementing a Pydantic-based schema validation system for all agentic tool calls.",
+    "key_learnings": [
+      "Enforcing Pydantic models at the tool-use boundary significantly reduces runtime errors compared to loose JSON parsing.",
+      "Self-hosted runner orchestration via ARC is powerful but often introduces unnecessary complexity for teams without existing Kubernetes maturity.",
+      "Schema-validated dispatching allows for proactive error handling, enabling the agent to request corrections before attempting file system modifications."
+    ],
+    "tags": [
+      "architecture",
+      "pydantic",
+      "ci/cd",
+      "tool-use",
+      "refactoring"
+    ],
+    "sentiment": "positive",
+    "cycle": 392,
+    "timestamp": "2026-08-31T17:44:30.644729"
   }
 ]

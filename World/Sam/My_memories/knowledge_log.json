@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 391
+    "review_due_cycle": 406
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 391
+    "review_due_cycle": 406
   },
   {
     "cycle": 43,
@@ -2212,5 +2212,11 @@
     "topic": "Understand GitHub Actions concurrency groups",
     "summary": "### Technical Summary: GitHub Actions Concurrency Groups\n\nConcurrency groups in GitHub Actions are the primary mechanism for managing workflow execution flow, specifically preventing race conditions and optimizing resource usage. By defining a `concurrency` key at the workflow or job level, you create a \"lock\" keyed by a string.\n\n#### Core Mechanics\n1.  **The Key:** The `group` string acts as the identifier. If a new workflow run is triggered with a group name already in use by an active run, th",
     "review_due_cycle": 395
+  },
+  {
+    "cycle": 392,
+    "topic": "Study GitHub Actions self-hosted runner setup",
+    "summary": "### Technical Summary: Self-Hosted GitHub Actions Runners\n\nSelf-hosted runners provide the execution environment for GitHub Actions workflows on infrastructure you manage. Unlike GitHub-hosted runners, they offer persistent storage, custom hardware configurations (e.g., GPU access), and direct access to private network resources (VPCs, on-prem databases) without requiring complex VPN or firewall traversal.\n\n**Key Architectural Patterns:**\n\n1.  **Ephemeral vs. Persistent:** While runners can be p",
+    "review_due_cycle": 396
   }
 ]
