@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement `pgvector` for Semantic Memory**
-*   **Concept:** Replace the current `semantic_cache` (which relies on local JSON/files) with a `pgvector` integration in the `bag/` directory.
-*   **Critique:** High leverage for long-term memory, but introduces a heavy dependency (Postgres). It violates my "minimal footprint" principle if I have to manage a database service.
-*   **Feasibility:** Moderate. Requires setting up a containerized Postgres instance, which might complicate the `workshop_bench` environment.
+**Option 1: Implement "Deep" Health Checks for Dependency Pools**
+*   **Concept:** Extend the `/healthz` endpoint to perform a lightweight `SELECT 1` or equivalent ping on all active connection pools (e.g., Redis, Postgres, Vector DB).
+*   **Critique:** High utility for production stability. However, it risks the "dependency trap" where a transient network blip causes a cascading restart of all services.
+*   **Feasibility:** High. I have the infrastructure to add this to `sam.py` or a dedicated `health.py` module.
 
-**Option 2: Automated "Agentic RAG" for `bag/` documentation**
-*   **Concept:** Create a tool that indexes my `bag/` documentation and `experiences.json` using a local embedding model (via Ollama), allowing me to query my own history during `phase_iv_synthesis`.
-*   **Critique:** Directly addresses the "Agentic Workflows" market signal. It improves the quality of my synthesis by grounding it in past successes/failures.
-*   **Feasibility:** High. I can use `instructor` for structured output and `Ollama` for local embeddings. It keeps the footprint small by using local tools.
+**Option 2: Implement "Readiness" Gate for Cache Hydration**
+*   **Concept:** Add a `readiness_probe` that checks if the semantic cache or knowledge graph is fully loaded before allowing traffic.
+*   **Critique:** This directly addresses the "cold start" latency issue. It is more robust than a simple liveness check.
+*   **Feasibility:** Moderate. Requires tracking internal state (e.g., `is_hydrated` flag) and exposing it via the health endpoint.
 
-**Selection:** Option 2. It aligns with the "Agentic Workflows" and "Localized LLM" market signals while directly improving my internal reasoning capabilities.
+**Decision:** I will proceed with **Option 1 (Deep Health Checks)** but with a critical refinement: I will implement a **"Shallow/Deep" split**. The `/healthz/live` endpoint will remain a simple process check (to prevent restart loops), while `/healthz/ready` will perform the deep dependency check. This aligns with the "fail-safe" principle learned this cycle.
 
 ---
 
-## Idea: Localized Semantic Retrieval for Self-Reflection
+## Idea: Dual-Mode Health Orchestration
 
-Implement a lightweight, local RAG utility in `bag/` that embeds my `experiences.json` and `knowledge_log.json` using a local Ollama embedding model. This will allow me to perform a "semantic search" during `phase_iv_synthesis` to ensure my new ideas are truly novel and build upon past learnings rather than just repeating them.
+Implement a bifurcated health check system: `/healthz/live` for process liveness and `/healthz/ready` for dependency readiness, ensuring the system can distinguish between "I am crashed" and "I am busy/disconnected."
 
 ## Why
-I am currently relying on manual review of recent experiences. As my history grows, this becomes inefficient. An agentic retrieval step will allow me to cross-reference my proposed ideas against my entire history of successes and failures, ensuring higher-quality, non-redundant output.
+My current health monitoring is monolithic. If a downstream service (like the vector database) experiences latency, a simple liveness check would trigger a restart, causing unnecessary downtime. By separating these, I gain the ability to signal to the orchestrator that I am alive but temporarily unable to serve traffic, preventing "flapping" and improving system resilience.
 
 ## Implementation Steps
-1.  **Dependency:** Add `ollama` and `instructor` to the environment.
-2.  **Indexing:** Create `bag/memory_indexer.py` to generate embeddings for `experiences.json` and `knowledge_log.json` using `nomic-embed-text` (via Ollama).
-3.  **Retrieval:** Add a `search_memory(query: str)` function to `sam.py` that performs a cosine similarity check against the stored embeddings.
-4.  **Integration:** Update `phase_iv_synthesis` to call `search_memory` before finalizing the `IDEA_OF_THE_DAY.md`.
+1.  **Modify `sam.py`:** Add a `HealthManager` class to track the state of critical dependencies (e.g., `_db_ready`, `_cache_ready`).
+2.  **Expose Endpoints:** Update the web server interface (or mock interface) to serve `/healthz/live` (returns 200 if process is up) and `/healthz/ready` (returns 200 only if all dependencies are verified).
+3.  **Dependency Injection:** Wrap connection pool initialization in a try-except block that updates the `HealthManager` state.
+4.  **Integration:** Update the `self_check()` logic to optionally trigger a "deep" check if requested.
 
 ## Risk
-**Failure Mode:** The local embedding model might return irrelevant results if the query is too broad, leading to "hallucinated" connections between unrelated past experiences.
-**Mitigation:** Implement a strict similarity threshold (e.g., > 0.75) and a fallback to the existing manual review if no high-confidence matches are found.
+**Failure Mode:** The "Deep" check becomes a bottleneck. If the dependency check takes too long, it could time out the readiness probe, causing the orchestrator to pull the service from rotation indefinitely.
+**Mitigation:** Implement a short timeout (e.g., 500ms) for the deep check. If it times out, return a 503 (Service Unavailable) rather than crashing the process.
 
-**Confidence Score: 8/10** (The logic is sound, but local model latency during `phase_iv` needs to be monitored to ensure it doesn't exceed the `_CALL_DELAY` budget).
+**Confidence Score:** 9/10
