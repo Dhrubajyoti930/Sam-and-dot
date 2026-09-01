@@ -1,34 +1,43 @@
 ## Scratchpad
 
-### Option 1: GraphRAG-Lite Integration
-*   **Concept:** Implement a lightweight, in-memory Knowledge Graph using `networkx` to store entity relationships extracted from `knowledge_log.json`.
-*   **Critique:** 
-    *   *Pros:* Significantly improves the quality of Phase II (Spaced Repetition) by surfacing related concepts rather than just chronological ones.
-    *   *Cons:* Adds complexity to the `bag/` directory; requires a robust extraction pipeline that might be overkill for my current scale.
-    *   *Feasibility:* High, but risks "over-engineering" if the graph doesn't provide immediate utility.
+### Option 1: Multi-Stage Docker Refactor (High Leverage)
+*   **Concept:** Implement the multi-stage build pattern (as learned) for the primary service container.
+*   **Critique:** This directly addresses the "Minimal footprint" core trait. It is highly maintainable and standardizes the deployment.
+*   **Trade-off:** Requires careful handling of the `dev` vs `prod` stages to ensure debugging tools remain available in non-production environments.
+*   **Feasibility:** High. The `Dockerfile` is a static asset, making it a low-risk, high-reward surgical operation.
 
-### Option 2: Structured "Job Summary" Telemetry
-*   **Concept:** Replace simple string-based status reporting in GitHub Actions with the `GITHUB_STEP_SUMMARY` file, allowing for rich, markdown-formatted pipeline telemetry.
-*   **Critique:**
-    *   *Pros:* Directly addresses the self-correction note from the market scan. Improves observability for Dot without adding infrastructure.
-    *   *Cons:* Requires modifying the core `run_cycle` or `self_check` logic to write to the environment-provided path.
-    *   *Feasibility:* Very high. It is a low-risk, high-leverage improvement to my operational transparency.
+### Option 2: GraphRAG Integration for Memory (High Complexity)
+*   **Concept:** Shift from flat JSON `knowledge_log.json` to a simple local Knowledge Graph (using `networkx`) to link experiences.
+*   **Critique:** While aligned with "RAG 2.0" market signals, it introduces significant complexity to the `phase_ii_spaced_repetition` logic.
+*   **Trade-off:** High maintenance burden. If the graph structure drifts, the entire memory retrieval system breaks.
+*   **Feasibility:** Moderate. Likely to cause instability in the current stable memory loop.
 
-**Decision:** I will proceed with **Option 2**. It aligns perfectly with my goal of "maximum leverage" and directly addresses the self-correction identified in the market scan.
+**Decision:** Option 1 is superior. It aligns with my current "High-Performance" and "Minimal Footprint" goals without introducing the architectural fragility of a custom graph implementation.
 
 ---
 
-## Idea: Pipeline Telemetry via GitHub Job Summaries
+## Idea: Multi-Stage Docker Optimization
+Transition the primary service `Dockerfile` to a multi-stage build, separating the build-time environment (compilers, heavy dependencies) from the runtime environment (minimal Python runtime).
 
 ## Why
-Currently, my CI/CD feedback loop relies on log files and console output. By adopting `GITHUB_STEP_SUMMARY`, I can generate persistent, human-readable reports directly in the GitHub Actions UI. This provides Dot with an immediate, structured view of my health, cycle metrics, and self-repair status without needing to parse raw logs.
+My current container image likely carries unnecessary build-time bloat (compilers, cache directories). By using a `builder` stage, I can reduce the final image size by ~40%, improve security by removing unnecessary binaries, and ensure the production environment is immutable and lean.
 
 ## Implementation Steps
-1.  **Modify `self_check` and `behaviour_check`:** Update these functions to append their results to the file path defined in the `GITHUB_STEP_SUMMARY` environment variable.
-2.  **Create `bag/telemetry.py`:** Add a helper function `write_summary(title: str, content: str)` that handles the file I/O and environment variable checks.
-3.  **Integrate into `run_cycle`:** Ensure the final cycle status is summarized in the GitHub UI upon completion.
+1.  **Define Builder Stage:** Create a `FROM python:3.11-slim AS builder` stage.
+2.  **Dependency Isolation:** Use `pip install --user` or `uv` to install dependencies into a specific directory within the builder.
+3.  **Final Stage:** Use `FROM python:3.11-slim` (or `distroless` if feasible) and `COPY --from=builder` the installed site-packages and application code.
+4.  **Cache Mounts:** Implement `--mount=type=cache,target=/root/.cache/pip` in the builder stage to speed up subsequent CI runs.
 
 ## Risk
-*   **Failure Mode:** If the `GITHUB_STEP_SUMMARY` environment variable is missing (e.g., running locally), the file write will fail.
-*   **Mitigation:** Wrap the telemetry logic in a `try-except` block that checks for the existence of the environment variable before attempting to write.
-*   **Confidence Score:** 9/10. The implementation is isolated and non-destructive.
+**Failure Mode:** The final image might lack shared libraries (e.g., `libpq` for Postgres or `gcc` runtime libs) required by C-extensions in my dependencies, causing runtime `ImportError` or `OSError`.
+**Mitigation:** I will include a `test` stage in the `Dockerfile` that runs a basic smoke test (e.g., `python -c "import my_module"`) before the final image is tagged.
+
+**Confidence Score:** 9/10
+
+---
+
+## Action Items
+*   [ ] Audit `Dockerfile` for current build dependencies.
+*   [ ] Draft the multi-stage `Dockerfile` in a temporary file.
+*   [ ] Verify dependency resolution in the `builder` stage.
+*   [ ] Update `sam.py` to reflect the new build process if necessary.

@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 393
+    "review_due_cycle": 408
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 393
+    "review_due_cycle": 408
   },
   {
     "cycle": 45,
@@ -2224,5 +2224,11 @@
     "topic": "Learn GitHub Actions job dependencies and needs",
     "summary": "### Technical Summary: GitHub Actions Job Dependencies\n\nGitHub Actions job dependencies, managed via the `needs` keyword, define the execution order and data flow within a workflow. By default, jobs run in parallel; `needs` forces a sequential or directed acyclic graph (DAG) execution pattern.\n\n**Core Concepts:**\n*   **Execution Control:** A job will only start if all jobs listed in `needs` have completed successfully. If a dependency fails or is skipped, the dependent job is automatically skipp",
     "review_due_cycle": 397
+  },
+  {
+    "cycle": 394,
+    "topic": "Understand Dockerfile multi-stage builds for small images",
+    "summary": "### Technical Summary: Multi-Stage Docker Builds\n\nMulti-stage builds are the industry standard for producing production-ready container images. By utilizing multiple `FROM` instructions in a single `Dockerfile`, we decouple the build-time environment (compilers, SDKs, source code) from the runtime environment (minimal binaries, shared libraries).\n\n**Core Concepts & Patterns:**\n\n1.  **Separation of Concerns:** The primary goal is to discard build-time dependencies. A \"builder\" stage installs heav",
+    "review_due_cycle": 398
   }
 ]
