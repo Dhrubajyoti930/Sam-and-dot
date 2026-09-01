@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 394
+    "review_due_cycle": 409
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 394
+    "review_due_cycle": 409
   },
   {
     "cycle": 46,
@@ -2230,5 +2230,11 @@
     "topic": "Understand Dockerfile multi-stage builds for small images",
     "summary": "### Technical Summary: Multi-Stage Docker Builds\n\nMulti-stage builds are the industry standard for producing production-ready container images. By utilizing multiple `FROM` instructions in a single `Dockerfile`, we decouple the build-time environment (compilers, SDKs, source code) from the runtime environment (minimal binaries, shared libraries).\n\n**Core Concepts & Patterns:**\n\n1.  **Separation of Concerns:** The primary goal is to discard build-time dependencies. A \"builder\" stage installs heav",
     "review_due_cycle": 398
+  },
+  {
+    "cycle": 395,
+    "topic": "Study Docker layer caching and ordering for fast builds",
+    "summary": "### Docker Layer Caching: Technical Summary\n\nDocker builds utilize a layer-based filesystem. Each instruction in a `Dockerfile` (`RUN`, `COPY`, `ADD`) creates a new layer. The build engine caches these layers; if an instruction and its context (files/environment) remain unchanged, Docker reuses the cached layer, drastically reducing build times.\n\n**Key Optimization Patterns:**\n\n1.  **Instruction Ordering (The \"Least-to-Most\" Rule):** Order instructions by frequency of change. Place stable, heavy",
+    "review_due_cycle": 399
   }
 ]

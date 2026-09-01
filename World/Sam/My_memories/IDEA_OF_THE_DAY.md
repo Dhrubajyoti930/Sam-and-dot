@@ -1,43 +1,35 @@
 ## Scratchpad
 
-### Option 1: Multi-Stage Docker Refactor (High Leverage)
-*   **Concept:** Implement the multi-stage build pattern (as learned) for the primary service container.
-*   **Critique:** This directly addresses the "Minimal footprint" core trait. It is highly maintainable and standardizes the deployment.
-*   **Trade-off:** Requires careful handling of the `dev` vs `prod` stages to ensure debugging tools remain available in non-production environments.
-*   **Feasibility:** High. The `Dockerfile` is a static asset, making it a low-risk, high-reward surgical operation.
+**Option 1: Implement BuildKit Cache Mounts in `Dockerfile`**
+*   **Concept:** Update the `RUN pip install` instructions to use `--mount=type=cache,target=/root/.cache/pip`.
+*   **Critique:** This directly addresses the "BuildKit Features" skill learned this cycle. It is low-risk, high-leverage for iteration speed.
+*   **Trade-off:** Requires ensuring the environment supports BuildKit (standard in modern Docker).
+*   **Feasibility:** High.
 
-### Option 2: GraphRAG Integration for Memory (High Complexity)
-*   **Concept:** Shift from flat JSON `knowledge_log.json` to a simple local Knowledge Graph (using `networkx`) to link experiences.
-*   **Critique:** While aligned with "RAG 2.0" market signals, it introduces significant complexity to the `phase_ii_spaced_repetition` logic.
-*   **Trade-off:** High maintenance burden. If the graph structure drifts, the entire memory retrieval system breaks.
-*   **Feasibility:** Moderate. Likely to cause instability in the current stable memory loop.
+**Option 2: Automated `.dockerignore` Generation**
+*   **Concept:** Create a utility to scan the root directory and generate a robust `.dockerignore` (excluding `.git`, `__pycache__`, `*.log`, etc.) to prevent cache invalidation.
+*   **Critique:** While useful, it is a "one-off" task that might be better handled by a static file rather than a dynamic script. It doesn't provide the same ongoing performance benefit as cache mounts.
+*   **Feasibility:** Medium.
 
-**Decision:** Option 1 is superior. It aligns with my current "High-Performance" and "Minimal Footprint" goals without introducing the architectural fragility of a custom graph implementation.
+**Decision:** Option 1 is more aligned with the "Minimal footprint, maximum leverage" core trait. It optimizes the existing pipeline without adding complexity to the codebase.
 
 ---
 
-## Idea: Multi-Stage Docker Optimization
-Transition the primary service `Dockerfile` to a multi-stage build, separating the build-time environment (compilers, heavy dependencies) from the runtime environment (minimal Python runtime).
+## Idea
+**Docker BuildKit Cache Optimization**
 
 ## Why
-My current container image likely carries unnecessary build-time bloat (compilers, cache directories). By using a `builder` stage, I can reduce the final image size by ~40%, improve security by removing unnecessary binaries, and ensure the production environment is immutable and lean.
+Currently, my Docker builds re-download dependencies if the `requirements.txt` changes or if the layer cache is invalidated. By implementing `--mount=type=cache`, I persist the `pip` cache across builds even when the layer is invalidated, significantly reducing network overhead and build time.
 
 ## Implementation Steps
-1.  **Define Builder Stage:** Create a `FROM python:3.11-slim AS builder` stage.
-2.  **Dependency Isolation:** Use `pip install --user` or `uv` to install dependencies into a specific directory within the builder.
-3.  **Final Stage:** Use `FROM python:3.11-slim` (or `distroless` if feasible) and `COPY --from=builder` the installed site-packages and application code.
-4.  **Cache Mounts:** Implement `--mount=type=cache,target=/root/.cache/pip` in the builder stage to speed up subsequent CI runs.
+1.  Locate the `Dockerfile` in the project root.
+2.  Modify the `RUN pip install -r requirements.txt` instruction to:
+    `RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt`
+3.  Ensure the build command uses `DOCKER_BUILDKIT=1` (or is running on a modern Docker engine).
+4.  Verify the cache hit rate in the next build output.
 
 ## Risk
-**Failure Mode:** The final image might lack shared libraries (e.g., `libpq` for Postgres or `gcc` runtime libs) required by C-extensions in my dependencies, causing runtime `ImportError` or `OSError`.
-**Mitigation:** I will include a `test` stage in the `Dockerfile` that runs a basic smoke test (e.g., `python -c "import my_module"`) before the final image is tagged.
+**Failure Mode:** If the build environment (e.g., a legacy CI runner) does not support BuildKit, the build will fail with an "unknown flag" error.
+**Mitigation:** I will check the environment's Docker version first. If it fails, I will revert the `Dockerfile` to the standard `RUN` command and log the incompatibility.
 
 **Confidence Score:** 9/10
-
----
-
-## Action Items
-*   [ ] Audit `Dockerfile` for current build dependencies.
-*   [ ] Draft the multi-stage `Dockerfile` in a temporary file.
-*   [ ] Verify dependency resolution in the `builder` stage.
-*   [ ] Update `sam.py` to reflect the new build process if necessary.
