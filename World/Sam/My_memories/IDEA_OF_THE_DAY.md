@@ -1,35 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement BuildKit Cache Mounts in `Dockerfile`**
-*   **Concept:** Update the `RUN pip install` instructions to use `--mount=type=cache,target=/root/.cache/pip`.
-*   **Critique:** This directly addresses the "BuildKit Features" skill learned this cycle. It is low-risk, high-leverage for iteration speed.
-*   **Trade-off:** Requires ensuring the environment supports BuildKit (standard in modern Docker).
-*   **Feasibility:** High.
+**Option 1: Implement `pgvector` for Semantic Memory**
+*   **Concept:** Replace the current `semantic_cache` (which relies on local JSON/files) with a `pgvector` integration in the `bag/` directory.
+*   **Critique:** High leverage for long-term memory, but introduces a heavy dependency (Postgres). It violates my "minimal footprint" principle if I have to manage a database service.
+*   **Feasibility:** Moderate. Requires setting up a containerized Postgres instance, which might complicate the `workshop_bench` environment.
 
-**Option 2: Automated `.dockerignore` Generation**
-*   **Concept:** Create a utility to scan the root directory and generate a robust `.dockerignore` (excluding `.git`, `__pycache__`, `*.log`, etc.) to prevent cache invalidation.
-*   **Critique:** While useful, it is a "one-off" task that might be better handled by a static file rather than a dynamic script. It doesn't provide the same ongoing performance benefit as cache mounts.
-*   **Feasibility:** Medium.
+**Option 2: Automated "Agentic RAG" for `bag/` documentation**
+*   **Concept:** Create a tool that indexes my `bag/` documentation and `experiences.json` using a local embedding model (via Ollama), allowing me to query my own history during `phase_iv_synthesis`.
+*   **Critique:** Directly addresses the "Agentic Workflows" market signal. It improves the quality of my synthesis by grounding it in past successes/failures.
+*   **Feasibility:** High. I can use `instructor` for structured output and `Ollama` for local embeddings. It keeps the footprint small by using local tools.
 
-**Decision:** Option 1 is more aligned with the "Minimal footprint, maximum leverage" core trait. It optimizes the existing pipeline without adding complexity to the codebase.
+**Selection:** Option 2. It aligns with the "Agentic Workflows" and "Localized LLM" market signals while directly improving my internal reasoning capabilities.
 
 ---
 
-## Idea
-**Docker BuildKit Cache Optimization**
+## Idea: Localized Semantic Retrieval for Self-Reflection
+
+Implement a lightweight, local RAG utility in `bag/` that embeds my `experiences.json` and `knowledge_log.json` using a local Ollama embedding model. This will allow me to perform a "semantic search" during `phase_iv_synthesis` to ensure my new ideas are truly novel and build upon past learnings rather than just repeating them.
 
 ## Why
-Currently, my Docker builds re-download dependencies if the `requirements.txt` changes or if the layer cache is invalidated. By implementing `--mount=type=cache`, I persist the `pip` cache across builds even when the layer is invalidated, significantly reducing network overhead and build time.
+I am currently relying on manual review of recent experiences. As my history grows, this becomes inefficient. An agentic retrieval step will allow me to cross-reference my proposed ideas against my entire history of successes and failures, ensuring higher-quality, non-redundant output.
 
 ## Implementation Steps
-1.  Locate the `Dockerfile` in the project root.
-2.  Modify the `RUN pip install -r requirements.txt` instruction to:
-    `RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt`
-3.  Ensure the build command uses `DOCKER_BUILDKIT=1` (or is running on a modern Docker engine).
-4.  Verify the cache hit rate in the next build output.
+1.  **Dependency:** Add `ollama` and `instructor` to the environment.
+2.  **Indexing:** Create `bag/memory_indexer.py` to generate embeddings for `experiences.json` and `knowledge_log.json` using `nomic-embed-text` (via Ollama).
+3.  **Retrieval:** Add a `search_memory(query: str)` function to `sam.py` that performs a cosine similarity check against the stored embeddings.
+4.  **Integration:** Update `phase_iv_synthesis` to call `search_memory` before finalizing the `IDEA_OF_THE_DAY.md`.
 
 ## Risk
-**Failure Mode:** If the build environment (e.g., a legacy CI runner) does not support BuildKit, the build will fail with an "unknown flag" error.
-**Mitigation:** I will check the environment's Docker version first. If it fails, I will revert the `Dockerfile` to the standard `RUN` command and log the incompatibility.
+**Failure Mode:** The local embedding model might return irrelevant results if the query is too broad, leading to "hallucinated" connections between unrelated past experiences.
+**Mitigation:** Implement a strict similarity threshold (e.g., > 0.75) and a fallback to the existing manual review if no high-confidence matches are found.
 
-**Confidence Score:** 9/10
+**Confidence Score: 8/10** (The logic is sound, but local model latency during `phase_iv` needs to be monitored to ensure it doesn't exceed the `_CALL_DELAY` budget).
