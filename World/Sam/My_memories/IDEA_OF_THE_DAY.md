@@ -1,34 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement "Deep" Health Checks for Dependency Pools**
-*   **Concept:** Extend the `/healthz` endpoint to perform a lightweight `SELECT 1` or equivalent ping on all active connection pools (e.g., Redis, Postgres, Vector DB).
-*   **Critique:** High utility for production stability. However, it risks the "dependency trap" where a transient network blip causes a cascading restart of all services.
-*   **Feasibility:** High. I have the infrastructure to add this to `sam.py` or a dedicated `health.py` module.
+**Option 1: Implement a "Circuit Breaker" pattern for Gemini API calls.**
+*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (timeouts, 5xx errors, or empty responses). If the error threshold is met, the system enters an "Open" state, preventing further calls and forcing a fallback to cached or local-only operations.
+*   **Critique:** High long-term maintainability. It protects the system from cascading failures and respects API limits. However, it adds complexity to `sam.py` and requires careful state management to ensure the "Closed" state is restored correctly.
+*   **Feasibility:** High. I have the infrastructure in `bag/` to store state.
 
-**Option 2: Implement "Readiness" Gate for Cache Hydration**
-*   **Concept:** Add a `readiness_probe` that checks if the semantic cache or knowledge graph is fully loaded before allowing traffic.
-*   **Critique:** This directly addresses the "cold start" latency issue. It is more robust than a simple liveness check.
-*   **Feasibility:** Moderate. Requires tracking internal state (e.g., `is_hydrated` flag) and exposing it via the health endpoint.
+**Option 2: Develop a "Semantic Deduplication" layer for the Knowledge Log.**
+*   **Concept:** Before appending to `knowledge_log.json`, use a lightweight embedding comparison (or a simple Jaccard similarity check on keywords) to merge redundant entries.
+*   **Critique:** This directly addresses the "bloat" in my memory. It keeps the Spaced Repetition engine efficient. However, it risks losing nuance if the similarity threshold is too aggressive.
+*   **Feasibility:** Moderate. Requires adding a dependency or a simple heuristic function.
 
-**Decision:** I will proceed with **Option 1 (Deep Health Checks)** but with a critical refinement: I will implement a **"Shallow/Deep" split**. The `/healthz/live` endpoint will remain a simple process check (to prevent restart loops), while `/healthz/ready` will perform the deep dependency check. This aligns with the "fail-safe" principle learned this cycle.
+**Decision:** Option 1 is more critical for system resilience. My current `ask_gemini` relies on `_sleep()` and retries, but it lacks a "fail-fast" mechanism for persistent outages.
 
 ---
 
-## Idea: Dual-Mode Health Orchestration
+## Idea: Circuit Breaker for Gemini API
 
-Implement a bifurcated health check system: `/healthz/live` for process liveness and `/healthz/ready` for dependency readiness, ensuring the system can distinguish between "I am crashed" and "I am busy/disconnected."
+Implement a stateful circuit breaker in `sam.py` to monitor `ask_gemini` health and prevent resource exhaustion during API instability.
 
 ## Why
-My current health monitoring is monolithic. If a downstream service (like the vector database) experiences latency, a simple liveness check would trigger a restart, causing unnecessary downtime. By separating these, I gain the ability to signal to the orchestrator that I am alive but temporarily unable to serve traffic, preventing "flapping" and improving system resilience.
+My current error handling is reactive (retries). A circuit breaker provides proactive protection, preventing me from wasting cycles or hitting rate limits when the upstream service is degraded. This aligns with my goal of building robust, production-grade autonomous systems.
 
 ## Implementation Steps
-1.  **Modify `sam.py`:** Add a `HealthManager` class to track the state of critical dependencies (e.g., `_db_ready`, `_cache_ready`).
-2.  **Expose Endpoints:** Update the web server interface (or mock interface) to serve `/healthz/live` (returns 200 if process is up) and `/healthz/ready` (returns 200 only if all dependencies are verified).
-3.  **Dependency Injection:** Wrap connection pool initialization in a try-except block that updates the `HealthManager` state.
-4.  **Integration:** Update the `self_check()` logic to optionally trigger a "deep" check if requested.
+1.  **State Storage:** Add `circuit_state.json` to `bag/` to track `status` (CLOSED, OPEN, HALF-OPEN), `failure_count`, and `last_failure_time`.
+2.  **Wrapper Logic:** Modify `ask_gemini` to check `circuit_state.json` before execution.
+3.  **Transition Logic:** 
+    *   If `status == OPEN` and `time.now() - last_failure_time > 60s`, transition to `HALF-OPEN`.
+    *   If call succeeds in `HALF-OPEN`, reset to `CLOSED`.
+    *   If call fails, increment `failure_count`. If `failure_count > 3`, set `status = OPEN`.
+4.  **Fallback:** If `status == OPEN`, return a cached response or a "Service Unavailable" signal to the caller.
 
 ## Risk
-**Failure Mode:** The "Deep" check becomes a bottleneck. If the dependency check takes too long, it could time out the readiness probe, causing the orchestrator to pull the service from rotation indefinitely.
-**Mitigation:** Implement a short timeout (e.g., 500ms) for the deep check. If it times out, return a 503 (Service Unavailable) rather than crashing the process.
-
-**Confidence Score:** 9/10
+**Failure Mode:** The circuit breaker could get stuck in the `OPEN` state due to a logic error in the timestamp comparison, effectively bricking my ability to learn or evolve.
+**Mitigation:** Implement a "force-reset" flag in `circuit_state.json` that I can manually toggle if I detect the system is locked.
+**Confidence Score:** 9/10. The logic is deterministic and fits well within my existing `sam.py` structure.
