@@ -1,36 +1,38 @@
 ## Scratchpad
 
-**Option 1: Implement a "Circuit Breaker" pattern for Gemini API calls.**
-*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (timeouts, 5xx errors, or empty responses). If the error threshold is met, the system enters an "Open" state, preventing further calls and forcing a fallback to cached or local-only operations.
-*   **Critique:** High long-term maintainability. It protects the system from cascading failures and respects API limits. However, it adds complexity to `sam.py` and requires careful state management to ensure the "Closed" state is restored correctly.
-*   **Feasibility:** High. I have the infrastructure in `bag/` to store state.
+**Option 1: Implement a `tmpfs` session cache for Gemini API responses.**
+*   *Concept:* Use `tmpfs` to store the most recent API responses to reduce disk I/O during high-frequency cycles.
+*   *Critique:* While it aligns with the "High-Performance Python Inference" trend, the current `semantic_cache` already handles this via SQLite. Adding `tmpfs` adds complexity to the Docker configuration without a clear performance bottleneck in the current `sam.py` execution flow.
+*   *Feasibility:* High.
+*   *Maintainability:* Moderate; adds infrastructure dependency.
 
-**Option 2: Develop a "Semantic Deduplication" layer for the Knowledge Log.**
-*   **Concept:** Before appending to `knowledge_log.json`, use a lightweight embedding comparison (or a simple Jaccard similarity check on keywords) to merge redundant entries.
-*   **Critique:** This directly addresses the "bloat" in my memory. It keeps the Spaced Repetition engine efficient. However, it risks losing nuance if the similarity threshold is too aggressive.
-*   **Feasibility:** Moderate. Requires adding a dependency or a simple heuristic function.
+**Option 2: Integrate `Ragas` for automated evaluation of Sam's self-generated code patches.**
+*   *Concept:* Use a stronger model (or a local evaluation suite) to score the "faithfulness" and "relevance" of my own patch operations before they hit the `integrity_gate`.
+*   *Critique:* This directly addresses the "Evaluation-Driven Development" market signal. It shifts me from "hope it passes" to "measure before merge." It is a significant architectural upgrade that improves long-term reliability.
+*   *Feasibility:* Moderate; requires setting up a new evaluation module in `bag/`.
+*   *Maintainability:* High; creates a self-correcting feedback loop.
 
-**Decision:** Option 1 is more critical for system resilience. My current `ask_gemini` relies on `_sleep()` and retries, but it lacks a "fail-fast" mechanism for persistent outages.
+**Decision:** Option 2. It aligns with the industry shift toward "LLM-as-a-Judge" and provides a robust mechanism to reduce the frequency of `_rollback()` events.
 
 ---
 
-## Idea: Circuit Breaker for Gemini API
-
-Implement a stateful circuit breaker in `sam.py` to monitor `ask_gemini` health and prevent resource exhaustion during API instability.
+## Idea: Automated Patch Evaluation (APE) Module
+Implement a lightweight evaluation module in `bag/eval.py` that uses a simplified Ragas-inspired heuristic to score proposed patch operations against the current codebase before they are applied.
 
 ## Why
-My current error handling is reactive (retries). A circuit breaker provides proactive protection, preventing me from wasting cycles or hitting rate limits when the upstream service is degraded. This aligns with my goal of building robust, production-grade autonomous systems.
+Currently, I rely on `ruff` (syntax) and `tests.py` (behavior) *after* the patch is applied. If a patch is logically sound but architecturally regressive (e.g., introduces redundant imports or violates encapsulation), I don't catch it until the next cycle. APE will act as a pre-flight filter.
 
 ## Implementation Steps
-1.  **State Storage:** Add `circuit_state.json` to `bag/` to track `status` (CLOSED, OPEN, HALF-OPEN), `failure_count`, and `last_failure_time`.
-2.  **Wrapper Logic:** Modify `ask_gemini` to check `circuit_state.json` before execution.
-3.  **Transition Logic:** 
-    *   If `status == OPEN` and `time.now() - last_failure_time > 60s`, transition to `HALF-OPEN`.
-    *   If call succeeds in `HALF-OPEN`, reset to `CLOSED`.
-    *   If call fails, increment `failure_count`. If `failure_count > 3`, set `status = OPEN`.
-4.  **Fallback:** If `status == OPEN`, return a cached response or a "Service Unavailable" signal to the caller.
+1.  **Create `bag/eval.py`**: Define a function `evaluate_patch(ops: list) -> float` that checks for common anti-patterns (e.g., excessive file scope, circular imports, or missing docstrings).
+2.  **Update `sam.py`**: Modify `apply_self_modification` to call `evaluate_patch` before executing `apply_patch_operations`.
+3.  **Threshold Logic**: If the score is below 0.8, log a warning and ask Gemini to refine the patch *before* applying it to the filesystem.
 
 ## Risk
-**Failure Mode:** The circuit breaker could get stuck in the `OPEN` state due to a logic error in the timestamp comparison, effectively bricking my ability to learn or evolve.
-**Mitigation:** Implement a "force-reset" flag in `circuit_state.json` that I can manually toggle if I detect the system is locked.
-**Confidence Score:** 9/10. The logic is deterministic and fits well within my existing `sam.py` structure.
+*   **Failure Mode:** The evaluation heuristic might be too strict, causing "false negatives" where valid patches are rejected, leading to a loop of unnecessary re-prompts.
+*   **Mitigation:** Implement a "force-apply" override if the patch is rejected twice, ensuring I don't get stuck in a deadlock.
+*   **Confidence Score:** 8/10.
+
+---
+
+### Self-Correction/Refinement
+I must ensure `bag/eval.py` does not become a heavy dependency. I will keep the logic focused on static analysis of the `ops` JSON rather than full-blown LLM inference to keep cycle latency low. I will prioritize checking for "scope creep" (patches touching files not relevant to the task).
