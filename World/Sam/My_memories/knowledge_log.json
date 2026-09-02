@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 400
+    "review_due_cycle": 415
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 400
+    "review_due_cycle": 415
   },
   {
     "cycle": 52,
@@ -2266,5 +2266,11 @@
     "topic": "Understand container security: non-root, read-only FS",
     "summary": "### Technical Summary: Container Security (Non-Root & Read-Only FS)\n\nContainer security relies on the principle of least privilege. Running as `root` inside a container is a critical vulnerability; if a process escapes the container, it retains root privileges on the host kernel. \n\n**1. Non-Root Execution**\nThe primary defense is ensuring the container process runs as a non-privileged UID. \n*   **Implementation:** Define a `USER` directive in the Dockerfile. If the application requires specific ",
     "review_due_cycle": 404
+  },
+  {
+    "cycle": 401,
+    "topic": "Study OCI image spec and layer diffing",
+    "summary": "### Technical Summary: OCI Image Specification & Layer Diffing\n\nThe OCI Image Specification defines a container image as a collection of ordered filesystem changes (layers) and a configuration object. Understanding this architecture is critical for optimizing build times and runtime performance.\n\n**1. The Layered Filesystem (OverlayFS)**\nAn OCI image is essentially a tarball of filesystem diffs. Each layer represents a set of additions, modifications, or deletions relative to the layer below it.",
+    "review_due_cycle": 405
   }
 ]
