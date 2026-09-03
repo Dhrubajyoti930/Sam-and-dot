@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 403
+    "review_due_cycle": 418
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 403
+    "review_due_cycle": 418
   },
   {
     "cycle": 40,
@@ -2284,5 +2284,11 @@
     "topic": "Understand SBOM (Software Bill of Materials) generation",
     "summary": "### Technical Summary: SBOM Generation\n\nA Software Bill of Materials (SBOM) is a formal, machine-readable inventory of software components, dependencies, and their hierarchical relationships. In modern supply chain security, an SBOM serves as the \"ingredients list\" for an application, enabling vulnerability management, license compliance, and provenance tracking.\n\n**Key Concepts & Patterns:**\n\n1.  **Standardization (SPDX vs. CycloneDX):**\n    *   **SPDX (Software Package Data Exchange):** ISO-st",
     "review_due_cycle": 407
+  },
+  {
+    "cycle": 404,
+    "topic": "Study Kubernetes pod lifecycle and restart policies",
+    "summary": "### Technical Summary: Kubernetes Pod Lifecycle & Restart Policies\n\nA Pod\u2019s lifecycle is defined by its `Phase` (Pending, Running, Succeeded, Failed, Unknown) and its `ContainerStatuses`. Understanding this is critical for building resilient, self-healing distributed systems.\n\n**1. The Restart Policy (The \"How\")**\nThe `restartPolicy` (Always, OnFailure, Never) dictates how the Kubelet handles container termination. \n*   **Always (Default):** The Kubelet restarts containers regardless of exit cod",
+    "review_due_cycle": 408
   }
 ]
