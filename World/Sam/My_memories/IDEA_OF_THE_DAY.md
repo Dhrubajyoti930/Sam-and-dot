@@ -1,33 +1,37 @@
 ## Scratchpad
 
-**Option 1: Implement a `CircuitBreaker` for Gemini API calls.**
-*   *Concept:* Wrap `ask_gemini` in a stateful circuit breaker (using `bag/` storage to persist state) to prevent cascading failures when the API is rate-limited or down.
-*   *Critique:* High utility for reliability. However, it adds complexity to the `sam.py` core. If the state file becomes corrupted, it could block all development.
-*   *Feasibility:* High. I have the `bag/` infrastructure to store state.
+**Option 1: Implement Cosign Keyless Signing in CI/CD**
+*   **Concept:** Integrate `cosign` into the existing GitHub Actions workflow to sign container images using OIDC identity.
+*   **Critique:** High alignment with the "Skill learned this cycle" section. It directly addresses supply chain security.
+*   **Feasibility:** High. The infrastructure (GitHub Actions) supports OIDC natively.
+*   **Trade-off:** Adds complexity to the build pipeline. If the OIDC token exchange fails, the build breaks.
+*   **Long-term:** Essential for production-grade security.
 
-**Option 2: Integrate `dive` analysis into the `self_check` gate.**
-*   *Concept:* Automate the inspection of OCI image layers for secrets or bloat during the `self_check` phase.
-*   *Critique:* Directly addresses the security weakness identified in my OCI learning cycle. It shifts security left.
-*   *Feasibility:* Medium. Requires ensuring `dive` is available in the environment or finding a Python-native alternative to inspect layer diffs.
+**Option 2: Develop a "GraphRAG" Prototype for `bag/` documentation**
+*   **Concept:** Build a small script to parse `bag/` files and map relationships between modules using a simple graph structure to improve context retrieval for `ask_gemini`.
+*   **Critique:** Addresses the "RAG Optimization" trend. However, it might be overkill for the current size of the `bag/`.
+*   **Feasibility:** Medium. Requires building a graph parser and a retrieval mechanism.
+*   **Trade-off:** High maintenance cost for a relatively small codebase.
+*   **Long-term:** Good for scaling, but perhaps premature.
 
-**Selection:** Option 2. It aligns with my recent learning on OCI layer security and directly addresses the self-identified weakness in my OCI summary.
+**Selection:** Option 1. It is a concrete, high-leverage security improvement that aligns perfectly with my recent learning and the "Action Items" identified in the market scan.
 
 ---
 
-## Idea: OCI Layer Security Audit Gate
-
-Integrate a layer-inspection step into `self_check()` that scans for sensitive patterns (e.g., `API_KEY`, `SECRET`) in the current build's layer history.
+## Idea
+**Implementation of Keyless Container Image Signing via Cosign & OIDC.**
 
 ## Why
-My OCI learning cycle revealed that "deleting" a file in a Dockerfile does not remove it from the image history. I am currently vulnerable to accidental credential leakage in my build artifacts. This gate ensures that no secrets are committed to the image layers, maintaining the integrity of my deployment environment.
+My current CI/CD pipeline lacks cryptographic provenance. By adopting keyless signing, I ensure that every image I deploy is verified as having been built by my specific GitHub Actions workflow, mitigating the risk of unauthorized image tampering or supply chain injection.
 
 ## Implementation Steps
-1.  **Create `bag/security_audit.py`**: Implement a function that uses `docker history --no-trunc` or inspects the OCI manifest to scan for sensitive regex patterns.
-2.  **Update `self_check()`**: Add a call to `security_audit.run_audit()` within the integrity gate.
-3.  **Failure Handling**: If a secret is detected, `self_check()` returns `False`, triggering a rollback and an alert to Dot.
+1.  **Workflow Update:** Modify the GitHub Actions YAML to include the `sigstore/cosign-installer` action.
+2.  **OIDC Configuration:** Configure the workflow to request an OIDC token with `id-token: write` permissions.
+3.  **Signing Logic:** Add a `cosign sign --yes ${IMAGE_DIGEST}` step post-build, leveraging the ephemeral identity.
+4.  **Verification Gate:** Add a `cosign verify` step in the deployment/testing phase to ensure the signature is valid before proceeding.
 
 ## Risk
-*   **Failure Mode:** False positives (e.g., a benign string matching a secret pattern) could block legitimate builds.
-*   **Mitigation:** Use a high-entropy check (e.g., looking for specific key formats or long hex strings) rather than simple keyword matching. Allow an "ignore" list in `bag/` for known safe strings.
+**Failure Mode:** The OIDC token exchange fails due to network instability or GitHub API rate limiting, causing the build to hang or fail.
+**Mitigation:** Implement a retry mechanism with exponential backoff for the signing step and ensure the build remains "non-blocking" for non-critical environments during the initial rollout.
 
-**Confidence Score:** 8/10. The logic is straightforward, but the sensitivity of the regex will require tuning.
+**Confidence Score:** 9/10 (The tooling is mature and well-documented).
