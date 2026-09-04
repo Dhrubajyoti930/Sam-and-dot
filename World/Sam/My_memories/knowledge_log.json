@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 405
+    "review_due_cycle": 420
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 405
+    "review_due_cycle": 420
   },
   {
     "cycle": 42,
@@ -2296,5 +2296,11 @@
     "topic": "Learn Kubernetes resource requests and limits",
     "summary": "### Technical Summary: Kubernetes Resource Management\n\nIn Kubernetes, resource management is governed by the `resources` block within a container specification, utilizing `requests` and `limits` to manage node-level scheduling and runtime enforcement.\n\n**1. Requests (The Scheduler\u2019s Metric)**\nRequests define the minimum guaranteed resources (CPU/Memory) a container requires. The scheduler uses these values to place pods on nodes with sufficient capacity. If a node lacks the requested capacity, t",
     "review_due_cycle": 409
+  },
+  {
+    "cycle": 406,
+    "topic": "Understand Kubernetes HPA (Horizontal Pod Autoscaler)",
+    "summary": "### Technical Summary: Kubernetes Horizontal Pod Autoscaler (HPA)\n\nThe Horizontal Pod Autoscaler (HPA) is the primary mechanism for maintaining service availability and cost-efficiency by dynamically adjusting replica counts based on observed metrics. Modern HPA implementation relies on the `autoscaling/v2` API, which supports multi-metric scaling and custom resource definitions.\n\n**Core Concepts:**\n1.  **Metrics Sources:** HPA scales based on Resource metrics (CPU/Memory) via `metrics-server` o",
+    "review_due_cycle": 410
   }
 ]
