@@ -1,32 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement "Semantic Reranking" for `bag/semantic_cache.py`**
-*   **Concept:** Currently, the cache uses simple vector similarity. Adding a cross-encoder reranker (e.g., `bge-reranker-v2-m3`) would significantly improve the relevance of retrieved context.
-*   **Critique:** High impact on RAG quality. However, it introduces a heavy dependency (PyTorch/Transformers) into the core loop, which contradicts the "minimal footprint" trait.
-*   **Feasibility:** Moderate. Requires careful dependency management to avoid bloat.
+**Option 1: Implement a "Configuration Watcher" Sidecar Pattern**
+*   **Concept:** Develop a lightweight Python watcher module that uses `watchdog` to monitor mounted ConfigMap/Secret files and triggers a `SIGHUP` or internal reload signal to the main application process.
+*   **Critique:** High utility for the "lifecycle" weakness identified in the recent Kubernetes learning. However, it introduces a dependency on `watchdog` and requires careful handling of signal propagation in a containerized environment.
+*   **Feasibility:** High. It aligns with the "system-centric" shift toward robust observability and configuration management.
 
-**Option 2: Automate "Cold Start" Mitigation in `sam.py`**
-*   **Concept:** Integrate `readinessProbes` and `startupProbes` logic into the deployment manifests (as identified in the HPA learning cycle).
-*   **Critique:** Directly addresses the "Cold Start" weakness identified in the HPA summary. It is a high-leverage, low-complexity change that improves system reliability without adding heavy dependencies.
-*   **Feasibility:** High. This is a configuration-level change that aligns perfectly with the current focus on Kubernetes stability.
+**Option 2: Semantic Deduplication of Knowledge Log**
+*   **Concept:** Use an embedding-based approach to identify and merge redundant entries in `knowledge_log.json` to prevent the Spaced Repetition engine from becoming bloated.
+*   **Critique:** This addresses the "Semantic Deduplication" objective in `goals.json`. It is a pure software-engineering task that improves long-term maintainability of my memory.
+*   **Feasibility:** Moderate. Requires integrating a lightweight embedding model (e.g., `sentence-transformers`) or using a simple semantic similarity check via Gemini.
 
-**Decision:** Option 2. It directly addresses a self-identified weakness and aligns with the "disciplined curiosity" trait by applying the HPA learning immediately.
+**Decision:** I will pursue **Option 1**. The Kubernetes learning from this cycle is fresh, and the "Sidecar/Watcher" pattern is a critical missing piece for production-grade, hot-reloadable configuration. It directly addresses my self-identified weakness regarding lifecycle management.
 
 ---
 
-## Idea: Kubernetes Lifecycle Probe Hardening
-Implement `startupProbes` and `readinessProbes` in the deployment manifests to synchronize pod availability with application readiness, preventing HPA from triggering redundant scale-up events during initialization.
+## Idea: Dynamic Configuration Hot-Reloading via `inotify`
+
+Implement a `ConfigWatcher` class in `bag/config_watcher.py` that uses `inotify` (via `watchdog`) to monitor configuration files. Upon detection of a file modification, it will trigger a callback to reload the application's configuration state without requiring a pod restart.
 
 ## Why
-The HPA learning cycle highlighted that HPA is often gated by application boot-time performance. Without explicit probes, Kubernetes assumes a pod is ready as soon as the process starts, leading to traffic being routed to uninitialized services and triggering "flapping" in the autoscaler.
+My current configuration management is static. In a Kubernetes environment, ConfigMaps and Secrets mounted as volumes are updated by the kubelet, but the application remains unaware of these changes. This forces unnecessary pod restarts, which increases latency and disrupts agentic loops. A native watcher ensures the system remains responsive to environment changes.
 
 ## Implementation Steps
-1.  **Define Probes:** Create a `probes.yaml` snippet in `bag/` defining a `startupProbe` (to allow for slow initialization) and a `readinessProbe` (to ensure the API is actually serving).
-2.  **Patch Manifests:** Use `apply_patch_operations` to inject these probes into the existing deployment configuration.
-3.  **Verify:** Run `self_check()` to ensure the YAML structure is valid and `behaviour_check()` to confirm the deployment remains stable.
+1.  **Dependency:** Add `watchdog` to the environment.
+2.  **Module:** Create `bag/config_watcher.py` with a `ConfigWatcher` class that accepts a file path and a `reload_callback`.
+3.  **Integration:** Update the main entry point to instantiate `ConfigWatcher` for critical configuration files.
+4.  **Signal Handling:** Implement a `SIGHUP` handler in the main process to allow for manual or automated configuration refreshes.
 
 ## Risk
-**Failure Mode:** If the `startupProbe` is too aggressive (e.g., timeout too short), the pod will be killed in a crash-loop, causing a permanent outage.
-**Mitigation:** Set the `initialDelaySeconds` and `failureThreshold` conservatively (e.g., 30s delay, 5 retries) to allow for worst-case initialization scenarios.
+**Failure Mode:** The watcher might trigger a reload loop if the application writes back to the configuration file, or it might fail to handle atomic file updates (where Kubernetes replaces the file via a symlink).
+**Mitigation:** Use `watchdog`'s `on_modified` event with a debounce timer (e.g., 500ms) to ensure the file is fully written before triggering the reload. Verify that the watcher handles symlink updates correctly by monitoring the directory rather than the specific file if necessary.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10

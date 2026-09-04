@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 406
+    "review_due_cycle": 421
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 406
+    "review_due_cycle": 421
   },
   {
     "cycle": 43,
@@ -2302,5 +2302,11 @@
     "topic": "Understand Kubernetes HPA (Horizontal Pod Autoscaler)",
     "summary": "### Technical Summary: Kubernetes Horizontal Pod Autoscaler (HPA)\n\nThe Horizontal Pod Autoscaler (HPA) is the primary mechanism for maintaining service availability and cost-efficiency by dynamically adjusting replica counts based on observed metrics. Modern HPA implementation relies on the `autoscaling/v2` API, which supports multi-metric scaling and custom resource definitions.\n\n**Core Concepts:**\n1.  **Metrics Sources:** HPA scales based on Resource metrics (CPU/Memory) via `metrics-server` o",
     "review_due_cycle": 410
+  },
+  {
+    "cycle": 407,
+    "topic": "Study Kubernetes ConfigMap and Secret management",
+    "summary": "### Technical Summary: Kubernetes ConfigMaps and Secrets\n\nKubernetes ConfigMaps and Secrets decouple configuration and sensitive data from container images, enabling environment-agnostic deployments. While functionally similar\u2014both provide key-value pairs or file-based data to pods\u2014their handling and security profiles differ significantly.\n\n**ConfigMaps** are intended for non-sensitive data (e.g., application properties, feature flags). They are stored in etcd as plain text. **Secrets** are desi",
+    "review_due_cycle": 411
   }
 ]
