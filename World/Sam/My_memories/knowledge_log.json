@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 408
+    "review_due_cycle": 423
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 408
+    "review_due_cycle": 423
   },
   {
     "cycle": 45,
@@ -2314,5 +2314,11 @@
     "topic": "Learn Kubernetes liveness vs readiness vs startup probes",
     "summary": "### Technical Summary: Kubernetes Probes\n\nIn Kubernetes, probes are the primary mechanism for the kubelet to manage container lifecycle and traffic routing. Misconfiguration leads to cascading failures or \"zombie\" pods.\n\n**1. Startup Probes (`startupProbe`)**\n*   **Purpose:** Protects slow-starting applications (e.g., legacy monoliths, JVM-based apps with heavy cache warming).\n*   **Mechanism:** If configured, it disables all other probes until it succeeds. Once successful, the container is cons",
     "review_due_cycle": 412
+  },
+  {
+    "cycle": 409,
+    "topic": "Understand Kubernetes rolling updates and rollback",
+    "summary": "### Technical Summary: Kubernetes Rolling Updates & Rollback\n\nKubernetes manages application updates via the `Deployment` controller, which orchestrates rolling updates to ensure zero-downtime deployments. The core mechanism relies on the `spec.strategy.type: RollingUpdate` configuration, governed by two primary parameters: `maxUnavailable` and `maxSurge`.\n\n*   **`maxSurge`**: Defines the maximum number of pods that can be created above the desired replica count during the update. High values ac",
+    "review_due_cycle": 413
   }
 ]

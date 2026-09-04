@@ -1,44 +1,38 @@
 ## Scratchpad
 
-**Option 1: Implement a `Healthz` Middleware for `sam.py`**
-*   **Concept:** Introduce a lightweight, non-blocking health check endpoint within `sam.py` that monitors the `bag/` directory integrity and the `Gemini` client connectivity.
-*   **Critique:** While useful for K8s readiness, it adds complexity to the core `sam.py` which should remain a lean orchestrator. It risks "probe bloat" if not kept strictly to a 200 OK status.
-*   **Feasibility:** High. It aligns with the "Kubernetes Probes" skill learned this cycle.
+**Option 1: Implement `readinessProbe` and `startupProbe` logic in `sam.py`**
+*   *Concept:* Add a `check_readiness()` method to `sam.py` that verifies the state of `bag/` dependencies and semantic cache before signaling "Ready" to a hypothetical orchestrator.
+*   *Critique:* High utility for production-grade stability. However, Sam currently runs as a CLI-based autonomous agent, not a long-running service. Adding probes might be "over-engineering" for the current execution model.
+*   *Feasibility:* High.
 
-**Option 2: Semantic Deduplication for `knowledge_log.json`**
-*   **Concept:** Implement a routine that uses vector similarity (via a simple cosine similarity on embeddings) to merge redundant entries in `knowledge_log.json` before Phase II reviews.
-*   **Critique:** This directly addresses the "Semantic Deduplication" objective in `goals.json`. It improves the quality of spaced repetition by preventing the review of near-identical concepts.
-*   **Feasibility:** Moderate. Requires integrating a lightweight embedding approach (e.g., `sentence-transformers` or a simple local model) into the `bag/` utilities.
+**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
+*   *Concept:* Build a tool that compares new `knowledge_log` entries against existing ones using vector similarity (via `pgvector` or local embeddings) to prevent redundant learning.
+*   *Critique:* Directly addresses the "minimal footprint" trait. It prevents memory bloat and ensures the Spaced Repetition engine (Phase II) focuses on high-value, unique concepts.
+*   *Feasibility:* Moderate. Requires integrating a lightweight embedding model (e.g., `sentence-transformers`).
 
-**Decision:** Option 2. It directly advances a stated objective and improves the long-term utility of my memory system.
+**Decision:** Option 2. It aligns with the "Semantic Deduplication" objective in `load_goals()` and directly improves the quality of the knowledge base.
 
 ---
 
-## Idea: Semantic Deduplication for Knowledge Log
+## Idea: Semantic Knowledge Deduplication
 
-Implement a `deduplicate_knowledge()` utility in `bag/memory_utils.py` that identifies and merges entries in `knowledge_log.json` with high semantic overlap.
+Implement a `deduplicate_knowledge()` function in `bag/memory_ops.py` that computes cosine similarity between a new knowledge entry and existing entries in `knowledge_log.json` using a local, lightweight embedding model.
 
 ## Why
-My `knowledge_log.json` is growing. Without deduplication, Phase II (Spaced Repetition) will eventually become inefficient, forcing me to review the same concepts phrased differently. This ensures my "knowledge base" remains high-signal and concise.
+My memory is growing. Without deduplication, I risk "knowledge drift" where I re-learn the same concepts with slightly different phrasing, diluting the effectiveness of the Spaced Repetition engine. This ensures I only commit unique, high-value insights to my long-term memory.
 
 ## Implementation Steps
-1.  **Create `bag/memory_utils.py`:** Add a function to calculate cosine similarity between the `summary` fields of knowledge entries.
-2.  **Thresholding:** Use a similarity threshold (e.g., > 0.85) to flag duplicates.
-3.  **Merge Logic:** When a duplicate is found, keep the entry with the most recent `review_due_cycle` and append the older summary's context if unique.
-4.  **Integration:** Call this function at the start of `phase_ii_spaced_repetition`.
+1.  **Dependency:** Add `sentence-transformers` to the environment.
+2.  **Logic:** Create `bag/memory_ops.py` with a function `is_redundant(new_summary: str, threshold: float = 0.85)`.
+3.  **Integration:** Update `phase_i_deep_learning` to call `is_redundant` before appending to `knowledge_log.json`.
+4.  **Refinement:** If redundant, instead of discarding, perform a "knowledge merge" (ask Gemini to synthesize the two entries into a more comprehensive one).
 
 ## Risk
-**Failure Mode:** The deduplication logic might merge two distinct but related concepts (e.g., "Kubernetes Probes" vs "Kubernetes Services") if the summary text is too similar.
-**Mitigation:** Implement a "Human-in-the-loop" check for the first 5 cycles: log the proposed merges to `log.info` instead of auto-deleting, allowing me to verify the logic before enabling destructive writes.
-
-**Confidence Score:** 8/10
+*   **Failure Mode:** The embedding model might flag distinct but related concepts as redundant (False Positive), causing me to lose nuance.
+*   **Mitigation:** Set a high similarity threshold (0.85+) and implement a "merge" step rather than a "delete" step to ensure no information is lost.
+*   **Confidence Score:** 8/10.
 
 ---
 
-## Proposed Development Idea
-
-**Task:** Create `bag/memory_utils.py` and integrate semantic deduplication into the Phase II workflow.
-
-*   **Step 1:** Define `bag/memory_utils.py` with a `calculate_similarity(text1, text2)` function using a lightweight local approach (e.g., `difflib.SequenceMatcher` for a zero-dependency start, or a small `sentence-transformers` call if available).
-*   **Step 2:** Update `phase_ii_spaced_repetition` in `sam.py` to invoke `deduplicate_knowledge()` before filtering for `due_items`.
-*   **Step 3:** Ensure the `knowledge_log.json` is rewritten atomically to prevent corruption during the merge.
+### Self-Correction
+I must ensure that the embedding model doesn't introduce significant latency to the `phase_i_deep_learning` cycle. I will use a small, quantized model (e.g., `all-MiniLM-L6-v2`) to keep the footprint minimal. I will also ensure the `knowledge_log` remains human-readable for Dot's auditability.
