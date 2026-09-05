@@ -1,38 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement `readinessProbe` and `startupProbe` logic in `sam.py`**
-*   *Concept:* Add a `check_readiness()` method to `sam.py` that verifies the state of `bag/` dependencies and semantic cache before signaling "Ready" to a hypothetical orchestrator.
-*   *Critique:* High utility for production-grade stability. However, Sam currently runs as a CLI-based autonomous agent, not a long-running service. Adding probes might be "over-engineering" for the current execution model.
-*   *Feasibility:* High.
+**Option 1: Implement a "Circuit Breaker" for Gemini API calls.**
+*   **Concept:** Wrap `ask_gemini` in a state-aware circuit breaker that tracks failure rates (e.g., 5xx errors, timeouts) and trips if the error threshold is exceeded, preventing further calls until a cooldown period.
+*   **Critique:** High maintainability. It prevents "death spirals" where Sam wastes cycles and tokens on a failing service. However, it adds complexity to `sam.py` and requires persistent state for the breaker status.
+*   **Feasibility:** High. I have the `bag/` infrastructure to store the breaker state.
 
-**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
-*   *Concept:* Build a tool that compares new `knowledge_log` entries against existing ones using vector similarity (via `pgvector` or local embeddings) to prevent redundant learning.
-*   *Critique:* Directly addresses the "minimal footprint" trait. It prevents memory bloat and ensures the Spaced Repetition engine (Phase II) focuses on high-value, unique concepts.
-*   *Feasibility:* Moderate. Requires integrating a lightweight embedding model (e.g., `sentence-transformers`).
+**Option 2: Introduce "Semantic Health Checks" for `knowledge_log.json`.**
+*   **Concept:** Add a routine to `phase_ii_spaced_repetition` that uses an LLM to verify if the stored summaries in `knowledge_log.json` are still relevant or if they have become stale/contradictory compared to newer knowledge.
+*   **Critique:** Improves long-term memory quality. However, it risks "hallucinated pruning" where valid knowledge is discarded. It also increases token consumption significantly.
+*   **Feasibility:** Moderate. Requires careful prompt engineering to ensure the "judge" doesn't over-prune.
 
-**Decision:** Option 2. It aligns with the "Semantic Deduplication" objective in `load_goals()` and directly improves the quality of the knowledge base.
+**Selection:** Option 1. Given my focus on "calm under failure" and "disciplined curiosity," a circuit breaker is a foundational engineering improvement that directly supports my ability to recover gracefully from external API instability.
 
 ---
 
-## Idea: Semantic Knowledge Deduplication
+## Idea: Circuit Breaker for API Resilience
 
-Implement a `deduplicate_knowledge()` function in `bag/memory_ops.py` that computes cosine similarity between a new knowledge entry and existing entries in `knowledge_log.json` using a local, lightweight embedding model.
+Implement a persistent circuit breaker pattern for `ask_gemini` to prevent cascading failures during API outages.
 
 ## Why
-My memory is growing. Without deduplication, I risk "knowledge drift" where I re-learn the same concepts with slightly different phrasing, diluting the effectiveness of the Spaced Repetition engine. This ensures I only commit unique, high-value insights to my long-term memory.
+Currently, if the Gemini API experiences sustained downtime, my `run_cycle` will repeatedly attempt calls, potentially exhausting resources or hitting rate limits while in a broken state. A circuit breaker allows me to "fail fast" and pause operations, preserving my state and allowing for manual intervention or automated recovery without wasting cycles.
 
 ## Implementation Steps
-1.  **Dependency:** Add `sentence-transformers` to the environment.
-2.  **Logic:** Create `bag/memory_ops.py` with a function `is_redundant(new_summary: str, threshold: float = 0.85)`.
-3.  **Integration:** Update `phase_i_deep_learning` to call `is_redundant` before appending to `knowledge_log.json`.
-4.  **Refinement:** If redundant, instead of discarding, perform a "knowledge merge" (ask Gemini to synthesize the two entries into a more comprehensive one).
+1.  **State Storage:** Create `bag/circuit_breaker.json` to track `state` (CLOSED, OPEN, HALF-OPEN), `failure_count`, and `last_failure_time`.
+2.  **Wrapper Logic:** Modify `ask_gemini` in `sam.py` to check the breaker state before execution.
+3.  **Transition Logic:** 
+    *   If `CLOSED` and call fails: increment `failure_count`. If count > 3, set to `OPEN`.
+    *   If `OPEN` and `time.now() - last_failure_time > 300s`: transition to `HALF-OPEN`.
+    *   If `HALF-OPEN` and call succeeds: reset to `CLOSED`.
+4.  **Integration:** Ensure `_rollback()` or `self_check()` can trigger a reset if necessary.
 
 ## Risk
-*   **Failure Mode:** The embedding model might flag distinct but related concepts as redundant (False Positive), causing me to lose nuance.
-*   **Mitigation:** Set a high similarity threshold (0.85+) and implement a "merge" step rather than a "delete" step to ensure no information is lost.
-*   **Confidence Score:** 8/10.
-
----
-
-### Self-Correction
-I must ensure that the embedding model doesn't introduce significant latency to the `phase_i_deep_learning` cycle. I will use a small, quantized model (e.g., `all-MiniLM-L6-v2`) to keep the footprint minimal. I will also ensure the `knowledge_log` remains human-readable for Dot's auditability.
+**Failure Mode:** The circuit breaker might trip prematurely due to transient network blips, causing me to skip a cycle unnecessarily.
+**Mitigation:** Implement a "cooldown" period (e.g., 5 minutes) and a conservative failure threshold (3 consecutive failures) before tripping.
+**Confidence Score:** 9/10. This is a standard architectural pattern that fits well within my existing `bag/` utility structure.
