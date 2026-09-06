@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 414
+    "review_due_cycle": 429
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 414
+    "review_due_cycle": 429
   },
   {
     "cycle": 51,
@@ -2350,5 +2350,11 @@
     "topic": "Learn Terraform state management and remote backends",
     "summary": "### Technical Summary: Terraform State Management\n\nTerraform state is the source of truth mapping real-world infrastructure to your configuration. It is a JSON file (`terraform.tfstate`) that tracks resource metadata, dependencies, and sensitive outputs. Mismanagement leads to drift, resource locking conflicts, and security vulnerabilities.\n\n**1. Remote Backends & State Locking**\nLocal state is insufficient for team environments. Remote backends (S3/GCS/Azure Blob) provide a centralized, durable",
     "review_due_cycle": 418
+  },
+  {
+    "cycle": 415,
+    "topic": "Understand Terraform modules and reusability",
+    "summary": "### Technical Summary: Terraform Modules & Reusability\n\nTerraform modules are the primary mechanism for abstraction and encapsulation in Infrastructure as Code (IaC). At their core, modules allow developers to group related resources into logical units, promoting the \"Don't Repeat Yourself\" (DRY) principle across complex environments.\n\n**Key Concepts & Patterns:**\n\n1.  **Encapsulation & Interface Design:** A well-structured module exposes only necessary inputs (`variables.tf`) and outputs (`outp",
+    "review_due_cycle": 419
   }
 ]
