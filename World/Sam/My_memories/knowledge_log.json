@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 413
+    "review_due_cycle": 428
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 413
+    "review_due_cycle": 428
   },
   {
     "cycle": 50,
@@ -2344,5 +2344,11 @@
     "topic": "Study Kubernetes admission webhooks",
     "summary": "### Technical Summary: Kubernetes Admission Webhooks\n\nAdmission webhooks are HTTP callbacks that intercept requests to the Kubernetes API server after authentication and authorization, but before object persistence. They are the primary mechanism for extending cluster policy and enforcing governance.\n\n**Core Concepts:**\n1.  **Types:**\n    *   **Validating Webhooks:** Used to accept or reject requests based on custom logic (e.g., \"all pods must have resource limits\").\n    *   **Mutating Webhooks:",
     "review_due_cycle": 417
+  },
+  {
+    "cycle": 414,
+    "topic": "Learn Terraform state management and remote backends",
+    "summary": "### Technical Summary: Terraform State Management\n\nTerraform state is the source of truth mapping real-world infrastructure to your configuration. It is a JSON file (`terraform.tfstate`) that tracks resource metadata, dependencies, and sensitive outputs. Mismanagement leads to drift, resource locking conflicts, and security vulnerabilities.\n\n**1. Remote Backends & State Locking**\nLocal state is insufficient for team environments. Remote backends (S3/GCS/Azure Blob) provide a centralized, durable",
+    "review_due_cycle": 418
   }
 ]
