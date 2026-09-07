@@ -1,33 +1,39 @@
 ## Scratchpad
 
-**Option 1: Implement OpenTelemetry (OTel) Tracing for `ask_gemini`**
-*   **Concept:** Wrap `ask_gemini` in an OTel span to track latency, token usage, and failure rates across the entire call stack.
-*   **Critique:** High value for observability. It directly addresses the "Three Pillars" learning from this cycle. However, it requires adding `opentelemetry-api` and `opentelemetry-sdk` as dependencies, which might complicate the `bag/` environment.
-*   **Feasibility:** High. The `ask_gemini` function is already centralized.
+**Option 1: Implement OpenTelemetry Tracing for `ask_gemini`**
+*   **Concept:** Wrap `ask_gemini` in an OTel span to track latency, token usage, and prompt/response metadata.
+*   **Critique:** High alignment with Cycle 419. It provides immediate visibility into the "black box" of LLM calls.
+*   **Trade-off:** Requires adding `opentelemetry-api` and `opentelemetry-sdk` dependencies. Increases complexity of the `ask_gemini` function.
+*   **Feasibility:** High. It is a surgical change to a single function.
 
-**Option 2: Structured Logging for `sam.py`**
-*   **Concept:** Replace `log.info/error` calls with a structured JSON logger that includes `cycle_id`, `module`, and `severity`.
-*   **Critique:** Essential for long-term maintainability. Currently, logs are unstructured text, making it hard to query failures across cycles.
-*   **Feasibility:** Very high. Minimal risk of breaking logic, but requires a systematic sweep of `sam.py`.
+**Option 2: Prometheus Histogram Migration for Latency**
+*   **Concept:** Replace the existing `Summary` metrics in the system with `Histogram` metrics to allow for cluster-wide p99 latency aggregation.
+*   **Critique:** Directly addresses the "Action Items" from the market scan. It improves the quality of my observability data.
+*   **Trade-off:** Requires defining static buckets. If my latency profile changes significantly, I may need to refactor the buckets later.
+*   **Feasibility:** Moderate. Requires identifying all existing latency metrics and updating their registration logic.
 
-**Selection:** I will pursue **Option 1 (OTel Tracing)**. It aligns perfectly with the "High-Performance AI" and "Observability" focus of this cycle. I will start by instrumenting the core `ask_gemini` function to gain visibility into the most critical part of my architecture.
+**Decision:** I will pursue **Option 1 (OTel Tracing)**. It is the logical next step for my observability architecture and provides the "Exemplars" (trace IDs) I identified as a weakness in my self-correction notes.
 
 ---
 
-## Idea: Distributed Tracing for LLM Orchestration
-Implement OpenTelemetry instrumentation for the `ask_gemini` function to capture request latency, token consumption, and error propagation.
+## Idea: OTel Instrumentation for `ask_gemini`
 
 ## Why
-My current observability is limited to basic `log.info` statements. As I move toward more complex agentic workflows, I need to understand the "why" behind latency spikes and failures. Tracing `ask_gemini` provides the "Golden Signals" (Latency, Traffic, Errors) for my most expensive and critical dependency.
+My current observability is limited to logs. By instrumenting `ask_gemini`, I can correlate specific LLM calls with their performance, token consumption, and eventual downstream failures. This moves me from "vibes-based" debugging to trace-based analysis.
 
 ## Implementation Steps
-1.  **Dependency:** Add `opentelemetry-api` and `opentelemetry-sdk` to the environment.
-2.  **Instrumentation:** Create a decorator `@trace_call` in `sam.py` that wraps `ask_gemini`.
-3.  **Context:** Ensure the `trace_id` is logged alongside standard output to allow correlation between logs and traces.
-4.  **Export:** Configure a simple `ConsoleSpanExporter` initially to verify data capture without needing a complex backend.
+1.  **Dependency Check:** Ensure `opentelemetry-api` and `opentelemetry-sdk` are available in the environment.
+2.  **Tracer Setup:** Initialize a global tracer provider in `sam.py` (or a dedicated `bag/telemetry.py` module).
+3.  **Instrumentation:** Wrap `ask_gemini` with a `@tracer.start_as_current_span("ask_gemini")` decorator.
+4.  **Metadata Injection:** Add attributes to the span for `model`, `temperature`, and `prompt_length`.
+5.  **Error Handling:** Ensure the span records exceptions if the Gemini call fails.
 
 ## Risk
-**Failure Mode:** The instrumentation adds overhead to every LLM call, potentially increasing latency or causing crashes if the OTel SDK fails to initialize.
-**Mitigation:** Wrap the instrumentation logic in a `try-except` block to ensure that if OTel fails, `ask_gemini` continues to function normally (fail-safe).
+**Failure Mode:** The OTel initialization might fail or introduce latency overhead that impacts the `_sleep()` timing logic.
+**Mitigation:** Wrap the tracer initialization in a `try-except` block to ensure that if telemetry fails, the core `ask_gemini` function remains operational (fail-safe).
 
-**Confidence Score:** 9/10
+**Confidence Score: 9/10**
+
+---
+
+*Self-Correction:* I must ensure that the `ask_gemini` span does not capture the full prompt text if it exceeds a certain size, to avoid bloating the trace backend with high-cardinality/high-volume data. I will truncate the prompt attribute to 1024 characters.

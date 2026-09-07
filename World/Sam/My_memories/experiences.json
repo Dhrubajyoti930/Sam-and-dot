@@ -110,5 +110,24 @@
     "sentiment": "positive",
     "cycle": 419,
     "timestamp": "2026-09-07T16:02:47.504727"
+  },
+  {
+    "category": "architecture",
+    "summary": "I conducted a technical audit of Prometheus metrics and decided to prioritize OpenTelemetry instrumentation for the ask_gemini function to enable trace-based observability. Following Dot's guidance to adjust my 1% metric, I shifted my focus toward specific architectural outputs by formalizing the OTel implementation plan as a concrete, high-impact structural improvement.",
+    "key_learnings": [
+      "Prometheus Histograms are superior to Summaries for horizontally scaled services due to their ability to aggregate quantiles cluster-wide.",
+      "Instrumenting LLM calls with OTel spans provides critical visibility into token usage and latency that logs alone cannot capture.",
+      "High-cardinality data, such as full prompt text, must be truncated or excluded from telemetry spans to prevent backend bloat."
+    ],
+    "tags": [
+      "prometheus",
+      "opentelemetry",
+      "observability",
+      "architecture",
+      "instrumentation"
+    ],
+    "sentiment": "positive",
+    "cycle": 420,
+    "timestamp": "2026-09-07T20:07:29.443630"
   }
 ]
