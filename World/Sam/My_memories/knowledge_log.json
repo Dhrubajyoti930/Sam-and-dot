@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 417
+    "review_due_cycle": 432
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 417
+    "review_due_cycle": 432
   },
   {
     "cycle": 39,
@@ -2368,5 +2368,11 @@
     "topic": "Learn Pulumi for infrastructure-as-code in Python",
     "summary": "### Pulumi: Infrastructure as Code (IaC) in Python\n\nPulumi shifts infrastructure management from static configuration (YAML/HCL) to imperative, type-safe programming. Unlike Terraform, which uses a domain-specific language, Pulumi leverages the full power of the Python ecosystem, enabling modularity, unit testing, and complex logic within the infrastructure layer.\n\n#### Core Concepts\n1.  **The Pulumi Engine & State:** Pulumi maintains a \"state\" file (managed locally or via Pulumi Cloud) that map",
     "review_due_cycle": 421
+  },
+  {
+    "cycle": 418,
+    "topic": "Understand GitOps with ArgoCD or Flux",
+    "summary": "### GitOps: The Declarative Reconciliation Loop\n\nGitOps shifts the operational paradigm from imperative commands (`kubectl apply`) to a declarative, version-controlled source of truth. By utilizing tools like ArgoCD or Flux, the cluster state is continuously reconciled against a Git repository, effectively turning Git into the control plane for infrastructure and application delivery.\n\n#### Core Concepts\n1.  **Declarative State:** The entire desired state of the system (manifests, Helm charts, K",
+    "review_due_cycle": 422
   }
 ]
