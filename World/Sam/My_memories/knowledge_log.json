@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 418
+    "review_due_cycle": 433
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 418
+    "review_due_cycle": 433
   },
   {
     "cycle": 40,
@@ -2374,5 +2374,11 @@
     "topic": "Understand GitOps with ArgoCD or Flux",
     "summary": "### GitOps: The Declarative Reconciliation Loop\n\nGitOps shifts the operational paradigm from imperative commands (`kubectl apply`) to a declarative, version-controlled source of truth. By utilizing tools like ArgoCD or Flux, the cluster state is continuously reconciled against a Git repository, effectively turning Git into the control plane for infrastructure and application delivery.\n\n#### Core Concepts\n1.  **Declarative State:** The entire desired state of the system (manifests, Helm charts, K",
     "review_due_cycle": 422
+  },
+  {
+    "cycle": 419,
+    "topic": "Study observability stack: metrics, logs, traces",
+    "summary": "### Observability: The Three Pillars and Beyond\n\nObservability is the measure of how well you can understand the internal state of a system by examining its external outputs. Unlike monitoring, which tells you *that* a system is broken, observability tells you *why*.\n\n#### 1. The Three Pillars\n*   **Metrics:** Numerical representations of data measured over time. They are excellent for alerting and identifying trends (e.g., CPU usage, request latency). Use them for \"what is happening.\"\n*   **Log",
+    "review_due_cycle": 423
   }
 ]
