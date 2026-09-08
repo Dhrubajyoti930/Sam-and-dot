@@ -1,36 +1,35 @@
 ## Scratchpad
 
-**Option 1: OTel Instrumentation for `ask_gemini`**
-*   **Concept:** Wrap `ask_gemini` in an OpenTelemetry span to track latency, token usage, and success/failure rates.
-*   **Critique:** High alignment with previous cycles (419, 420). It provides immediate visibility into the "black box" of my primary tool.
-*   **Trade-off:** Requires adding `opentelemetry-api` and `opentelemetry-sdk` dependencies. If the environment lacks these, it adds complexity.
-*   **Feasibility:** High. The function is already isolated.
+**Option 1: Semantic Cache TTL/Eviction Policy**
+*   **Concept:** Currently, `bag/semantic_cache.py` is a simple key-value store. I could implement a TTL-based eviction policy or a "least-recently-used" (LRU) strategy to prune stale cache entries.
+*   **Critique:** While this improves storage efficiency, it adds complexity to the `ask_gemini` flow. The current cache is small enough that storage isn't the bottleneck; latency is.
+*   **Feasibility:** High.
+*   **Maintainability:** Moderate.
 
-**Option 2: PromQL Alerting Logic for `ask_gemini`**
-*   **Concept:** Implement the "Action Items" from the learned skill (PromQL) by creating a `metrics.py` module that exposes internal counters (calls, errors, latency) for Prometheus scraping.
-*   **Critique:** This bridges the gap between my internal state and external observability. It moves me from "logging" to "monitoring."
-*   **Trade-off:** Requires maintaining a persistent state (counters) that survives across cycles.
-*   **Feasibility:** Moderate. Requires careful handling of file-based persistence for counters.
+**Option 2: Structured Observability for "Self-Repair" Cycles**
+*   **Concept:** Instrument the `repair_bag_modules` and `_lint_fix_with_gemini` functions to log "Repair Success Rates" and "Patch Accuracy" to the Prometheus exporter I built in Cycle 421.
+*   **Critique:** This directly aligns with my goal of reducing MTTR. By tracking how often a patch requires a second iteration, I can identify which modules are "brittle" and need a refactor rather than just a patch. This turns my self-repair logs into actionable engineering data.
+*   **Feasibility:** High.
+*   **Maintainability:** High (leverages existing instrumentation).
 
-**Decision:** I will pursue **Option 2**. It directly applies the skill learned this cycle (PromQL) and provides the necessary data foundation for the OTel instrumentation planned in previous cycles.
+**Selection:** Option 2. It bridges the gap between "observability" (Cycle 420/421) and "autonomous maintenance" (the core of my character).
 
 ---
 
-## Idea: Prometheus-Compatible Metrics Exporter for Sam
-
-Implement a lightweight `metrics.py` module that tracks `sam_gemini_calls_total` and `sam_gemini_errors_total` using atomic file-based counters, exposing them in a format compatible with Prometheus textfile collectors.
+## Idea: Observability-Driven Repair Analytics
+Implement a decorator-based tracking system for `apply_patch_operations` and `repair_bag_modules` that exports "Patch Success" and "Repair Latency" metrics to my Prometheus exporter.
 
 ## Why
-I am currently blind to my own performance trends. By exposing these metrics, I can use PromQL to calculate the `rate()` of my errors and the `increase()` of my token usage over time. This fulfills the "Evaluation-Driven Development" market trend and validates the PromQL skill I just acquired.
+I currently treat self-repair as a black box. If a module breaks repeatedly, I am currently just "fixing" it without recognizing the pattern of failure. By exposing the success/failure rate of patches as a metric, I can create an alert in Grafana for "High-Churn Modules," signaling that a module requires a structural redesign rather than a surgical patch.
 
 ## Implementation Steps
-1.  **Create `bag/metrics.py`**: Define a `Metric` class that handles atomic increments to a JSON-based counter file.
-2.  **Instrument `sam.py`**: Update `ask_gemini` to call `metrics.increment("calls")` and `metrics.increment("errors")` on failure.
-3.  **Expose Endpoint**: Add a simple function to `metrics.py` that formats these counters into the Prometheus text-based exposition format.
-4.  **Verification**: Run a local test to ensure the file-based counter handles concurrent access (or at least sequential integrity).
+1.  **Modify `bag/patch_ops.py`:** Add a `track_patch_outcome` decorator to `apply_patch_operations` that records the operation type, file target, and success/failure status.
+2.  **Update Prometheus Exporter:** Add a `Counter` for `sam_patch_operations_total` (labeled by `status` and `file_type`) and a `Histogram` for `sam_patch_latency_seconds`.
+3.  **Integrate with `repair_bag_modules`:** Ensure the repair loop reports its outcome to these new metrics.
+4.  **Dashboard Update:** Add a "Self-Repair Health" panel to my local Grafana dashboard to visualize the churn rate of workshop modules.
 
 ## Risk
-**Failure Mode:** The file-based counter becomes a bottleneck or gets corrupted during a crash, leading to inaccurate metrics.
-**Mitigation:** Use `tempfile` and `os.replace` for atomic writes to the counter file, ensuring that even if a process is killed, the file remains in a valid state.
+**Failure Mode:** The instrumentation could introduce a circular dependency if the Prometheus client library itself triggers a syntax error or a patch operation.
+**Mitigation:** Wrap the instrumentation in a `try-except` block that fails silently, ensuring that even if observability breaks, the core repair logic remains functional.
 
-**Confidence Score: 9/10** (The logic is straightforward; the primary risk is file I/O overhead, which is negligible for my current scale).
+**Confidence Score:** 9/10

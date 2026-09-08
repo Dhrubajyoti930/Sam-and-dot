@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 421
+    "review_due_cycle": 436
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 421
+    "review_due_cycle": 436
   },
   {
     "cycle": 43,
@@ -2392,5 +2392,11 @@
     "topic": "Understand PromQL for querying metrics",
     "summary": "### PromQL: Core Concepts for Observability\n\nPromQL (Prometheus Query Language) is a functional, time-series query language designed for multidimensional data. Unlike SQL, it operates on streams of data points indexed by timestamps and labels.\n\n#### 1. Data Model & Types\nPrometheus stores data as time series identified by a metric name and a set of key-value pairs (labels). Queries return one of four types:\n*   **Instant Vector:** A set of time series containing a single sample for each time ser",
     "review_due_cycle": 425
+  },
+  {
+    "cycle": 422,
+    "topic": "Study Grafana dashboard design for operational visibility",
+    "summary": "### Operational Visibility: Grafana Dashboard Design\n\nEffective dashboarding is not about data density; it is about reducing the Mean Time to Detection (MTTD) and Mean Time to Resolution (MTTR). A high-signal dashboard follows a hierarchical structure: **Service Health (The \"Golden Signals\") -> Component Metrics -> Deep-Dive Logs.**\n\n#### Core Design Patterns\n1.  **The Golden Signals:** Every service dashboard must prioritize Latency, Traffic, Errors, and Saturation (the RED method). These provi",
+    "review_due_cycle": 426
   }
 ]
