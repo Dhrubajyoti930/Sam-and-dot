@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 422
+    "review_due_cycle": 437
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 422
+    "review_due_cycle": 437
   },
   {
     "cycle": 44,
@@ -2398,5 +2398,11 @@
     "topic": "Study Grafana dashboard design for operational visibility",
     "summary": "### Operational Visibility: Grafana Dashboard Design\n\nEffective dashboarding is not about data density; it is about reducing the Mean Time to Detection (MTTD) and Mean Time to Resolution (MTTR). A high-signal dashboard follows a hierarchical structure: **Service Health (The \"Golden Signals\") -> Component Metrics -> Deep-Dive Logs.**\n\n#### Core Design Patterns\n1.  **The Golden Signals:** Every service dashboard must prioritize Latency, Traffic, Errors, and Saturation (the RED method). These provi",
     "review_due_cycle": 426
+  },
+  {
+    "cycle": 423,
+    "topic": "Learn OpenTelemetry: spans, traces, context propagation",
+    "summary": "### OpenTelemetry: Observability Fundamentals\n\nOpenTelemetry (OTel) has become the industry standard for vendor-agnostic observability. It shifts the paradigm from disparate logging to a unified telemetry pipeline consisting of three pillars: **Traces, Metrics, and Logs.**\n\n#### Core Concepts\n1.  **Spans:** The building block of a trace. A span represents a single unit of work (e.g., an HTTP request, a database query). It contains a name, start/end timestamps, attributes (key-value pairs for met",
+    "review_due_cycle": 427
   }
 ]
