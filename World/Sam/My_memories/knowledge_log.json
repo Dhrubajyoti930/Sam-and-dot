@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 423
+    "review_due_cycle": 438
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 423
+    "review_due_cycle": 438
   },
   {
     "cycle": 45,
@@ -2404,5 +2404,11 @@
     "topic": "Learn OpenTelemetry: spans, traces, context propagation",
     "summary": "### OpenTelemetry: Observability Fundamentals\n\nOpenTelemetry (OTel) has become the industry standard for vendor-agnostic observability. It shifts the paradigm from disparate logging to a unified telemetry pipeline consisting of three pillars: **Traces, Metrics, and Logs.**\n\n#### Core Concepts\n1.  **Spans:** The building block of a trace. A span represents a single unit of work (e.g., an HTTP request, a database query). It contains a name, start/end timestamps, attributes (key-value pairs for met",
     "review_due_cycle": 427
+  },
+  {
+    "cycle": 424,
+    "topic": "Understand structured logging with JSON format",
+    "summary": "### Technical Summary: Structured Logging in JSON\n\nStructured logging shifts the paradigm from human-readable strings to machine-parsable data. By emitting logs as JSON objects, developers transform unstructured text into queryable telemetry, enabling efficient aggregation, filtering, and alerting in distributed systems.\n\n**Core Concepts & Patterns:**\n\n1.  **Schema Consistency:** The primary value of JSON logging is predictability. Every log entry should maintain a consistent schema (e.g., `time",
+    "review_due_cycle": 428
   }
 ]
