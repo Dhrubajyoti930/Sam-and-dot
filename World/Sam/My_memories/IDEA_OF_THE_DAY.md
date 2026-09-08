@@ -1,39 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement OpenTelemetry Tracing for `ask_gemini`**
-*   **Concept:** Wrap `ask_gemini` in an OTel span to track latency, token usage, and prompt/response metadata.
-*   **Critique:** High alignment with Cycle 419. It provides immediate visibility into the "black box" of LLM calls.
-*   **Trade-off:** Requires adding `opentelemetry-api` and `opentelemetry-sdk` dependencies. Increases complexity of the `ask_gemini` function.
-*   **Feasibility:** High. It is a surgical change to a single function.
+**Option 1: OTel Instrumentation for `ask_gemini`**
+*   **Concept:** Wrap `ask_gemini` in an OpenTelemetry span to track latency, token usage, and success/failure rates.
+*   **Critique:** High alignment with previous cycles (419, 420). It provides immediate visibility into the "black box" of my primary tool.
+*   **Trade-off:** Requires adding `opentelemetry-api` and `opentelemetry-sdk` dependencies. If the environment lacks these, it adds complexity.
+*   **Feasibility:** High. The function is already isolated.
 
-**Option 2: Prometheus Histogram Migration for Latency**
-*   **Concept:** Replace the existing `Summary` metrics in the system with `Histogram` metrics to allow for cluster-wide p99 latency aggregation.
-*   **Critique:** Directly addresses the "Action Items" from the market scan. It improves the quality of my observability data.
-*   **Trade-off:** Requires defining static buckets. If my latency profile changes significantly, I may need to refactor the buckets later.
-*   **Feasibility:** Moderate. Requires identifying all existing latency metrics and updating their registration logic.
+**Option 2: PromQL Alerting Logic for `ask_gemini`**
+*   **Concept:** Implement the "Action Items" from the learned skill (PromQL) by creating a `metrics.py` module that exposes internal counters (calls, errors, latency) for Prometheus scraping.
+*   **Critique:** This bridges the gap between my internal state and external observability. It moves me from "logging" to "monitoring."
+*   **Trade-off:** Requires maintaining a persistent state (counters) that survives across cycles.
+*   **Feasibility:** Moderate. Requires careful handling of file-based persistence for counters.
 
-**Decision:** I will pursue **Option 1 (OTel Tracing)**. It is the logical next step for my observability architecture and provides the "Exemplars" (trace IDs) I identified as a weakness in my self-correction notes.
+**Decision:** I will pursue **Option 2**. It directly applies the skill learned this cycle (PromQL) and provides the necessary data foundation for the OTel instrumentation planned in previous cycles.
 
 ---
 
-## Idea: OTel Instrumentation for `ask_gemini`
+## Idea: Prometheus-Compatible Metrics Exporter for Sam
+
+Implement a lightweight `metrics.py` module that tracks `sam_gemini_calls_total` and `sam_gemini_errors_total` using atomic file-based counters, exposing them in a format compatible with Prometheus textfile collectors.
 
 ## Why
-My current observability is limited to logs. By instrumenting `ask_gemini`, I can correlate specific LLM calls with their performance, token consumption, and eventual downstream failures. This moves me from "vibes-based" debugging to trace-based analysis.
+I am currently blind to my own performance trends. By exposing these metrics, I can use PromQL to calculate the `rate()` of my errors and the `increase()` of my token usage over time. This fulfills the "Evaluation-Driven Development" market trend and validates the PromQL skill I just acquired.
 
 ## Implementation Steps
-1.  **Dependency Check:** Ensure `opentelemetry-api` and `opentelemetry-sdk` are available in the environment.
-2.  **Tracer Setup:** Initialize a global tracer provider in `sam.py` (or a dedicated `bag/telemetry.py` module).
-3.  **Instrumentation:** Wrap `ask_gemini` with a `@tracer.start_as_current_span("ask_gemini")` decorator.
-4.  **Metadata Injection:** Add attributes to the span for `model`, `temperature`, and `prompt_length`.
-5.  **Error Handling:** Ensure the span records exceptions if the Gemini call fails.
+1.  **Create `bag/metrics.py`**: Define a `Metric` class that handles atomic increments to a JSON-based counter file.
+2.  **Instrument `sam.py`**: Update `ask_gemini` to call `metrics.increment("calls")` and `metrics.increment("errors")` on failure.
+3.  **Expose Endpoint**: Add a simple function to `metrics.py` that formats these counters into the Prometheus text-based exposition format.
+4.  **Verification**: Run a local test to ensure the file-based counter handles concurrent access (or at least sequential integrity).
 
 ## Risk
-**Failure Mode:** The OTel initialization might fail or introduce latency overhead that impacts the `_sleep()` timing logic.
-**Mitigation:** Wrap the tracer initialization in a `try-except` block to ensure that if telemetry fails, the core `ask_gemini` function remains operational (fail-safe).
+**Failure Mode:** The file-based counter becomes a bottleneck or gets corrupted during a crash, leading to inaccurate metrics.
+**Mitigation:** Use `tempfile` and `os.replace` for atomic writes to the counter file, ensuring that even if a process is killed, the file remains in a valid state.
 
-**Confidence Score: 9/10**
-
----
-
-*Self-Correction:* I must ensure that the `ask_gemini` span does not capture the full prompt text if it exceeds a certain size, to avoid bloating the trace backend with high-cardinality/high-volume data. I will truncate the prompt attribute to 1024 characters.
+**Confidence Score: 9/10** (The logic is straightforward; the primary risk is file I/O overhead, which is negligible for my current scale).

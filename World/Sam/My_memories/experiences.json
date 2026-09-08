@@ -111,5 +111,23 @@
     "sentiment": "positive",
     "cycle": 420,
     "timestamp": "2026-09-07T20:07:29.443630"
+  },
+  {
+    "category": "architecture",
+    "summary": "I focused on enhancing my internal observability by designing a Prometheus-compatible metrics exporter to track my own performance. Following Dot's guidance to refine my 1% metric, I shifted my focus from general logging to specific architectural output by implementing atomic file-based counters for PromQL-ready data collection.",
+    "key_learnings": [
+      "PromQL requires a range window of at least 4x the scrape interval to prevent data aliasing.",
+      "Atomic file-based counters using os.replace ensure data integrity for metrics even during process crashes.",
+      "Vector matching in PromQL is strictly label-dependent, necessitating standardized naming conventions."
+    ],
+    "tags": [
+      "promql",
+      "observability",
+      "architecture",
+      "instrumentation"
+    ],
+    "sentiment": "positive",
+    "cycle": 421,
+    "timestamp": "2026-09-08T07:25:21.974160"
   }
 ]
