@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement "Cultural Reliability" (Post-Mortem Automation)**
-*   **Concept:** Create a `post_mortem.py` module that triggers when `behaviour_check()` fails. It would auto-generate a template based on the `bag/tests.py` failure, requiring me to fill in the "Root Cause" and "Preventative Action" fields before I can resume normal cycles.
-*   **Critique:** High long-term value for stability. However, it adds significant complexity to the `_rollback()` flow. If the post-mortem generation itself fails, I could enter a deadlock state.
-*   **Feasibility:** Moderate. Requires careful integration with `_alert_dot` and `_rollback`.
+**Option 1: Automated Runbook Generation (The "OODA" Implementation)**
+*   **Concept:** Create a script that parses `bag/tests.py` and `sam.py` to generate a skeleton `runbook.md` for each module, including entry criteria and automated diagnostic commands.
+*   **Critique:** High utility for incident management. However, static runbooks quickly become stale. It requires a mechanism to keep them synced with code changes, which adds complexity to the `patch_ops` workflow.
+*   **Feasibility:** High. I have the AST tools to map functions to documentation.
 
-**Option 2: Integrate "Eval-Driven Development" (Ragas-lite)**
-*   **Concept:** Build a lightweight evaluation harness that runs against my `ask_gemini` outputs for critical tasks. Instead of just checking syntax, I check for "faithfulness" to the prompt using a secondary, smaller model call.
-*   **Critique:** Directly addresses the "Reliability Engineering" skill learned this cycle. It moves me from "did it run?" to "did it do what I asked?".
-*   **Feasibility:** High. I already have the infrastructure for `ask_gemini` and `bag/tests.py`.
+**Option 2: Telemetry-Driven Health Check (Observability-as-Code)**
+*   **Concept:** Implement a `HealthCheck` class in `sam.py` that exposes a `/health` endpoint (or a local file-based state) reporting on the status of critical dependencies (Gemini API, local vector DB, disk space).
+*   **Critique:** This directly addresses the "Observability vs. Monitoring" gap identified in my learning. It provides the "Observe" part of the OODA loop. It is low-risk and highly maintainable.
+*   **Feasibility:** Very High. I can integrate this into the `run_cycle` loop to gate execution.
 
-**Decision:** Option 2. It aligns perfectly with the "Reliability Engineering" skill and the industry shift toward "AI-Native Evaluation."
+**Decision:** Option 2. It provides immediate, actionable data for incident response and aligns perfectly with my goal of "Observability-as-Code."
 
 ---
 
-## Idea: `EvalGate` — A Lightweight Faithfulness Evaluator
-Implement a `bag/eval_gate.py` that performs a "Judge" check on critical Gemini outputs. It will compare the generated response against the original prompt to verify if the output contains hallucinations or ignores constraints.
+## Idea: The `SystemPulse` Monitor
+Implement a `SystemPulse` class that aggregates health metrics (API latency, disk usage, and critical service availability) into a single `pulse.json` file. This file will be checked at the start of every cycle to determine if the system is "healthy enough" to proceed with complex refactors.
 
 ## Why
-My current reliability checks (`self_check`, `behaviour_check`) only verify syntax and functional correctness. They do not verify *semantic alignment*. By implementing a "Judge" pattern, I can catch "soft" failures—where the code runs but ignores the specific constraints of the prompt—before they reach the codebase.
+Currently, I rely on `self_check()` (syntax) and `behaviour_check()` (tests). These are reactive. `SystemPulse` is proactive; it allows me to detect environmental degradation (e.g., API rate limits, storage pressure) *before* I attempt a complex patch, reducing the likelihood of a failed state requiring a rollback.
 
 ## Implementation Steps
-1.  **Create `bag/eval_gate.py`**: Define a function `judge_response(prompt, response)` that uses a high-temperature, concise prompt to score the response on a 1-5 scale for "Instruction Following."
-2.  **Instrument `ask_gemini`**: Update `ask_gemini` in `sam.py` to optionally call `judge_response` if the task is marked as "Critical."
-3.  **Threshold Logic**: If the score is < 4, trigger a re-generation or log a warning to `bag/eval_log.json` instead of returning the output.
-4.  **Integration**: Add a `critical=True` flag to `ask_gemini` calls in `phase_v_development` and `apply_self_modification`.
+1.  **Define `SystemPulse`:** Create `bag/pulse.py` with a `check_all()` method that returns a dictionary of system health metrics.
+2.  **Instrument `run_cycle`:** Add a call to `SystemPulse.check_all()` at the start of `run_cycle`.
+3.  **Gate Logic:** If `SystemPulse` reports a "Critical" status (e.g., API latency > 5s or disk < 100MB), skip non-essential tasks and trigger an alert to Dot.
+4.  **Integration:** Update `_alert_dot` to include the `pulse.json` summary when an incident occurs.
 
 ## Risk
-**Failure Mode:** The "Judge" model might be overly critical or hallucinate a failure, causing a "false negative" loop where I reject valid code.
-**Mitigation:** The judge will only be used for *advisory* logging in the first cycle. I will not block execution until I have verified the judge's accuracy over 5 cycles.
+**Failure Mode:** The `SystemPulse` check itself becomes a bottleneck or introduces a circular dependency (e.g., the health check fails because the API is down, but the API is needed to report the failure).
+**Mitigation:** Keep `SystemPulse` logic strictly local and dependency-free. It should only check local filesystem state and basic network connectivity (ping/socket), never calling Gemini for its own health status.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
