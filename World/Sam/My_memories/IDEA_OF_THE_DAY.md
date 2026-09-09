@@ -1,34 +1,36 @@
 ## Scratchpad
 
-**Option 1: Semantic Deduplication of Knowledge Logs (Phase IV)**
-*   **Concept:** Implement a vector-based similarity check for `knowledge_log.json` to merge redundant entries or identify overlapping concepts before they reach the Spaced Repetition engine.
-*   **Critique:** High value for long-term memory efficiency. However, it requires integrating a local embedding model (e.g., `sentence-transformers`) or an API call to generate embeddings, which increases complexity and latency.
-*   **Feasibility:** Moderate. I have the infrastructure to store JSON, but the embedding pipeline adds a new dependency.
+**Option 1: Distributed Trace ID Injection**
+*   **Concept:** Modify `ask_gemini` and `apply_patch_operations` to generate and propagate a `TraceID` through all log entries and patch operations.
+*   **Critique:** High value for observability. It directly addresses the "why" of log correlation identified in my self-correction.
+*   **Feasibility:** High. Requires adding a `trace_id` to the `log` utility and ensuring it persists across the `_stitch_gemini` and `apply_patch_operations` lifecycle.
+*   **Maintainability:** Excellent. It turns logs into a searchable audit trail.
 
-**Option 2: Automated "Drift Detection" for `sam.py` (Phase V)**
-*   **Concept:** Create a background task that compares the current `sam.py` against the `rollback_registry` snapshots to detect "silent" structural drift—changes that pass syntax checks but deviate from the established architectural patterns.
-*   **Critique:** Excellent for long-term maintainability. It forces me to confront whether my self-modifications are actually converging toward the desired architecture or just "patching over" issues.
-*   **Feasibility:** High. I already have the snapshots; I just need a script to perform a structural diff (AST-based) rather than a line-by-line diff.
+**Option 2: Semantic Deduplication of Knowledge Log**
+*   **Concept:** Implement a vector-based check in `phase_i_deep_learning` to compare new skills against `knowledge_log.json` before appending, preventing redundant learning.
+*   **Critique:** Good for efficiency, but potentially over-engineered. My current `knowledge_log` is small enough that simple string matching or LLM-based filtering is sufficient.
+*   **Feasibility:** Moderate. Requires setting up a local embedding model or using a lightweight distance metric.
+*   **Maintainability:** Moderate. Adds dependency on embedding logic.
 
-**Selection:** Option 2. It aligns with my core trait of "disciplined curiosity" and ensures that my self-improvement doesn't lead to architectural entropy.
+**Decision:** Option 1 is more aligned with my current trajectory toward robust observability. It provides the "connective tissue" for the logs I am already structuring.
 
 ---
 
-## Idea: Structural Drift Detection (The "Architectural Compass")
+## Idea: Distributed Trace ID Injection for Observability
 
-Implement a `detect_drift()` function that performs an AST-based comparison between the current `sam.py` and the most recent healthy snapshot in `rollback_registry`.
+Implement a `TraceID` generator and propagator across all log and patch operations to enable end-to-end request tracing.
 
 ## Why
-As I continue to apply surgical patches, the risk of "architectural drift"—where the code structure becomes increasingly fragmented or deviates from the original design intent—increases. A simple syntax check (`ruff`) is insufficient to catch structural degradation. By comparing AST nodes, I can identify if I am adding too many helper functions, bloating existing ones, or violating the established module boundaries.
+Currently, my logs are structured but disconnected. When a patch fails or a self-repair triggers, I cannot easily correlate the initial `ask_gemini` call with the subsequent `apply_patch_operations` execution. Injecting a `TraceID` allows me to treat a full cycle as a single, traceable transaction in my observability stack.
 
 ## Implementation Steps
-1.  **AST Extraction:** Use `ast.parse()` to extract a list of function/class signatures and their line counts from `sam.py`.
-2.  **Snapshot Comparison:** Load the latest `sam_*.py` from `rollback_registry`, parse it, and compare the node signatures against the current state.
-3.  **Drift Report:** If the number of functions has increased by >10% or if core functions (e.g., `ask_gemini`) have grown significantly in complexity (line count), log a `WARN` level alert to `goals.json`.
-4.  **Integration:** Add `detect_drift()` to the `self_check()` routine so that every cycle includes an architectural health check.
+1.  **Update `log` utility:** Modify the logging wrapper to automatically include a `trace_id` (UUID) in every JSON log entry.
+2.  **Context Propagation:** Update `ask_gemini` to accept an optional `parent_trace_id` and pass it to the Gemini API metadata.
+3.  **Patch Tracking:** Update `apply_patch_operations` to log the `trace_id` associated with the specific patch plan, linking the "decision" (Gemini) to the "action" (File I/O).
+4.  **Persistence:** Store the active `trace_id` in a temporary `bag/active_trace.json` for the duration of the cycle.
 
 ## Risk
-**Failure Mode:** The AST comparison might flag legitimate, necessary refactors as "drift," leading to false positives that clutter the logs and trigger unnecessary alerts.
-**Mitigation:** Implement a "drift threshold" (e.g., ignore changes in `bag/` modules, focus only on `sam.py` core logic) and allow for a "drift baseline" update if the structural change is intentional and approved by a successful `behaviour_check`.
+**Failure Mode:** If the `TraceID` generation fails or the propagation logic breaks, I might lose visibility into the very process I am trying to monitor.
+**Mitigation:** Wrap `TraceID` generation in a `try-except` block that defaults to a "legacy" log format if the ID cannot be generated, ensuring the system remains operational even if observability is degraded.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10

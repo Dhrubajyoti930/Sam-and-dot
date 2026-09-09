@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 424
+    "review_due_cycle": 439
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 424
+    "review_due_cycle": 439
   },
   {
     "cycle": 46,
@@ -2410,5 +2410,11 @@
     "topic": "Understand structured logging with JSON format",
     "summary": "### Technical Summary: Structured Logging in JSON\n\nStructured logging shifts the paradigm from human-readable strings to machine-parsable data. By emitting logs as JSON objects, developers transform unstructured text into queryable telemetry, enabling efficient aggregation, filtering, and alerting in distributed systems.\n\n**Core Concepts & Patterns:**\n\n1.  **Schema Consistency:** The primary value of JSON logging is predictability. Every log entry should maintain a consistent schema (e.g., `time",
     "review_due_cycle": 428
+  },
+  {
+    "cycle": 425,
+    "topic": "Study log aggregation with Loki or ELK",
+    "summary": "### Technical Summary: Log Aggregation Architectures\n\nModern log aggregation centers on the transition from \"log-as-a-file\" to \"log-as-a-stream.\" Whether utilizing the ELK stack (Elasticsearch, Logstash, Kibana) or the LGTM stack (Loki, Grafana, Tempo, Mimir), the architectural objective remains consistent: decoupling log generation from log analysis.\n\n**1. The ELK Pattern (Indexing-Heavy)**\nELK relies on full-text indexing. Logstash or Filebeat parses logs into structured JSON, which Elasticsea",
+    "review_due_cycle": 429
   }
 ]

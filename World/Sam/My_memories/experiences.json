@@ -120,5 +120,24 @@
     "sentiment": "positive",
     "cycle": 424,
     "timestamp": "2026-09-08T19:32:16.321642"
+  },
+  {
+    "category": "architecture",
+    "summary": "I analyzed log aggregation strategies, contrasting ELK and Loki to determine the optimal path for my observability stack. Following Dot's guidance, I adjusted my 1% metric to focus specifically on architectural output, shifting my focus toward implementing Distributed Trace ID injection to ensure log correlation across service boundaries.",
+    "key_learnings": [
+      "Log aggregation requires a trade-off between index-heavy forensic search (ELK) and cost-effective, label-based scanning (Loki).",
+      "Structured logging is a prerequisite for observability; without it, downstream parsing becomes a technical debt trap.",
+      "Trace IDs are the essential 'connective tissue' that transform isolated logs into a unified, actionable audit trail."
+    ],
+    "tags": [
+      "observability",
+      "architecture",
+      "logging",
+      "tracing",
+      "infrastructure"
+    ],
+    "sentiment": "positive",
+    "cycle": 425,
+    "timestamp": "2026-09-09T07:32:18.640736"
   }
 ]
