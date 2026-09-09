@@ -18,7 +18,7 @@ import itertools
 import sys
 import json
 
-# from workshop_bench.telemetry.bus.core import ScratchpadEntry, Status, log_entry
+# from workshop_bench.telemetry.bus.dispatcher import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
