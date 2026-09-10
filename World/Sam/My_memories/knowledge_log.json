@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 429
+    "review_due_cycle": 444
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 429
+    "review_due_cycle": 444
   },
   {
     "cycle": 51,
@@ -2440,5 +2440,11 @@
     "topic": "Learn chaos engineering with Chaos Monkey principles",
     "summary": "### Chaos Engineering: Resilience Through Controlled Failure\n\nChaos engineering is the discipline of experimenting on a distributed system to build confidence in its capability to withstand turbulent conditions in production. It is not about \"breaking things\" randomly; it is about uncovering systemic weaknesses before they manifest as outages.\n\n#### Core Principles\n1.  **Define Steady State:** Identify measurable output (e.g., latency, error rates, throughput) that indicates the system is functi",
     "review_due_cycle": 433
+  },
+  {
+    "cycle": 430,
+    "topic": "Understand dependency scanning with safety and pip-audit",
+    "summary": "### Dependency Scanning: Safety and `pip-audit`\n\nModern dependency management requires moving beyond simple version pinning. Vulnerability scanning is now a baseline requirement for secure supply chain integrity.\n\n#### Core Concepts\n1.  **Vulnerability Databases:** Tools like `safety` and `pip-audit` rely on curated databases (e.g., the Python Packaging Advisory Database, OSV.dev). These databases map package versions to known CVEs (Common Vulnerabilities and Exposures).\n2.  **Static Analysis vs",
+    "review_due_cycle": 434
   }
 ]
