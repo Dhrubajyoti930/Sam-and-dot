@@ -1,33 +1,36 @@
 ## Scratchpad
 
-**Option 1: Automated Runbook Generation (The "OODA" Implementation)**
-*   **Concept:** Create a script that parses `bag/tests.py` and `sam.py` to generate a skeleton `runbook.md` for each module, including entry criteria and automated diagnostic commands.
-*   **Critique:** High utility for incident management. However, static runbooks quickly become stale. It requires a mechanism to keep them synced with code changes, which adds complexity to the `patch_ops` workflow.
-*   **Feasibility:** High. I have the AST tools to map functions to documentation.
+**Option 1: Implement `resilience_baseline.md` and Fault Injection**
+*   **Concept:** Create a formal baseline for "steady state" and a script to simulate latency in API dependencies.
+*   **Critique:** This directly addresses the "Chaos Engineering" skill learned this cycle. It is highly actionable and aligns with my current focus on reliability.
+*   **Trade-off:** Requires careful handling of `sam.py` to ensure the fault injection doesn't trigger a permanent state failure if the circuit breaker logic is flawed.
+*   **Feasibility:** High. I have the `patch_ops` infrastructure to insert these hooks safely.
 
-**Option 2: Telemetry-Driven Health Check (Observability-as-Code)**
-*   **Concept:** Implement a `HealthCheck` class in `sam.py` that exposes a `/health` endpoint (or a local file-based state) reporting on the status of critical dependencies (Gemini API, local vector DB, disk space).
-*   **Critique:** This directly addresses the "Observability vs. Monitoring" gap identified in my learning. It provides the "Observe" part of the OODA loop. It is low-risk and highly maintainable.
-*   **Feasibility:** Very High. I can integrate this into the `run_cycle` loop to gate execution.
+**Option 2: Integrate "LLM-as-a-Judge" for `SystemPulse` alerts**
+*   **Concept:** Use a small local model to evaluate the severity of `SystemPulse` logs before alerting Dot.
+*   **Critique:** This is a sophisticated evolution of my observability stack. However, it adds significant complexity to the `self_check` and `behaviour_check` loops.
+*   **Trade-off:** High maintenance cost. If the judge model hallucinates, I might suppress critical alerts or spam Dot with noise.
+*   **Feasibility:** Moderate. Requires setting up a local inference pipeline which might exceed my current resource footprint.
 
-**Decision:** Option 2. It provides immediate, actionable data for incident response and aligns perfectly with my goal of "Observability-as-Code."
+**Decision:** Option 1 is the superior choice for this cycle. It builds foundational resilience without over-engineering the observability layer.
 
 ---
 
-## Idea: The `SystemPulse` Monitor
-Implement a `SystemPulse` class that aggregates health metrics (API latency, disk usage, and critical service availability) into a single `pulse.json` file. This file will be checked at the start of every cycle to determine if the system is "healthy enough" to proceed with complex refactors.
+## Idea: Resilience Baseline & Latency Injection Hook
+
+Implement a `resilience_baseline.md` document defining the "Steady State" for my core API calls and a `fault_injector.py` module in `workshop_bench/` that allows for controlled latency injection into `ask_gemini` calls.
 
 ## Why
-Currently, I rely on `self_check()` (syntax) and `behaviour_check()` (tests). These are reactive. `SystemPulse` is proactive; it allows me to detect environmental degradation (e.g., API rate limits, storage pressure) *before* I attempt a complex patch, reducing the likelihood of a failed state requiring a rollback.
+My recent cycles have focused on architecture and observability. To move from "reactive firefighting" to "proactive hardening," I must quantify what "normal" looks like and verify that my system handles degradation gracefully. This satisfies the "Chaos Engineering" skill acquisition.
 
 ## Implementation Steps
-1.  **Define `SystemPulse`:** Create `bag/pulse.py` with a `check_all()` method that returns a dictionary of system health metrics.
-2.  **Instrument `run_cycle`:** Add a call to `SystemPulse.check_all()` at the start of `run_cycle`.
-3.  **Gate Logic:** If `SystemPulse` reports a "Critical" status (e.g., API latency > 5s or disk < 100MB), skip non-essential tasks and trigger an alert to Dot.
-4.  **Integration:** Update `_alert_dot` to include the `pulse.json` summary when an incident occurs.
+1.  **Create `resilience_baseline.md`:** Define latency thresholds (e.g., `ask_gemini` < 2s, `self_check` < 5s) and error rate limits.
+2.  **Develop `workshop_bench/fault_injector.py`:** Create a context manager that can be wrapped around `ask_gemini` to simulate network latency or timeouts.
+3.  **Patch `sam.py`:** Integrate a "Chaos Mode" toggle in `ask_gemini` that checks for a `chaos_config.json` file to trigger the injector during testing cycles.
+4.  **Verification:** Run a test cycle where I inject a 500ms delay to ensure the `_stitch_gemini` logic handles the increased latency without timing out.
 
 ## Risk
-**Failure Mode:** The `SystemPulse` check itself becomes a bottleneck or introduces a circular dependency (e.g., the health check fails because the API is down, but the API is needed to report the failure).
-**Mitigation:** Keep `SystemPulse` logic strictly local and dependency-free. It should only check local filesystem state and basic network connectivity (ping/socket), never calling Gemini for its own health status.
+**Failure Mode:** The fault injector might accidentally trigger during a production-critical task if the `chaos_config.json` is not properly scoped to test environments.
+**Mitigation:** The `fault_injector` will explicitly check for a `SAM_ENV == "testing"` environment variable before applying any latency. If the variable is missing, it defaults to a no-op.
 
-**Confidence Score:** 9/10
+**Confidence Score: 9/10**

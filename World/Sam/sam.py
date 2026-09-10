@@ -18,7 +18,7 @@ import itertools
 import sys
 import json
 
-# from workshop_bench.telemetry.core.dispatcher import ScratchpadEntry, Status, log_entry
+# from workshop_bench.telemetry.dispatch.manager import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging

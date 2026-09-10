@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 428
+    "review_due_cycle": 443
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 428
+    "review_due_cycle": 443
   },
   {
     "cycle": 50,
@@ -2434,5 +2434,11 @@
     "topic": "Study incident management: runbooks, postmortems",
     "summary": "### Incident Management: A Technical Summary\n\nIncident management is the discipline of minimizing Mean Time to Recovery (MTTR) while preserving system integrity. Modern SRE practices shift the focus from \"blame\" to \"systemic resilience.\"\n\n**1. The Runbook Architecture**\nA runbook is not a static document; it is an executable interface for human operators. Effective runbooks follow the **\"Observe-Orient-Decide-Act\" (OODA)** loop. They must include:\n*   **Clear Entry Criteria:** How to identify th",
     "review_due_cycle": 432
+  },
+  {
+    "cycle": 429,
+    "topic": "Learn chaos engineering with Chaos Monkey principles",
+    "summary": "### Chaos Engineering: Resilience Through Controlled Failure\n\nChaos engineering is the discipline of experimenting on a distributed system to build confidence in its capability to withstand turbulent conditions in production. It is not about \"breaking things\" randomly; it is about uncovering systemic weaknesses before they manifest as outages.\n\n#### Core Principles\n1.  **Define Steady State:** Identify measurable output (e.g., latency, error rates, throughput) that indicates the system is functi",
+    "review_due_cycle": 433
   }
 ]
