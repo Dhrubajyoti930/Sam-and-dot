@@ -1,35 +1,34 @@
 ## Scratchpad
 
-**Option 1: Automated Dependency Hardening (Supply Chain Security)**
-*   **Concept:** Integrate `pip-audit` into the pre-commit pipeline and automate the generation of a `vulnerability_manifest.json` that the `self_check()` function queries before allowing any code execution.
-*   **Critique:** High alignment with the "Safety and `pip-audit`" skill learned this cycle. It moves security from a passive check to an active gate.
-*   **Trade-off:** Increases cycle time slightly; potential for "dependency hell" if a critical patch breaks existing functionality.
-*   **Feasibility:** High. I have existing `self_check()` infrastructure to hook into.
+### Option 1: Semgrep-based Architectural Guardrails
+*   **Concept:** Implement a custom Semgrep rule set to enforce architectural boundaries (e.g., preventing direct database access in the presentation layer or banning specific insecure patterns).
+*   **Critique:** High leverage. It moves beyond simple linting into structural governance. It is highly maintainable because rules are declarative.
+*   **Trade-off:** Requires learning the Semgrep rule syntax and integrating it into the `self_check()` pipeline.
+*   **Feasibility:** High. The infrastructure for running `subprocess` commands already exists in `self_check()`.
 
-**Option 2: Graph-Based Contextual Memory (RAG 2.0)**
-*   **Concept:** Refactor `experiences.json` into a local knowledge graph using `networkx` to map relationships between past cycles, learned skills, and architectural decisions.
-*   **Critique:** Addresses the "siloed" nature of my current memory. However, it is a significant architectural shift that might be overkill for my current scale.
-*   **Trade-off:** High complexity; risk of over-engineering.
-*   **Feasibility:** Moderate. Requires building a new persistence layer.
+### Option 2: Automated "Thought-Trace" Observability
+*   **Concept:** Inject a lightweight tracing decorator into `ask_gemini` to log the input prompt, token usage, and the resulting JSON/code structure to a local `trace/` directory.
+*   **Critique:** Improves observability, but might bloat the `bag/` directory. It helps in debugging "black box" failures but doesn't prevent them.
+*   **Trade-off:** Increases complexity of the core `ask_gemini` function.
+*   **Feasibility:** Moderate. Requires careful handling of the `semantic_cache` to avoid circular dependencies.
 
-**Decision:** Option 1 is the superior choice. It directly addresses the "Shift-Left" security strategy identified in my learning, improves my long-term maintainability, and fits the "minimal footprint, maximum leverage" philosophy.
+**Selection:** Option 1. It aligns perfectly with the "Governance" aspect of my recent learning and directly addresses the need to prevent architectural drift.
 
 ---
 
-## Idea: Supply Chain Integrity Gate
-Integrate `pip-audit` into the `self_check()` workflow to enforce a "Zero-Vulnerability" policy for critical-severity CVEs in the `bag/` environment.
+## Idea: Architectural Governance via Semgrep Guardrails
 
-## Why
-My current `self_check()` focuses on syntax and logic (Ruff/py_compile). It ignores the supply chain. As I integrate more complex agentic frameworks (like CrewAI or LlamaIndex), the risk of transitive dependency vulnerabilities increases. This change ensures that I am not building on a compromised foundation.
+### Why
+My current `self_check()` relies on `ruff` (syntax/logic) and `bag/tests.py` (behavior). Neither catches structural violations, such as a new module bypassing the `bag/` abstraction layer or using forbidden patterns. Semgrep provides AST-aware enforcement that ensures my code structure remains clean as I evolve.
 
-## Implementation Steps
-1.  **Dependency Check:** Add `pip-audit` to the environment.
-2.  **Integrity Gate Update:** Modify `self_check()` in `sam.py` to execute `pip-audit -r requirements.txt --format json` before running the linting pass.
-3.  **Failure Logic:** If `pip-audit` returns a non-zero exit code for "critical" vulnerabilities, trigger `_alert_dot()` and abort the cycle.
-4.  **Reporting:** Log the audit result to a new `security_audit.log` for historical tracking.
+### Implementation Steps
+1.  **Install/Verify:** Ensure `semgrep` is available in the environment.
+2.  **Rule Definition:** Create `bag/rules/arch_guard.yaml` to define a rule banning direct database imports in `workshop_bench/` files.
+3.  **Integration:** Update `self_check()` in `sam.py` to include a `semgrep scan --config bag/rules/arch_guard.yaml .` call.
+4.  **Feedback Loop:** If a scan fails, log the violation and trigger the existing `_rollback()` mechanism to maintain integrity.
 
-## Risk
-**Failure Mode:** A false positive or a critical vulnerability in a core dependency that has no immediate patch, effectively "bricking" my ability to run cycles.
-**Mitigation:** Implement an `allowlist.json` for specific CVEs that have been manually reviewed and deemed non-exploitable in my specific usage context.
+### Risk
+**Failure Mode:** A poorly written Semgrep rule could flag legitimate code (false positives), causing a "deadlock" where I cannot commit valid changes.
+**Mitigation:** Implement the scan in "warning mode" for the first cycle to observe output before enabling the `_rollback()` trigger.
 
 **Confidence Score:** 9/10

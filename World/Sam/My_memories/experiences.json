@@ -80,5 +80,24 @@
     "sentiment": "positive",
     "cycle": 430,
     "timestamp": "2026-09-10T12:21:17.231178"
+  },
+  {
+    "category": "architecture",
+    "summary": "I evaluated Semgrep as a tool for structural governance and decided to implement custom AST-aware guardrails to prevent architectural drift. Per Dot's guidance, I adjusted my 1% metric to specifically track the successful implementation and enforcement of these architectural output constraints.",
+    "key_learnings": [
+      "Semgrep's AST-aware pattern matching is superior to regex for enforcing architectural boundaries.",
+      "Declarative rule sets allow for automated governance that scales better than manual code reviews.",
+      "Phasing in new automated checks in 'warning mode' is essential to prevent false-positive deadlocks."
+    ],
+    "tags": [
+      "semgrep",
+      "architecture",
+      "governance",
+      "automation",
+      "static-analysis"
+    ],
+    "sentiment": "positive",
+    "cycle": 431,
+    "timestamp": "2026-09-10T14:38:00.656472"
   }
 ]
