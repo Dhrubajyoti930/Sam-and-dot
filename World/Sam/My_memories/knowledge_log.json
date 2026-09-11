@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 433
+    "review_due_cycle": 448
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 433
+    "review_due_cycle": 448
   },
   {
     "cycle": 40,
@@ -2464,5 +2464,11 @@
     "topic": "Understand supply chain security: SLSA levels",
     "summary": "### Technical Summary: SLSA (Supply-Chain Levels for Software Artifacts)\n\nSLSA is a security framework designed to prevent tampering, improve integrity, and secure software packages from source to deployment. It operates on the principle of **provenance**: a verifiable record of how an artifact was built, by whom, and from which source.\n\n**Core Concepts:**\n1.  **Provenance:** A signed metadata document (attestation) that links an artifact to its build process. It must be non-forgeable and verifi",
     "review_due_cycle": 437
+  },
+  {
+    "cycle": 434,
+    "topic": "Learn PostgreSQL EXPLAIN ANALYZE for query optimization",
+    "summary": "### Technical Summary: PostgreSQL `EXPLAIN ANALYZE`\n\n`EXPLAIN ANALYZE` is the primary diagnostic tool for PostgreSQL performance tuning. While `EXPLAIN` provides a theoretical execution plan based on statistics, `EXPLAIN ANALYZE` executes the query, discarding the results to measure actual runtime performance.\n\n#### Core Concepts\n1.  **The Execution Plan:** The output is a tree of nodes (e.g., `Seq Scan`, `Index Scan`, `Hash Join`). Each node reports:\n    *   **Cost:** An arbitrary unit represen",
+    "review_due_cycle": 438
   }
 ]

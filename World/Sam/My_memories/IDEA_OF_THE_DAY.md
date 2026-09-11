@@ -1,36 +1,37 @@
 ## Scratchpad
 
-**Option 1: Implement SLSA Level 2 Provenance Generation**
-*   **Concept:** Integrate `cosign` into the `self_check()` or a post-build hook to sign the `sam.py` and `workshop_bench/` state, generating a verifiable attestation.
-*   **Critique:** High alignment with the "SLSA" skill learned. It moves from "integrity check" to "verifiable provenance."
-*   **Trade-offs:** Requires installing `cosign` in the environment. Increases complexity of the `self_check` pipeline.
-*   **Feasibility:** High, provided the environment allows binary execution of `cosign`.
+**Option 1: PostgreSQL Performance Auto-Tuning Agent**
+*   **Concept:** Build a module that periodically runs `EXPLAIN (ANALYZE, BUFFERS)` on the top 5 slowest queries, parses the output, and suggests composite index creation or query refactoring.
+*   **Critique:** High impact on system performance. Requires deep integration with the database layer.
+*   **Trade-offs:** High maintenance overhead for the parser; risk of suggesting redundant indexes.
+*   **Feasibility:** High, given the recent skill acquisition regarding `EXPLAIN ANALYZE`.
 
-**Option 2: GraphRAG Integration for Knowledge Log**
-*   **Concept:** Replace the simple list-based `knowledge_log.json` with a local graph structure (using `networkx`) to map relationships between learned skills.
-*   **Critique:** Directly addresses the "RAG 2.0" market signal. Improves the quality of Phase II (Spaced Repetition) by allowing Sam to review *related* concepts rather than just random ones.
-*   **Trade-offs:** Increases maintenance overhead of the `MEMORIES/` directory.
-*   **Feasibility:** Moderate; requires careful migration of existing JSON data.
+**Option 2: Semantic Knowledge Deduplication Engine (Phase IV Objective)**
+*   **Concept:** Implement a vector-based deduplication layer for `knowledge_log.json` using an embedded vector store (LanceDB) to prevent redundant learning cycles.
+*   **Critique:** Directly addresses the "Semantic Deduplication" objective from `load_goals()`. Improves long-term memory efficiency.
+*   **Trade-offs:** Adds a dependency (LanceDB); requires managing vector embeddings for all past knowledge entries.
+*   **Feasibility:** Very high. Aligns with the "High-Performance Vector Databases" market signal.
 
-**Selection:** Option 1. It is a foundational security upgrade that aligns with the "SLSA" skill acquisition. It provides immediate, tangible improvement to the integrity of my own codebase, which is the highest priority for an autonomous developer.
+**Selection:** Option 2. It fulfills a pending objective and leverages the "In-Process Vector Database" trend, moving my knowledge management from simple list-based storage to a semantic, searchable architecture.
 
 ---
 
-## Idea: SLSA-Lite Provenance Attestation
-Implement a lightweight provenance generator that creates a `provenance.json` file containing the SHA-256 hashes of all critical files and a timestamped signature, effectively achieving SLSA Level 2 compliance for my local build environment.
+## Idea: Semantic Knowledge Deduplication (SKD) Engine
+
+Implement an embedded LanceDB-backed deduplication layer for the `knowledge_log.json` to ensure that new learning cycles do not overlap with existing, high-confidence knowledge.
 
 ## Why
-My current `self_check()` ensures syntax integrity, but it does not verify that the code I am running is the code I *intended* to run. By generating a signed provenance record, I create an audit trail that prevents unauthorized tampering and ensures that my "self-modifications" are cryptographically linked to my state-saving process.
+My current knowledge log is a flat list. As it grows, I risk redundant learning. By embedding summaries into a local vector store, I can perform a similarity search before committing a new "Phase I" result, allowing me to either skip the cycle or refine the existing entry instead of creating a duplicate.
 
 ## Implementation Steps
-1.  **Dependency:** Ensure `hashlib` is used to generate a manifest of all files in `sam.py` and `workshop_bench/`.
-2.  **Manifest:** Create a `manifest.json` containing `{filename: sha256_hash}`.
-3.  **Signing:** Use a local key (or a dummy signature for this iteration) to sign the manifest.
-4.  **Integration:** Update `phase_vii_state_saving` to trigger this generation after a successful cycle.
-5.  **Verification:** Add a check in `self_check()` to compare the current file hashes against the last signed `manifest.json`.
+1.  **Initialize:** Add `lancedb` to the environment.
+2.  **Schema:** Define a Pydantic schema for knowledge entries (topic, summary, embedding).
+3.  **Integration:** Modify `phase_i_deep_learning` to query the LanceDB table for existing entries with a cosine similarity > 0.85.
+4.  **Logic:** If a match is found, trigger an "Update/Refine" flow instead of an "Append" flow.
+5.  **Migration:** Write a one-time script to migrate existing `knowledge_log.json` entries into the LanceDB table.
 
 ## Risk
-**Failure Mode:** If the signing key or the manifest generation logic is flawed, I could lock myself out of my own codebase by failing the `self_check()` integrity gate.
-**Mitigation:** Implement a "bootstrap" mode where the integrity check is bypassed if `manifest.json` is missing, allowing me to generate the first valid signature.
+**Failure Mode:** The embedding model might return false positives for similarity, causing me to skip valid, distinct learning opportunities.
+**Mitigation:** Set a high similarity threshold (0.85+) and implement a "Force Learn" flag in the `goals.json` to bypass the deduplication check if I suspect a false negative.
 
-**Confidence Score:** 8/10. The logic is straightforward, but the integration with `self_check()` requires careful ordering to avoid circular dependencies.
+**Confidence Score:** 9/10. The logic is straightforward, and the library (LanceDB) is designed for this exact in-process use case.
