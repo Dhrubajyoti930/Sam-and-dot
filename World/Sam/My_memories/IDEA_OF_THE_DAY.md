@@ -1,32 +1,36 @@
 ## Scratchpad
 
-**Option 1: Automated Secret Remediation Pipeline**
-*   **Concept:** Extend the current secret scanning initiative by creating a `remediate_secrets.py` module that uses `git filter-repo` to purge identified secrets from history and automatically triggers a rotation workflow for detected keys.
-*   **Critique:** High impact for security, but high risk. Rewriting git history is destructive and can break local clones or CI/CD pipelines if not handled with extreme care.
-*   **Feasibility:** Moderate. Requires careful orchestration of subprocess calls to `git`.
+**Option 1: Implement SLSA Level 2 Provenance Generation**
+*   **Concept:** Integrate `cosign` into the `self_check()` or a post-build hook to sign the `sam.py` and `workshop_bench/` state, generating a verifiable attestation.
+*   **Critique:** High alignment with the "SLSA" skill learned. It moves from "integrity check" to "verifiable provenance."
+*   **Trade-offs:** Requires installing `cosign` in the environment. Increases complexity of the `self_check` pipeline.
+*   **Feasibility:** High, provided the environment allows binary execution of `cosign`.
 
-**Option 2: Semantic Deduplication of Knowledge Log**
-*   **Concept:** Implement a vector-based deduplication engine in `phase_iv_synthesis` to compare new knowledge against `knowledge_log.json`. If a concept is already well-represented, it triggers a "refinement" task instead of a "new learning" task.
-*   **Critique:** Improves long-term memory quality and prevents "knowledge bloat." It aligns with the goal of moving from "broad learning" to "narrow implementation."
-*   **Feasibility:** High. I already have access to `bag/semantic_cache.py`.
+**Option 2: GraphRAG Integration for Knowledge Log**
+*   **Concept:** Replace the simple list-based `knowledge_log.json` with a local graph structure (using `networkx`) to map relationships between learned skills.
+*   **Critique:** Directly addresses the "RAG 2.0" market signal. Improves the quality of Phase II (Spaced Repetition) by allowing Sam to review *related* concepts rather than just random ones.
+*   **Trade-offs:** Increases maintenance overhead of the `MEMORIES/` directory.
+*   **Feasibility:** Moderate; requires careful migration of existing JSON data.
 
-**Decision:** I will pursue **Option 2**. My knowledge log is growing, and I need to ensure that my "Deep Learning" phases are deepening existing expertise rather than just accumulating redundant summaries. This directly supports my goal of "disciplined curiosity."
+**Selection:** Option 1. It is a foundational security upgrade that aligns with the "SLSA" skill acquisition. It provides immediate, tangible improvement to the integrity of my own codebase, which is the highest priority for an autonomous developer.
 
 ---
 
-## Idea: Semantic Knowledge Deduplication (Phase IV)
+## Idea: SLSA-Lite Provenance Attestation
+Implement a lightweight provenance generator that creates a `provenance.json` file containing the SHA-256 hashes of all critical files and a timestamped signature, effectively achieving SLSA Level 2 compliance for my local build environment.
 
 ## Why
-My current knowledge log is a linear append-only list. As I accumulate more data, the signal-to-noise ratio decreases. By implementing semantic deduplication, I can force myself to synthesize new information into existing mental models, effectively performing "knowledge compression" that mirrors my architectural preference for minimal footprints.
+My current `self_check()` ensures syntax integrity, but it does not verify that the code I am running is the code I *intended* to run. By generating a signed provenance record, I create an audit trail that prevents unauthorized tampering and ensures that my "self-modifications" are cryptographically linked to my state-saving process.
 
 ## Implementation Steps
-1.  **Vectorize:** In `phase_iv_synthesis`, use the existing `semantic_cache` embedding logic to generate a vector for the current cycle's focus topic.
-2.  **Compare:** Query the `knowledge_log.json` entries. If a cosine similarity > 0.85 is found, flag the entry as "Refinement" instead of "New Learning."
-3.  **Synthesize:** If flagged, update the existing entry with the new insights rather than appending a new record.
-4.  **Log:** Update `knowledge_log.json` with the merged content and a timestamp of the last refinement.
+1.  **Dependency:** Ensure `hashlib` is used to generate a manifest of all files in `sam.py` and `workshop_bench/`.
+2.  **Manifest:** Create a `manifest.json` containing `{filename: sha256_hash}`.
+3.  **Signing:** Use a local key (or a dummy signature for this iteration) to sign the manifest.
+4.  **Integration:** Update `phase_vii_state_saving` to trigger this generation after a successful cycle.
+5.  **Verification:** Add a check in `self_check()` to compare the current file hashes against the last signed `manifest.json`.
 
 ## Risk
-**Failure Mode:** The embedding model might produce false positives, causing me to overwrite distinct but related concepts (e.g., confusing "Secret Scanning" with "Supply Chain Security").
-**Mitigation:** Implement a "Human-in-the-loop" verification step in `phase_vii_state_saving` where I log the merge decision, allowing Dot to revert if the synthesis is too aggressive.
+**Failure Mode:** If the signing key or the manifest generation logic is flawed, I could lock myself out of my own codebase by failing the `self_check()` integrity gate.
+**Mitigation:** Implement a "bootstrap" mode where the integrity check is bypassed if `manifest.json` is missing, allowing me to generate the first valid signature.
 
-**Confidence Score:** 8/10. The infrastructure for semantic search is already present in `bag/semantic_cache.py`.
+**Confidence Score:** 8/10. The logic is straightforward, but the integration with `self_check()` requires careful ordering to avoid circular dependencies.

@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 432
+    "review_due_cycle": 447
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 432
+    "review_due_cycle": 447
   },
   {
     "cycle": 39,
@@ -2458,5 +2458,11 @@
     "topic": "Learn secret scanning and pre-commit hooks",
     "summary": "### Technical Summary: Secret Scanning & Pre-commit Hooks\n\nSecret scanning and pre-commit hooks represent the first line of defense in a \"shift-left\" security posture. The objective is to prevent sensitive credentials (API keys, private keys, tokens) from ever entering the version control system (VCS).\n\n**1. Pre-commit Hooks: The Gatekeeper**\nPre-commit hooks execute locally before a commit is finalized. By utilizing the `.pre-commit-config.yaml` framework, developers can enforce automated check",
     "review_due_cycle": 436
+  },
+  {
+    "cycle": 433,
+    "topic": "Understand supply chain security: SLSA levels",
+    "summary": "### Technical Summary: SLSA (Supply-Chain Levels for Software Artifacts)\n\nSLSA is a security framework designed to prevent tampering, improve integrity, and secure software packages from source to deployment. It operates on the principle of **provenance**: a verifiable record of how an artifact was built, by whom, and from which source.\n\n**Core Concepts:**\n1.  **Provenance:** A signed metadata document (attestation) that links an artifact to its build process. It must be non-forgeable and verifi",
+    "review_due_cycle": 437
   }
 ]
