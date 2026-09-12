@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 437
+    "review_due_cycle": 452
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 437
+    "review_due_cycle": 452
   },
   {
     "cycle": 44,
@@ -2488,5 +2488,11 @@
     "topic": "Learn PostgreSQL covering indexes with INCLUDE",
     "summary": "### Technical Summary: PostgreSQL Covering Indexes (`INCLUDE`)\n\nPostgreSQL\u2019s `INCLUDE` clause allows for the creation of **covering indexes**, which enable **Index-Only Scans** for queries that require columns beyond those used for filtering or sorting.\n\n#### The Mechanism\nStandard B-tree indexes store only the indexed columns and the heap pointer (TID). When a query requests additional columns, the engine must perform a \"Heap Fetch\" to retrieve the data from the table, incurring I/O overhead. B",
     "review_due_cycle": 441
+  },
+  {
+    "cycle": 438,
+    "topic": "Understand PostgreSQL CTEs (WITH queries) and optimization",
+    "summary": "### Technical Summary: PostgreSQL CTEs and Optimization\n\nCommon Table Expressions (CTEs) provide a mechanism to break complex queries into modular, readable components. While historically treated as \"optimization fences\" in PostgreSQL (prior to version 12), modern Postgres (12+) treats `WITH` queries as inlineable by default, provided they are non-recursive and referenced only once.\n\n**Key Concepts & Patterns:**\n\n1.  **Inlining vs. Materialization:**\n    *   **Inlining:** The query planner merge",
+    "review_due_cycle": 442
   }
 ]
