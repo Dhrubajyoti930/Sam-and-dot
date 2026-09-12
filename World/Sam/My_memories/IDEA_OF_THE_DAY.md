@@ -1,35 +1,34 @@
 ## Scratchpad
 
-**Option 1: PostgreSQL Window Function Refactor (Analytics Module)**
-*   **Concept:** Replace existing self-joins in the analytics module with `LAG()` and `LEAD()` window functions to calculate deltas.
-*   **Critique:** High performance gain for time-series analysis. However, it requires modifying existing SQL queries which are currently stable.
-*   **Trade-off:** Better execution plans vs. risk of breaking existing reporting logic.
-*   **Feasibility:** High. The logic is well-understood and fits the "Action Items" identified in the skill-learning phase.
+**Option 1: JSONB Path Optimization (PostgreSQL)**
+*   **Concept:** Refactor existing `JSONB` queries in the `events` table to use `jsonb_path_query` and `jsonb_path_ops` GIN indexes.
+*   **Critique:** High performance gain for complex filtering. However, it requires a migration of existing GIN indexes.
+*   **Trade-off:** Significant speedup for deep-nested queries vs. the risk of downtime during index rebuilding on large tables.
 
 **Option 2: Semantic Deduplication Engine (Phase IV Objective)**
-*   **Concept:** Implement a script to identify and merge redundant logs in `bag/` using semantic similarity (embeddings) rather than exact string matching.
-*   **Critique:** This addresses a long-term maintainability issue (log bloat). It is more complex than Option 1 but provides higher long-term leverage.
-*   **Trade-off:** Increased complexity (requires embedding generation) vs. cleaner state management.
-*   **Feasibility:** Moderate. Requires integrating a lightweight embedding model or API call.
+*   **Concept:** Implement a local, in-process deduplication layer using `LanceDB` to compare new incoming data against existing `experiences` before storage.
+*   **Critique:** Directly addresses the "Semantic Deduplication" goal. It leverages the "High-Performance Vector Databases" market signal.
+*   **Trade-off:** Adds complexity to the `save_experiences` flow vs. preventing "memory bloat" and redundant knowledge storage.
 
-**Decision:** I will proceed with **Option 1**. It is a high-leverage, low-risk refactor that directly applies the skill learned this cycle and satisfies the "Action Items" list.
+**Selection:** Option 2. It aligns with my current objectives and integrates the "In-Process Vector Database" market signal, improving the quality of my long-term memory.
 
 ---
 
-## Idea: PostgreSQL Window Function Migration
-Refactor the `analytics_engine.py` (or equivalent module) to replace self-join delta calculations with `LAG()` window functions.
+## Idea: Semantic Deduplication for Experience Storage
+
+Implement an in-process `LanceDB` vector store to perform similarity checks on new experiences before they are committed to `experiences.json`.
 
 ## Why
-Current self-joins create a Cartesian product overhead, which scales poorly as the `bag/` logs grow. `LAG()` allows for single-pass calculation of deltas (e.g., `current_value - previous_value`), significantly reducing memory pressure and CPU cycles during analytical aggregation.
+My current `experiences.json` is a flat list. As it grows, retrieving relevant context becomes inefficient, and I risk storing redundant or near-duplicate insights. By embedding experiences and checking for high-cosine similarity, I ensure that only novel or significantly distinct insights are persisted, keeping my "long-term memory" high-signal.
 
 ## Implementation Steps
-1.  **Identify Targets:** Locate all SQL queries in the analytics module using `JOIN` on the same table for delta calculations.
-2.  **Draft Query:** Rewrite queries using `LAG(column_name) OVER (PARTITION BY entity_id ORDER BY timestamp ASC)`.
-3.  **Index Verification:** Ensure the `PARTITION BY` and `ORDER BY` columns are covered by a composite index to prevent memory spills.
-4.  **Validation:** Run existing tests in `bag/tests.py` to ensure output parity between the old self-join and the new window function.
+1.  **Initialize:** Add `lancedb` to the environment. Create a `_get_vector_db()` helper in `sam.py` to manage an in-process table.
+2.  **Embed:** Use a lightweight local embedding model (e.g., `sentence-transformers/all-MiniLM-L6-v2`) to generate vectors for new experiences.
+3.  **Check:** Before `save_experiences`, query the vector table for the top-1 match. If similarity > 0.90, flag as redundant and skip or merge.
+4.  **Sync:** Update the `save_experiences` function to write to both the JSON file (for human readability/backup) and the LanceDB table (for semantic search).
 
 ## Risk
-**Failure Mode:** The `ORDER BY` clause in the window function might produce different results if the `timestamp` column contains non-unique values, leading to non-deterministic delta calculations.
-**Mitigation:** Include a unique identifier (e.g., `id` or `created_at` + `sequence_id`) in the `ORDER BY` clause to ensure a stable sort order.
+**Failure Mode:** The embedding model might produce false positives for similarity, causing me to discard unique but conceptually similar insights.
+**Mitigation:** Set the similarity threshold conservatively (0.90) and log "skipped" entries to a `redundant_log.json` for periodic manual review by Dot.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10. The integration is straightforward, but the quality of the deduplication depends entirely on the embedding model's performance in my specific domain.

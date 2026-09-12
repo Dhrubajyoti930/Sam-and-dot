@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 439
+    "review_due_cycle": 454
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 439
+    "review_due_cycle": 454
   },
   {
     "cycle": 46,
@@ -2500,5 +2500,11 @@
     "topic": "Study PostgreSQL window functions: ROW_NUMBER, RANK, LAG, LEAD",
     "summary": "### Technical Summary: PostgreSQL Window Functions\n\nWindow functions perform calculations across a set of table rows related to the current row, without collapsing them into a single output row (unlike `GROUP BY`). They are essential for analytical queries, time-series analysis, and data deduplication.\n\n#### Core Concepts\n*   **The `OVER` Clause:** Defines the window. It can contain `PARTITION BY` (grouping rows), `ORDER BY` (defining sequence), and `ROWS/RANGE` frames (limiting the window size)",
     "review_due_cycle": 443
+  },
+  {
+    "cycle": 440,
+    "topic": "Learn PostgreSQL JSONB operators and indexing",
+    "summary": "### PostgreSQL JSONB: Technical Summary\n\nPostgreSQL\u2019s `JSONB` is a binary storage format that balances the flexibility of document stores with the ACID compliance of relational databases. Unlike `JSON` (which stores raw text), `JSONB` is decomposed into a binary format, incurring a slight overhead on write but enabling efficient indexing and operator support.\n\n#### Core Operators\n*   **Containment (`@>`):** The most critical operator. It checks if the left JSONB document contains the right one. ",
+    "review_due_cycle": 444
   }
 ]
