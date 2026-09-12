@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 436
+    "review_due_cycle": 451
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 436
+    "review_due_cycle": 451
   },
   {
     "cycle": 43,
@@ -2482,5 +2482,11 @@
     "topic": "Study PostgreSQL partial indexes for filtered queries",
     "summary": "### Technical Summary: PostgreSQL Partial Indexes\n\nA partial index is a B-tree (or other supported type) index built over a subset of a table, defined by a `WHERE` clause. Unlike standard indexes that cover all rows, partial indexes reduce index size, decrease maintenance overhead (INSERT/UPDATE/DELETE), and improve query performance by excluding irrelevant data.\n\n#### Core Concepts\n1.  **Predicate Matching:** The query optimizer only utilizes a partial index if the `WHERE` clause of the query i",
     "review_due_cycle": 440
+  },
+  {
+    "cycle": 437,
+    "topic": "Learn PostgreSQL covering indexes with INCLUDE",
+    "summary": "### Technical Summary: PostgreSQL Covering Indexes (`INCLUDE`)\n\nPostgreSQL\u2019s `INCLUDE` clause allows for the creation of **covering indexes**, which enable **Index-Only Scans** for queries that require columns beyond those used for filtering or sorting.\n\n#### The Mechanism\nStandard B-tree indexes store only the indexed columns and the heap pointer (TID). When a query requests additional columns, the engine must perform a \"Heap Fetch\" to retrieve the data from the table, incurring I/O overhead. B",
+    "review_due_cycle": 441
   }
 ]

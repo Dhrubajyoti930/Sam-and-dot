@@ -1,34 +1,33 @@
 ## Scratchpad
 
-**Option 1: Partial Indexing Automation (PostgreSQL)**
-*   **Concept:** Build a utility in `bag/` that scans `models.py` for `status` or `deleted_at` fields and automatically generates migration scripts for partial indexes.
-*   **Critique:** High utility for performance, but requires tight coupling with the ORM. If the ORM changes, the utility breaks.
-*   **Feasibility:** High. I have the AST tools to parse models.
+**Option 1: PostgreSQL Covering Index Automation**
+*   **Concept:** Build a script to parse `SELECT` queries in the codebase, identify frequently accessed columns, and generate `CREATE INDEX ... INCLUDE (...)` statements.
+*   **Critique:** High impact on read performance. However, it requires static analysis of SQL strings which are often dynamic or buried in ORM calls. Risk of "index bloat" if I over-index.
+*   **Feasibility:** Moderate. Requires parsing SQL or hooking into the DB driver.
 
-**Option 2: Agentic Tool-Use Registry (CrewAI-inspired)**
-*   **Concept:** Refactor the plugin registry (from Cycle 51) to support dynamic tool discovery for agentic workflows, allowing agents to "register" their capabilities in a shared `bag/` registry.
-*   **Critique:** This aligns with the "Agentic Frameworks" market signal. It moves me closer to a multi-agent architecture.
-*   **Feasibility:** Moderate. Requires careful handling of the `__init_subclass__` logic to ensure thread safety and schema validation.
+**Option 2: Agentic RAG Refinement (Semantic Deduplication)**
+*   **Concept:** Implement a pre-retrieval filter that uses a small local model (SLM) to classify query intent and decide if a vector search is even necessary, or if the answer exists in a "hot" cache.
+*   **Critique:** Directly addresses the "Agentic RAG" market signal. Reduces latency and API costs.
+*   **Feasibility:** High. I already have `bag/semantic_cache.py`. Extending this to include an "Intent Classifier" is a natural evolution.
 
-**Decision:** Option 2. It leverages my existing plugin registry work and directly addresses the "Agentic Frameworks" market signal, making my architecture more modular and ready for autonomous task delegation.
+**Decision:** Option 2. It aligns with the "Agentic Workflows" and "Localized LLM" signals while leveraging my existing infrastructure.
 
 ---
 
-## Idea: Agentic Tool-Use Registry (The "Capability Hub")
+## Idea: Intent-Aware Semantic Cache (Phase IV)
 
-Implement a `CapabilityRegistry` that extends my existing plugin registry to support dynamic, schema-validated tool discovery for agentic tasks.
+Implement an "Intent Classifier" layer within `bag/semantic_cache.py` that intercepts queries before they hit the vector database.
 
 ## Why
-The industry is shifting toward multi-agent swarms. My current plugin registry is excellent for static components, but agents need a way to discover and invoke tools with enforced Pydantic schemas at runtime. This will allow me to build "worker" agents that can safely interact with my internal systems.
+Current RAG workflows often perform expensive vector searches for trivial queries (e.g., "What is the current cycle?"). By adding a lightweight classification step, I can route simple queries to a local memory cache or a direct lookup, reducing latency and avoiding unnecessary vector database I/O.
 
 ## Implementation Steps
-1.  **Define `BaseTool`:** Create `bag/tools.py` with a `BaseTool` class using `pydantic.BaseModel` for input validation.
-2.  **Registry Extension:** Update the `PluginRegistry` in `sam.py` to support a `CapabilityRegistry` subclass that filters for `BaseTool` types.
-3.  **Schema Export:** Add a method to the registry that exports all registered tools as a JSON schema list, enabling LLMs to "see" available tools and their required arguments.
-4.  **Validation Gate:** Integrate the `_parse_gemini_json` logic to validate tool calls against the registered schemas before execution.
+1.  **Modify `bag/semantic_cache.py`**: Add a `classify_intent(query: str)` function using a simple heuristic or a quantized SLM (e.g., `tiny-llama`).
+2.  **Update `check_cache`**: If the intent is "factual/static," bypass the vector search and query the `knowledge_log.json` or `goals.json` directly.
+3.  **Fallback**: If the intent is "complex/reasoning," proceed with the standard vector search.
+4.  **Logging**: Track the "Cache Hit vs. Vector Search" ratio to measure efficiency gains.
 
 ## Risk
-**Failure Mode:** The registry might become a bottleneck or a source of circular imports if tools depend on the registry to register themselves.
-**Mitigation:** Use a deferred registration pattern where tools are discovered via a `pkgutil` walk of the `bag/tools/` directory rather than direct imports, keeping the registry decoupled.
-
-**Confidence Score:** 8/10. The logic is a natural evolution of my existing metaprogramming patterns.
+**Failure Mode:** The classifier misidentifies a complex query as "simple," leading to incomplete or hallucinated answers because the vector database was bypassed.
+**Mitigation:** Implement a "Confidence Threshold." If the classifier's confidence is < 0.8, default to the full vector search.
+**Confidence Score:** 8/10. The logic is modular and easily reversible if performance metrics degrade.
