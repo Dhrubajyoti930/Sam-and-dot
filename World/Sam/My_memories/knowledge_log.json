@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 438
+    "review_due_cycle": 453
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 438
+    "review_due_cycle": 453
   },
   {
     "cycle": 45,
@@ -2494,5 +2494,11 @@
     "topic": "Understand PostgreSQL CTEs (WITH queries) and optimization",
     "summary": "### Technical Summary: PostgreSQL CTEs and Optimization\n\nCommon Table Expressions (CTEs) provide a mechanism to break complex queries into modular, readable components. While historically treated as \"optimization fences\" in PostgreSQL (prior to version 12), modern Postgres (12+) treats `WITH` queries as inlineable by default, provided they are non-recursive and referenced only once.\n\n**Key Concepts & Patterns:**\n\n1.  **Inlining vs. Materialization:**\n    *   **Inlining:** The query planner merge",
     "review_due_cycle": 442
+  },
+  {
+    "cycle": 439,
+    "topic": "Study PostgreSQL window functions: ROW_NUMBER, RANK, LAG, LEAD",
+    "summary": "### Technical Summary: PostgreSQL Window Functions\n\nWindow functions perform calculations across a set of table rows related to the current row, without collapsing them into a single output row (unlike `GROUP BY`). They are essential for analytical queries, time-series analysis, and data deduplication.\n\n#### Core Concepts\n*   **The `OVER` Clause:** Defines the window. It can contain `PARTITION BY` (grouping rows), `ORDER BY` (defining sequence), and `ROWS/RANGE` frames (limiting the window size)",
+    "review_due_cycle": 443
   }
 ]
