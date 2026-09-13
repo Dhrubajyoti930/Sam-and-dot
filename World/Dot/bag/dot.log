@@ -306,3 +306,47 @@
 2026-09-13 10:31:48,545 [DOT][INFO] Appended to Letter_20260913T103114Z.md: Sunday Special
 2026-09-13 10:31:48,548 [DOT][INFO] Worklog: no stale entries.
 2026-09-13 10:31:49,767 [DOT][INFO] Dot's daily run complete.
+2026-09-13 16:59:52,657 [DOT][INFO] ═══════════════════════════════════
+2026-09-13 16:59:52,657 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-09-13 16:59:52,657 [DOT][INFO] ═══════════════════════════════════
+2026-09-13 16:59:52,657 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-09-13 16:59:52,693 [DOT][INFO] Task 1: chunk 1/8 from cache.
+2026-09-13 16:59:52,694 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-09-13 16:59:52,694 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-09-13 16:59:52,694 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-09-13 16:59:52,695 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-09-13 16:59:52,695 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-09-13 16:59:52,695 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-09-13 16:59:52,696 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-09-13 17:00:08,729 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-09-13 17:00:08,729 [DOT][WARNING] Direct use of automatic function calling (AFC) in Models.generate_content is not recommended. Instead, we recommend to use AFC in Chat.send_message. Similarly, direct use of AFC in Models.generate_content_stream is not recommended. Instead, we recommend to use AFC in Chat.send_message_stream.
+2026-09-13 17:00:13,772 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-09-13 17:00:13,773 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-09-13 17:00:21,774 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-09-13 17:00:21,776 [DOT][INFO] Task 2: 4 experiences → 1 batch(es) of ≤5.
+2026-09-13 17:00:29,776 [DOT][INFO] Task 2: batch 1/1 — cycles [51, 441, 442, 443]
+2026-09-13 17:00:37,787 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-09-13 17:00:40,506 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-09-13 17:00:40,511 [DOT][INFO] Experiences curated: 1 kept, 0 forgotten, 1 consolidated. Total now: 2.
+2026-09-13 17:00:40,511 [DOT][INFO] Letter written to Sam: Letter_20260913T170040Z.md
+2026-09-13 17:00:40,511 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-09-13 17:00:40,511 [DOT][INFO] Finding best recipient for: Tiago Henriques, maintainer of 'python-dependency-injector'. His project is widely used for DI in smaller Python ecosyst
+2026-09-13 17:00:48,522 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-09-13 17:00:49,679 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-09-13 17:00:49,682 [DOT][INFO] Recipient match:  <> confidence=0 — Tiago Henriques is not present in the provided list of people.
+2026-09-13 17:00:49,682 [DOT][WARNING] Match confidence 0 below threshold 7 — skipping.
+2026-09-13 17:00:49,682 [DOT][WARNING] No suitable recipient found in emails.json — request preserved.
+2026-09-13 17:00:49,682 [DOT][INFO] Appended to Letter_20260913T170040Z.md: Email Dispatch — No Match
+2026-09-13 17:00:49,683 [DOT][INFO] Appended to Letter_20260913T170040Z.md: Email Dispatch
+2026-09-13 17:00:57,683 [DOT][INFO] ── Task 4: Bag Review ──
+2026-09-13 17:01:05,693 [DOT][INFO] Dot cache hit.
+2026-09-13 17:01:05,693 [DOT][INFO] Bag review complete.
+2026-09-13 17:01:05,694 [DOT][INFO] Appended to Letter_20260913T170040Z.md: Bag Excavation Findings
+2026-09-13 17:01:13,694 [DOT][INFO] ── Task 5: Sunday Inbox Check ──
+2026-09-13 17:01:14,682 [DOT][INFO] Appended to Letter_20260913T170040Z.md: Sunday Inbox Report
+2026-09-13 17:01:14,682 [DOT][INFO] Task 6: Adding external signal for Sam.
+2026-09-13 17:01:14,691 [DOT][INFO] Dot cache hit.
+2026-09-13 17:01:14,693 [DOT][INFO] Added external topic for Sam: Agentic Workflows
+2026-09-13 17:01:14,694 [DOT][INFO] Appended to Letter_20260913T170040Z.md: Sunday Special
+2026-09-13 17:01:14,697 [DOT][INFO] Worklog: no stale entries.
+2026-09-13 17:01:16,371 [DOT][INFO] Dot's daily run complete.
