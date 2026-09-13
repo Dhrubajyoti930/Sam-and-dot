@@ -1,34 +1,32 @@
 ## Scratchpad
 
-**Option 1: JSONB Path Optimization (PostgreSQL)**
-*   **Concept:** Refactor existing `JSONB` queries in the `events` table to use `jsonb_path_query` and `jsonb_path_ops` GIN indexes.
-*   **Critique:** High performance gain for complex filtering. However, it requires a migration of existing GIN indexes.
-*   **Trade-off:** Significant speedup for deep-nested queries vs. the risk of downtime during index rebuilding on large tables.
+**Option 1: Implementing a "Semantic Cache" Layer for `ask_gemini`**
+*   **Concept:** Instead of simple string-based caching, use a local vector store (e.g., FAISS or a lightweight SQLite-based embedding index) to store previous prompts and their responses. When a new prompt arrives, check for semantic similarity before calling the API.
+*   **Critique:** High leverage for cost and latency. However, it introduces a dependency on an embedding model (e.g., `sentence-transformers`), which adds complexity to the environment.
+*   **Feasibility:** High, but requires careful management of the embedding index to prevent it from becoming a "black box" that returns stale or hallucinated data.
 
-**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
-*   **Concept:** Implement a local, in-process deduplication layer using `LanceDB` to compare new incoming data against existing `experiences` before storage.
-*   **Critique:** Directly addresses the "Semantic Deduplication" goal. It leverages the "High-Performance Vector Databases" market signal.
-*   **Trade-off:** Adds complexity to the `save_experiences` flow vs. preventing "memory bloat" and redundant knowledge storage.
+**Option 2: PostgreSQL FTS Integration (Action Item from Market Scan)**
+*   **Concept:** Migrate the current `bag/` search functionality from `ILIKE` to a GIN-indexed `tsvector` column.
+*   **Critique:** This directly addresses the "Market Signals" and "Action Items" provided. It is a low-risk, high-reward refactor that improves performance and search relevance without adding external dependencies.
+*   **Feasibility:** Very high. It leverages existing infrastructure (PostgreSQL) and aligns with the "Minimal footprint, maximum leverage" core trait.
 
-**Selection:** Option 2. It aligns with my current objectives and integrates the "In-Process Vector Database" market signal, improving the quality of my long-term memory.
+**Selection:** Option 2. It is a concrete, high-impact architectural improvement that aligns perfectly with the current cycle's technical learning.
 
 ---
 
-## Idea: Semantic Deduplication for Experience Storage
-
-Implement an in-process `LanceDB` vector store to perform similarity checks on new experiences before they are committed to `experiences.json`.
+## Idea: PostgreSQL Full-Text Search Migration
+Migrate the existing `ILIKE` search logic in the `bag/` module to a native PostgreSQL Full-Text Search (FTS) implementation using a generated `tsvector` column and a GIN index.
 
 ## Why
-My current `experiences.json` is a flat list. As it grows, retrieving relevant context becomes inefficient, and I risk storing redundant or near-duplicate insights. By embedding experiences and checking for high-cosine similarity, I ensure that only novel or significantly distinct insights are persisted, keeping my "long-term memory" high-signal.
+Current `ILIKE` queries are O(N) and lack linguistic awareness (stemming, stop-word removal). Moving to FTS provides O(log N) performance via GIN indexing and significantly improves search relevance, aligning with the "RAG 2.0" shift toward optimized retrieval.
 
 ## Implementation Steps
-1.  **Initialize:** Add `lancedb` to the environment. Create a `_get_vector_db()` helper in `sam.py` to manage an in-process table.
-2.  **Embed:** Use a lightweight local embedding model (e.g., `sentence-transformers/all-MiniLM-L6-v2`) to generate vectors for new experiences.
-3.  **Check:** Before `save_experiences`, query the vector table for the top-1 match. If similarity > 0.90, flag as redundant and skip or merge.
-4.  **Sync:** Update the `save_experiences` function to write to both the JSON file (for human readability/backup) and the LanceDB table (for semantic search).
+1.  **Schema Update:** Add a generated column to the primary content table: `ALTER TABLE content ADD COLUMN search_vector tsvector GENERATED ALWAYS AS (to_tsvector('english', body)) STORED;`
+2.  **Indexing:** Create a GIN index on the new column: `CREATE INDEX idx_fts_search ON content USING GIN(search_vector);`
+3.  **Query Refactor:** Update the Python search function to use `websearch_to_tsquery` and `ts_rank_cd` for relevance scoring.
+4.  **Validation:** Verify that the search results include stemmed matches (e.g., "running" matches "run").
 
 ## Risk
-**Failure Mode:** The embedding model might produce false positives for similarity, causing me to discard unique but conceptually similar insights.
-**Mitigation:** Set the similarity threshold conservatively (0.90) and log "skipped" entries to a `redundant_log.json` for periodic manual review by Dot.
-
-**Confidence Score:** 8/10. The integration is straightforward, but the quality of the deduplication depends entirely on the embedding model's performance in my specific domain.
+**Failure Mode:** The `tsvector` column might grow significantly in size, potentially impacting storage if the dataset scales rapidly.
+**Mitigation:** Monitor the index size and, if necessary, implement a partial index or a more aggressive stop-word dictionary to prune noise.
+**Confidence Score:** 9/10. The implementation is standard Postgres practice and well-documented.

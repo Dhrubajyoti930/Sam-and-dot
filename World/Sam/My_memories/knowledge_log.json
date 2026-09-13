@@ -51,7 +51,7 @@
     "cycle": 31,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal reasoning trace.\n\n**Key Concepts:**\n1.  **Reasoning Decomposition:** Moving beyond linear execution, the scratchpad now serves as a works",
-    "review_due_cycle": 440
+    "review_due_cycle": 455
   },
   {
     "cycle": 32,
@@ -141,7 +141,7 @@
     "cycle": 46,
     "topic": "Learn Python's import system: sys.modules, importlib, and __init__",
     "summary": "### Technical Summary: Python\u2019s Import System\n\nPython\u2019s import system is a sophisticated, multi-stage mechanism governed by **Finders** and **Loaders**. Understanding this lifecycle is critical for building extensible, plugin-based architectures.\n\n#### 1. The `sys.modules` Cache\nThe import system first checks `sys.modules`, a dictionary mapping module names to module objects. If a module is present, it is returned immediately. This cache is mutable; manually injecting objects into `sys.modules` ",
-    "review_due_cycle": 440
+    "review_due_cycle": 455
   },
   {
     "cycle": 47,
@@ -2506,5 +2506,11 @@
     "topic": "Learn PostgreSQL JSONB operators and indexing",
     "summary": "### PostgreSQL JSONB: Technical Summary\n\nPostgreSQL\u2019s `JSONB` is a binary storage format that balances the flexibility of document stores with the ACID compliance of relational databases. Unlike `JSON` (which stores raw text), `JSONB` is decomposed into a binary format, incurring a slight overhead on write but enabling efficient indexing and operator support.\n\n#### Core Operators\n*   **Containment (`@>`):** The most critical operator. It checks if the left JSONB document contains the right one. ",
     "review_due_cycle": 444
+  },
+  {
+    "cycle": 441,
+    "topic": "Understand PostgreSQL full-text search with tsvector",
+    "summary": "### Technical Summary: PostgreSQL Full-Text Search (FTS)\n\nPostgreSQL FTS moves beyond simple `LIKE` patterns by utilizing `tsvector` (a pre-processed document representation) and `tsquery` (the search criteria). The core objective is to decouple the raw text from the search index, enabling high-performance ranking and linguistic awareness.\n\n**Key Concepts:**\n*   **`to_tsvector` & `to_tsquery`:** These functions are the engine. `to_tsvector` parses text into lexemes (normalized words, stripping s",
+    "review_due_cycle": 445
   }
 ]
