@@ -1,32 +1,44 @@
 ## Scratchpad
 
-**Option 1: Implementing a "Semantic Cache" Layer for `ask_gemini`**
-*   **Concept:** Instead of simple string-based caching, use a local vector store (e.g., FAISS or a lightweight SQLite-based embedding index) to store previous prompts and their responses. When a new prompt arrives, check for semantic similarity before calling the API.
-*   **Critique:** High leverage for cost and latency. However, it introduces a dependency on an embedding model (e.g., `sentence-transformers`), which adds complexity to the environment.
-*   **Feasibility:** High, but requires careful management of the embedding index to prevent it from becoming a "black box" that returns stale or hallucinated data.
+### Option 1: `LISTEN/NOTIFY` Event Bus for `workshop_bench`
+*   **Concept:** Implement a lightweight pub-sub system using PostgreSQL `LISTEN/NOTIFY` to trigger background tasks (e.g., re-indexing, cache invalidation) across multiple Sam instances or processes.
+*   **Critique:** 
+    *   *Pros:* Extremely low latency, zero external dependencies (no Redis), transaction-aware.
+    *   *Cons:* Requires a persistent connection per listener; incompatible with `PgBouncer` in transaction mode.
+    *   *Feasibility:* High, given my current PostgreSQL infrastructure.
+*   **Trade-off:** I sacrifice connection pool flexibility for architectural simplicity.
 
-**Option 2: PostgreSQL FTS Integration (Action Item from Market Scan)**
-*   **Concept:** Migrate the current `bag/` search functionality from `ILIKE` to a GIN-indexed `tsvector` column.
-*   **Critique:** This directly addresses the "Market Signals" and "Action Items" provided. It is a low-risk, high-reward refactor that improves performance and search relevance without adding external dependencies.
-*   **Feasibility:** Very high. It leverages existing infrastructure (PostgreSQL) and aligns with the "Minimal footprint, maximum leverage" core trait.
+### Option 2: Structured Evaluation Harness (EvalOps)
+*   **Concept:** Build a local `Ragas`-inspired harness that runs against my `knowledge_log.json` to score the "quality" of my past synthesis cycles.
+*   **Critique:**
+    *   *Pros:* Directly addresses the "vibe-based development" risk; provides quantitative data for my 1% growth metric.
+    *   *Cons:* Requires significant boilerplate to set up ground-truth datasets for my own history.
+    *   *Feasibility:* Moderate.
+*   **Trade-off:** High maintenance overhead for the evaluation harness itself.
 
-**Selection:** Option 2. It is a concrete, high-impact architectural improvement that aligns perfectly with the current cycle's technical learning.
+**Decision:** Option 1 is more aligned with my current "system-centric" evolution. It provides a robust foundation for future asynchronous agentic workflows without adding external infrastructure complexity.
 
 ---
 
-## Idea: PostgreSQL Full-Text Search Migration
-Migrate the existing `ILIKE` search logic in the `bag/` module to a native PostgreSQL Full-Text Search (FTS) implementation using a generated `tsvector` column and a GIN index.
+## Idea: PostgreSQL-Native Event Signaling (The "Signal-Bus")
+
+Implement a `SignalBus` class in `bag/signal_bus.py` that manages a dedicated, long-lived PostgreSQL connection to `LISTEN` for specific event channels, providing a callback registration mechanism for internal modules.
 
 ## Why
-Current `ILIKE` queries are O(N) and lack linguistic awareness (stemming, stop-word removal). Moving to FTS provides O(log N) performance via GIN indexing and significantly improves search relevance, aligning with the "RAG 2.0" shift toward optimized retrieval.
+My current architecture relies on polling or direct triggers. As I move toward agentic orchestration, I need a way to signal state changes (e.g., "new knowledge ingested," "patch applied") across modules without tight coupling or external message brokers. This leverages the `LISTEN/NOTIFY` skill learned this cycle.
 
 ## Implementation Steps
-1.  **Schema Update:** Add a generated column to the primary content table: `ALTER TABLE content ADD COLUMN search_vector tsvector GENERATED ALWAYS AS (to_tsvector('english', body)) STORED;`
-2.  **Indexing:** Create a GIN index on the new column: `CREATE INDEX idx_fts_search ON content USING GIN(search_vector);`
-3.  **Query Refactor:** Update the Python search function to use `websearch_to_tsquery` and `ts_rank_cd` for relevance scoring.
-4.  **Validation:** Verify that the search results include stemmed matches (e.g., "running" matches "run").
+1.  **Create `bag/signal_bus.py`:** Define a `SignalBus` class using `psycopg2` (or `asyncpg`) that maintains a dedicated connection.
+2.  **Implement Reconnection Logic:** Add a heartbeat or `try/except` block to re-issue `LISTEN` commands if the connection drops.
+3.  **Registry Pattern:** Allow internal modules to register callbacks for specific channels (e.g., `channel_knowledge_updated`).
+4.  **Integration:** Update `phase_i_deep_learning` to `NOTIFY` the bus upon successful knowledge log updates.
 
 ## Risk
-**Failure Mode:** The `tsvector` column might grow significantly in size, potentially impacting storage if the dataset scales rapidly.
-**Mitigation:** Monitor the index size and, if necessary, implement a partial index or a more aggressive stop-word dictionary to prune noise.
-**Confidence Score:** 9/10. The implementation is standard Postgres practice and well-documented.
+*   **Failure Mode:** Connection exhaustion or "zombie" connections if the `SignalBus` doesn't handle `PgBouncer` disconnects gracefully.
+*   **Mitigation:** Implement a `ping` check before every `LISTEN` attempt and use a dedicated, non-pooled connection string for the bus.
+*   **Confidence Score:** 8/10.
+
+---
+
+### Self-Correction/Critique
+I must ensure that the `SignalBus` does not block the main execution loop. It should run in a separate `threading.Thread` or `asyncio.Task`. Given my current synchronous `sam.py` structure, a `threading.Thread` with a queue-based dispatch is the most stable path forward. I will ensure the `SignalBus` is initialized only once during the cycle startup.
