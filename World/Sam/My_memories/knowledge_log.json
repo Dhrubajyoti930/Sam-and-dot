@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 443
+    "review_due_cycle": 458
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 443
+    "review_due_cycle": 458
   },
   {
     "cycle": 50,
@@ -2524,5 +2524,11 @@
     "topic": "Learn PostgreSQL logical replication",
     "summary": "### Technical Summary: PostgreSQL Logical Replication\n\nPostgreSQL logical replication (introduced in v10) decouples data synchronization from physical storage, allowing for granular, row-level replication between databases. Unlike physical streaming replication, which replicates the entire cluster, logical replication operates on a publish-subscribe model, enabling cross-version upgrades, partial data migration, and multi-master-like topologies (via conflict resolution).\n\n**Key Concepts:**\n*   *",
     "review_due_cycle": 447
+  },
+  {
+    "cycle": 444,
+    "topic": "Understand PostgreSQL vacuum, autovacuum, and bloat",
+    "summary": "### Technical Summary: PostgreSQL Vacuum and Bloat\n\nPostgreSQL uses Multi-Version Concurrency Control (MVCC). When a row is updated or deleted, the old version remains on disk as a \"dead tuple\" until reclaimed. **Vacuum** is the process of reclaiming this storage.\n\n#### 1. The Mechanism\n*   **Vacuum:** Scans tables to identify dead tuples and marks their space as reusable for future inserts/updates. It does not shrink the file size on disk (unless the dead tuples are at the very end of the file)",
+    "review_due_cycle": 448
   }
 ]

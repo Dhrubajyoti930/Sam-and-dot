@@ -1,34 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement a "Replication Observer" for PostgreSQL**
-*   **Concept:** Build a monitoring class that wraps `pg_replication_slots` and `pg_stat_replication` to provide real-time telemetry on WAL lag and slot health.
-*   **Critique:** High utility for the "Logical Replication" skill learned this cycle. It directly addresses the "Performance Overhead" constraint identified in my self-correction.
-*   **Trade-off:** Requires adding a new dependency or a robust `psycopg2` connection pool to `bag/`.
-*   **Feasibility:** High. I have the knowledge of the system tables; it’s a matter of clean integration.
+**Option 1: Automated Bloat-Aware Vacuum Orchestrator**
+*   **Concept:** Create a background agent that queries `pg_stat_user_tables` for bloat metrics and dynamically adjusts `autovacuum_vacuum_scale_factor` for specific tables via `ALTER TABLE` commands.
+*   **Critique:** High impact on DB health. However, it risks "configuration drift" where the database state diverges from the intended baseline. Requires careful state tracking to avoid infinite loops of `ALTER` commands.
+*   **Feasibility:** High, provided I use a robust locking mechanism.
 
-**Option 2: Agentic "Self-Correction" Loop for Schema DDL**
-*   **Concept:** Create a utility that compares the current `workshop_bench` schema definitions against the live DB and generates the necessary `ALTER` statements to ensure parity.
-*   **Critique:** This addresses the "Schema Synchronization" constraint of logical replication. It moves me toward an autonomous migration workflow.
-*   **Trade-off:** High complexity. Parsing DDL and diffing schemas is error-prone and could lead to destructive operations if the logic is flawed.
-*   **Feasibility:** Moderate. Requires careful handling of the `REPLICA IDENTITY` requirement.
+**Option 2: Semantic Cache Invalidation via GraphRAG**
+*   **Concept:** Instead of simple semantic similarity for caching, use a lightweight graph structure to track dependencies between prompt topics and previous outputs.
+*   **Critique:** Over-engineering for my current scale. The current semantic cache is sufficient; adding graph complexity increases latency and maintenance overhead without a clear 1% gain in accuracy.
+*   **Feasibility:** Moderate, but low ROI.
 
-**Decision:** Option 1 is more aligned with my "Minimal footprint, maximum leverage" trait. It provides observability without the risk of destructive schema changes, serving as a foundational safety layer before I attempt more complex replication tasks.
+**Selection:** Option 1. It directly addresses the technical debt identified in the "Skill learned this cycle" section and aligns with my goal of maintaining long-term system resilience.
 
 ---
 
-## Idea: `ReplicationSentinel` — A PostgreSQL WAL-Lag Monitor
+## Idea: `VacuumSentinel` – Dynamic Autovacuum Tuning Agent
+
+Implement a `VacuumSentinel` module in `workshop_bench/` that monitors table bloat and transaction age, applying targeted `autovacuum` tuning for high-churn tables.
 
 ## Why
-Logical replication is asynchronous. Without active monitoring of `pg_replication_slots`, I risk silent data divergence or disk exhaustion due to WAL bloat. A dedicated sentinel class will provide the telemetry needed to ensure my replication topology remains healthy and performant.
+My current PostgreSQL architecture is vulnerable to bloat-induced I/O degradation and the catastrophic risk of XID wraparound. Manual tuning is reactive; an autonomous agent ensures the database proactively manages its own storage health, reducing the need for destructive `VACUUM FULL` operations.
 
 ## Implementation Steps
-1.  **Define `ReplicationSentinel`:** Create `bag/db_sentinel.py` with a method to query `pg_replication_slots` for `restart_lsn` and `confirmed_flush_lsn`.
-2.  **Calculate Lag:** Implement logic to convert LSN differences into bytes, providing a clear "lag-in-bytes" metric.
-3.  **Threshold Alerting:** Add a configurable threshold; if lag exceeds a defined limit, trigger a log entry or an `_alert_dot` call.
-4.  **Integration:** Register the sentinel in the `run_cycle` startup sequence to ensure it runs as a background health check.
+1.  **Metric Collection:** Create a query-runner in `workshop_bench/db_monitor.py` to fetch `n_dead_tup` and `relname` from `pg_stat_user_tables`.
+2.  **Threshold Logic:** Define a `VacuumSentinel` class that compares dead tuple counts against a `scale_factor` threshold.
+3.  **Action Execution:** If a table exceeds the threshold, execute `ALTER TABLE {table} SET (autovacuum_vacuum_scale_factor = 0.02)`.
+4.  **Safety Gate:** Implement a "cooldown" period for each table to prevent rapid-fire `ALTER` commands.
+5.  **Integration:** Register the `VacuumSentinel` in the main cycle loop to run as a low-priority background task.
 
 ## Risk
-**Failure Mode:** The sentinel might trigger false positives if the database is under heavy write load, leading to "alert fatigue" or unnecessary rollbacks.
-**Mitigation:** Implement a "moving average" window for lag calculation rather than a single-point-in-time check, ensuring alerts only fire on sustained, significant lag.
+**Failure Mode:** The agent might trigger an `ALTER TABLE` on a table currently undergoing a heavy schema migration or a long-running transaction, causing lock contention.
+**Mitigation:** Use `SET LOCAL` or ensure the `ALTER` command is wrapped in a `try-except` block with a `lock_timeout` setting to prevent blocking production queries.
 
-**Confidence Score: 9/10** (The logic is straightforward, and the system tables are well-documented).
+**Confidence Score:** 8/10. The logic is straightforward, but database permissions and lock management require precise implementation.
