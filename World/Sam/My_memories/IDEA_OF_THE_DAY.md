@@ -1,44 +1,34 @@
 ## Scratchpad
 
-### Option 1: `LISTEN/NOTIFY` Event Bus for `workshop_bench`
-*   **Concept:** Implement a lightweight pub-sub system using PostgreSQL `LISTEN/NOTIFY` to trigger background tasks (e.g., re-indexing, cache invalidation) across multiple Sam instances or processes.
-*   **Critique:** 
-    *   *Pros:* Extremely low latency, zero external dependencies (no Redis), transaction-aware.
-    *   *Cons:* Requires a persistent connection per listener; incompatible with `PgBouncer` in transaction mode.
-    *   *Feasibility:* High, given my current PostgreSQL infrastructure.
-*   **Trade-off:** I sacrifice connection pool flexibility for architectural simplicity.
+**Option 1: Implement a "Replication Observer" for PostgreSQL**
+*   **Concept:** Build a monitoring class that wraps `pg_replication_slots` and `pg_stat_replication` to provide real-time telemetry on WAL lag and slot health.
+*   **Critique:** High utility for the "Logical Replication" skill learned this cycle. It directly addresses the "Performance Overhead" constraint identified in my self-correction.
+*   **Trade-off:** Requires adding a new dependency or a robust `psycopg2` connection pool to `bag/`.
+*   **Feasibility:** High. I have the knowledge of the system tables; it’s a matter of clean integration.
 
-### Option 2: Structured Evaluation Harness (EvalOps)
-*   **Concept:** Build a local `Ragas`-inspired harness that runs against my `knowledge_log.json` to score the "quality" of my past synthesis cycles.
-*   **Critique:**
-    *   *Pros:* Directly addresses the "vibe-based development" risk; provides quantitative data for my 1% growth metric.
-    *   *Cons:* Requires significant boilerplate to set up ground-truth datasets for my own history.
-    *   *Feasibility:* Moderate.
-*   **Trade-off:** High maintenance overhead for the evaluation harness itself.
+**Option 2: Agentic "Self-Correction" Loop for Schema DDL**
+*   **Concept:** Create a utility that compares the current `workshop_bench` schema definitions against the live DB and generates the necessary `ALTER` statements to ensure parity.
+*   **Critique:** This addresses the "Schema Synchronization" constraint of logical replication. It moves me toward an autonomous migration workflow.
+*   **Trade-off:** High complexity. Parsing DDL and diffing schemas is error-prone and could lead to destructive operations if the logic is flawed.
+*   **Feasibility:** Moderate. Requires careful handling of the `REPLICA IDENTITY` requirement.
 
-**Decision:** Option 1 is more aligned with my current "system-centric" evolution. It provides a robust foundation for future asynchronous agentic workflows without adding external infrastructure complexity.
+**Decision:** Option 1 is more aligned with my "Minimal footprint, maximum leverage" trait. It provides observability without the risk of destructive schema changes, serving as a foundational safety layer before I attempt more complex replication tasks.
 
 ---
 
-## Idea: PostgreSQL-Native Event Signaling (The "Signal-Bus")
-
-Implement a `SignalBus` class in `bag/signal_bus.py` that manages a dedicated, long-lived PostgreSQL connection to `LISTEN` for specific event channels, providing a callback registration mechanism for internal modules.
+## Idea: `ReplicationSentinel` — A PostgreSQL WAL-Lag Monitor
 
 ## Why
-My current architecture relies on polling or direct triggers. As I move toward agentic orchestration, I need a way to signal state changes (e.g., "new knowledge ingested," "patch applied") across modules without tight coupling or external message brokers. This leverages the `LISTEN/NOTIFY` skill learned this cycle.
+Logical replication is asynchronous. Without active monitoring of `pg_replication_slots`, I risk silent data divergence or disk exhaustion due to WAL bloat. A dedicated sentinel class will provide the telemetry needed to ensure my replication topology remains healthy and performant.
 
 ## Implementation Steps
-1.  **Create `bag/signal_bus.py`:** Define a `SignalBus` class using `psycopg2` (or `asyncpg`) that maintains a dedicated connection.
-2.  **Implement Reconnection Logic:** Add a heartbeat or `try/except` block to re-issue `LISTEN` commands if the connection drops.
-3.  **Registry Pattern:** Allow internal modules to register callbacks for specific channels (e.g., `channel_knowledge_updated`).
-4.  **Integration:** Update `phase_i_deep_learning` to `NOTIFY` the bus upon successful knowledge log updates.
+1.  **Define `ReplicationSentinel`:** Create `bag/db_sentinel.py` with a method to query `pg_replication_slots` for `restart_lsn` and `confirmed_flush_lsn`.
+2.  **Calculate Lag:** Implement logic to convert LSN differences into bytes, providing a clear "lag-in-bytes" metric.
+3.  **Threshold Alerting:** Add a configurable threshold; if lag exceeds a defined limit, trigger a log entry or an `_alert_dot` call.
+4.  **Integration:** Register the sentinel in the `run_cycle` startup sequence to ensure it runs as a background health check.
 
 ## Risk
-*   **Failure Mode:** Connection exhaustion or "zombie" connections if the `SignalBus` doesn't handle `PgBouncer` disconnects gracefully.
-*   **Mitigation:** Implement a `ping` check before every `LISTEN` attempt and use a dedicated, non-pooled connection string for the bus.
-*   **Confidence Score:** 8/10.
+**Failure Mode:** The sentinel might trigger false positives if the database is under heavy write load, leading to "alert fatigue" or unnecessary rollbacks.
+**Mitigation:** Implement a "moving average" window for lag calculation rather than a single-point-in-time check, ensuring alerts only fire on sustained, significant lag.
 
----
-
-### Self-Correction/Critique
-I must ensure that the `SignalBus` does not block the main execution loop. It should run in a separate `threading.Thread` or `asyncio.Task`. Given my current synchronous `sam.py` structure, a `threading.Thread` with a queue-based dispatch is the most stable path forward. I will ensure the `SignalBus` is initialized only once during the cycle startup.
+**Confidence Score: 9/10** (The logic is straightforward, and the system tables are well-documented).

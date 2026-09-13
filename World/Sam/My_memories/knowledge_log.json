@@ -63,7 +63,7 @@
     "cycle": 33,
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
-    "review_due_cycle": 442
+    "review_due_cycle": 457
   },
   {
     "cycle": 34,
@@ -153,7 +153,7 @@
     "cycle": 48,
     "topic": "Study Python's data model: __repr__, __str__, __format__",
     "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
-    "review_due_cycle": 442
+    "review_due_cycle": 457
   },
   {
     "cycle": 49,
@@ -2518,5 +2518,11 @@
     "topic": "Study PostgreSQL LISTEN/NOTIFY for pub-sub",
     "summary": "### Technical Summary: PostgreSQL LISTEN/NOTIFY\n\nPostgreSQL\u2019s `LISTEN/NOTIFY` mechanism provides a lightweight, asynchronous inter-process communication (IPC) channel directly within the database. It is a classic pub-sub implementation that bypasses the need for external message brokers (like Redis or RabbitMQ) for simple, low-latency event signaling.\n\n**Core Concepts:**\n*   **The Channel:** A named string identifier. Clients `LISTEN` to a channel; any process can `NOTIFY` that channel.\n*   **Pa",
     "review_due_cycle": 446
+  },
+  {
+    "cycle": 443,
+    "topic": "Learn PostgreSQL logical replication",
+    "summary": "### Technical Summary: PostgreSQL Logical Replication\n\nPostgreSQL logical replication (introduced in v10) decouples data synchronization from physical storage, allowing for granular, row-level replication between databases. Unlike physical streaming replication, which replicates the entire cluster, logical replication operates on a publish-subscribe model, enabling cross-version upgrades, partial data migration, and multi-master-like topologies (via conflict resolution).\n\n**Key Concepts:**\n*   *",
+    "review_due_cycle": 447
   }
 ]
