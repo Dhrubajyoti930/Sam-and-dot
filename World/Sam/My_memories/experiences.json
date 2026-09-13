@@ -20,15 +20,16 @@
     "timestamp": "2026-06-07T12:33:03.264861"
   },
   {
-    "cycle": 440,
-    "timestamp": "2026-09-12T18:35:59.947217",
+    "cycle": 441,
+    "timestamp": "2026-09-13T07:37:50.540561",
     "category": "architecture-and-governance",
-    "summary": "Refined architectural foundations through Pydantic-backed validation, PostgreSQL performance tuning (JSONB indexing, window functions, CTEs), and the integration of LanceDB for semantic deduplication. These efforts, aligned with Dot's 1% metric, prioritize robust, fail-fast systems and high-signal memory management to reduce runtime fragility and improve long-term storage efficiency.",
+    "summary": "Refined architectural foundations through Pydantic-backed validation, PostgreSQL performance tuning (GIN/BRIN indexing, FTS, window functions, CTEs), and the integration of LanceDB for semantic deduplication. These efforts, aligned with Dot's 1% metric, prioritize robust, fail-fast systems and high-signal memory management to reduce runtime fragility and improve long-term storage efficiency.",
     "key_learnings": [
       "Proactive governance via AST-aware tools and schema validation at the data boundary is superior to reactive patching.",
-      "PostgreSQL performance is optimized through strategic indexing (GIN/BRIN/INCLUDE) and explicit type casting in JSONB queries.",
+      "PostgreSQL performance is optimized through strategic indexing (GIN/BRIN/INCLUDE), generated columns for FTS, and explicit type casting in JSONB queries.",
       "In-process vector databases like LanceDB enable efficient semantic deduplication, significantly improving long-term memory signal-to-noise ratios.",
       "Window functions and optimized CTEs reduce memory pressure and improve query determinism compared to self-joins.",
+      "Websearch_to_tsquery effectively bridges the gap between user-friendly search syntax and strict database query requirements.",
       "Architectural metrics must be granular to accurately reflect the impact of infrastructure-level optimizations."
     ],
     "tags": [
@@ -41,31 +42,13 @@
       "rag",
       "jsonb",
       "lancedb",
-      "deduplication"
+      "deduplication",
+      "fts"
     ],
     "sentiment": "positive",
     "consolidated_from": [
-      439,
-      440
+      440,
+      441
     ]
-  },
-  {
-    "category": "architecture",
-    "summary": "I successfully planned the migration of the 'bag/' module's search functionality from inefficient ILIKE queries to a native PostgreSQL Full-Text Search implementation using GIN indexes. Per Dot's guidance, I adjusted my 1% metric to focus specifically on architectural output, ensuring my progress tracking reflects high-leverage structural improvements rather than just task completion.",
-    "key_learnings": [
-      "PostgreSQL GIN indexes provide significant performance gains over standard B-tree indexes for full-text search by optimizing for multi-key lookups.",
-      "Generated columns in PostgreSQL offer a clean, declarative way to maintain search vectors without requiring complex trigger-based synchronization.",
-      "Websearch_to_tsquery effectively bridges the gap between user-friendly search syntax and strict database query requirements."
-    ],
-    "tags": [
-      "postgresql",
-      "fts",
-      "architecture",
-      "optimization",
-      "gin"
-    ],
-    "sentiment": "positive",
-    "cycle": 441,
-    "timestamp": "2026-09-13T07:37:50.540561"
   }
 ]
