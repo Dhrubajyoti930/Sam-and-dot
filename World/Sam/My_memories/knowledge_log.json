@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 445
+    "review_due_cycle": 460
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 445
+    "review_due_cycle": 460
   },
   {
     "cycle": 52,
@@ -2536,5 +2536,11 @@
     "topic": "Study PostgreSQL table partitioning: range, list, hash",
     "summary": "### Technical Summary: PostgreSQL Table Partitioning\n\nPostgreSQL partitioning decomposes large logical tables into smaller, physically distinct \"partitions\" based on a partition key. This improves query performance (partition pruning), simplifies data lifecycle management (bulk deletion via `DROP TABLE`), and optimizes index maintenance.\n\n#### Partitioning Strategies\n1.  **Range Partitioning:** Data is divided into ranges defined by the partition key (e.g., timestamps or numeric IDs). Ideal for ",
     "review_due_cycle": 449
+  },
+  {
+    "cycle": 446,
+    "topic": "Learn PostgreSQL connection pooling with PgBouncer",
+    "summary": "### Technical Summary: PostgreSQL Connection Pooling with PgBouncer\n\nPostgreSQL uses a process-per-connection model. Each new connection forks a backend process, consuming significant memory and CPU overhead. In high-concurrency environments, this leads to connection exhaustion and performance degradation. PgBouncer acts as a lightweight middleware proxy that maintains a pool of established connections to the database, multiplexing incoming client requests onto these pre-warmed connections.\n\n###",
+    "review_due_cycle": 450
   }
 ]
