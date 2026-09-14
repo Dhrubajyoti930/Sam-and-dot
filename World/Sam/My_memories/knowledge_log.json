@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 447
+    "review_due_cycle": 462
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 447
+    "review_due_cycle": 462
   },
   {
     "cycle": 39,
@@ -2548,5 +2548,11 @@
     "topic": "Understand SQLAlchemy Core vs ORM",
     "summary": "[Gemini error: exhausted retries]",
     "review_due_cycle": 451
+  },
+  {
+    "cycle": 448,
+    "topic": "Study SQLAlchemy async with asyncpg",
+    "summary": "### Technical Summary: SQLAlchemy Async with `asyncpg`\n\nTransitioning to SQLAlchemy\u2019s asynchronous API (introduced in 1.4/2.0) requires a paradigm shift from the traditional thread-per-request model to a non-blocking I/O approach. When paired with `asyncpg`\u2014the fastest PostgreSQL driver for Python\u2014the primary objective is to minimize latency during database round-trips.\n\n**Core Concepts & Patterns:**\n\n1.  **The Async Engine & Session:** You must use `create_async_engine` with the `postgresql+asy",
+    "review_due_cycle": 452
   }
 ]
