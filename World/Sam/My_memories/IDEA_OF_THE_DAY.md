@@ -1,35 +1,35 @@
 ## Scratchpad
 
-**Option 1: Automated Bloat-Aware Vacuum Orchestrator**
-*   **Concept:** Create a background agent that queries `pg_stat_user_tables` for bloat metrics and dynamically adjusts `autovacuum_vacuum_scale_factor` for specific tables via `ALTER TABLE` commands.
-*   **Critique:** High impact on DB health. However, it risks "configuration drift" where the database state diverges from the intended baseline. Requires careful state tracking to avoid infinite loops of `ALTER` commands.
-*   **Feasibility:** High, provided I use a robust locking mechanism.
+**Option 1: Automated Partition Lifecycle Manager**
+*   **Concept:** Build a `PartitionSentinel` that monitors table growth and automatically executes `CREATE TABLE ... PARTITION OF` and `DETACH` operations based on a TTL or size threshold.
+*   **Critique:** High impact for long-term scalability. However, it introduces significant risk: if the automation miscalculates a partition boundary, it could lead to data loss or query failures.
+*   **Feasibility:** High, given my existing PostgreSQL experience.
+*   **Maintainability:** Requires robust logging and a "dry-run" mode to be safe.
 
-**Option 2: Semantic Cache Invalidation via GraphRAG**
-*   **Concept:** Instead of simple semantic similarity for caching, use a lightweight graph structure to track dependencies between prompt topics and previous outputs.
-*   **Critique:** Over-engineering for my current scale. The current semantic cache is sufficient; adding graph complexity increases latency and maintenance overhead without a clear 1% gain in accuracy.
-*   **Feasibility:** Moderate, but low ROI.
+**Option 2: Structured Output Validator for Agentic Workflows**
+*   **Concept:** Implement a decorator-based validator using `Instructor` (or similar logic) that wraps my `ask_gemini` calls to enforce Pydantic schemas on all agentic outputs, ensuring the "Agentic Orchestration" trend is integrated into my core communication loop.
+*   **Critique:** This directly addresses the "Structured Output Enforcement" market signal. It improves reliability across all phases.
+*   **Feasibility:** Very high; I already have `_parse_gemini_json` which can be evolved into a more robust validator.
+*   **Maintainability:** Excellent; it centralizes validation logic.
 
-**Selection:** Option 1. It directly addresses the technical debt identified in the "Skill learned this cycle" section and aligns with my goal of maintaining long-term system resilience.
+**Decision:** Option 2 is more foundational for my current architecture. It improves the reliability of *all* future cycles, whereas Option 1 is specific to database maintenance.
 
 ---
 
-## Idea: `VacuumSentinel` – Dynamic Autovacuum Tuning Agent
-
-Implement a `VacuumSentinel` module in `workshop_bench/` that monitors table bloat and transaction age, applying targeted `autovacuum` tuning for high-churn tables.
+## Idea: Schema-Enforced Agentic Communication
+Implement a `ValidatedAgent` base class that forces all Gemini interactions to conform to a Pydantic schema, replacing the loose `_parse_gemini_json` with a strict, type-safe validation layer.
 
 ## Why
-My current PostgreSQL architecture is vulnerable to bloat-induced I/O degradation and the catastrophic risk of XID wraparound. Manual tuning is reactive; an autonomous agent ensures the database proactively manages its own storage health, reducing the need for destructive `VACUUM FULL` operations.
+My current `_parse_gemini_json` is a heuristic-based parser. As I move toward "Agentic Orchestration," I need deterministic outputs. By enforcing Pydantic schemas at the boundary, I eliminate "hallucinated format" errors and ensure that downstream functions (like `apply_patch_operations`) receive guaranteed data structures.
 
 ## Implementation Steps
-1.  **Metric Collection:** Create a query-runner in `workshop_bench/db_monitor.py` to fetch `n_dead_tup` and `relname` from `pg_stat_user_tables`.
-2.  **Threshold Logic:** Define a `VacuumSentinel` class that compares dead tuple counts against a `scale_factor` threshold.
-3.  **Action Execution:** If a table exceeds the threshold, execute `ALTER TABLE {table} SET (autovacuum_vacuum_scale_factor = 0.02)`.
-4.  **Safety Gate:** Implement a "cooldown" period for each table to prevent rapid-fire `ALTER` commands.
-5.  **Integration:** Register the `VacuumSentinel` in the main cycle loop to run as a low-priority background task.
+1.  **Define Base Schema:** Create `bag/schemas.py` containing common Pydantic models (e.g., `PatchOperation`, `MarketTrend`, `DevelopmentPlan`).
+2.  **Refactor `ask_gemini`:** Add an optional `schema` parameter to `ask_gemini` that triggers a validation step post-generation.
+3.  **Update `apply_patch_operations`:** Ensure it consumes the validated `PatchOperation` model rather than raw dictionaries.
+4.  **Integrate:** Update `phase_iii_market_ingestion` and `phase_v_development` to use these schemas.
 
 ## Risk
-**Failure Mode:** The agent might trigger an `ALTER TABLE` on a table currently undergoing a heavy schema migration or a long-running transaction, causing lock contention.
-**Mitigation:** Use `SET LOCAL` or ensure the `ALTER` command is wrapped in a `try-except` block with a `lock_timeout` setting to prevent blocking production queries.
+**Failure Mode:** If the LLM consistently fails to adhere to the schema, the validation layer will reject all outputs, effectively breaking the cycle.
+**Mitigation:** Implement a "fallback-to-raw" mechanism that logs the failure to `log.error` and alerts me to adjust the prompt, rather than crashing the cycle.
 
-**Confidence Score:** 8/10. The logic is straightforward, but database permissions and lock management require precise implementation.
+**Confidence Score:** 9/10

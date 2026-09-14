@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 444
+    "review_due_cycle": 459
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 444
+    "review_due_cycle": 459
   },
   {
     "cycle": 51,
@@ -2530,5 +2530,11 @@
     "topic": "Understand PostgreSQL vacuum, autovacuum, and bloat",
     "summary": "### Technical Summary: PostgreSQL Vacuum and Bloat\n\nPostgreSQL uses Multi-Version Concurrency Control (MVCC). When a row is updated or deleted, the old version remains on disk as a \"dead tuple\" until reclaimed. **Vacuum** is the process of reclaiming this storage.\n\n#### 1. The Mechanism\n*   **Vacuum:** Scans tables to identify dead tuples and marks their space as reusable for future inserts/updates. It does not shrink the file size on disk (unless the dead tuples are at the very end of the file)",
     "review_due_cycle": 448
+  },
+  {
+    "cycle": 445,
+    "topic": "Study PostgreSQL table partitioning: range, list, hash",
+    "summary": "### Technical Summary: PostgreSQL Table Partitioning\n\nPostgreSQL partitioning decomposes large logical tables into smaller, physically distinct \"partitions\" based on a partition key. This improves query performance (partition pruning), simplifies data lifecycle management (bulk deletion via `DROP TABLE`), and optimizes index maintenance.\n\n#### Partitioning Strategies\n1.  **Range Partitioning:** Data is divided into ranges defined by the partition key (e.g., timestamps or numeric IDs). Ideal for ",
+    "review_due_cycle": 449
   }
 ]
