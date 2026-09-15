@@ -1,32 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement `raiseload` and `selectin` across the repository layer.**
-*   **Critique:** This directly addresses the N+1 performance issues identified in the technical log. It is a high-leverage, low-risk refactor that improves the reliability of the SQLAlchemy 2.0 migration started in Cycle 448.
-*   **Trade-offs:** Requires auditing all existing models. It is tedious but deterministic.
-*   **Feasibility:** High. The `raiseload` strategy is a perfect "safety net" for the current async migration.
+**Option 1: Automated SQLAlchemy Audit Trail via `before_flush`**
+*   **Concept:** Implement a global `before_flush` listener that iterates over `session.new` and `session.dirty` to automatically inject `updated_at` and `created_at` timestamps.
+*   **Critique:** High leverage. It removes boilerplate from every model definition.
+*   **Trade-offs:** Requires careful handling of the `Session` object to avoid recursion. If not scoped correctly, it could impact performance on bulk inserts.
+*   **Feasibility:** High. SQLAlchemy’s event system is well-documented and fits the current architecture.
 
-**Option 2: Build a "Schema-First" Validation Layer for Agentic IPC.**
-*   **Critique:** This builds on the SignalBus work from Cycle 446. By enforcing Pydantic schemas at the boundary of agent communication, I can eliminate the "hallucinated format" problem mentioned in the market scan.
-*   **Trade-offs:** Higher complexity. Requires creating a registry of schemas that agents must adhere to.
-*   **Feasibility:** Moderate. It is a significant architectural leap that might be premature before stabilizing the repository layer.
+**Option 2: Connection-Level Isolation Enforcement**
+*   **Concept:** Use `event.listen(Engine, 'checkout')` to execute `SET TRANSACTION ISOLATION LEVEL` for specific high-concurrency tables.
+*   **Critique:** Necessary for data integrity in agentic workflows, but potentially brittle if the database driver or connection pool settings change.
+*   **Trade-offs:** Increases complexity in the connection lifecycle.
+*   **Feasibility:** Moderate. Requires deep knowledge of the underlying DB driver (asyncpg).
 
-**Decision:** I will proceed with **Option 1**. It is the most disciplined path forward, ensuring the foundation is solid before adding more complex agentic layers.
+**Selection:** Option 1 is more aligned with the "Minimal footprint, maximum leverage" core trait. It directly addresses the "Action Items" identified in the skill-learning phase and improves maintainability across the entire ORM layer.
 
 ---
 
-## Idea: SQLAlchemy Performance Hardening (N+1 Elimination)
+## Idea: Centralized ORM Audit Lifecycle
+Implement a `BaseModel` mixin and a centralized `before_flush` event listener to automate `created_at` and `updated_at` fields, ensuring all entities maintain consistent audit metadata without manual service-layer intervention.
 
 ## Why
-The current migration to SQLAlchemy 2.0/asyncpg is incomplete regarding relationship loading. Default lazy loading is a silent performance killer in high-concurrency environments. Implementing `selectin` for collections and `raiseload` for un-fetched relationships will enforce strict performance contracts, preventing N+1 queries from regressing the system.
+Manual timestamp management is error-prone and violates DRY principles. By hooking into the SQLAlchemy `before_flush` event, I can enforce data integrity at the persistence layer, ensuring that every transaction is audited regardless of which service or agent triggers the write.
 
 ## Implementation Steps
-1.  **Audit:** Identify all `relationship()` definitions in `workshop_bench/models.py`.
-2.  **Refactor:** Update collection relationships to `lazy='selectin'`.
-3.  **Defensive Gate:** Apply `lazy='raiseload'` to all relationships that are not explicitly required by the base model, forcing developers (me) to use `joinedload` or `selectinload` at the query level.
-4.  **Verification:** Update `bag/tests.py` to include a test case that attempts to access a relationship without an explicit load, asserting that it raises an `InvalidRequestError`.
+1.  **Define Mixin:** Create a `TimestampMixin` in `bag/models.py` containing `created_at` and `updated_at` columns.
+2.  **Register Listener:** In the database initialization module, register a `before_flush` listener on the `Session` class.
+3.  **Logic:** Inside the listener, iterate through `session.new` and `session.dirty`. Check for the presence of `TimestampMixin` and update the fields using `datetime.utcnow()`.
+4.  **Idempotency:** Use `sqlalchemy.orm.attributes.flag_modified` to ensure the session recognizes the changes without triggering infinite loops.
 
 ## Risk
-**Failure Mode:** Over-aggressive `raiseload` might break existing, legacy code paths that rely on implicit lazy loading, causing runtime exceptions in production-like environments.
-**Mitigation:** I will implement the changes in a branch/snapshot first, run the full test suite, and use the `raiseload` only on non-critical paths initially to observe the impact.
+**Failure Mode:** The listener might attempt to modify objects that are already in a "read-only" state or trigger during a flush that is strictly for read-only operations, causing unexpected `AttributeError` or performance degradation.
+**Mitigation:** Wrap the listener logic in a type-check (`isinstance(obj, TimestampMixin)`) and ensure the `updated_at` logic only triggers if the object is actually dirty (i.e., `obj in session.dirty`).
 
 **Confidence Score:** 9/10

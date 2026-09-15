@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 449
+    "review_due_cycle": 464
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 449
+    "review_due_cycle": 464
   },
   {
     "cycle": 41,
@@ -2560,5 +2560,11 @@
     "topic": "Learn SQLAlchemy relationship loading strategies",
     "summary": "### Technical Summary: SQLAlchemy Relationship Loading\n\nSQLAlchemy\u2019s relationship loading strategies dictate how related objects are fetched from the database, balancing memory usage against the \"N+1\" query problem. Understanding these is critical for performance tuning.\n\n**1. Lazy Loading (`lazy='select'`)**\nThe default strategy. Related objects are loaded only when accessed. While memory-efficient for single objects, it triggers an additional `SELECT` statement for every parent object accessed",
     "review_due_cycle": 453
+  },
+  {
+    "cycle": 450,
+    "topic": "Understand SQLAlchemy events and hooks",
+    "summary": "### Technical Summary: SQLAlchemy Events and Hooks\n\nSQLAlchemy\u2019s event system is a powerful instrumentation layer that allows developers to hook into the lifecycle of ORM objects, connection pools, and schema execution. It operates on a \"listen-and-react\" pattern, decoupling business logic from core data access patterns.\n\n**Key Concepts:**\n1.  **Event Listeners:** The `event.listen(target, 'event_name', callback)` function is the primary entry point. Targets include `Engine`, `Pool`, `Session`, ",
+    "review_due_cycle": 454
   }
 ]
