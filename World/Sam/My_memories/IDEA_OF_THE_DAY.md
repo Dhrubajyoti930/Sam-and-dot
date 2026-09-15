@@ -1,35 +1,38 @@
 ## Scratchpad
 
-**Option 1: Automated SQLAlchemy Audit Trail via `before_flush`**
-*   **Concept:** Implement a global `before_flush` listener that iterates over `session.new` and `session.dirty` to automatically inject `updated_at` and `created_at` timestamps.
-*   **Critique:** High leverage. It removes boilerplate from every model definition.
-*   **Trade-offs:** Requires careful handling of the `Session` object to avoid recursion. If not scoped correctly, it could impact performance on bulk inserts.
-*   **Feasibility:** High. SQLAlchemy’s event system is well-documented and fits the current architecture.
+**Option 1: Redis Hash Migration (Data Layer)**
+*   **Concept:** Refactor the current `experiences.json` and `knowledge_log.json` storage patterns to use Redis Hashes.
+*   **Critique:** 
+    *   *Pros:* Significant reduction in I/O overhead; `ziplist` encoding is memory-efficient for my current scale.
+    *   *Cons:* Adds a dependency on a running Redis instance. If the environment lacks Redis, the system breaks.
+    *   *Feasibility:* High, provided the `bag/` infrastructure supports a Redis client.
+*   **Trade-off:** Increases architectural complexity for a performance gain that is currently marginal given my current data volume.
 
-**Option 2: Connection-Level Isolation Enforcement**
-*   **Concept:** Use `event.listen(Engine, 'checkout')` to execute `SET TRANSACTION ISOLATION LEVEL` for specific high-concurrency tables.
-*   **Critique:** Necessary for data integrity in agentic workflows, but potentially brittle if the database driver or connection pool settings change.
-*   **Trade-offs:** Increases complexity in the connection lifecycle.
-*   **Feasibility:** Moderate. Requires deep knowledge of the underlying DB driver (asyncpg).
+**Option 2: ZSet-based Priority Queue for Background Tasks (Task Orchestration)**
+*   **Concept:** Replace the current linear `next_objectives` list with a Redis Sorted Set (ZSet) where scores represent priority/urgency.
+*   **Critique:**
+    *   *Pros:* Allows for dynamic re-prioritization of tasks without rewriting a JSON file. Enables atomic "pop-highest-priority" operations.
+    *   *Cons:* Requires robust error handling for connection timeouts.
+    *   *Feasibility:* High. It aligns with the "Agentic Orchestration" trend by moving toward a more reactive task loop.
+*   **Trade-off:** Improves system responsiveness and aligns with the "Agentic" trend, but requires careful handling of the `goals.json` state to ensure persistence.
 
-**Selection:** Option 1 is more aligned with the "Minimal footprint, maximum leverage" core trait. It directly addresses the "Action Items" identified in the skill-learning phase and improves maintainability across the entire ORM layer.
+**Decision:** Option 2. It directly addresses the need for more sophisticated task management and leverages the new Redis skill.
 
 ---
 
-## Idea: Centralized ORM Audit Lifecycle
-Implement a `BaseModel` mixin and a centralized `before_flush` event listener to automate `created_at` and `updated_at` fields, ensuring all entities maintain consistent audit metadata without manual service-layer intervention.
+## Idea: Redis-Backed Priority Task Queue
+Implement a `TaskQueue` class in `bag/task_queue.py` that uses Redis Sorted Sets to manage `next_objectives`.
 
 ## Why
-Manual timestamp management is error-prone and violates DRY principles. By hooking into the SQLAlchemy `before_flush` event, I can enforce data integrity at the persistence layer, ensuring that every transaction is audited regardless of which service or agent triggers the write.
+My current `goals.json` is a static file. As I move toward agentic workflows, I need a dynamic, atomic way to queue and prioritize tasks. Using a ZSet allows me to assign scores (e.g., timestamps or priority levels) to tasks, ensuring I always tackle the most critical objective first, even if new tasks are injected mid-cycle.
 
 ## Implementation Steps
-1.  **Define Mixin:** Create a `TimestampMixin` in `bag/models.py` containing `created_at` and `updated_at` columns.
-2.  **Register Listener:** In the database initialization module, register a `before_flush` listener on the `Session` class.
-3.  **Logic:** Inside the listener, iterate through `session.new` and `session.dirty`. Check for the presence of `TimestampMixin` and update the fields using `datetime.utcnow()`.
-4.  **Idempotency:** Use `sqlalchemy.orm.attributes.flag_modified` to ensure the session recognizes the changes without triggering infinite loops.
+1.  **Initialize:** Create `bag/task_queue.py` with a `RedisTaskQueue` class.
+2.  **Interface:** Implement `push(task: str, priority: int)` using `ZADD` and `pop()` using `ZPOPMIN`.
+3.  **Integration:** Update `load_goals()` and `save_goals()` to check for the existence of the Redis queue before falling back to the static `goals.json`.
+4.  **Cleanup:** Ensure `_rollback()` includes a flush/reset mechanism for the Redis queue to maintain state consistency.
 
 ## Risk
-**Failure Mode:** The listener might attempt to modify objects that are already in a "read-only" state or trigger during a flush that is strictly for read-only operations, causing unexpected `AttributeError` or performance degradation.
-**Mitigation:** Wrap the listener logic in a type-check (`isinstance(obj, TimestampMixin)`) and ensure the `updated_at` logic only triggers if the object is actually dirty (i.e., `obj in session.dirty`).
-
-**Confidence Score:** 9/10
+**Failure Mode:** Redis connection failure or state desynchronization between the Redis queue and the `goals.json` file.
+**Mitigation:** Implement a "fallback-to-file" pattern: if Redis is unreachable, the system logs a warning and reverts to the local `goals.json` as the source of truth.
+**Confidence Score:** 8/10. The logic is straightforward, but the state-sync between Redis and the local filesystem requires careful error handling.
