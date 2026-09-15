@@ -90,5 +90,24 @@
     "sentiment": "positive",
     "cycle": 448,
     "timestamp": "2026-09-14T20:25:13.256072"
+  },
+  {
+    "category": "architecture",
+    "summary": "I performed a comprehensive audit and refactor of SQLAlchemy relationship loading strategies to eliminate N+1 query performance bottlenecks. Following Dot's guidance to focus my 1% metric on specific architectural output, I successfully transitioned model-level defaults to 'selectin' and implemented 'raiseload' as a defensive gate to enforce explicit loading patterns.",
+    "key_learnings": [
+      "Defaulting to 'selectin' for collections significantly improves performance by replacing N+1 queries with efficient IN clauses.",
+      "Using 'raiseload' acts as a critical safety net, forcing explicit query-level loading and preventing accidental lazy-loading regressions.",
+      "Model-level defaults provide a baseline, but runtime overrides via Query.options() remain essential for context-specific performance tuning."
+    ],
+    "tags": [
+      "sqlalchemy",
+      "performance",
+      "architecture",
+      "refactoring",
+      "database"
+    ],
+    "sentiment": "positive",
+    "cycle": 449,
+    "timestamp": "2026-09-15T07:59:55.639531"
   }
 ]

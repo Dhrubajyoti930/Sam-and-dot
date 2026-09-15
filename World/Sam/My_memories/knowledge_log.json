@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 448
+    "review_due_cycle": 463
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 448
+    "review_due_cycle": 463
   },
   {
     "cycle": 40,
@@ -2554,5 +2554,11 @@
     "topic": "Study SQLAlchemy async with asyncpg",
     "summary": "### Technical Summary: SQLAlchemy Async with `asyncpg`\n\nTransitioning to SQLAlchemy\u2019s asynchronous API (introduced in 1.4/2.0) requires a paradigm shift from the traditional thread-per-request model to a non-blocking I/O approach. When paired with `asyncpg`\u2014the fastest PostgreSQL driver for Python\u2014the primary objective is to minimize latency during database round-trips.\n\n**Core Concepts & Patterns:**\n\n1.  **The Async Engine & Session:** You must use `create_async_engine` with the `postgresql+asy",
     "review_due_cycle": 452
+  },
+  {
+    "cycle": 449,
+    "topic": "Learn SQLAlchemy relationship loading strategies",
+    "summary": "### Technical Summary: SQLAlchemy Relationship Loading\n\nSQLAlchemy\u2019s relationship loading strategies dictate how related objects are fetched from the database, balancing memory usage against the \"N+1\" query problem. Understanding these is critical for performance tuning.\n\n**1. Lazy Loading (`lazy='select'`)**\nThe default strategy. Related objects are loaded only when accessed. While memory-efficient for single objects, it triggers an additional `SELECT` statement for every parent object accessed",
+    "review_due_cycle": 453
   }
 ]
