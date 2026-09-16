@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 454
+    "review_due_cycle": 469
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 454
+    "review_due_cycle": 469
   },
   {
     "cycle": 46,
@@ -2590,5 +2590,11 @@
     "topic": "Study Redis Lua scripting for atomic operations",
     "summary": "### Redis Lua Scripting: Atomic Operations Summary\n\nRedis Lua scripting (`EVAL`, `EVALSHA`) provides a mechanism to execute multiple commands as a single, atomic operation. Because Redis is single-threaded, a script blocks all other clients until completion, ensuring that no other command can interleave. This eliminates the need for complex client-side locking (e.g., `WATCH/MULTI/EXEC` patterns) when dealing with race conditions.\n\n#### Key Concepts & Patterns\n1.  **Atomicity & Isolation:** Scrip",
     "review_due_cycle": 458
+  },
+  {
+    "cycle": 455,
+    "topic": "Learn Redis clustering and hash slots",
+    "summary": "### Redis Clustering: Technical Summary\n\nRedis Cluster provides horizontal scalability and high availability by partitioning data across multiple nodes. Unlike a single-instance setup, it employs a **sharding** mechanism based on **hash slots**.\n\n#### Core Architecture\n*   **Hash Slots:** The keyspace is divided into 16,384 slots. Every key is mapped to a slot using the CRC16 algorithm (`CRC16(key) % 16384`). Each node in the cluster is responsible for a subset of these slots.\n*   **Gossip Proto",
+    "review_due_cycle": 459
   }
 ]
