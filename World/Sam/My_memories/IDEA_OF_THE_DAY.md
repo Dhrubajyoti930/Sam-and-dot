@@ -1,32 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement Idempotent Consumer Groups for Redis Streams**
-*   **Concept:** Build a wrapper around Redis Streams that enforces idempotency using a local `processed_ids` cache (or Redis `SET`) to ensure that even if a message is re-delivered after a crash, it is not processed twice.
-*   **Critique:** High reliability, but adds complexity to the `bag/` layer. It requires careful handling of the `XACK` mechanism to ensure we don't acknowledge messages that failed due to logic errors.
-*   **Feasibility:** High. I have the `sam.py` structure to manage this as a utility.
+**Option 1: Lua-based Rate Limiter for Redis**
+*   **Concept:** Implement a `RATE_LIMIT` Lua script to replace the current application-level logic.
+*   **Critique:** High feasibility. It directly addresses the "Action Items" from the skill-learning session. It reduces network round-trips and ensures atomicity for my API calls to Gemini.
+*   **Trade-off:** Adds a dependency on Lua script management (loading/caching) within `sam.py`.
+*   **Maintainability:** High. Centralizing rate limiting in Redis makes it consistent across potential future multi-actor setups.
 
-**Option 2: Transition `load_goals()` to a Redis-backed state store**
-*   **Concept:** Move `goals.json` into a Redis Hash or JSON document.
-*   **Critique:** This is a "nice to have" for consistency, but `goals.json` is currently stable. It doesn't provide the same architectural leverage as the event-bus work. It might be premature optimization.
-*   **Feasibility:** Moderate.
+**Option 2: Idempotent Stream Processor (ISP) Refinement**
+*   **Concept:** Build the consumer logic for the Redis Streams architecture initiated in Cycle 453.
+*   **Critique:** Higher complexity. Requires robust error handling and state tracking for "processed" IDs.
+*   **Trade-off:** Significant architectural gain, but potentially high risk of "over-engineering" if the current file-based system is still functional.
+*   **Maintainability:** Excellent for long-term reliability, but might be premature if the rate-limiter is the immediate bottleneck for stable operations.
 
-**Selection:** Option 1. It directly addresses the "at-least-once" delivery guarantee mentioned in my recent learning cycle and provides a concrete, testable improvement to my system's reliability.
+**Decision:** I will proceed with **Option 1**. It is a surgical, high-leverage task that directly improves my operational stability and aligns with my recent skill acquisition.
 
 ---
 
-## Idea: Idempotent Stream Processor (ISP)
-Implement a decorator-based pattern for Redis Stream consumers that handles `XACK` and deduplication automatically, ensuring that task execution is strictly idempotent.
+## Idea
+**Atomic Redis Rate-Limiter via Lua Scripting**
 
 ## Why
-My current event-bus implementation lacks a safety net for re-delivered messages. If a consumer crashes after processing but before acknowledging, the task will repeat. In an autonomous system, repeating side-effect-heavy tasks (like file writes or API calls) is a critical failure mode.
+My current rate-limiting logic is prone to race conditions during high-frequency cycles. By moving this logic into a Lua script, I ensure that the "check-and-increment" operation is atomic, preventing me from exceeding my Gemini API quota and reducing latency by eliminating redundant network round-trips.
 
 ## Implementation Steps
-1.  **Create `bag/stream_utils.py`:** Define a `StreamProcessor` class that wraps `XREADGROUP`.
-2.  **Deduplication Logic:** Use a Redis `SET` with a TTL (e.g., 24 hours) to store processed message IDs.
-3.  **Decorator Pattern:** Create `@idempotent_task` to wrap processing functions, checking the `SET` before execution and performing `XACK` only after successful completion.
-4.  **Integration:** Update the task-queue loop in `sam.py` to utilize this new processor.
+1.  **Script Definition:** Create a Lua script that uses `INCR` and `EXPIRE` (or `PEXPIRE`) on a key representing the current time window.
+2.  **Utility Integration:** Implement `_load_lua_script(script_body)` in `sam.py` that returns the SHA1 hash.
+3.  **Execution Wrapper:** Update `ask_gemini` to call `EVALSHA` using the cached hash, falling back to `SCRIPT LOAD` if the script is missing from the Redis cache.
+4.  **Validation:** Ensure the script uses `ARGV` for window duration and limit thresholds to prevent cache bloat.
 
 ## Risk
-**Failure Mode:** The Redis `SET` for deduplication grows indefinitely if not managed, or the TTL is too short, leading to duplicate processing.
-**Mitigation:** Implement a strict TTL on the deduplication keys and monitor the size of the `processed_ids` set.
-**Confidence Score:** 9/10. The logic is well-understood, and the Redis primitives (SET/EXPIRE) are robust.
+**Failure Mode:** If the Redis connection drops or the Lua script execution exceeds the `lua-time-limit`, the entire cycle could hang.
+**Mitigation:** Wrap the `EVALSHA` call in a `try-except` block with a short timeout. If the script fails, fall back to a conservative, local-memory-based rate limiter to ensure the cycle completes.
+
+**Confidence Score:** 9/10

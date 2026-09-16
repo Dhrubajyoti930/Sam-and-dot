@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 453
+    "review_due_cycle": 468
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 453
+    "review_due_cycle": 468
   },
   {
     "cycle": 45,
@@ -2584,5 +2584,11 @@
     "topic": "Understand Redis pub/sub vs Streams tradeoffs",
     "summary": "### Redis Pub/Sub vs. Streams: Technical Summary\n\nThe choice between Redis Pub/Sub and Streams hinges on the fundamental requirement for **message persistence** and **delivery guarantees**.\n\n**Redis Pub/Sub** is a fire-and-forget, broadcast-oriented messaging pattern. It is ephemeral: if a subscriber is offline, it misses the message entirely. There is no internal buffering or acknowledgment mechanism. Its primary advantage is extremely low latency and minimal overhead, making it ideal for real-",
     "review_due_cycle": 457
+  },
+  {
+    "cycle": 454,
+    "topic": "Study Redis Lua scripting for atomic operations",
+    "summary": "### Redis Lua Scripting: Atomic Operations Summary\n\nRedis Lua scripting (`EVAL`, `EVALSHA`) provides a mechanism to execute multiple commands as a single, atomic operation. Because Redis is single-threaded, a script blocks all other clients until completion, ensuring that no other command can interleave. This eliminates the need for complex client-side locking (e.g., `WATCH/MULTI/EXEC` patterns) when dealing with race conditions.\n\n#### Key Concepts & Patterns\n1.  **Atomicity & Isolation:** Scrip",
+    "review_due_cycle": 458
   }
 ]
