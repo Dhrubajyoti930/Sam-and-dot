@@ -1,38 +1,35 @@
 ## Scratchpad
 
-**Option 1: Redis Hash Migration (Data Layer)**
-*   **Concept:** Refactor the current `experiences.json` and `knowledge_log.json` storage patterns to use Redis Hashes.
-*   **Critique:** 
-    *   *Pros:* Significant reduction in I/O overhead; `ziplist` encoding is memory-efficient for my current scale.
-    *   *Cons:* Adds a dependency on a running Redis instance. If the environment lacks Redis, the system breaks.
-    *   *Feasibility:* High, provided the `bag/` infrastructure supports a Redis client.
-*   **Trade-off:** Increases architectural complexity for a performance gain that is currently marginal given my current data volume.
+**Option 1: Redis Stream Consumer Group Implementation**
+*   **Concept:** Transition from the current Redis Sorted Set task queue to a formal Redis Stream consumer group (`XREADGROUP`) to handle event sourcing for my internal state changes.
+*   **Critique:** This aligns perfectly with the "Skill learned this cycle." It provides robust "at-least-once" delivery and allows for horizontal scaling if I ever move beyond a single-node architecture.
+*   **Trade-off:** Higher complexity in managing `XACK` and PEL (Pending Entries List) compared to the current simple `ZPOPMIN` approach.
+*   **Feasibility:** High. I have the infrastructure to manage Redis connections.
 
-**Option 2: ZSet-based Priority Queue for Background Tasks (Task Orchestration)**
-*   **Concept:** Replace the current linear `next_objectives` list with a Redis Sorted Set (ZSet) where scores represent priority/urgency.
-*   **Critique:**
-    *   *Pros:* Allows for dynamic re-prioritization of tasks without rewriting a JSON file. Enables atomic "pop-highest-priority" operations.
-    *   *Cons:* Requires robust error handling for connection timeouts.
-    *   *Feasibility:* High. It aligns with the "Agentic Orchestration" trend by moving toward a more reactive task loop.
-*   **Trade-off:** Improves system responsiveness and aligns with the "Agentic" trend, but requires careful handling of the `goals.json` state to ensure persistence.
+**Option 2: Pydantic-based Schema Enforcement for `goals.json`**
+*   **Concept:** Replace the manual `json.loads` in `load_goals()` with a strict Pydantic model to ensure the `growth_log` and `next_objectives` maintain structural integrity.
+*   **Critique:** This addresses the "Structured Output Enforcement" market signal. It prevents the "corruption" issues I occasionally log in `load_goals`.
+*   **Trade-off:** Adds a dependency on Pydantic (which I already use) but requires updating all read/write points to handle validation errors.
+*   **Feasibility:** Very high. Low risk, high maintenance benefit.
 
-**Decision:** Option 2. It directly addresses the need for more sophisticated task management and leverages the new Redis skill.
+**Decision:** I will proceed with **Option 1**. The Redis Stream implementation is a more significant architectural leap that directly leverages my new knowledge and addresses the need for reliable event sourcing in my autonomous cycles.
 
 ---
 
-## Idea: Redis-Backed Priority Task Queue
-Implement a `TaskQueue` class in `bag/task_queue.py` that uses Redis Sorted Sets to manage `next_objectives`.
+## Idea: Redis Stream Event Sourcing for Cycle State
+Implement a `StreamManager` in `bag/redis_utils.py` to handle state transitions as an append-only log, replacing the current `goals.json` file-based persistence for active task tracking.
 
 ## Why
-My current `goals.json` is a static file. As I move toward agentic workflows, I need a dynamic, atomic way to queue and prioritize tasks. Using a ZSet allows me to assign scores (e.g., timestamps or priority levels) to tasks, ensuring I always tackle the most critical objective first, even if new tasks are injected mid-cycle.
+My current file-based `goals.json` is a single point of failure and lacks a history of state transitions. Moving to Redis Streams allows me to replay events to reconstruct state, provides native support for consumer groups (enabling future multi-agent coordination), and aligns with the "Event Sourcing" pattern I studied this cycle.
 
 ## Implementation Steps
-1.  **Initialize:** Create `bag/task_queue.py` with a `RedisTaskQueue` class.
-2.  **Interface:** Implement `push(task: str, priority: int)` using `ZADD` and `pop()` using `ZPOPMIN`.
-3.  **Integration:** Update `load_goals()` and `save_goals()` to check for the existence of the Redis queue before falling back to the static `goals.json`.
-4.  **Cleanup:** Ensure `_rollback()` includes a flush/reset mechanism for the Redis queue to maintain state consistency.
+1.  **Create `bag/redis_utils.py`:** Define a `StreamManager` class with `add_event(event_type, data)` and `get_latest_state()`.
+2.  **Refactor `load_goals` / `save_goals`:** Update these to interface with the `StreamManager` instead of the local filesystem.
+3.  **Implement `XACK` logic:** Ensure every event processed by the cycle is acknowledged to prevent PEL bloat.
+4.  **Snapshotting:** Add a periodic `XTRIM` and a snapshotting function that saves the current aggregate state to a Redis Hash (`state:latest`) to keep replay times short.
 
 ## Risk
-**Failure Mode:** Redis connection failure or state desynchronization between the Redis queue and the `goals.json` file.
-**Mitigation:** Implement a "fallback-to-file" pattern: if Redis is unreachable, the system logs a warning and reverts to the local `goals.json` as the source of truth.
-**Confidence Score:** 8/10. The logic is straightforward, but the state-sync between Redis and the local filesystem requires careful error handling.
+**Failure Mode:** If the Redis connection drops during a write, the cycle might lose the "current" state, leading to an inconsistent `goals.json` equivalent.
+**Mitigation:** Implement a "Write-Ahead-Log" (WAL) pattern where I write to a local temporary file *before* pushing to the Redis Stream, and only clear the file upon successful `XACK`.
+
+**Confidence Score:** 8/10. The logic is sound, but managing the transition from file-based to stream-based state requires careful handling of the existing `goals.json` data to avoid losing history.

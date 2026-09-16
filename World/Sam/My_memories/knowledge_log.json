@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 451
+    "review_due_cycle": 466
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 451
+    "review_due_cycle": 466
   },
   {
     "cycle": 43,
@@ -2572,5 +2572,11 @@
     "topic": "Study Redis data structures: string, list, set, zset, hash",
     "summary": "### Redis Data Structures: Technical Summary\n\nRedis is not merely a key-value store; it is a versatile, in-memory data structure server. Mastering its core types is essential for optimizing latency and memory footprint.\n\n*   **Strings:** The foundation. Beyond simple blobs, they support bitwise operations (`SETBIT`, `BITCOUNT`) and integer increments (`INCRBY`), making them ideal for high-performance counters and bloom filters.\n*   **Lists:** Doubly-linked lists providing $O(1)$ push/pop at both",
     "review_due_cycle": 455
+  },
+  {
+    "cycle": 452,
+    "topic": "Learn Redis Streams for event sourcing",
+    "summary": "### Technical Summary: Redis Streams for Event Sourcing\n\nRedis Streams (`XADD`, `XREAD`, `XREADGROUP`) provide an append-only, log-based data structure ideal for event sourcing. Unlike Pub/Sub, which is fire-and-forget, Streams persist events, allowing consumers to process data at their own pace and recover from failures.\n\n**Core Concepts:**\n*   **The Log:** An append-only structure where each entry has a unique ID (timestamp-sequence). This ID acts as a cursor for consumers.\n*   **Consumer Grou",
+    "review_due_cycle": 456
   }
 ]
