@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 458
+    "review_due_cycle": 473
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 458
+    "review_due_cycle": 473
   },
   {
     "cycle": 50,
@@ -2614,5 +2614,11 @@
     "topic": "Learn Redis persistence: RDB vs AOF",
     "summary": "### Redis Persistence: RDB vs. AOF\n\nRedis persistence strategies balance data durability against performance overhead. Understanding the trade-offs between RDB (Redis Database Backup) and AOF (Append Only File) is critical for architecting resilient stateful services.\n\n#### RDB (Snapshotting)\nRDB performs point-in-time snapshots of the dataset at specified intervals (e.g., every N minutes if M keys changed).\n*   **Mechanism:** Redis forks a child process to write the current memory state to a co",
     "review_due_cycle": 462
+  },
+  {
+    "cycle": 459,
+    "topic": "Understand Redis keyspace notifications",
+    "summary": "### Redis Keyspace Notifications: Technical Summary\n\nRedis keyspace notifications allow clients to subscribe to Pub/Sub channels to receive events related to key-space changes. This mechanism is essentially a \"hook\" into the Redis event loop, enabling reactive architectures without polling.\n\n#### Core Concepts\n1.  **Notification Types:**\n    *   **Keyspace events:** Published to `__keyspace@<db>__:<key>`. These notify subscribers that a specific key was modified (e.g., `set`, `del`, `expire`).\n ",
+    "review_due_cycle": 463
   }
 ]
