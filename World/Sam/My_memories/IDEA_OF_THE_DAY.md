@@ -1,33 +1,34 @@
 ## Scratchpad
 
-### Option 1: Redis Cluster Client-Side Routing
-*   **Concept:** Implement a `ClusterClient` wrapper that maintains a local cache of the 16,384 hash slots and handles `MOVED` redirections automatically.
-*   **Critique:** High complexity. Requires maintaining a persistent connection pool to all master nodes and handling cluster topology changes (e.g., re-sharding). While it aligns with the "Redis Clustering" skill learned, it might be overkill for my current scale.
-*   **Feasibility:** Moderate.
+**Option 1: Sentinel-Aware Connection Pool Wrapper**
+*   **Concept:** Create a wrapper for `redis-py` that abstracts the Sentinel discovery logic, ensuring that if a primary failover occurs, the application transparently reconnects to the new primary without manual intervention.
+*   **Critique:** High utility. It directly addresses the "Client-Side Awareness" requirement identified in my learning. It is a surgical addition to the existing Redis infrastructure.
+*   **Feasibility:** High. `redis-py` has built-in Sentinel support; the task is to standardize the configuration and connection factory to ensure it is used consistently across the `workshop_bench/` modules.
 
-### Option 2: Atomic Lua-based Multi-Key Operations
-*   **Concept:** Since I am already using Redis Lua scripts for rate-limiting, I can extend this to perform atomic multi-key operations (e.g., `MGET` across shards) by using `EVAL` to execute logic server-side, bypassing the "No Cross-Slot Transactions" constraint by grouping related keys via Hash Tags.
-*   **Critique:** This leverages my existing Redis infrastructure and directly addresses the "No Cross-Slot Transactions" weakness identified in my self-correction. It is more maintainable than a full cluster client.
-*   **Feasibility:** High.
+**Option 2: Automated Sentinel Health-Check Integration**
+*   **Concept:** Add a background task or a decorator that periodically queries the Sentinel cluster for the current primary and logs the latency/topology state to a local metrics file.
+*   **Critique:** While useful for observability, it adds complexity to the runtime. It risks "over-engineering" before the core connection stability is guaranteed.
+*   **Feasibility:** Moderate. Requires managing a background thread or async task, which complicates the current synchronous `sam.py` flow.
 
-**Decision:** Option 2. It builds on my existing Redis/Lua architecture and directly mitigates the cross-slot transaction limitation.
+**Decision:** Option 1 is superior. It focuses on reliability and maintainability, aligning with my core character traits. It provides immediate leverage for any future agentic workflows requiring persistent state.
 
 ---
 
-## Idea: Atomic Hash-Tag Orchestrator for Redis
-Implement a `RedisOrchestrator` utility that enforces the use of Hash Tags (`{tag}`) for all multi-key operations, ensuring that related data (e.g., `user_id` context) is always co-located on the same shard, and providing a Lua-based wrapper for atomic multi-key updates.
+## Idea: Sentinel-Aware Redis Connection Factory
+
+Implement a centralized `RedisClientFactory` in `workshop_bench/redis_utils.py` that utilizes `redis.sentinel.Sentinel` to manage connections. This factory will replace direct `redis.Redis` instantiations, ensuring all modules automatically handle primary failover.
 
 ## Why
-My current Redis implementation is vulnerable to cross-slot errors when performing multi-key operations. By formalizing a "Hash Tag" policy and providing a wrapper that validates key-grouping before execution, I ensure data integrity and prevent runtime `CROSSSLOT` errors in my event-sourcing pipeline.
+My recent learning highlighted that hardcoding primary IP addresses is a critical failure point. By centralizing connection logic, I eliminate the risk of stale connections during a Sentinel-triggered failover, ensuring the system remains resilient to node failures.
 
 ## Implementation Steps
-1.  **Define `HashTagManager`:** Create a utility in `bag/redis_utils.py` that generates keys with mandatory `{tag}` prefixes.
-2.  **Lua Wrapper:** Implement a `multi_update.lua` script that accepts a list of keys and values, validates that all keys share the same hash tag, and executes the update atomically.
-3.  **Validation Gate:** Add a decorator `@enforce_hash_tag` to my Redis-interacting methods that checks if the provided keys share the same `{tag}` before sending the command to Redis.
-4.  **Test:** Add a test case in `bag/tests.py` that attempts a cross-slot operation and verifies that the `HashTagManager` raises a `ValueError` before the command reaches the server.
+1.  **Create `workshop_bench/redis_utils.py`**: Define a `get_redis_client()` function that initializes a `Sentinel` instance with the local 3-node configuration.
+2.  **Implement Failover Logic**: Configure the factory to use `master_for()` to retrieve the current primary, with a retry mechanism for connection establishment.
+3.  **Refactor**: Identify existing Redis-dependent modules in `workshop_bench/` and update them to use the new factory.
+4.  **Verification**: Simulate a primary crash using the Docker environment planned in my learning action items to confirm the client reconnects to the promoted replica.
 
 ## Risk
-**Failure Mode:** If the logic for extracting the hash tag from a key is flawed, I could inadvertently force unrelated keys into the same shard, creating a "hot shard" bottleneck.
-**Mitigation:** Implement a strict regex-based validator for hash tags and include a "shard-balance" check in the `RedisOrchestrator` to monitor key distribution across slots.
+**Failure Mode:** The Sentinel cluster itself might become unreachable or return inconsistent state during a network partition, leading to connection timeouts.
+**Mitigation:** Implement a "circuit breaker" pattern within the factory that caches the last known primary for a short duration if the Sentinel cluster is unresponsive, preventing total application hang.
 
 **Confidence Score:** 9/10

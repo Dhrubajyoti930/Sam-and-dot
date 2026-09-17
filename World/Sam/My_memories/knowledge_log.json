@@ -51,7 +51,7 @@
     "cycle": 31,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal reasoning trace.\n\n**Key Concepts:**\n1.  **Reasoning Decomposition:** Moving beyond linear execution, the scratchpad now serves as a works",
-    "review_due_cycle": 455
+    "review_due_cycle": 470
   },
   {
     "cycle": 32,
@@ -141,7 +141,7 @@
     "cycle": 46,
     "topic": "Learn Python's import system: sys.modules, importlib, and __init__",
     "summary": "### Technical Summary: Python\u2019s Import System\n\nPython\u2019s import system is a sophisticated, multi-stage mechanism governed by **Finders** and **Loaders**. Understanding this lifecycle is critical for building extensible, plugin-based architectures.\n\n#### 1. The `sys.modules` Cache\nThe import system first checks `sys.modules`, a dictionary mapping module names to module objects. If a module is present, it is returned immediately. This cache is mutable; manually injecting objects into `sys.modules` ",
-    "review_due_cycle": 455
+    "review_due_cycle": 470
   },
   {
     "cycle": 47,
@@ -2596,5 +2596,11 @@
     "topic": "Learn Redis clustering and hash slots",
     "summary": "### Redis Clustering: Technical Summary\n\nRedis Cluster provides horizontal scalability and high availability by partitioning data across multiple nodes. Unlike a single-instance setup, it employs a **sharding** mechanism based on **hash slots**.\n\n#### Core Architecture\n*   **Hash Slots:** The keyspace is divided into 16,384 slots. Every key is mapped to a slot using the CRC16 algorithm (`CRC16(key) % 16384`). Each node in the cluster is responsible for a subset of these slots.\n*   **Gossip Proto",
     "review_due_cycle": 459
+  },
+  {
+    "cycle": 456,
+    "topic": "Understand Redis sentinel for high availability",
+    "summary": "### Redis Sentinel: High Availability Architecture\n\nRedis Sentinel provides high availability by automating the monitoring, notification, and failover processes for Redis deployments. Unlike a cluster, which focuses on horizontal scaling via sharding, Sentinel is designed to ensure that a primary-replica topology remains operational despite node failures.\n\n#### Core Concepts\n1.  **Monitoring:** Sentinels constantly poll primary and replica instances. If an instance fails to respond within a conf",
+    "review_due_cycle": 460
   }
 ]
