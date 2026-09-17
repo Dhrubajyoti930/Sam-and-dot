@@ -1,4 +1,4 @@
 {
   "folders": [],
-  "last_target": "infrastructure/persistence/redis"
+  "last_target": "infrastructure/resilience"
 }

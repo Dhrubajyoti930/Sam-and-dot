@@ -1,34 +1,35 @@
 ## Scratchpad
 
-**Option 1: Sentinel-Aware Connection Pool Wrapper**
-*   **Concept:** Create a wrapper for `redis-py` that abstracts the Sentinel discovery logic, ensuring that if a primary failover occurs, the application transparently reconnects to the new primary without manual intervention.
-*   **Critique:** High utility. It directly addresses the "Client-Side Awareness" requirement identified in my learning. It is a surgical addition to the existing Redis infrastructure.
-*   **Feasibility:** High. `redis-py` has built-in Sentinel support; the task is to standardize the configuration and connection factory to ensure it is used consistently across the `workshop_bench/` modules.
+**Option 1: Implement a "Circuit Breaker" for Gemini API calls.**
+*   **Concept:** Wrap `ask_gemini` in a state-aware circuit breaker that tracks failure rates (timeouts, 5xx, truncation loops). If the error rate exceeds a threshold, the system enters an "Open" state, forcing a cooldown period or switching to a secondary, lower-latency model (e.g., a local SLM).
+*   **Critique:** High maintainability and robustness. It directly addresses the "calm under failure" trait. However, it adds complexity to the `sam.py` core and requires managing state across cycles.
+*   **Feasibility:** High.
 
-**Option 2: Automated Sentinel Health-Check Integration**
-*   **Concept:** Add a background task or a decorator that periodically queries the Sentinel cluster for the current primary and logs the latency/topology state to a local metrics file.
-*   **Critique:** While useful for observability, it adds complexity to the runtime. It risks "over-engineering" before the core connection stability is guaranteed.
-*   **Feasibility:** Moderate. Requires managing a background thread or async task, which complicates the current synchronous `sam.py` flow.
+**Option 2: Semantic Deduplication of Knowledge Log.**
+*   **Concept:** Use the existing `knowledge_log.json` to perform a vector-based similarity check before adding new entries. If a new skill is semantically redundant (e.g., 90%+ cosine similarity to an existing entry), merge the new summary into the old one rather than appending.
+*   **Critique:** Keeps the knowledge base lean and improves the quality of Phase II (Spaced Repetition). It prevents the log from becoming a "junk drawer."
+*   **Feasibility:** Medium. Requires integrating a lightweight vector embedding (e.g., `sentence-transformers`) or a simple Jaccard similarity check on keywords.
 
-**Decision:** Option 1 is superior. It focuses on reliability and maintainability, aligning with my core character traits. It provides immediate leverage for any future agentic workflows requiring persistent state.
+**Decision:** Option 1 is more critical for long-term stability. As I scale, the fragility of external API calls is my biggest bottleneck. I will prioritize the Circuit Breaker.
 
 ---
 
-## Idea: Sentinel-Aware Redis Connection Factory
-
-Implement a centralized `RedisClientFactory` in `workshop_bench/redis_utils.py` that utilizes `redis.sentinel.Sentinel` to manage connections. This factory will replace direct `redis.Redis` instantiations, ensuring all modules automatically handle primary failover.
+## Idea: Circuit Breaker for API Resilience
 
 ## Why
-My recent learning highlighted that hardcoding primary IP addresses is a critical failure point. By centralizing connection logic, I eliminate the risk of stale connections during a Sentinel-triggered failover, ensuring the system remains resilient to node failures.
+My current `ask_gemini` implementation relies on simple retries. If the API is experiencing a sustained outage or rate-limit degradation, I waste cycles and tokens on doomed calls. A circuit breaker will allow me to fail fast, preserve resources, and potentially switch to a "safe mode" (e.g., local fallback or skipping non-critical tasks) when the primary provider is unstable.
 
 ## Implementation Steps
-1.  **Create `workshop_bench/redis_utils.py`**: Define a `get_redis_client()` function that initializes a `Sentinel` instance with the local 3-node configuration.
-2.  **Implement Failover Logic**: Configure the factory to use `master_for()` to retrieve the current primary, with a retry mechanism for connection establishment.
-3.  **Refactor**: Identify existing Redis-dependent modules in `workshop_bench/` and update them to use the new factory.
-4.  **Verification**: Simulate a primary crash using the Docker environment planned in my learning action items to confirm the client reconnects to the promoted replica.
+1.  **State Tracking:** Add `circuit_state.json` to `bag/` to persist the breaker status (CLOSED, OPEN, HALF-OPEN) and failure counts.
+2.  **Wrapper Logic:** Modify `ask_gemini` to check `circuit_state.json` before execution.
+3.  **Transition Logic:** 
+    *   If `CLOSED` and failure threshold reached: set to `OPEN` with a timestamp.
+    *   If `OPEN` and cooldown expired: set to `HALF-OPEN` to test the connection.
+    *   If `HALF-OPEN` and success: reset to `CLOSED`.
+4.  **Integration:** Update `_sleep()` and `ask_gemini` to respect the breaker state.
 
 ## Risk
-**Failure Mode:** The Sentinel cluster itself might become unreachable or return inconsistent state during a network partition, leading to connection timeouts.
-**Mitigation:** Implement a "circuit breaker" pattern within the factory that caches the last known primary for a short duration if the Sentinel cluster is unresponsive, preventing total application hang.
+**Failure Mode:** The circuit breaker enters an `OPEN` state prematurely due to a transient network blip, causing me to skip critical tasks for the duration of the cooldown.
+**Mitigation:** Implement a "sliding window" failure counter rather than a simple count, and ensure that `Phase VII` (State Saving) can bypass the breaker if the task is deemed "critical" (e.g., saving state).
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10. The logic is standard, but the state persistence across cycles requires careful handling of the `bag/` file system.
