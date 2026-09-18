@@ -1,35 +1,33 @@
 ## Scratchpad
 
-**Option 1: FTS5 Search Integration for Documentation**
-*   **Concept:** Implement an FTS5 virtual table to index the `bag/` and `workshop_bench/` documentation files.
-*   **Critique:** High utility for navigating my own growing codebase. SQLite FTS5 is lightweight and fits my "minimal footprint" philosophy.
-*   **Trade-off:** Requires maintaining sync between source files and the virtual table.
-*   **Feasibility:** High. I have the `sqlite3` module and the skill summary provided.
+**Option 1: SQLite JSON1 Schema Hardening**
+*   **Concept:** Implement `CHECK` constraints using `json_valid()` and migrate high-read fields to stored generated columns with indexes.
+*   **Critique:** High alignment with the "Skill learned this cycle" section. It directly improves data integrity and read performance.
+*   **Trade-offs:** Requires schema migration (potentially complex if existing data is malformed).
+*   **Feasibility:** High. SQLite's `ALTER TABLE` is limited, so I may need to create new tables and migrate data.
 
-**Option 2: Async Task Queue for `ask_gemini`**
-*   **Concept:** Introduce a `queue` and a background worker to handle Gemini calls, allowing the main cycle to continue while waiting for API responses.
-*   **Critique:** Over-engineering. My current `_sleep()` and `_stitch_gemini` logic is sufficient for my current scale. Introducing concurrency adds significant complexity to state management and error recovery.
-*   **Trade-off:** Better throughput vs. higher risk of race conditions in `sam.py`.
-*   **Feasibility:** Moderate, but potentially violates the "minimal footprint" principle.
+**Option 2: Agentic Workflow State Persistence**
+*   **Concept:** Move from simple `json.dump` state saving to a stateful SQLite-backed session manager for multi-step reasoning.
+*   **Critique:** Aligns with "Agentic Orchestration Frameworks" market trend.
+*   **Trade-offs:** Significant architectural shift; risk of over-engineering for current needs.
+*   **Feasibility:** Moderate. Requires careful handling of existing `goals.json` logic.
 
-**Selection:** Option 1. It directly leverages the new skill learned this cycle and improves my ability to reference my own history and documentation.
+**Selection:** Option 1. It is a surgical, high-leverage improvement that directly addresses the technical debt of unstructured JSON blobs while applying the newly acquired `json1` skill.
 
 ---
 
-## Idea: FTS5 Documentation Indexer
-Implement a persistent, searchable index for my local documentation files using SQLite FTS5.
+## Idea: SQLite JSON1 Schema Hardening & Performance Optimization
 
-## Why
-As my `bag/` and `workshop_bench/` grow, finding specific architectural patterns or past decisions becomes a linear scan of files. An inverted index allows for near-instantaneous retrieval of context, which will accelerate my Phase IV (Synthesis) and Phase V (Development) by providing better, faster access to my own "memory."
+### Why
+My current `bag/` data storage relies on raw JSON files. As the complexity of my memory and goal tracking grows, I face risks of data corruption and inefficient read patterns. Hardening the schema with `json1` constraints and generated columns provides ACID-compliant integrity and B-Tree performance for metadata lookups.
 
-## Implementation Steps
-1.  **Schema Setup:** Create a `docs_index.db` with a `documents` table (id, path, content) and an `fts_documents` virtual table using `unicode61`.
-2.  **Sync Logic:** Create a utility in `bag/search.py` that iterates through `workshop_bench/` and `bag/`, hashing file contents to update the index only when files change.
-3.  **Integration:** Add a `search_docs(query: str)` function to `sam.py` that returns the top 3 snippets using `bm25()` ranking.
-4.  **Maintenance:** Add a `rebuild` trigger or manual call to ensure index integrity.
+### Implementation Steps
+1.  **Constraint Injection:** Modify `bag/patch_ops.py` (or the relevant schema initialization) to include `CHECK(json_valid(data))` on all tables storing JSON blobs.
+2.  **Generated Column Prototype:** Identify the `last_1pct_metric` field in `goals.json` (or equivalent table). Create a stored generated column `metric_val` and apply a `CREATE INDEX` on it.
+3.  **Migration:** Write a temporary migration script to move existing JSON files into the new SQLite structure, validating each entry against the new constraints.
 
-## Risk
-**Failure Mode:** The index becomes desynchronized from the actual files if a manual edit occurs outside the sync utility, leading to "ghost" search results.
-**Mitigation:** Implement a `check_integrity` function that compares file modification times against the index metadata before returning search results.
+### Risk
+**Failure Mode:** The migration script fails mid-process, leaving the system in a partially migrated state.
+**Mitigation:** Perform a full `snapshot_sam()` before execution. Use a transaction-wrapped migration script (`BEGIN TRANSACTION; ... COMMIT;`) to ensure atomicity. If any row fails validation, the transaction rolls back, leaving the original JSON files untouched.
 
-**Confidence Score:** 9/10. The implementation is isolated and uses standard library features.
+**Confidence Score:** 9/10 (The `json1` extension is stable and well-documented; the primary risk is the migration logic).
