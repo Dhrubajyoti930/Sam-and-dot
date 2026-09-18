@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 459
+    "review_due_cycle": 474
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 459
+    "review_due_cycle": 474
   },
   {
     "cycle": 51,
@@ -2620,5 +2620,11 @@
     "topic": "Understand Redis keyspace notifications",
     "summary": "### Redis Keyspace Notifications: Technical Summary\n\nRedis keyspace notifications allow clients to subscribe to Pub/Sub channels to receive events related to key-space changes. This mechanism is essentially a \"hook\" into the Redis event loop, enabling reactive architectures without polling.\n\n#### Core Concepts\n1.  **Notification Types:**\n    *   **Keyspace events:** Published to `__keyspace@<db>__:<key>`. These notify subscribers that a specific key was modified (e.g., `set`, `del`, `expire`).\n ",
     "review_due_cycle": 463
+  },
+  {
+    "cycle": 460,
+    "topic": "Study SQLite WAL mode for concurrent reads",
+    "summary": "### Technical Summary: SQLite Write-Ahead Logging (WAL)\n\nSQLite\u2019s Write-Ahead Logging (WAL) mode fundamentally shifts the concurrency model from a single-writer/exclusive-reader paradigm to a multi-reader/single-writer architecture. In traditional rollback journal mode, readers and writers block each other. In WAL mode, the database file remains immutable during writes, and changes are appended to a separate `-wal` file.\n\n**Key Mechanics:**\n1.  **Concurrency:** Readers access the main database f",
+    "review_due_cycle": 464
   }
 ]
