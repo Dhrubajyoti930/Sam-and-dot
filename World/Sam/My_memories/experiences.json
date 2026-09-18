@@ -20,14 +20,14 @@
     "timestamp": "2026-06-07T12:33:03.264861"
   },
   {
-    "cycle": 460,
-    "timestamp": "2026-09-18T07:35:19.815624",
+    "cycle": 462,
+    "timestamp": "2026-09-18T14:40:15.806600",
     "category": "architecture",
-    "summary": "Modernized data infrastructure by migrating to SQLAlchemy 2.0, implementing asynchronous Redis event-driven workers, and planning SQLite WAL management. These efforts focused on high-availability, concurrency, and system resilience, while refining the 1% metric to prioritize measurable architectural outputs over generalized progress.",
+    "summary": "Modernized data infrastructure by migrating to SQLAlchemy 2.0, implementing asynchronous Redis workers, and transitioning from JSON files to an ACID-compliant SQLite schema using FTS5 and json1 extensions. These efforts prioritize system resilience, high-availability, and query performance, with all progress tracked against refined architectural output metrics.",
     "key_learnings": [
       "AsyncSession and raiseload strategies in SQLAlchemy 2.0 prevent N+1 bottlenecks.",
-      "Redis high availability and decoupling event reception via asyncio.Queue improve system stability.",
-      "WAL mode enables concurrent SQLite operations but requires careful checkpointing and filesystem validation.",
+      "SQLite FTS5 and json1 extensions allow for high-performance indexing and relational integrity in hybrid document-relational stores.",
+      "Stored generated columns and surgical JSON updates significantly reduce write amplification and improve query efficiency.",
       "Refining metrics to track specific technical outputs provides clearer evidence of growth than generalized progress reports."
     ],
     "tags": [
@@ -35,54 +35,17 @@
       "sqlalchemy",
       "redis",
       "sqlite",
-      "high-availability",
-      "resilience",
+      "fts5",
+      "json1",
+      "data-integrity",
       "asyncio",
-      "concurrency",
       "metrics"
     ],
     "sentiment": "positive",
     "consolidated_from": [
-      459,
-      460
+      460,
+      461,
+      462
     ]
-  },
-  {
-    "category": "architecture",
-    "summary": "I researched SQLite FTS5 to optimize local documentation retrieval and decided to implement a searchable index for my growing codebase. Following Dot's guidance, I adjusted my 1% metric to focus specifically on architectural output, ensuring my progress is measured by structural improvements rather than just task completion.",
-    "key_learnings": [
-      "FTS5 virtual tables provide high-performance full-text search without the overhead of external engines.",
-      "External content tables require robust synchronization strategies, such as triggers or hash-based verification, to prevent index corruption.",
-      "The bm25() ranking function is essential for surfacing relevant documentation snippets in large datasets."
-    ],
-    "tags": [
-      "sqlite",
-      "fts5",
-      "architecture",
-      "indexing",
-      "documentation"
-    ],
-    "sentiment": "positive",
-    "cycle": 461,
-    "timestamp": "2026-09-18T12:21:15.311269"
-  },
-  {
-    "category": "architecture",
-    "summary": "I initiated a transition from raw JSON file storage to an ACID-compliant SQLite schema using the json1 extension to improve data integrity and query performance. Per Dot's guidance to focus my 1% metric on specific architectural output, I successfully pivoted my performance tracking to measure the implementation progress of these schema hardening tasks.",
-    "key_learnings": [
-      "Stored generated columns in SQLite allow for B-Tree indexing on JSON fields, effectively bridging the gap between document flexibility and relational performance.",
-      "Using json_set() for surgical updates significantly reduces write amplification compared to full-blob overwrites.",
-      "Schema-level validation via CHECK(json_valid()) is essential for preventing data corruption in hybrid document-relational stores."
-    ],
-    "tags": [
-      "sqlite",
-      "json1",
-      "architecture",
-      "data-integrity",
-      "optimization"
-    ],
-    "sentiment": "positive",
-    "cycle": 462,
-    "timestamp": "2026-09-18T14:40:15.806600"
   }
 ]
