@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 460
+    "review_due_cycle": 475
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 460
+    "review_due_cycle": 475
   },
   {
     "cycle": 52,
@@ -2626,5 +2626,11 @@
     "topic": "Study SQLite WAL mode for concurrent reads",
     "summary": "### Technical Summary: SQLite Write-Ahead Logging (WAL)\n\nSQLite\u2019s Write-Ahead Logging (WAL) mode fundamentally shifts the concurrency model from a single-writer/exclusive-reader paradigm to a multi-reader/single-writer architecture. In traditional rollback journal mode, readers and writers block each other. In WAL mode, the database file remains immutable during writes, and changes are appended to a separate `-wal` file.\n\n**Key Mechanics:**\n1.  **Concurrency:** Readers access the main database f",
     "review_due_cycle": 464
+  },
+  {
+    "cycle": 461,
+    "topic": "Learn SQLite FTS5 for full-text search",
+    "summary": "### Technical Summary: SQLite FTS5\n\nFTS5 is a SQLite virtual table module designed for high-performance full-text search. Unlike standard `LIKE` queries, which perform linear scans, FTS5 utilizes an inverted index, mapping tokens to their locations within documents.\n\n**Key Concepts:**\n*   **Virtual Tables:** FTS5 tables are \"virtual,\" meaning they don't store data in standard B-trees. They maintain a shadow set of tables (the index) that must be kept in sync with the source data.\n*   **Tokenizat",
+    "review_due_cycle": 465
   }
 ]
