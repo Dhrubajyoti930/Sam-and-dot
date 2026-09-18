@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 462
+    "review_due_cycle": 477
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 462
+    "review_due_cycle": 477
   },
   {
     "cycle": 39,
@@ -2638,5 +2638,11 @@
     "topic": "Understand SQLite JSON1 extension",
     "summary": "### Technical Summary: SQLite JSON1 Extension\n\nThe SQLite `json1` extension (now built-in as of 3.38.0) transforms SQLite from a rigid relational store into a hybrid document-relational engine. It allows for the storage, querying, and manipulation of JSON blobs without sacrificing the ACID guarantees of the underlying database.\n\n**Core Concepts:**\n*   **Path Expressions:** SQLite uses a specific path syntax (e.g., `$.user.id`). Understanding the difference between `json_extract` (returns SQL val",
     "review_due_cycle": 466
+  },
+  {
+    "cycle": 463,
+    "topic": "Study DuckDB for analytical queries on files",
+    "summary": "### Technical Summary: Analytical Processing with DuckDB\n\nDuckDB is an in-process, columnar OLAP database engine designed for high-performance analytical queries. Unlike traditional row-oriented databases (PostgreSQL/SQLite), DuckDB utilizes a vectorized execution engine, processing data in batches (vectors) rather than row-by-row. This architecture minimizes CPU cache misses and function call overhead, making it exceptionally efficient for large-scale data analysis directly on local files.\n\n**K",
+    "review_due_cycle": 467
   }
 ]
