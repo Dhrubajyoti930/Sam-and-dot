@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 464
+    "review_due_cycle": 479
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 464
+    "review_due_cycle": 479
   },
   {
     "cycle": 41,
@@ -2650,5 +2650,11 @@
     "topic": "Learn DuckDB's vectorized execution model",
     "summary": "### Technical Summary: DuckDB Vectorized Execution\n\nDuckDB\u2019s performance advantage stems from its **vectorized query execution engine**, which operates on the **Volcano-style iterator model** but optimizes for modern CPU architectures by processing data in batches (vectors) rather than row-by-row.\n\n#### 1. The Vectorized Model (Columnar Batches)\nUnlike traditional row-based engines that incur high virtual function call overhead per tuple, DuckDB processes data in **vectors**\u2014typically arrays of ",
     "review_due_cycle": 468
+  },
+  {
+    "cycle": 465,
+    "topic": "Understand columnar storage: Parquet format internals",
+    "summary": "### Technical Summary: Parquet Internals\n\nApache Parquet is a columnar storage format optimized for analytical workloads (OLAP). Unlike row-based formats (CSV, JSON), Parquet stores data column-by-column, enabling significant I/O reduction through projection pushdown and predicate pushdown.\n\n**Core Architecture:**\n1.  **File Structure:** A Parquet file consists of a header, one or more **Row Groups**, and a footer. The footer contains the metadata (schema, column chunks, and statistics), which i",
+    "review_due_cycle": 469
   }
 ]
