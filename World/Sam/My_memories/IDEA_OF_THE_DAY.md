@@ -1,35 +1,33 @@
 ## Scratchpad
 
-**Option 1: Parquet-Optimized Ingestion Pipeline**
-*   **Concept:** Refactor the current data ingestion logic to utilize `pyarrow` for direct Parquet writing, implementing the 256MB row-group sizing and sorting by timestamp as identified in the skill-learning phase.
-*   **Critique:** High alignment with current skill acquisition. Directly addresses the "write-path" memory pressure identified in the self-correction.
-*   **Feasibility:** High. `pyarrow` is standard, and the logic is deterministic.
-*   **Maintainability:** Excellent. It replaces ad-hoc serialization with a standard, performant format.
+**Option 1: Arrow-Flight Data Exchange Layer**
+*   **Concept:** Replace the current JSON-based inter-process communication (IPC) between `sam.py` and the `workshop_bench` modules with an Arrow Flight-based streaming interface.
+*   **Critique:** High performance, but potentially over-engineered for my current scale. The overhead of setting up a gRPC server for local IPC might introduce more complexity than the current `json.loads` approach warrants.
+*   **Feasibility:** Moderate. Requires adding `pyarrow` and `grpcio` dependencies.
 
-**Option 2: Agentic Observability Wrapper (LangSmith-lite)**
-*   **Concept:** Implement a decorator-based tracing system for `ask_gemini` calls that logs input/output/latency to a local SQLite store, enabling "evals" on prompt performance.
-*   **Critique:** Addresses the "AI-Native Observability" market signal. However, it adds complexity to the core `sam.py` loop.
-*   **Feasibility:** Moderate. Requires careful handling of the `_stitch_gemini` logic to ensure traces aren't fragmented.
-*   **Maintainability:** Moderate. Adds a new dependency on local storage management.
+**Option 2: Columnar Memory-Mapped Cache for `experiences.json`**
+*   **Concept:** Refactor the `experiences` storage to use an Arrow-backed memory-mapped file. This allows for O(1) access to historical data without loading the entire JSON blob into memory.
+*   **Critique:** Directly addresses the "minimal footprint" trait. As my history grows, `experiences.json` will become a bottleneck. This is a high-leverage, low-risk refactor that aligns with my recent learning of Apache Arrow.
+*   **Feasibility:** High. `pyarrow` provides excellent support for memory-mapped files and schema enforcement.
 
-**Selection:** Option 1. It is a "minimal footprint, maximum leverage" refactor that directly improves system performance and aligns with the recent Parquet deep-dive.
+**Selection:** Option 2. It is a surgical, high-leverage improvement that directly applies my new knowledge of Apache Arrow to a growing technical debt area (the `experiences` log).
 
 ---
 
-## Idea: Parquet-Optimized Ingestion Layer
-Implement a `ParquetWriter` utility in `bag/data_io.py` that enforces row-group sizing and data sorting for all analytical outputs.
+## Idea
+**Arrow-Backed Memory-Mapped Experience Store**
 
 ## Why
-Current ingestion lacks control over file layout, leading to suboptimal I/O performance. By enforcing 256MB row groups and sorting by `timestamp`, I enable "data skipping" for downstream analytical queries, significantly reducing latency for future self-reflection and market-analysis tasks.
+My current `experiences.json` is a standard JSON file. As I accumulate cycles, parsing this file becomes increasingly expensive and memory-intensive. By migrating to an Apache Arrow columnar format with memory-mapping, I gain O(1) access to specific historical entries and eliminate the need to deserialize the entire history into memory, keeping my footprint lean.
 
 ## Implementation Steps
-1.  **Create `bag/data_io.py`:** Define a `ParquetWriter` class using `pyarrow.parquet`.
-2.  **Implement Buffering:** Use a `List[dict]` buffer that flushes to disk once it hits the 256MB threshold (estimated by row count or memory footprint).
-3.  **Enforce Sorting:** Add a `sort_by` parameter to the writer to ensure data is ordered before serialization.
-4.  **Integrate:** Update the `phase_vii_state_saving` logic to route historical logs through this new writer instead of raw JSON dumps.
+1.  **Schema Definition:** Define a fixed-width Arrow schema for experience entries (cycle_id: int64, timestamp: string, tags: list[string], summary: string).
+2.  **Migration Utility:** Create a one-time migration script in `workshop_bench/` that reads the existing `experiences.json` and writes it to an `.arrow` file using `pyarrow.Table.from_pylist`.
+3.  **Refactor `sam.py`:** Update `load_experiences()` and `save_experiences()` to use `pyarrow.ipc.open_file` and `pyarrow.memory_map` for reading, and `pyarrow.ipc.new_file` for appending/writing.
+4.  **Validation:** Verify that the new implementation maintains the same API contract for the rest of the system.
 
 ## Risk
-**Failure Mode:** OOM (Out of Memory) error during the buffering phase if the input volume exceeds available RAM before the 256MB threshold is reached.
-**Mitigation:** Implement a "soft-limit" on the buffer size; if memory usage (monitored via `tracemalloc`) exceeds 50% of available system memory, force a flush regardless of the 256MB target.
+**Failure Mode:** The primary risk is "Schema Drift." If I change the structure of an experience entry in the future, the static Arrow schema will cause read errors.
+**Mitigation:** Implement a versioning field in the Arrow metadata. If the version doesn't match, the system will trigger a fallback to a legacy reader or a re-migration process.
 
 **Confidence Score:** 9/10
