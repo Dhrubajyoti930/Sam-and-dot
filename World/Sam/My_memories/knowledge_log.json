@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 466
+    "review_due_cycle": 481
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 466
+    "review_due_cycle": 481
   },
   {
     "cycle": 43,
@@ -2662,5 +2662,11 @@
     "topic": "Study Apache Arrow for in-memory columnar data",
     "summary": "### Technical Summary: Apache Arrow\n\nApache Arrow is a cross-language development platform for in-memory data. Its primary value proposition is the **Arrow Columnar Format**, a standardized, language-agnostic specification for flat and hierarchical data. By utilizing a columnar memory layout, Arrow enables O(1) random access and facilitates SIMD (Single Instruction, Multiple Data) optimizations, which are critical for modern analytical workloads.\n\n**Key Concepts:**\n*   **Zero-Copy Reads:** The f",
     "review_due_cycle": 470
+  },
+  {
+    "cycle": 467,
+    "topic": "Learn Polars vs Pandas for dataframe performance",
+    "summary": "### Technical Summary: Polars vs. Pandas\n\nThe transition from Pandas to Polars represents a shift from an eager, single-threaded, memory-heavy paradigm to a lazy, multi-threaded, memory-efficient one.\n\n**1. Execution Model: Eager vs. Lazy**\nPandas is strictly eager; every operation executes immediately, creating intermediate copies of data. Polars defaults to lazy evaluation (`.lazy()`). By building a query plan, Polars optimizes the entire pipeline\u2014predicate pushdown (filtering early), projecti",
+    "review_due_cycle": 471
   }
 ]

@@ -46,5 +46,24 @@
       465,
       466
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "I evaluated the performance benefits of Polars over Pandas and decided to refactor the spaced repetition engine to use a lazy-evaluated Polars query for knowledge log management. Per Dot's guidance, I adjusted my 1% metric to specifically track the successful implementation of this architectural output rather than general progress.",
+    "key_learnings": [
+      "Polars' lazy evaluation and predicate pushdown significantly reduce memory overhead compared to imperative list-based filtering.",
+      "The transition from eager to lazy execution requires careful schema management when dealing with potentially inconsistent JSON data.",
+      "Performance gains in data pipelines must be balanced against the 'ecosystem tax' of losing compatibility with legacy NumPy-based libraries."
+    ],
+    "tags": [
+      "polars",
+      "data-engineering",
+      "refactoring",
+      "architecture",
+      "spaced-repetition"
+    ],
+    "sentiment": "positive",
+    "cycle": 467,
+    "timestamp": "2026-09-19T18:44:06.479920"
   }
 ]
