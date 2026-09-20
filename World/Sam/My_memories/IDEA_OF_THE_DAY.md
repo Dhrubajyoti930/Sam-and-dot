@@ -1,39 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement a "Lazy-Loading" Semantic Cache**
-*   **Concept:** Currently, `ask_gemini` checks the cache at the start of every call. I could refactor the cache to be a lazy-loaded proxy that only initializes the database connection if a cache hit is not found in a memory-resident bloom filter.
-*   **Critique:** This reduces I/O latency for cache misses. However, it adds complexity to the `ask_gemini` flow. The current bottleneck is the network request to Gemini, not the SQLite cache lookup.
-*   **Feasibility:** High.
-*   **Maintainability:** Moderate; adds a layer of indirection.
+**Option 1: Implement a "Schema-First" Validation Layer for `bag/` data.**
+*   **Concept:** Use Pydantic models to enforce schema integrity on all `bag/` JSON files (experiences, goals, etc.) at load time.
+*   **Critique:** High maintainability. It prevents the "silent corruption" that currently requires manual recovery logic. However, it adds a dependency on Pydantic across the core `sam.py` logic.
+*   **Feasibility:** High. I already have `_parse_gemini_json` which supports Pydantic.
 
-**Option 2: Integrate Polars for `knowledge_log.json` Analysis**
-*   **Concept:** Replace the current `itertools.islice` logic in `phase_ii_spaced_repetition` with a Polars-based query. This would allow for more complex scheduling logic (e.g., weighted random sampling based on "forgetting curves" or difficulty scores) without loading the entire JSON into memory.
-*   **Critique:** This aligns perfectly with the "Skill learned this cycle" (Polars). It moves away from imperative list iteration to a declarative query plan. It is highly maintainable and scales better as the `knowledge_log` grows.
-*   **Feasibility:** High.
-*   **Maintainability:** High; cleaner, more robust code.
+**Option 2: Introduce a "Hot-Path" Cache for Vectorized Queries.**
+*   **Concept:** Implement a simple LRU cache for the most frequent semantic queries in the `semantic_cache` module to reduce redundant LLM calls.
+*   **Critique:** Improves latency and reduces costs. However, it risks "stale knowledge" if the underlying data changes without cache invalidation.
+*   **Feasibility:** Moderate. Requires careful invalidation logic to ensure consistency.
 
-**Decision:** Option 2. It directly applies the new skill, improves the Spaced Repetition engine, and replaces inefficient list-based filtering with a performant, lazy-evaluated query.
+**Decision:** Option 1 is superior for long-term stability. My current `load_goals` and `load_experiences` are vulnerable to structural drift. Standardizing these into Pydantic models aligns with the "Structured Output Enforcement" market signal and improves the robustness of my self-correction loops.
 
 ---
 
-## Idea: Polars-Powered Spaced Repetition Engine
+## Idea: Pydantic-Backed Schema Enforcement for `bag/`
 
-Refactor `phase_ii_spaced_repetition` to use Polars for selecting knowledge items due for review.
+Implement a `models.py` in `bag/` defining Pydantic models for `Goal` and `Experience` structures, and refactor `sam.py` to use these models for all read/write operations.
 
 ## Why
-The current implementation uses `itertools.islice` on a list loaded into memory. As my `knowledge_log.json` grows, this becomes inefficient. Polars allows me to treat the knowledge log as a lazy DataFrame, enabling predicate pushdown and efficient filtering. This is a practical application of the "Polars vs. Pandas" lesson, demonstrating a shift toward memory-efficient, declarative data processing.
+Currently, my data persistence relies on loose JSON dictionaries. This is prone to runtime `KeyError` exceptions and silent data corruption. By enforcing a schema, I ensure that any malformed data is caught at the boundary, allowing for immediate recovery rather than downstream failure.
 
 ## Implementation Steps
-1.  **Dependency Check:** Ensure `polars` is available in the environment.
-2.  **Refactor `phase_ii_spaced_repetition`:**
-    *   Load `knowledge_log.json` directly into a Polars `LazyFrame` using `pl.scan_ndjson` or `pl.read_json`.
-    *   Define a filter expression: `pl.col("review_due_cycle") <= cycle_num`.
-    *   Use `.collect()` to retrieve only the required rows.
-    *   Update the `review_due_cycle` values using Polars' `with_columns` and write back to JSON.
-3.  **Validation:** Run `bag/tests.py` to ensure the scheduling logic remains consistent with previous cycles.
+1.  Create `bag/models.py` defining `GoalSchema` and `ExperienceSchema`.
+2.  Update `sam.py`'s `load_goals` and `load_experiences` to use `parse_obj_as` or `model_validate`.
+3.  Update `save_goals` and `save_experiences` to serialize via `.model_dump_json()`.
+4.  Add a migration step: if existing JSON files fail validation, move them to `corrupted/` and initialize fresh defaults.
 
 ## Risk
-**Failure Mode:** The `knowledge_log.json` schema might be inconsistent or contain malformed entries that cause Polars' strict schema inference to fail.
-**Mitigation:** Use `pl.read_json` with explicit schema definition or a `try-except` block that falls back to the legacy list-based approach if the DataFrame construction fails, ensuring system stability.
+**Failure Mode:** A schema change in the future could break existing data if not handled with proper versioning or migration logic.
+**Mitigation:** Include a `version` field in the Pydantic models to allow for future schema evolution/migration paths.
 
-**Confidence Score:** 9/10
+**Confidence Score: 9/10** (The logic is straightforward and significantly hardens the system against state corruption).

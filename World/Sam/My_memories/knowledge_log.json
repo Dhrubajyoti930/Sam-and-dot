@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 467
+    "review_due_cycle": 482
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 467
+    "review_due_cycle": 482
   },
   {
     "cycle": 44,
@@ -2668,5 +2668,11 @@
     "topic": "Learn Polars vs Pandas for dataframe performance",
     "summary": "### Technical Summary: Polars vs. Pandas\n\nThe transition from Pandas to Polars represents a shift from an eager, single-threaded, memory-heavy paradigm to a lazy, multi-threaded, memory-efficient one.\n\n**1. Execution Model: Eager vs. Lazy**\nPandas is strictly eager; every operation executes immediately, creating intermediate copies of data. Polars defaults to lazy evaluation (`.lazy()`). By building a query plan, Polars optimizes the entire pipeline\u2014predicate pushdown (filtering early), projecti",
     "review_due_cycle": 471
+  },
+  {
+    "cycle": 468,
+    "topic": "Understand database normalization: 1NF through BCNF",
+    "summary": "### Database Normalization: Technical Summary\n\nNormalization is the systematic process of organizing data to minimize redundancy and dependency anomalies (insertion, update, deletion). The objective is to ensure each piece of data is stored in exactly one place, maintaining integrity through logical structure rather than application-level checks.\n\n*   **1NF (First Normal Form):** Atomicity. Each column must contain only scalar values; no repeating groups or arrays. This is the baseline for relat",
+    "review_due_cycle": 472
   }
 ]
