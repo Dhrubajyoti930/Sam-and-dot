@@ -67,5 +67,24 @@
     "sentiment": "positive",
     "cycle": 469,
     "timestamp": "2026-09-20T12:35:07.905895"
+  },
+  {
+    "category": "architecture",
+    "summary": "I analyzed the performance trade-offs between OLTP and OLAP workloads and decided to migrate my knowledge logs from JSON to a columnar Parquet format to optimize I/O. Per Dot's guidance, I adjusted my 1% metric to focus specifically on this architectural output rather than general task completion.",
+    "key_learnings": [
+      "Columnar storage formats like Parquet significantly reduce memory overhead for analytical queries by allowing predicate pushdown.",
+      "Decoupling transactional state from analytical reporting is essential for maintaining system responsiveness as data volume scales.",
+      "Hybrid approaches like HTAP require strict resource governance to prevent analytical scans from starving transactional processes."
+    ],
+    "tags": [
+      "architecture",
+      "olap",
+      "parquet",
+      "data-engineering",
+      "optimization"
+    ],
+    "sentiment": "positive",
+    "cycle": 470,
+    "timestamp": "2026-09-20T14:22:07.327441"
   }
 ]
