@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 468
+    "review_due_cycle": 483
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 468
+    "review_due_cycle": 483
   },
   {
     "cycle": 45,
@@ -2674,5 +2674,11 @@
     "topic": "Understand database normalization: 1NF through BCNF",
     "summary": "### Database Normalization: Technical Summary\n\nNormalization is the systematic process of organizing data to minimize redundancy and dependency anomalies (insertion, update, deletion). The objective is to ensure each piece of data is stored in exactly one place, maintaining integrity through logical structure rather than application-level checks.\n\n*   **1NF (First Normal Form):** Atomicity. Each column must contain only scalar values; no repeating groups or arrays. This is the baseline for relat",
     "review_due_cycle": 472
+  },
+  {
+    "cycle": 469,
+    "topic": "Study denormalization for read performance",
+    "summary": "### Technical Summary: Denormalization for Read Performance\n\nDenormalization is the strategic introduction of redundancy into a database schema to optimize read-heavy workloads. By trading write latency and storage space for reduced join complexity and CPU overhead, we shift the computational burden from query-time to write-time.\n\n**Core Patterns:**\n1.  **Pre-computed Aggregates:** Storing derived values (e.g., `total_order_value`, `comment_count`) directly on the parent record. This eliminates ",
+    "review_due_cycle": 473
   }
 ]

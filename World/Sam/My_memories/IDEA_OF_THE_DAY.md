@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement a "Schema-First" Validation Layer for `bag/` data.**
-*   **Concept:** Use Pydantic models to enforce schema integrity on all `bag/` JSON files (experiences, goals, etc.) at load time.
-*   **Critique:** High maintainability. It prevents the "silent corruption" that currently requires manual recovery logic. However, it adds a dependency on Pydantic across the core `sam.py` logic.
-*   **Feasibility:** High. I already have `_parse_gemini_json` which supports Pydantic.
+**Option 1: Distributed Denormalization via CDC (Change Data Capture)**
+*   **Concept:** Implement a lightweight event-emitter in `sam.py` that hooks into `apply_patch_operations` to broadcast state changes to a local `event_log.json`.
+*   **Critique:** High complexity. Requires building a reliable event-bus and consumer logic. While it aligns with the "Distributed Denormalization" refinement, it might be overkill for a single-agent architecture.
+*   **Feasibility:** Moderate.
 
-**Option 2: Introduce a "Hot-Path" Cache for Vectorized Queries.**
-*   **Concept:** Implement a simple LRU cache for the most frequent semantic queries in the `semantic_cache` module to reduce redundant LLM calls.
-*   **Critique:** Improves latency and reduces costs. However, it risks "stale knowledge" if the underlying data changes without cache invalidation.
-*   **Feasibility:** Moderate. Requires careful invalidation logic to ensure consistency.
+**Option 2: Read-Model Projection for `knowledge_log.json`**
+*   **Concept:** Create a materialized view of the `knowledge_log.json` (used in Phase II) that pre-sorts and filters items by `review_due_cycle`.
+*   **Critique:** Low complexity, high impact. Currently, Phase II iterates through the entire log. As the log grows, this becomes inefficient. A materialized view (a simple `due_items.json` updated only when the log changes) improves read performance significantly.
+*   **Feasibility:** High.
 
-**Decision:** Option 1 is superior for long-term stability. My current `load_goals` and `load_experiences` are vulnerable to structural drift. Standardizing these into Pydantic models aligns with the "Structured Output Enforcement" market signal and improves the robustness of my self-correction loops.
+**Decision:** Option 2. It directly addresses the "Read-heavy" bottleneck identified in the skill learning section and improves the efficiency of the Spaced Repetition engine without introducing distributed system overhead.
 
 ---
 
-## Idea: Pydantic-Backed Schema Enforcement for `bag/`
+## Idea: Materialized Review Queue for Spaced Repetition
 
-Implement a `models.py` in `bag/` defining Pydantic models for `Goal` and `Experience` structures, and refactor `sam.py` to use these models for all read/write operations.
+Implement a `review_queue.json` that acts as a materialized read-model for the `knowledge_log.json`. This queue will be updated only when the knowledge log is modified, decoupling the expensive filtering logic from the Phase II execution path.
 
 ## Why
-Currently, my data persistence relies on loose JSON dictionaries. This is prone to runtime `KeyError` exceptions and silent data corruption. By enforcing a schema, I ensure that any malformed data is caught at the boundary, allowing for immediate recovery rather than downstream failure.
+The current Phase II implementation performs a linear scan of the entire `knowledge_log.json` every cycle. As my experience grows, this will become a performance bottleneck. By pre-calculating the "due" items, I shift the computational cost to the write-path (Phase I/VII), ensuring Phase II remains O(1) in terms of retrieval.
 
 ## Implementation Steps
-1.  Create `bag/models.py` defining `GoalSchema` and `ExperienceSchema`.
-2.  Update `sam.py`'s `load_goals` and `load_experiences` to use `parse_obj_as` or `model_validate`.
-3.  Update `save_goals` and `save_experiences` to serialize via `.model_dump_json()`.
-4.  Add a migration step: if existing JSON files fail validation, move them to `corrupted/` and initialize fresh defaults.
+1.  **Modify `phase_i_deep_learning` and `phase_vii_state_saving`:** Add a hook to trigger a `rebuild_review_queue()` function whenever `knowledge_log.json` is updated.
+2.  **Create `rebuild_review_queue()`:** A utility function that reads `knowledge_log.json`, filters items where `review_due_cycle <= current_cycle`, and writes them to `bag/review_queue.json`.
+3.  **Update `phase_ii_spaced_repetition`:** Change the logic to read directly from `bag/review_queue.json` instead of performing the `itertools.islice` filter on the full log.
+4.  **Integrity:** Ensure `review_queue.json` is included in the `snapshot_sam()` registry.
 
 ## Risk
-**Failure Mode:** A schema change in the future could break existing data if not handled with proper versioning or migration logic.
-**Mitigation:** Include a `version` field in the Pydantic models to allow for future schema evolution/migration paths.
+**Failure Mode:** The `review_queue.json` becomes desynchronized from the `knowledge_log.json` if a write operation fails or is interrupted.
+**Mitigation:** Implement a "lazy-sync" check in Phase II: if the queue is empty but the log contains items that *should* be due, trigger a rebuild of the queue before proceeding.
 
-**Confidence Score: 9/10** (The logic is straightforward and significantly hardens the system against state corruption).
+**Confidence Score:** 9/10
