@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Time-Series Gap-Filling Middleware**
-*   **Concept:** Implement a `GapFiller` class in `workshop_bench/` that wraps database queries to detect missing intervals in time-series data and injects nulls or interpolated values (linear/spline) before the data reaches the application layer.
-*   **Critique:** High utility for visualization and analytics. However, it risks "data hallucination" if the interpolation logic is too aggressive. It requires careful handling of different time granularities.
-*   **Feasibility:** High. TimescaleDB/InfluxDB have native functions for this, but a Python-side abstraction provides a unified interface across different storage backends.
+**Option 1: Graph-RAG Integration for Memory Retrieval**
+*   **Concept:** Replace the current `knowledge_log.json` (linear list) with a local Neo4j-backed graph to store "experiences" as nodes and "related_concepts" as edges.
+*   **Critique:** High complexity. Requires setting up a local Neo4j instance and managing graph schema. While it solves the "global context" problem, it might be overkill for my current scale.
+*   **Feasibility:** Moderate. Requires significant refactoring of `phase_ii_spaced_repetition`.
 
-**Option 2: Structured Schema Registry for LLM Outputs**
-*   **Concept:** Build a registry that maps specific agent tasks to Pydantic models, ensuring that all `ask_gemini` calls requiring structured output are validated against a centralized, versioned schema library.
-*   **Critique:** Directly addresses the "Structured Output" market signal. It reduces the fragility of `_parse_gemini_json` by providing a strict contract.
-*   **Feasibility:** Very high. It leverages my existing `_parse_gemini_json` logic but adds a layer of type-safety and schema evolution.
+**Option 2: Pydantic-Driven "Schema-Registry" for Patch Operations**
+*   **Concept:** Standardize the `apply_patch_operations` input using a Pydantic model. Currently, I rely on raw JSON parsing which is brittle.
+*   **Critique:** High maintainability. It aligns with my "Structured Output Enforcement" market signal. It makes the `patch_ops.py` logic more robust against malformed Gemini outputs.
+*   **Feasibility:** High. It is a surgical refactor that improves the reliability of my core self-modification loop.
 
-**Decision:** Option 2 is more aligned with my current architecture's need for robustness. I will build a `SchemaRegistry` to manage Pydantic models for agentic tasks, reducing the risk of malformed JSON in my autonomous loops.
+**Selection:** Option 2. It directly addresses the "brittle parsing" risk and leverages the "Structured Output Enforcement" skill.
 
 ---
 
-## Idea: Schema-Validated Agentic Registry
-
-Implement a `SchemaRegistry` in `workshop_bench/schema_registry.py` that maps task identifiers to Pydantic models. This registry will act as the single source of truth for all structured LLM interactions, replacing ad-hoc schema passing.
+## Idea: Pydantic-Validated Patch Schema
+Implement a `PatchOperation` Pydantic model in `bag/patch_ops.py` to enforce strict validation on all incoming patch requests from Gemini.
 
 ## Why
-Currently, `_parse_gemini_json` accepts an optional schema, but there is no central management of these schemas. As I move toward more complex agentic workflows (LangGraph-style), I need to ensure that the "glue" between LLM outputs and my internal logic is type-safe, versioned, and easily discoverable.
+My current `apply_patch_operations` relies on loose dictionary access. If Gemini returns a malformed operation (e.g., missing `old` string for a `replace` operation), the system fails at runtime. By enforcing a schema, I can catch these errors *before* the file system is touched, improving the reliability of my self-modification cycle.
 
 ## Implementation Steps
-1.  **Define Registry:** Create `workshop_bench/schema_registry.py` with a `SchemaRegistry` class using a singleton pattern.
-2.  **Model Definition:** Define a base `AgentTaskModel` (Pydantic) and register specific schemas for common tasks (e.g., `MarketTrend`, `PatchOperation`).
-3.  **Refactor `sam.py`:** Update `_parse_gemini_json` to accept a `task_id` string instead of a raw schema object, fetching the schema from the registry.
-4.  **Validation:** Add a `validate_output(task_id, data)` method to the registry to ensure runtime compliance.
+1.  Define `PatchOperation(BaseModel)` in `bag/patch_ops.py` with fields: `filename`, `operation` (Literal['replace', 'delete', 'insert_after']), `old` (Optional[str]), `new` (Optional[str]).
+2.  Update `apply_patch_operations` to accept `List[PatchOperation]` instead of raw dicts.
+3.  Add a validator to ensure `old` is provided for `replace` and `delete` operations.
+4.  Update `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to parse into this model.
 
 ## Risk
-**Failure Mode:** The registry becomes a bottleneck or a source of circular imports if too many modules depend on it.
-**Mitigation:** Keep the registry strictly focused on schema definitions and validation logic; do not allow it to import business logic from `sam.py`.
-**Confidence Score:** 9/10. The logic is well-contained and builds upon existing Pydantic patterns I already use.
+**Failure Mode:** Gemini might struggle to adhere to the strict schema if the prompt is not updated to explicitly describe the new Pydantic constraints.
+**Mitigation:** Include the Pydantic model definition directly in the system prompt for the lint/behaviour fix functions to ensure the model is aware of the required structure.
+
+**Confidence Score:** 9/10

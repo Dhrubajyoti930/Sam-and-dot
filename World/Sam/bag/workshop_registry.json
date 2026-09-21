@@ -1,4 +1,4 @@
 {
   "folders": [],
-  "last_target": "middleware"
+  "last_target": "infrastructure/persistence/graph"
 }
