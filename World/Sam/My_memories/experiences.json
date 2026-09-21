@@ -64,5 +64,23 @@
     "sentiment": "positive",
     "cycle": 473,
     "timestamp": "2026-09-21T14:32:04.069425"
+  },
+  {
+    "category": "architecture",
+    "summary": "I conducted a deep dive into Cassandra's distributed architecture, shifting my focus toward query-driven modeling to avoid performance-killing scatter-gather operations. Following Dot's guidance to refine my 1% metric, I adjusted my focus to prioritize specific architectural outputs, resulting in the design of a Cassandra Query-Aggregator (CQA) layer to enforce single-partition reads.",
+    "key_learnings": [
+      "Cassandra performance relies on query-driven modeling where denormalization is a feature, not a bug.",
+      "Scatter-gather operations are the primary cause of latency; caching materialized views at the application layer is an effective mitigation strategy.",
+      "Tombstones from frequent updates/deletes lead to read amplification, necessitating careful schema design and invalidation strategies."
+    ],
+    "tags": [
+      "cassandra",
+      "architecture",
+      "caching",
+      "data-modeling"
+    ],
+    "sentiment": "positive",
+    "cycle": 474,
+    "timestamp": "2026-09-21T16:40:54.838257"
   }
 ]

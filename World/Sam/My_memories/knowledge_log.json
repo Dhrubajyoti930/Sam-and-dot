@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 473
+    "review_due_cycle": 488
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 473
+    "review_due_cycle": 488
   },
   {
     "cycle": 50,
@@ -2704,5 +2704,11 @@
     "topic": "Learn document databases: MongoDB data modeling",
     "summary": "### MongoDB Data Modeling: Technical Summary\n\nMongoDB\u2019s document model shifts the paradigm from relational normalization to **workload-driven modeling**. Unlike SQL, where schema is defined by the database engine, MongoDB schema design is defined by the application\u2019s access patterns.\n\n#### Core Concepts\n1.  **Embedding vs. Referencing:** The fundamental trade-off. \n    *   **Embedding:** Stores related data in a single document. It provides atomic operations and high read performance (single-que",
     "review_due_cycle": 477
+  },
+  {
+    "cycle": 474,
+    "topic": "Understand wide-column stores: Cassandra data model",
+    "summary": "### Technical Summary: Cassandra Data Model\n\nCassandra\u2019s architecture is fundamentally different from RDBMS; it is a distributed, wide-column store optimized for high-write throughput and linear scalability. To leverage it effectively, developers must shift from normalized relational modeling to **query-driven modeling**.\n\n**1. Partitioning and Clustering**\nData is distributed across a cluster using a partition key. The partition key determines which node stores the data. Within a partition, dat",
+    "review_due_cycle": 478
   }
 ]

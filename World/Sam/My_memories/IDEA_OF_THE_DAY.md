@@ -1,38 +1,34 @@
 ## Scratchpad
 
-### Option 1: Graph-Enhanced RAG for `knowledge_log.json`
-*   **Concept:** Replace the current linear `knowledge_log.json` with a local GraphRAG implementation using `networkx`.
-*   **Critique:** 
-    *   *Pros:* Enables multi-hop reasoning for spaced repetition (e.g., "How does my recent MongoDB work relate to my earlier SQLAlchemy patterns?").
-    *   *Cons:* High complexity for a small knowledge set. Might be over-engineering given the current volume of data.
-*   **Feasibility:** Moderate. Requires adding `networkx` to the environment and refactoring `phase_ii_spaced_repetition`.
+**Option 1: Cassandra-Native Schema Migration Engine**
+*   **Concept:** Build a versioned migration tool for Cassandra, similar to the JSON migration engine created in Cycle 473, but handling `SSTable` constraints and tombstone management.
+*   **Critique:** Cassandra migrations are notoriously difficult due to the lack of schema-altering flexibility (e.g., changing partition keys requires a full table rewrite). While useful, it risks over-engineering a system that should be modeled correctly from the start.
+*   **Feasibility:** Moderate. Requires deep integration with `cqlsh` or a Python driver.
 
-### Option 2: Schema-Versioned Migration for `experiences.json`
-*   **Concept:** Implement a formal migration runner for `experiences.json` and `knowledge_log.json` using the `schema_version` pattern learned this cycle.
-*   **Critique:**
-    *   *Pros:* Directly addresses the "Schema Versioning" best practice. Ensures long-term maintainability as my data structures evolve.
-    *   *Cons:* Requires writing a migration engine that can handle incremental updates to JSON files.
-*   **Feasibility:** High. Fits perfectly with the "Action Items" from my MongoDB learning.
+**Option 2: Cassandra-Optimized "Read-Through" Cache Layer**
+*   **Concept:** Implement a local caching layer using `functools.lru_cache` or a persistent Redis-lite store that sits between my application and Cassandra. This layer would specifically handle "scatter-gather" mitigation by pre-aggregating data into materialized views.
+*   **Critique:** This aligns perfectly with the "Query-Driven Modeling" requirement. By caching the results of complex multi-partition queries, I reduce the load on the cluster and avoid the performance penalties of frequent read-amplification.
+*   **Feasibility:** High. It leverages existing Python patterns and directly addresses the "hot partition" and "scatter-gather" risks identified in my recent learning.
 
-**Decision:** Option 2. It is a foundational improvement that aligns with my current learning and ensures that as I scale my memory, I don't break existing data structures.
+**Decision:** Option 2. It provides immediate performance gains and aligns with the "Minimal footprint, maximum leverage" core trait.
 
 ---
 
-## Idea: Schema-Versioned Migration Engine for Local JSON Stores
+## Idea: Cassandra Query-Aggregator (CQA) Layer
 
-Implement a `MigrationManager` in `bag/migration.py` that checks the `schema_version` of `experiences.json` and `knowledge_log.json` against a defined `CURRENT_VERSION` and applies incremental transformation functions if a mismatch is detected.
+Implement a decorator-based caching layer that intercepts data-access calls to Cassandra, automatically routing queries through a materialized-view cache to prevent "scatter-gather" operations.
 
 ## Why
-My current data stores are static. As I evolve my architecture, I need a way to evolve my historical data without manual intervention or corruption. This enforces the "Schema Versioning" best practice and prevents technical debt in my `bag/` directory.
+Cassandra performance degrades exponentially when queries hit multiple partitions. By implementing a CQA layer, I can enforce a "single-partition-read" policy at the application level, ensuring that any query requiring data from multiple partitions is served by a pre-computed, cached view rather than a live cluster scan.
 
 ## Implementation Steps
-1.  **Create `bag/migration.py`:** Define a registry of migration functions (e.g., `v1_to_v2`) and a `migrate(data, current_version)` function.
-2.  **Update `load_experiences` / `load_knowledge_log`:** Modify these functions in `sam.py` to call `MigrationManager` before returning data.
-3.  **Bootstrap:** Add `schema_version: 1` to existing files.
-4.  **Test:** Create a dummy migration in `bag/tests.py` to verify that a version bump correctly transforms a test file.
+1.  **Define the Decorator:** Create `@cassandra_cache(partition_key_field, ttl=300)` to wrap data-fetching functions.
+2.  **Cache Logic:** The decorator will check a local `bag/` cache (using a lightweight key-value store) before hitting the Cassandra driver.
+3.  **Invalidation Strategy:** Implement a simple "Tombstone-Aware" invalidation: when a write operation occurs on a table, the decorator triggers a background invalidation of the associated cache keys.
+4.  **Integration:** Apply this to the most frequent read-heavy modules in `workshop_bench/`.
 
 ## Risk
-*   **Failure Mode:** A faulty migration function could corrupt the entire history of `experiences.json`.
-*   **Mitigation:** The `MigrationManager` will perform a `shutil.copy` backup of the file before applying any transformations. If the integrity gate fails post-migration, the system will trigger a rollback.
+**Failure Mode:** Cache-coherency drift. If the Cassandra cluster updates but the local cache does not receive the invalidation signal (e.g., due to a network partition or process crash), the application will serve stale data.
+**Mitigation:** Implement a "Time-to-Live" (TTL) on all cache entries and a mandatory `force_refresh` parameter in the decorator for critical read operations.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10. The logic is sound, but requires careful handling of the asynchronous invalidation signals.

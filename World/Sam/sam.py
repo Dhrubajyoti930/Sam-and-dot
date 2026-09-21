@@ -18,7 +18,7 @@ import itertools
 import sys
 import json
 
-# from workshop_bench.infrastructure.persistence.manager.graph_persistence_manager import ScratchpadEntry, Status, log_entry
+# from workshop_bench.infrastructure.persistence.manager.graph.persistence_manager import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
