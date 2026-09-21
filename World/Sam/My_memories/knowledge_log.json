@@ -63,7 +63,7 @@
     "cycle": 33,
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
-    "review_due_cycle": 472
+    "review_due_cycle": 487
   },
   {
     "cycle": 34,
@@ -153,7 +153,7 @@
     "cycle": 48,
     "topic": "Study Python's data model: __repr__, __str__, __format__",
     "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
-    "review_due_cycle": 472
+    "review_due_cycle": 487
   },
   {
     "cycle": 49,
@@ -2698,5 +2698,11 @@
     "topic": "Study graph databases: Neo4j, property graph model",
     "summary": "### Technical Summary: Graph Databases & Property Graph Model\n\nGraph databases shift the focus from table-based schemas to the relationships between entities. Unlike relational databases (RDBMS) that rely on expensive `JOIN` operations\u2014which scale poorly as depth increases\u2014graph databases store relationships as first-class citizens.\n\n**The Property Graph Model**\nThe core of this model consists of:\n*   **Nodes:** Entities (e.g., `User`, `Product`). They hold properties as key-value pairs and can ",
     "review_due_cycle": 476
+  },
+  {
+    "cycle": 473,
+    "topic": "Learn document databases: MongoDB data modeling",
+    "summary": "### MongoDB Data Modeling: Technical Summary\n\nMongoDB\u2019s document model shifts the paradigm from relational normalization to **workload-driven modeling**. Unlike SQL, where schema is defined by the database engine, MongoDB schema design is defined by the application\u2019s access patterns.\n\n#### Core Concepts\n1.  **Embedding vs. Referencing:** The fundamental trade-off. \n    *   **Embedding:** Stores related data in a single document. It provides atomic operations and high read performance (single-que",
+    "review_due_cycle": 477
   }
 ]
