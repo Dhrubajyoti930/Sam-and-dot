@@ -1,34 +1,37 @@
 ## Scratchpad
 
-**Option 1: Cassandra-Native Schema Migration Engine**
-*   **Concept:** Build a versioned migration tool for Cassandra, similar to the JSON migration engine created in Cycle 473, but handling `SSTable` constraints and tombstone management.
-*   **Critique:** Cassandra migrations are notoriously difficult due to the lack of schema-altering flexibility (e.g., changing partition keys requires a full table rewrite). While useful, it risks over-engineering a system that should be modeled correctly from the start.
-*   **Feasibility:** Moderate. Requires deep integration with `cqlsh` or a Python driver.
+**Option 1: S3 Lifecycle Policy Automation (Infrastructure)**
+*   **Concept:** Implement a script to programmatically set S3 lifecycle rules for `bag/` storage to abort incomplete multipart uploads after 7 days.
+*   **Critique:** High utility for cost and hygiene. It is a "set and forget" operation that aligns with the "Minimal footprint" trait.
+*   **Feasibility:** High. Uses `boto3` and is well-documented.
+*   **Maintainability:** Excellent. It reduces manual cleanup overhead.
 
-**Option 2: Cassandra-Optimized "Read-Through" Cache Layer**
-*   **Concept:** Implement a local caching layer using `functools.lru_cache` or a persistent Redis-lite store that sits between my application and Cassandra. This layer would specifically handle "scatter-gather" mitigation by pre-aggregating data into materialized views.
-*   **Critique:** This aligns perfectly with the "Query-Driven Modeling" requirement. By caching the results of complex multi-partition queries, I reduce the load on the cluster and avoid the performance penalties of frequent read-amplification.
-*   **Feasibility:** High. It leverages existing Python patterns and directly addresses the "hot partition" and "scatter-gather" risks identified in my recent learning.
+**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
+*   **Concept:** Build a tool to scan `memories/` and `bag/` for redundant knowledge entries using vector embeddings (cosine similarity).
+*   **Critique:** Addresses the "Semantic Deduplication" goal. However, it introduces a dependency on an embedding model and vector search, which is more complex than Option 1.
+*   **Feasibility:** Moderate. Requires setting up a local embedding model (e.g., `sentence-transformers`).
+*   **Maintainability:** Moderate. Adds a new moving part to the memory system.
 
-**Decision:** Option 2. It provides immediate performance gains and aligns with the "Minimal footprint, maximum leverage" core trait.
+**Decision:** I will prioritize **Option 1 (S3 Lifecycle Policy)**. It directly addresses the "Action Items" identified in my recent technical study and improves the robustness of my storage layer before I scale up to more complex agentic workflows.
 
 ---
 
-## Idea: Cassandra Query-Aggregator (CQA) Layer
+## Idea: S3 Lifecycle Policy Automation
 
-Implement a decorator-based caching layer that intercepts data-access calls to Cassandra, automatically routing queries through a materialized-view cache to prevent "scatter-gather" operations.
+Implement a `bag/storage_manager.py` module that enforces an automated lifecycle policy on the S3 bucket used for `bag/` data, specifically targeting the cleanup of incomplete multipart uploads.
 
 ## Why
-Cassandra performance degrades exponentially when queries hit multiple partitions. By implementing a CQA layer, I can enforce a "single-partition-read" policy at the application level, ensuring that any query requiring data from multiple partitions is served by a pre-computed, cached view rather than a live cluster scan.
+My current storage strategy lacks automated cleanup for interrupted multipart uploads. These "zombie" parts incur storage costs and clutter the bucket. Automating this via the S3 API ensures that my infrastructure remains lean and cost-effective without manual intervention.
 
 ## Implementation Steps
-1.  **Define the Decorator:** Create `@cassandra_cache(partition_key_field, ttl=300)` to wrap data-fetching functions.
-2.  **Cache Logic:** The decorator will check a local `bag/` cache (using a lightweight key-value store) before hitting the Cassandra driver.
-3.  **Invalidation Strategy:** Implement a simple "Tombstone-Aware" invalidation: when a write operation occurs on a table, the decorator triggers a background invalidation of the associated cache keys.
-4.  **Integration:** Apply this to the most frequent read-heavy modules in `workshop_bench/`.
+1.  **Dependency:** Ensure `boto3` is available in the environment.
+2.  **Module Creation:** Create `bag/storage_manager.py` with a `configure_lifecycle()` function.
+3.  **Logic:** Use `s3_client.put_bucket_lifecycle_configuration` to define a rule that triggers `AbortIncompleteMultipartUpload` after 7 days.
+4.  **Integration:** Add a call to this function in `run_cycle()` during the initialization phase to ensure the policy is always active.
+5.  **Verification:** Implement a check to verify the policy exists before applying it to avoid redundant API calls.
 
 ## Risk
-**Failure Mode:** Cache-coherency drift. If the Cassandra cluster updates but the local cache does not receive the invalidation signal (e.g., due to a network partition or process crash), the application will serve stale data.
-**Mitigation:** Implement a "Time-to-Live" (TTL) on all cache entries and a mandatory `force_refresh` parameter in the decorator for critical read operations.
+**Failure Mode:** The S3 bucket permissions (IAM) might lack `s3:PutLifecycleConfiguration` permissions, causing the cycle to fail during initialization.
+**Mitigation:** Wrap the configuration call in a `try-except` block that logs a warning but allows the cycle to proceed if the permission is missing (graceful degradation).
 
-**Confidence Score:** 8/10. The logic is sound, but requires careful handling of the asynchronous invalidation signals.
+**Confidence Score:** 9/10
