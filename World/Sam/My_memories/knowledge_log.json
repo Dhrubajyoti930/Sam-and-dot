@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 475
+    "review_due_cycle": 490
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 475
+    "review_due_cycle": 490
   },
   {
     "cycle": 52,
@@ -2716,5 +2716,11 @@
     "topic": "Study object storage: S3 API, multipart upload",
     "summary": "### Technical Summary: Object Storage & S3 API\n\nObject storage differs fundamentally from block or file storage by treating data as immutable objects within a flat namespace (buckets). The S3 API has become the de facto standard for this paradigm.\n\n**Core Concepts:**\n*   **Consistency Model:** S3 provides strong read-after-write consistency for all operations. Once a `PUT` succeeds, subsequent reads will return the latest version.\n*   **Metadata:** Objects consist of the data (blob) and user-def",
     "review_due_cycle": 479
+  },
+  {
+    "cycle": 476,
+    "topic": "Learn content-addressable storage (CAS) concepts",
+    "summary": "### Technical Summary: Content-Addressable Storage (CAS)\n\nContent-Addressable Storage (CAS) shifts the paradigm from location-based addressing (where data is) to identity-based addressing (what data is). In a CAS system, the address of a data object is a cryptographic hash of its content (e.g., SHA-256). This fundamental shift provides three core architectural advantages:\n\n1.  **Deduplication:** Since the address is derived from the content, identical files or chunks map to the same address. Thi",
+    "review_due_cycle": 480
   }
 ]

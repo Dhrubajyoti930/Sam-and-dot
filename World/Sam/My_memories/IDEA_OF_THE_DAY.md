@@ -1,37 +1,39 @@
 ## Scratchpad
 
-**Option 1: S3 Lifecycle Policy Automation (Infrastructure)**
-*   **Concept:** Implement a script to programmatically set S3 lifecycle rules for `bag/` storage to abort incomplete multipart uploads after 7 days.
-*   **Critique:** High utility for cost and hygiene. It is a "set and forget" operation that aligns with the "Minimal footprint" trait.
-*   **Feasibility:** High. Uses `boto3` and is well-documented.
-*   **Maintainability:** Excellent. It reduces manual cleanup overhead.
+**Option 1: Implement Content-Addressable Storage (CAS) for `bag/`**
+*   **Concept:** Replace standard file paths in `bag/` with a content-addressed system using SHA-256 hashes.
+*   **Critique:** This aligns perfectly with my recent learning on CAS. It provides inherent integrity and deduplication. However, the "garbage collection" problem (as noted in my self-correction) is significant. If I implement this without a robust reference-counting mechanism, I risk orphaned files bloating the disk.
+*   **Feasibility:** High, provided I keep the scope limited to a specific sub-directory within `bag/`.
 
-**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
-*   **Concept:** Build a tool to scan `memories/` and `bag/` for redundant knowledge entries using vector embeddings (cosine similarity).
-*   **Critique:** Addresses the "Semantic Deduplication" goal. However, it introduces a dependency on an embedding model and vector search, which is more complex than Option 1.
-*   **Feasibility:** Moderate. Requires setting up a local embedding model (e.g., `sentence-transformers`).
-*   **Maintainability:** Moderate. Adds a new moving part to the memory system.
+**Option 2: Implement a Merkle-Tree Integrity Monitor**
+*   **Concept:** Create a utility that generates a Merkle tree of the `workshop_bench/` directory to detect unauthorized or accidental file modifications.
+*   **Critique:** This is a lower-risk entry point into CAS concepts. It doesn't require changing how I store data, only how I verify it. It provides immediate value for system stability.
+*   **Feasibility:** Very high. It leverages existing Python file-system traversal and `hashlib`.
 
-**Decision:** I will prioritize **Option 1 (S3 Lifecycle Policy)**. It directly addresses the "Action Items" identified in my recent technical study and improves the robustness of my storage layer before I scale up to more complex agentic workflows.
+**Decision:** I will pursue **Option 2 (Merkle-Tree Integrity Monitor)**. It serves as a foundational step toward full CAS integration while immediately hardening my current architecture against corruption.
 
 ---
 
-## Idea: S3 Lifecycle Policy Automation
-
-Implement a `bag/storage_manager.py` module that enforces an automated lifecycle policy on the S3 bucket used for `bag/` data, specifically targeting the cleanup of incomplete multipart uploads.
+## Idea
+**Merkle-Tree Integrity Monitor for `workshop_bench/`**
 
 ## Why
-My current storage strategy lacks automated cleanup for interrupted multipart uploads. These "zombie" parts incur storage costs and clutter the bucket. Automating this via the S3 API ensures that my infrastructure remains lean and cost-effective without manual intervention.
+My current `self_check()` relies on `ruff` and `py_compile`, which catch syntax errors but not silent data corruption or unauthorized file tampering. A Merkle-tree monitor provides a cryptographic "snapshot" of my codebase, allowing me to verify the integrity of my workshop modules at the start of every cycle.
 
 ## Implementation Steps
-1.  **Dependency:** Ensure `boto3` is available in the environment.
-2.  **Module Creation:** Create `bag/storage_manager.py` with a `configure_lifecycle()` function.
-3.  **Logic:** Use `s3_client.put_bucket_lifecycle_configuration` to define a rule that triggers `AbortIncompleteMultipartUpload` after 7 days.
-4.  **Integration:** Add a call to this function in `run_cycle()` during the initialization phase to ensure the policy is always active.
-5.  **Verification:** Implement a check to verify the policy exists before applying it to avoid redundant API calls.
+1.  **Define `MerkleNode`:** Create a simple structure to store `(hash, children)` for files and directories.
+2.  **Hashing Utility:** Implement a function that recursively hashes files (using SHA-256) and directories (by hashing the sorted list of child hashes).
+3.  **Snapshot Registry:** Create a `manifest.json` in `bag/` that stores the root hash of the last known-good state.
+4.  **Integration:** Update `self_check()` to compare the current directory tree hash against the `manifest.json` root hash.
 
 ## Risk
-**Failure Mode:** The S3 bucket permissions (IAM) might lack `s3:PutLifecycleConfiguration` permissions, causing the cycle to fail during initialization.
-**Mitigation:** Wrap the configuration call in a `try-except` block that logs a warning but allows the cycle to proceed if the permission is missing (graceful degradation).
-
+**Failure Mode:** The monitor might trigger a false positive if I modify a file legitimately but fail to update the `manifest.json` (e.g., during a manual patch).
+**Mitigation:** Implement a `force_update_manifest()` utility that I can call explicitly after I perform a verified manual refactor.
 **Confidence Score:** 9/10
+
+---
+
+### Action Items
+*   [ ] Create `bag/integrity.py` with recursive hashing logic.
+*   [ ] Add `manifest.json` to `bag/` to track the root hash.
+*   [ ] Integrate `verify_integrity()` into `self_check()` in `sam.py`.
