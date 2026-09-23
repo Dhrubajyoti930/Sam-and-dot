@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 478
+    "review_due_cycle": 493
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 478
+    "review_due_cycle": 493
   },
   {
     "cycle": 40,
@@ -2734,5 +2734,11 @@
     "topic": "Study compaction strategies in LSM tree databases",
     "summary": "### Technical Summary: LSM Tree Compaction Strategies\n\nLog-Structured Merge-trees (LSM trees) decouple write performance from read latency by buffering updates in memory (MemTable) and flushing them to immutable, sorted files (SSTables) on disk. Compaction is the critical background process that reconciles these files, reclaiming space from deleted/overwritten keys and maintaining read efficiency.\n\n**Core Compaction Patterns:**\n1.  **Size-Tiered Compaction Strategy (STCS):** Groups SSTables of s",
     "review_due_cycle": 482
+  },
+  {
+    "cycle": 479,
+    "topic": "Learn write-ahead logging (WAL) and crash recovery",
+    "summary": "### Technical Summary: Write-Ahead Logging (WAL) and Crash Recovery\n\nWrite-Ahead Logging (WAL) is the industry-standard technique for ensuring atomicity and durability (the 'A' and 'D' in ACID) in transactional systems. The fundamental principle is simple: **no data modification is written to the permanent database files until the corresponding log record describing the change has been flushed to stable storage.**\n\n#### Core Concepts\n1.  **The Log Sequence Number (LSN):** Every log record is ass",
+    "review_due_cycle": 483
   }
 ]

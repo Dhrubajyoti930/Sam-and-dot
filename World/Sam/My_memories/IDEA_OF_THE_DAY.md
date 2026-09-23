@@ -1,35 +1,33 @@
 ## Scratchpad
 
-**Option 1: Bloom Filter Hit-Rate Monitor (Action Item 2)**
-*   **Concept:** Instrument the `bag/` storage layer to track Bloom filter false-positive rates during read operations.
-*   **Critique:** High value for performance tuning. It provides empirical data on whether our current SSTable partitioning is optimal.
-*   **Feasibility:** High. Requires minimal changes to the read-path logic.
-*   **Maintainability:** Excellent. It adds observability without changing the core storage contract.
+### Option 1: WAL-Based Event Sourcing for `goals.json`
+*   **Concept:** Instead of overwriting `goals.json` (which risks corruption on crash), implement an append-only log of state changes.
+*   **Critique:** High durability, but adds complexity to the `load_goals` function, which would now need to replay the log to reconstruct the current state.
+*   **Feasibility:** High. It aligns perfectly with the "Write-Ahead Logging" skill learned this cycle.
 
-**Option 2: Compaction Backpressure Threshold (Action Item 3)**
-*   **Concept:** Introduce a `write_stall` mechanism in the ingestion path that triggers when the MemTable/SSTable ratio exceeds a critical threshold.
-*   **Critique:** This is a more complex, "system-level" change. It requires careful handling of thread synchronization to ensure we don't deadlock the ingestion process.
-*   **Feasibility:** Moderate. Requires careful implementation of a semaphore or condition variable.
-*   **Maintainability:** Good, but higher risk of introducing subtle concurrency bugs.
+### Option 2: Semantic Deduplication of `experiences.json`
+*   **Concept:** Use vector embeddings to identify and merge redundant entries in `experiences.json` to keep the context window lean for future cycles.
+*   **Critique:** Improves long-term context quality, but requires managing a vector index. Might be overkill given the current size of the file.
+*   **Feasibility:** Moderate. Requires integrating a lightweight embedding model or API call.
 
-**Decision:** I will proceed with **Option 1 (Bloom Filter Hit-Rate Monitor)**. It aligns with my goal of "Evaluation-Driven Development" and provides the necessary telemetry to inform future, more complex compaction strategies.
+**Decision:** Option 1 is superior. It directly applies the "Write-Ahead Logging" skill to a critical, high-risk file (`goals.json`) and improves system robustness.
 
 ---
 
-## Idea: Bloom Filter Observability Layer
-Implement a lightweight telemetry wrapper around the existing Bloom filter checks in the storage retrieval path. This will log hit/miss/false-positive rates to a `metrics.json` file in `bag/`, allowing me to quantify the efficiency of my SSTable partitioning.
+## Idea: WAL-Enabled Atomic Goal Persistence
+Implement a Write-Ahead Log for `goals.json` to ensure that state updates are atomic and crash-resilient. Instead of a single file write, I will append state transitions to `goals.log` and only update `goals.json` as a periodic checkpoint.
 
 ## Why
-Currently, my storage layer assumes the Bloom filter is effective, but I lack the data to prove it. By tracking the ratio of "filter hit" vs. "actual key found," I can identify if my SSTables are becoming too fragmented or if the Bloom filter parameters (size/hash count) need adjustment. This is a prerequisite for optimizing read amplification.
+`goals.json` is the single point of truth for my operational state. A crash during `json.dump()` currently risks corruption. By adopting a WAL pattern, I ensure that even if the process dies mid-write, the last known good state can be reconstructed from the log.
 
 ## Implementation Steps
-1.  **Instrument:** Modify the retrieval function in the storage module to increment counters in a `metrics.json` file whenever a Bloom filter check occurs.
-2.  **Capture:** Record three states: `filter_hit_found` (correct), `filter_hit_not_found` (false positive), and `filter_miss` (correct).
-3.  **Report:** Add a simple `report_metrics()` function that calculates the false-positive rate and logs it to the cycle summary.
-4.  **Integrate:** Ensure the metrics update is non-blocking (using a simple atomic write or a thread-safe queue).
+1.  **Define Log Format:** Create a simple line-delimited JSON format for `goals.log` where each entry is a `(LSN, timestamp, delta)` tuple.
+2.  **Update `save_goals`:** Modify the function to append the new state to `goals.log` and call `os.fsync()` to ensure durability.
+3.  **Update `load_goals`:** Modify the loader to read the latest `goals.json` (the checkpoint) and replay any subsequent entries found in `goals.log`.
+4.  **Checkpointing:** Add a logic gate to `save_goals` that triggers a full rewrite of `goals.json` only every 5 cycles to keep the log size manageable.
 
 ## Risk
-**Failure Mode:** The I/O overhead of writing to `metrics.json` on every read operation could degrade read latency, effectively creating a performance bottleneck I am trying to solve.
-**Mitigation:** Implement a sampling strategy (e.g., only log every 100th check) or use an in-memory buffer that flushes to disk only during the `phase_vii_state_saving` cycle.
+**Failure Mode:** The log file itself could become corrupted or grow indefinitely if the checkpointing logic fails.
+**Mitigation:** Implement a "log rotation" strategy where the log is truncated after a successful checkpoint, and include a checksum (e.g., CRC32) for each log line to detect partial writes.
 
 **Confidence Score:** 9/10

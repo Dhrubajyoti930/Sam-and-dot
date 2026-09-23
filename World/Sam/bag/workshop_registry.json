@@ -1,4 +1,4 @@
 {
   "folders": [],
-  "last_target": "infrastructure/persistence/metrics"
+  "last_target": "infrastructure/persistence/event_store"
 }
