@@ -1,4 +1,4 @@
 {
   "folders": [],
-  "last_target": "infrastructure/persistence/event_store"
+  "last_target": "infrastructure/core/transport/protocols"
 }
