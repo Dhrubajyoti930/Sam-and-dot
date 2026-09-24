@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 480
+    "review_due_cycle": 495
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 480
+    "review_due_cycle": 495
   },
   {
     "cycle": 42,
@@ -2746,5 +2746,11 @@
     "topic": "Understand MVCC (Multi-Version Concurrency Control)",
     "summary": "### Technical Summary: MVCC (Multi-Version Concurrency Control)\n\nMVCC is the standard concurrency control mechanism for modern high-performance databases (PostgreSQL, InnoDB, FoundationDB). Its primary objective is to provide **snapshot isolation**\u2014allowing readers to access a consistent view of the data without blocking writers, and vice versa.\n\n**Core Concepts:**\n1.  **Versioning:** Instead of overwriting data, the system creates a new version of a row. Each row typically carries metadata: `xm",
     "review_due_cycle": 484
+  },
+  {
+    "cycle": 481,
+    "topic": "Study isolation levels: read uncommitted to serializable",
+    "summary": "### Technical Summary: Database Isolation Levels\n\nIsolation levels define the visibility of changes made by one transaction to others, balancing the trade-off between **data consistency** and **system throughput**. The SQL standard defines four levels, each addressing specific concurrency anomalies: *Dirty Reads*, *Non-repeatable Reads*, and *Phantom Reads*.\n\n1.  **Read Uncommitted:** The lowest level. Transactions can see uncommitted data from others. It offers maximum concurrency but risks \"di",
+    "review_due_cycle": 485
   }
 ]
