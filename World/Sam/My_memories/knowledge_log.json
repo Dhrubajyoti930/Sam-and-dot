@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 481
+    "review_due_cycle": 496
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 481
+    "review_due_cycle": 496
   },
   {
     "cycle": 43,
@@ -2752,5 +2752,11 @@
     "topic": "Study isolation levels: read uncommitted to serializable",
     "summary": "### Technical Summary: Database Isolation Levels\n\nIsolation levels define the visibility of changes made by one transaction to others, balancing the trade-off between **data consistency** and **system throughput**. The SQL standard defines four levels, each addressing specific concurrency anomalies: *Dirty Reads*, *Non-repeatable Reads*, and *Phantom Reads*.\n\n1.  **Read Uncommitted:** The lowest level. Transactions can see uncommitted data from others. It offers maximum concurrency but risks \"di",
     "review_due_cycle": 485
+  },
+  {
+    "cycle": 482,
+    "topic": "Learn deadlock detection and prevention strategies",
+    "summary": "### Deadlock Detection and Prevention: Technical Summary\n\nDeadlocks occur when a set of processes are blocked because each process is holding a resource and waiting for another resource held by another process in the set. For a deadlock to exist, the four **Coffman conditions** must hold simultaneously: Mutual Exclusion, Hold and Wait, No Preemption, and Circular Wait.\n\n#### Prevention Strategies\nPrevention focuses on negating at least one of the Coffman conditions:\n*   **Eliminate Hold and Wait",
+    "review_due_cycle": 486
   }
 ]
