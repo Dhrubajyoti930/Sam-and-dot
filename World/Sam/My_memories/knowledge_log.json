@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 482
+    "review_due_cycle": 497
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 482
+    "review_due_cycle": 497
   },
   {
     "cycle": 44,
@@ -2758,5 +2758,11 @@
     "topic": "Learn deadlock detection and prevention strategies",
     "summary": "### Deadlock Detection and Prevention: Technical Summary\n\nDeadlocks occur when a set of processes are blocked because each process is holding a resource and waiting for another resource held by another process in the set. For a deadlock to exist, the four **Coffman conditions** must hold simultaneously: Mutual Exclusion, Hold and Wait, No Preemption, and Circular Wait.\n\n#### Prevention Strategies\nPrevention focuses on negating at least one of the Coffman conditions:\n*   **Eliminate Hold and Wait",
     "review_due_cycle": 486
+  },
+  {
+    "cycle": 483,
+    "topic": "Understand database connection lifetime management",
+    "summary": "### Technical Summary: Database Connection Lifetime Management\n\nDatabase connection management is a balance between latency, resource utilization, and fault tolerance. In modern distributed systems, the overhead of establishing a TCP handshake and performing TLS negotiation for every query is prohibitive. Consequently, **Connection Pooling** is the industry standard.\n\n#### Key Concepts & Patterns\n1.  **The Pool Lifecycle:** A pool maintains a set of \"warm\" connections. When a request arrives, it",
+    "review_due_cycle": 487
   }
 ]
