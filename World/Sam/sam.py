@@ -18,7 +18,7 @@ import itertools
 import sys
 import json
 
-# from workshop_bench.infrastructure.persistence.async_persistence_manager import ScratchpadEntry, Status, log_entry
+# from workshop_bench.infrastructure.persistence.manager.async_persistence import ScratchpadEntry, Status, log_entry
 import time
 import datetime
 import logging
