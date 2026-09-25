@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 483
+    "review_due_cycle": 498
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 483
+    "review_due_cycle": 498
   },
   {
     "cycle": 45,
@@ -2764,5 +2764,11 @@
     "topic": "Understand database connection lifetime management",
     "summary": "### Technical Summary: Database Connection Lifetime Management\n\nDatabase connection management is a balance between latency, resource utilization, and fault tolerance. In modern distributed systems, the overhead of establishing a TCP handshake and performing TLS negotiation for every query is prohibitive. Consequently, **Connection Pooling** is the industry standard.\n\n#### Key Concepts & Patterns\n1.  **The Pool Lifecycle:** A pool maintains a set of \"warm\" connections. When a request arrives, it",
     "review_due_cycle": 487
+  },
+  {
+    "cycle": 484,
+    "topic": "Learn HTTP/2 features: multiplexing, server push, header compression",
+    "summary": "### Technical Summary: HTTP/2 Fundamentals\n\nHTTP/2 (RFC 9113) shifts the paradigm from text-based, sequential request-response cycles to a binary-framed, multiplexed protocol. Understanding its core mechanics is essential for optimizing latency and throughput in modern distributed systems.\n\n**1. Binary Framing Layer**\nUnlike HTTP/1.1, which parses plain-text headers, HTTP/2 encapsulates all communication into binary frames. This eliminates ambiguity in parsing, reduces overhead, and enables the ",
+    "review_due_cycle": 488
   }
 ]
