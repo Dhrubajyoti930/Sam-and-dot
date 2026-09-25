@@ -1,33 +1,34 @@
 ## Scratchpad
 
-**Option 1: HATEOAS Link-Builder Utility**
-*   **Concept:** Implement a utility to inject `_links` into JSON responses, moving toward a more discoverable API structure.
-*   **Critique:** While elegant, it adds significant complexity to the `_parse_gemini_json` and response handling logic. It risks "over-engineering" for a system that currently relies on direct, high-speed data retrieval.
-*   **Trade-off:** High architectural purity vs. low immediate utility.
+**Option 1: GraphQL DataLoader Implementation**
+*   **Concept:** Implement a `DataLoader` class in `bag/` to batch database queries for nested relationships, specifically targeting the `experiences.json` and `knowledge_log.json` retrieval patterns.
+*   **Critique:** High feasibility. It directly addresses the N+1 problem identified in the skill acquisition phase. It improves performance for recursive queries.
+*   **Trade-off:** Adds complexity to the data access layer. Requires careful management of the request-scoped cache to avoid stale data.
 
-**Option 2: Pydantic-Driven Schema Enforcement for Synthesis**
-*   **Concept:** Formalize the `phase_iv_synthesis` output by defining a Pydantic model for the `IDEA_OF_THE_DAY.md` structure.
-*   **Critique:** This aligns with the "Structured Output" market trend. It ensures that the synthesis phase produces predictable, machine-readable data that can be easily validated and stored, reducing the risk of hallucinated formatting.
-*   **Trade-off:** Requires a small refactor of the synthesis prompt and parsing logic, but significantly improves the reliability of the knowledge base.
+**Option 2: Schema-Enforced Pydantic Models for `goals.json`**
+*   **Concept:** Replace the loose dictionary manipulation in `load_goals()` and `save_goals()` with a strict Pydantic model.
+*   **Critique:** High maintainability. It prevents the "corruption" issues mentioned in the `load_goals` docstring by enforcing types at the boundary.
+*   **Trade-off:** Requires a migration step for existing `goals.json` files.
 
-**Decision:** Option 2. It directly addresses the "Structured Output" trend identified in the market scan and improves the long-term maintainability of my internal knowledge logs.
+**Decision:** Option 1 is more aligned with the "High-Performance" market signal and the specific action items generated this cycle. I will proceed with a `DataLoader` implementation.
 
 ---
 
-## Idea
-**Pydantic-Driven Synthesis Schema**
+## Idea: Request-Scoped DataLoader for `bag/` Data Access
+
+Implement a `DataLoader` pattern to batch and cache data lookups, specifically for the `experiences` and `knowledge_log` modules, preventing redundant I/O during recursive synthesis or analysis phases.
 
 ## Why
-My current synthesis phase relies on unstructured text generation. By enforcing a Pydantic schema, I ensure that every "Idea of the Day" contains consistent fields (e.g., `title`, `technical_domain`, `implementation_complexity`, `relevance_score`). This makes my `knowledge_log.json` queryable and prevents the accumulation of "noisy" data.
+Currently, Sam’s data access is synchronous and file-based. As the `experiences.json` grows, repeated reads during synthesis cycles create unnecessary I/O overhead. By implementing a `DataLoader` that batches requests within a single cycle's execution, I reduce disk contention and prepare the architecture for future migration to a more robust database backend.
 
 ## Implementation Steps
-1.  Define a `SynthesisOutput` Pydantic model in `bag/schemas.py` (or a new `bag/models.py`).
-2.  Update `phase_iv_synthesis` to include the schema definition in the prompt sent to Gemini.
-3.  Update `_parse_gemini_json` to utilize this schema for validation.
-4.  Update the `IDEA_OF_THE_DAY.md` generation logic to map the validated Pydantic object to the final markdown file.
+1.  **Create `bag/dataloader.py`**: Define a generic `DataLoader` class that accepts a `batch_load_fn` and maintains an internal `cache` dictionary.
+2.  **Implement Batching**: Add a `load(key)` method that collects keys and a `load_many(keys)` method that executes the batch operation.
+3.  **Integrate with `sam.py`**: Update `load_experiences()` and `load_goals()` to utilize the `DataLoader` instance, ensuring that multiple calls within a single `run_cycle()` hit the cache rather than the disk.
+4.  **Lifecycle Management**: Ensure the cache is cleared at the end of `run_cycle()` to maintain data freshness for the next cycle.
 
 ## Risk
-**Failure Mode:** The LLM may struggle to adhere to the strict schema if the prompt is too restrictive, leading to frequent `ValidationError` exceptions during the synthesis phase.
-**Mitigation:** Provide a clear JSON example in the prompt and allow for a "fallback" to raw text if the schema validation fails, logging the error for manual review.
+**Failure Mode:** The cache might persist across cycles if not cleared correctly, leading to "stale" data if `experiences.json` is modified by an external process (though unlikely in this environment).
+**Mitigation:** Explicitly clear the `DataLoader` cache at the start of every `run_cycle()` and ensure the `DataLoader` is instantiated within the scope of the cycle.
 
-**Confidence Score:** 9/10
+**Confidence Score: 9/10**

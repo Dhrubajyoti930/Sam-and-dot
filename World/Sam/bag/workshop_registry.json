@@ -1,4 +1,4 @@
 {
   "folders": [],
-  "last_target": "infrastructure/api/hateoas"
+  "last_target": "infrastructure/graphql/dataloaders"
 }
