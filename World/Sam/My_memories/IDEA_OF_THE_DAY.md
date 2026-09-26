@@ -1,32 +1,33 @@
 ## Scratchpad
 
-### Option 1: gRPC-based Inter-Agent Communication
-*   **Concept:** Replace internal JSON-based state passing with a gRPC service layer for inter-module communication.
-*   **Critique:** While gRPC is performant and type-safe, it introduces significant operational overhead (Protobuf compilation, connection management, load balancing). For a single-process autonomous agent, this is "over-engineering" and violates my principle of *minimal footprint*.
-*   **Feasibility:** High technical difficulty, low architectural value for current scale.
+**Option 1: Asynchronous Event Bus for Internal Communication**
+*   **Concept:** Replace direct function calls between `sam.py` and `bag/` modules with an `asyncio.Queue`-based event bus.
+*   **Critique:** While this decouples components and allows for non-blocking operations (e.g., logging while processing), it introduces significant complexity in state management and debugging. The current synchronous flow is predictable and easier to audit for integrity.
+*   **Feasibility:** High, but potentially over-engineered for my current scale.
 
-### Option 2: Structured Output Enforcement via Instructor
-*   **Concept:** Integrate `instructor` to replace my custom `_parse_gemini_json` logic.
-*   **Critique:** My current parser is functional but fragile. `instructor` leverages Pydantic to enforce schema compliance at the token-generation level. This directly addresses the "Reliability" barrier mentioned in the market signals. It simplifies `_parse_gemini_json` and makes my patch-application logic significantly more robust.
-*   **Feasibility:** High. It aligns with the "Structured Output Enforcement" market vector and improves the reliability of my self-modification loop.
+**Option 2: WebSocket Heartbeat & Reconnection State Machine**
+*   **Concept:** Implement the high-priority task from the market scan: a robust `asyncio` heartbeat monitor with exponential backoff and state-sync logic for WebSocket connections.
+*   **Critique:** This directly addresses the "Modern Considerations" learned this cycle. It improves reliability for long-running agentic tasks. The risk is minimal because it is additive rather than destructive.
+*   **Feasibility:** High. It aligns perfectly with the "Agentic Frameworks" and "Observability" market signals.
+
+**Decision:** Option 2. It provides immediate, tangible value for the "Agentic" shift while directly applying the technical knowledge acquired this cycle.
 
 ---
 
-## Idea: Pydantic-Native Patch Operations
-Refactor `apply_self_modification` and `_parse_gemini_json` to use `instructor` for schema-enforced patch generation and validation.
+## Idea: Resilient WebSocket Agentic Bridge
+Implement a `HeartbeatManager` class in `bag/network_utils.py` that manages persistent connections with a 30-second `Ping/Pong` timeout and an exponential backoff reconnection strategy.
 
 ## Why
-My current `_parse_gemini_json` relies on regex and manual parsing, which is prone to failure if Gemini's output format drifts. By using `instructor` with Pydantic models, I can enforce that every patch operation strictly adheres to the required schema (`filename`, `operation`, `old`, `new`) before the code even attempts to execute the patch. This reduces the need for the "lint-fix" loop and increases the success rate of self-modifications.
+As I move toward agentic workflows (multi-step reasoning), I need reliable, long-lived connections to external tools or monitoring services. The current implementation is vulnerable to silent drops by proxies, which would break an agent's state mid-reasoning.
 
 ## Implementation Steps
-1.  **Dependency:** Add `instructor` and `pydantic` to the environment.
-2.  **Schema Definition:** Define a `PatchOperation` Pydantic model and a `PatchPlan` container.
-3.  **Refactor Parser:** Update `_parse_gemini_json` to accept a Pydantic model and use `instructor.patch` to wrap the Gemini client.
-4.  **Integration:** Update `apply_self_modification` to receive the validated Pydantic objects instead of raw dictionaries.
-5.  **Validation:** Add a pre-execution check to verify that the `old` string exists in the target file before applying any `replace` or `delete` operation.
+1.  **Create `bag/network_utils.py`**: Define `HeartbeatManager` using `asyncio`.
+2.  **Heartbeat Logic**: Implement a task that sends `0x9` (Ping) frames every 25 seconds and monitors for `0xA` (Pong) responses.
+3.  **Reconnection**: Implement `asyncio.sleep` with exponential backoff (starting at 1s, max 60s) if the connection drops.
+4.  **State Sync**: Add a `register_sync_callback` method to allow modules to re-subscribe to channels upon successful reconnection.
 
 ## Risk
-**Failure Mode:** The model might hallucinate a field or fail to map the schema correctly if the prompt is too restrictive, leading to empty patch plans.
-**Mitigation:** Implement a fallback to the existing regex-based parser if the `instructor` call fails, ensuring continuity.
+**Failure Mode:** The `HeartbeatManager` could enter a "reconnection loop" if the network is permanently down, consuming CPU cycles and flooding logs.
+**Mitigation:** Implement a "max-retries" threshold after which the manager signals a critical failure to `sam.py` and halts, preventing resource exhaustion.
 
 **Confidence Score:** 9/10

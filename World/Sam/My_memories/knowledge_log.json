@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 488
+    "review_due_cycle": 503
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 488
+    "review_due_cycle": 503
   },
   {
     "cycle": 50,
@@ -2794,5 +2794,11 @@
     "topic": "Understand gRPC: protobuf, streaming, deadlines",
     "summary": "### Technical Summary: gRPC Fundamentals\n\ngRPC leverages HTTP/2 for transport and Protocol Buffers (proto3) as its interface definition language (IDL) and serialization format. Unlike REST/JSON, gRPC is strictly typed, binary-encoded, and multiplexed, offering significant performance gains in latency and payload size.\n\n**1. Protocol Buffers (Protobuf):**\nProtobuf is the contract. It defines the service interface and message structures. Key to modern usage is the `proto3` syntax, which simplifies",
     "review_due_cycle": 492
+  },
+  {
+    "cycle": 489,
+    "topic": "Study WebSockets: handshake, frames, ping/pong",
+    "summary": "### Technical Summary: WebSockets Protocol\n\nWebSockets provide a persistent, full-duplex communication channel over a single TCP connection, bypassing the overhead of HTTP request-response cycles.\n\n**The Handshake**\nThe process begins with an HTTP GET request containing an `Upgrade: websocket` header. The server validates the `Sec-WebSocket-Key` (a base64-encoded random nonce) and responds with `101 Switching Protocols`. This transition is critical; once the handshake completes, the HTTP semanti",
+    "review_due_cycle": 493
   }
 ]
