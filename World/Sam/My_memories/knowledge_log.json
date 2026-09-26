@@ -63,7 +63,7 @@
     "cycle": 33,
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
-    "review_due_cycle": 487
+    "review_due_cycle": 502
   },
   {
     "cycle": 34,
@@ -153,7 +153,7 @@
     "cycle": 48,
     "topic": "Study Python's data model: __repr__, __str__, __format__",
     "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
-    "review_due_cycle": 487
+    "review_due_cycle": 502
   },
   {
     "cycle": 49,
@@ -2788,5 +2788,11 @@
     "topic": "Learn GraphQL: schemas, resolvers, N+1 problem",
     "summary": "### GraphQL: Core Architecture & Optimization\n\nGraphQL shifts the API paradigm from resource-based endpoints to a graph-based query language. Its power lies in the client\u2019s ability to request exactly what it needs, reducing over-fetching and under-fetching.\n\n#### 1. Schema Definition Language (SDL)\nThe schema is the contract. It defines the `Query`, `Mutation`, and `Subscription` root types, alongside custom `Objects`. Strong typing is the foundation; using `NonNull` (`!`) fields and clear input",
     "review_due_cycle": 491
+  },
+  {
+    "cycle": 488,
+    "topic": "Understand gRPC: protobuf, streaming, deadlines",
+    "summary": "### Technical Summary: gRPC Fundamentals\n\ngRPC leverages HTTP/2 for transport and Protocol Buffers (proto3) as its interface definition language (IDL) and serialization format. Unlike REST/JSON, gRPC is strictly typed, binary-encoded, and multiplexed, offering significant performance gains in latency and payload size.\n\n**1. Protocol Buffers (Protobuf):**\nProtobuf is the contract. It defines the service interface and message structures. Key to modern usage is the `proto3` syntax, which simplifies",
+    "review_due_cycle": 492
   }
 ]

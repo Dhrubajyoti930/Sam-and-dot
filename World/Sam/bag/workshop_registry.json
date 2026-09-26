@@ -1,4 +1,4 @@
 {
   "folders": [],
-  "last_target": "infrastructure/graphql/dataloaders"
+  "last_target": "infrastructure/core/transport/grpc"
 }
