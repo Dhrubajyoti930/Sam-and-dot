@@ -1,39 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implementing a `StreamManager` for SSE.**
-*   **Concept:** Build a robust `StreamManager` class in `bag/` that wraps `ReadableStream` and handles the `X-Accel-Buffering` requirements, reconnection logic, and event-type dispatching.
-*   **Critique:** High utility for real-time agent feedback. It aligns with the "Agentic Orchestration" trend. However, it adds complexity to the `bag/` directory.
-*   **Feasibility:** High. The protocol is well-understood, and the `fetch` API implementation is standard.
+**Option 1: Implement an "Eval-Driven" Regression Suite (Phase V/VI)**
+*   **Concept:** Integrate `Ragas` or a custom lightweight evaluation harness into `bag/tests.py` to benchmark my own code-generation patches against a set of "golden" prompt-response pairs.
+*   **Critique:** High long-term value for stability. However, it requires building a dataset of "correct" patches, which is a significant upfront investment. It might be overkill for my current scale.
+*   **Feasibility:** Moderate.
 
-**Option 2: Integrating `Instructor` for Schema-Validated Patching.**
-*   **Concept:** Refactor `apply_self_modification` to use `Instructor` for parsing the JSON patch operations. Currently, I rely on `_parse_gemini_json` which is brittle if the model hallucinates keys.
-*   **Critique:** This directly improves the reliability of my self-modification loop (Phase V/VI). It reduces the risk of malformed patches causing integrity gate failures.
-*   **Feasibility:** Very high. I already have `pydantic` available.
+**Option 2: Transition to SSE for Internal Agent Communication (Phase V)**
+*   **Concept:** Replace the current polling-based status checks in `run_cycle` with an SSE-based event stream for real-time monitoring of long-running tasks (like `ask_gemini` continuations).
+*   **Critique:** Aligns with the "Real-Time Communication" skill learned this cycle. It reduces latency and resource overhead. It is a cleaner architectural pattern than polling.
+*   **Feasibility:** High. It leverages existing `sam.py` infrastructure.
 
-**Decision:** I will proceed with **Option 2**. My self-modification loop is the most critical path; hardening it with Pydantic/Instructor ensures that my "autonomous developer" loop remains stable as I scale complexity.
+**Decision:** Option 2. It directly applies the cycle's learned skill to improve my internal operational efficiency.
 
 ---
 
-## Idea: Hardening Self-Modification with Pydantic-Instructor
-
-Refactor the `apply_self_modification` and `_lint_fix_with_gemini` pipelines to use a strict Pydantic model for patch operations, replacing the current loose JSON parsing.
+## Idea
+**SSE-Based Event Stream for Operational Monitoring**
 
 ## Why
-My current `_parse_gemini_json` is a heuristic-based fallback. By defining a `PatchOperation` Pydantic model, I can force Gemini to adhere to a strict schema. This eliminates "missing key" errors and ensures that the `apply_patch_operations` function receives validated data, significantly reducing the frequency of integrity gate failures.
+Currently, my cycle monitoring relies on polling `cycle_status` files. This is inefficient and introduces artificial latency. Implementing an SSE-based stream allows me to push real-time updates (e.g., "Gemini call started," "Patch applied," "Integrity Gate passed") to a local monitoring endpoint, improving observability without increasing resource consumption.
 
 ## Implementation Steps
-1.  Define `PatchOperation` and `PatchPlan` Pydantic models in a new `bag/schemas.py`.
-2.  Update `_parse_gemini_json` to optionally accept these models for strict validation.
-3.  Modify `apply_self_modification` to pass the `PatchPlan` model to the parser.
-4.  Update the prompt in `_lint_fix_with_gemini` to explicitly request the JSON structure matching the new Pydantic schema.
+1.  **Define Event Schema:** Create a simple `Event` Pydantic model in `bag/schemas.py` to standardize log messages (timestamp, level, message, component).
+2.  **Refactor `log` utility:** Update the internal `log` function to broadcast events to a local `asyncio.Queue` that acts as an event bus.
+3.  **Implement SSE Server:** Add a lightweight `FastAPI` or `starlette` route in a new `bag/monitor.py` that yields events from the queue to connected clients.
+4.  **Update `run_cycle`:** Integrate the event emitter into the core loop to push status updates as they happen.
 
 ## Risk
-**Failure Mode:** If the model struggles to map complex code blocks into the strict Pydantic schema (e.g., escaping issues in the `new` string), the patch might fail to generate entirely.
-**Mitigation:** I will include a "raw" fallback in the parser that logs a warning if validation fails, allowing me to inspect the output before it hits the integrity gate.
+**Failure Mode:** The SSE connection might hang or block the main execution thread if not handled with proper `asyncio` non-blocking patterns.
+**Mitigation:** Use `asyncio.Queue` with `put_nowait()` to ensure logging never blocks the primary logic. Wrap the SSE server in a separate thread or process to isolate it from the main `run_cycle` execution.
 
 **Confidence Score:** 9/10
-
----
-
-## 1% Metric
-I will measure the **"Integrity Gate Pass Rate"** for self-modification patches. My goal is to reduce the number of corrective lint/behaviour patches required per cycle by 20% by ensuring the initial patch plan is schema-valid.
