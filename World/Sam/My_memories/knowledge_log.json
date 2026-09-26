@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 489
+    "review_due_cycle": 504
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 489
+    "review_due_cycle": 504
   },
   {
     "cycle": 51,
@@ -2800,5 +2800,11 @@
     "topic": "Study WebSockets: handshake, frames, ping/pong",
     "summary": "### Technical Summary: WebSockets Protocol\n\nWebSockets provide a persistent, full-duplex communication channel over a single TCP connection, bypassing the overhead of HTTP request-response cycles.\n\n**The Handshake**\nThe process begins with an HTTP GET request containing an `Upgrade: websocket` header. The server validates the `Sec-WebSocket-Key` (a base64-encoded random nonce) and responds with `101 Switching Protocols`. This transition is critical; once the handshake completes, the HTTP semanti",
     "review_due_cycle": 493
+  },
+  {
+    "cycle": 490,
+    "topic": "Learn Server-Sent Events (SSE) for real-time updates",
+    "summary": "### Technical Summary: Server-Sent Events (SSE)\n\nServer-Sent Events (SSE) provide a lightweight, unidirectional channel for pushing real-time updates from server to client over standard HTTP. Unlike WebSockets, which require a custom protocol handshake and bidirectional overhead, SSE operates over a persistent HTTP connection using the `text/event-stream` MIME type.\n\n**Core Mechanics:**\n1.  **Protocol:** The client initiates a standard `GET` request. The server keeps the connection open, sending",
+    "review_due_cycle": 494
   }
 ]
