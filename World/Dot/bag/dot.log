@@ -2192,3 +2192,43 @@
 2026-09-26 10:06:43,596 [DOT][INFO] Today is Saturday — inbox check reserved for Sunday.
 2026-09-26 10:06:43,599 [DOT][INFO] Worklog: no stale entries.
 2026-09-26 10:06:44,419 [DOT][INFO] Dot's daily run complete.
+2026-09-26 17:18:51,597 [DOT][INFO] ═══════════════════════════════════
+2026-09-26 17:18:51,597 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-09-26 17:18:51,597 [DOT][INFO] ═══════════════════════════════════
+2026-09-26 17:18:51,598 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-09-26 17:18:51,627 [DOT][INFO] Task 1: chunk 1/8 from cache.
+2026-09-26 17:18:51,628 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-09-26 17:18:51,628 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-09-26 17:18:51,629 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-09-26 17:18:51,629 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-09-26 17:18:51,629 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-09-26 17:18:51,630 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-09-26 17:18:51,630 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-09-26 17:19:07,665 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-09-26 17:19:07,665 [DOT][WARNING] Direct use of automatic function calling (AFC) in Models.generate_content is not recommended. Instead, we recommend to use AFC in Chat.send_message. Similarly, direct use of AFC in Models.generate_content_stream is not recommended. Instead, we recommend to use AFC in Chat.send_message_stream.
+2026-09-26 17:19:11,077 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-09-26 17:19:11,079 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-09-26 17:19:19,079 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-09-26 17:19:19,081 [DOT][INFO] Task 2: 4 experiences → 1 batch(es) of ≤5.
+2026-09-26 17:19:27,081 [DOT][INFO] Task 2: batch 1/1 — cycles [51, 488, 489, 490]
+2026-09-26 17:19:35,094 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-09-26 17:19:36,697 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-09-26 17:19:36,702 [DOT][INFO] Experiences curated: 2 kept, 0 forgotten, 1 consolidated. Total now: 3.
+2026-09-26 17:19:36,702 [DOT][INFO] Letter written to Sam: Letter_20260926T171936Z.md
+2026-09-26 17:19:36,702 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-09-26 17:19:36,702 [DOT][INFO] Finding best recipient for: Tiago Henriques, maintainer of 'python-dependency-injector'. His project is widely used for DI in smaller Python ecosyst
+2026-09-26 17:19:44,715 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-09-26 17:19:45,467 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-09-26 17:19:45,470 [DOT][INFO] Recipient match:  <> confidence=0 — None of the individuals in the provided list are identified as Tiago Henriques, the maintainer of 'python-dependency-injector'.
+2026-09-26 17:19:45,471 [DOT][WARNING] Match confidence 0 below threshold 7 — skipping.
+2026-09-26 17:19:45,471 [DOT][WARNING] No suitable recipient found in emails.json — request preserved.
+2026-09-26 17:19:45,471 [DOT][INFO] Appended to Letter_20260926T171936Z.md: Email Dispatch — No Match
+2026-09-26 17:19:45,472 [DOT][INFO] Appended to Letter_20260926T171936Z.md: Email Dispatch
+2026-09-26 17:19:53,472 [DOT][INFO] ── Task 4: Bag Review ──
+2026-09-26 17:20:09,484 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-09-26 17:20:14,811 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-09-26 17:20:14,815 [DOT][INFO] Bag review complete.
+2026-09-26 17:20:14,815 [DOT][INFO] Appended to Letter_20260926T171936Z.md: Bag Excavation Findings
+2026-09-26 17:20:14,815 [DOT][INFO] Today is Saturday — inbox check reserved for Sunday.
+2026-09-26 17:20:14,818 [DOT][INFO] Worklog: no stale entries.
+2026-09-26 17:20:16,434 [DOT][INFO] Dot's daily run complete.
