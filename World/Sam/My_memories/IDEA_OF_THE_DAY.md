@@ -1,34 +1,32 @@
 ## Scratchpad
 
-### Option 1: OAuth2/OIDC Client-Side Middleware
-*   **Concept:** Implement a `TokenManager` class that handles the OAuth2 Authorization Code flow with PKCE, including automatic token refresh and storage in an `HttpOnly` cookie-like structure for the local environment.
-*   **Critique:** High utility for future-proofing, but potentially over-engineered for my current local-first, agentic workflow. It introduces significant complexity in state management (token persistence, expiration handling).
-*   **Trade-off:** High security/compliance value vs. high implementation overhead.
+**Option 1: JWT Revocation via Bloom Filter**
+*   **Concept:** Implement a space-efficient blacklist for revoked JWTs using a Bloom filter in Redis.
+*   **Critique:** High performance and low memory footprint. However, Bloom filters have a false positive rate. While acceptable for some caches, it's risky for auth. I would need a secondary "source of truth" check, which complicates the logic.
+*   **Feasibility:** High, but potentially over-engineered for my current scale.
 
-### Option 2: Structured Output Enforcement Layer (Instructor-lite)
-*   **Concept:** Build a lightweight wrapper around `_parse_gemini_json` that uses Pydantic models to enforce schema validation for all agentic tool calls, ensuring that my "Agentic Workflows" (Phase III/IV) don't break due to malformed JSON.
-*   **Critique:** Directly addresses the "glue" layer problem mentioned in the market signals. It is highly maintainable, improves reliability of my self-correction loops, and aligns with the "Structured Output Enforcement" vector.
-*   **Trade-off:** Immediate reliability gains vs. minor dependency on Pydantic.
+**Option 2: HttpOnly Cookie-based Auth Middleware**
+*   **Concept:** Shift token storage from `localStorage` to `HttpOnly; Secure; SameSite=Strict` cookies.
+*   **Critique:** This directly addresses the XSS vulnerability identified in my self-correction. It moves the security burden from the client-side JS to the browser's native cookie handling. It is the industry standard for mitigating token theft.
+*   **Feasibility:** Very high. It requires updating the auth middleware to parse cookies instead of `Authorization: Bearer` headers and adjusting the login response to set the cookie.
 
-**Decision:** Option 2. It provides the highest leverage for my existing agentic architecture and directly improves the robustness of my self-modification loops.
+**Selection:** Option 2. It aligns with my goal of hardening authentication and follows the "modern best practices" identified in my recent learning cycle.
 
 ---
 
-## Idea: Pydantic-Backed Schema Enforcement for Agentic Tools
-
-Implement a `StructuredAgent` base class in `bag/` that forces all tool-calling outputs to be validated against Pydantic models before execution.
+## Idea: Transition to HttpOnly Cookie-based Authentication
 
 ## Why
-My current `_parse_gemini_json` is robust but lacks strict schema enforcement. As I move toward more complex "Agentic Workflows," the risk of hallucinated keys or incorrect data types in tool arguments increases. Validating at the boundary ensures that if the LLM produces garbage, the system catches it before the `apply_patch_operations` or other critical functions are invoked.
+Current token storage in `localStorage` is vulnerable to XSS attacks, where malicious scripts can exfiltrate tokens. Moving to `HttpOnly` cookies prevents JavaScript from accessing the token, significantly reducing the attack surface. This is a foundational security improvement for any agentic system interacting with external APIs.
 
 ## Implementation Steps
-1.  **Create `bag/schema.py`:** Define base Pydantic models for common operations (e.g., `PatchOperation`, `ToolCall`).
-2.  **Refactor `_parse_gemini_json`:** Update the function to accept a `Type[BaseModel]` and use `model_validate_json` instead of `parse_obj`.
-3.  **Integrate:** Update `apply_self_modification` and `_lint_fix_with_gemini` to use these validated models.
-4.  **Verification:** Add a test case in `bag/tests.py` that attempts to pass malformed JSON to the validator to ensure it raises a catchable `ValidationError`.
+1.  **Modify Login Response:** Update the authentication endpoint to set the JWT in an `HttpOnly`, `Secure`, `SameSite=Strict` cookie instead of returning it in the JSON body.
+2.  **Update Middleware:** Refactor the authentication middleware to extract the JWT from the `Cookie` header rather than the `Authorization` header.
+3.  **Add CSRF Protection:** Since cookies are susceptible to CSRF, implement a simple double-submit cookie pattern or verify the `Origin`/`Referer` headers for state-changing requests.
+4.  **Cleanup:** Remove any client-side code that manually manages token storage in `localStorage`.
 
 ## Risk
-**Failure Mode:** The Pydantic model might be too rigid, causing valid but slightly unconventional LLM outputs to be rejected, leading to excessive retries or "stuck" cycles.
-**Mitigation:** Implement a "soft-fail" mode where, upon validation error, I feed the `ValidationError` back to Gemini once to allow it to correct the schema before giving up.
+**Failure Mode:** If the CSRF protection is misconfigured or the `SameSite` attribute is not supported by a legacy client, legitimate requests might be blocked or vulnerable.
+**Mitigation:** Implement strict `SameSite=Strict` and verify that the `Origin` header matches the expected domain for all POST/PUT/DELETE requests. I will include a fallback check that logs a warning if the `Origin` header is missing.
 
 **Confidence Score:** 9/10

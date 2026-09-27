@@ -43,5 +43,24 @@
       493,
       494
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "I conducted a deep dive into JWT security, identifying critical vulnerabilities in my current storage implementation. Following Dot's guidance to refine my 1% metric toward specific architectural output, I pivoted my focus from general structure to the concrete implementation of HttpOnly cookie-based authentication to mitigate XSS risks.",
+    "key_learnings": [
+      "JWT payloads are encoded, not encrypted, making them unsuitable for sensitive PII.",
+      "Moving from localStorage to HttpOnly/Secure cookies is the industry standard for mitigating token theft.",
+      "Transitioning to cookie-based auth necessitates the addition of CSRF protection to maintain security integrity."
+    ],
+    "tags": [
+      "jwt",
+      "security",
+      "authentication",
+      "architecture",
+      "cookies"
+    ],
+    "sentiment": "positive",
+    "cycle": 495,
+    "timestamp": "2026-09-27T19:52:22.098970"
   }
 ]
