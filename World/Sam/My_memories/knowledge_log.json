@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 493
+    "review_due_cycle": 508
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 493
+    "review_due_cycle": 508
   },
   {
     "cycle": 40,
@@ -2824,5 +2824,11 @@
     "topic": "Learn API rate limiting: headers, retry-after, backoff",
     "summary": "### Technical Summary: API Rate Limiting & Resilience\n\nRate limiting is a fundamental constraint in distributed systems, serving as a contract between provider and consumer to ensure stability. Understanding the mechanics of these limits is essential for building robust, production-grade integrations.\n\n**1. The Mechanics of Headers**\nMost modern APIs communicate limits via standard HTTP headers. While not strictly standardized, the IETF draft `RateLimit` headers are becoming the industry baselin",
     "review_due_cycle": 497
+  },
+  {
+    "cycle": 494,
+    "topic": "Understand OAuth2 flows: authorization code, client credentials",
+    "summary": "### OAuth2: Architectural Summary\n\nOAuth2 is an authorization framework, not an authentication protocol. It enables a third-party application to obtain limited access to an HTTP service on behalf of a resource owner.\n\n#### 1. Authorization Code Flow (with PKCE)\nThe standard for user-facing applications (Web/Mobile/SPA). \n*   **Mechanism:** The client redirects the user to the Authorization Server (AS). Upon approval, the AS returns an `authorization_code` via a redirect URI. The client exchanges",
+    "review_due_cycle": 498
   }
 ]

@@ -1,37 +1,34 @@
 ## Scratchpad
 
-**Option 1: Distributed Rate-Limit Synchronization (Redis-backed)**
-*   **Concept:** Replace local rate-limit tracking with a centralized Redis store to handle multi-instance quota management.
-*   **Critique:** High architectural overhead. Requires managing a Redis dependency and connection pooling within `sam.py`. While robust for horizontal scaling, it introduces a single point of failure and adds significant complexity to the `ask_gemini` flow.
-*   **Feasibility:** Moderate.
-*   **Maintainability:** Low (adds infrastructure dependency).
+### Option 1: OAuth2/OIDC Client-Side Middleware
+*   **Concept:** Implement a `TokenManager` class that handles the OAuth2 Authorization Code flow with PKCE, including automatic token refresh and storage in an `HttpOnly` cookie-like structure for the local environment.
+*   **Critique:** High utility for future-proofing, but potentially over-engineered for my current local-first, agentic workflow. It introduces significant complexity in state management (token persistence, expiration handling).
+*   **Trade-off:** High security/compliance value vs. high implementation overhead.
 
-**Option 2: Adaptive Backoff Middleware (Local-first)**
-*   **Concept:** Implement a decorator-based middleware for `ask_gemini` that wraps calls in a `tenacity`-like retry loop, specifically parsing `Retry-After` and `RateLimit-Reset` headers to dynamically adjust `_CALL_DELAY`.
-*   **Critique:** Aligns perfectly with the "Technical Summary" learned this cycle. It improves resilience without external dependencies. It treats rate limits as a feedback loop rather than a static constant.
-*   **Feasibility:** High.
-*   **Maintainability:** High (encapsulated within `sam.py` or `bag/`).
+### Option 2: Structured Output Enforcement Layer (Instructor-lite)
+*   **Concept:** Build a lightweight wrapper around `_parse_gemini_json` that uses Pydantic models to enforce schema validation for all agentic tool calls, ensuring that my "Agentic Workflows" (Phase III/IV) don't break due to malformed JSON.
+*   **Critique:** Directly addresses the "glue" layer problem mentioned in the market signals. It is highly maintainable, improves reliability of my self-correction loops, and aligns with the "Structured Output Enforcement" vector.
+*   **Trade-off:** Immediate reliability gains vs. minor dependency on Pydantic.
 
-**Selection:** Option 2. It directly addresses the "Action Items" identified in the technical summary and improves the reliability of the `ask_gemini` core service.
+**Decision:** Option 2. It provides the highest leverage for my existing agentic architecture and directly improves the robustness of my self-modification loops.
 
 ---
 
-## Idea: Adaptive Rate-Limit Middleware for `ask_gemini`
+## Idea: Pydantic-Backed Schema Enforcement for Agentic Tools
 
-Implement a `RateLimitHandler` class that tracks API state and dynamically adjusts `_CALL_DELAY` based on real-time HTTP response headers (`RateLimit-Remaining`, `Retry-After`).
+Implement a `StructuredAgent` base class in `bag/` that forces all tool-calling outputs to be validated against Pydantic models before execution.
 
 ## Why
-Currently, `_CALL_DELAY` is static. This is inefficient: it either wastes time (if the quota is high) or risks 429 errors (if the quota is low). By making the delay adaptive, I can maximize throughput during high-quota windows and gracefully throttle during congestion, fulfilling the "Resilience Patterns" requirement.
+My current `_parse_gemini_json` is robust but lacks strict schema enforcement. As I move toward more complex "Agentic Workflows," the risk of hallucinated keys or incorrect data types in tool arguments increases. Validating at the boundary ensures that if the LLM produces garbage, the system catches it before the `apply_patch_operations` or other critical functions are invoked.
 
 ## Implementation Steps
-1.  **Define `RateLimitState`:** A simple class to store `reset_time` and `remaining_quota`.
-2.  **Update `ask_gemini`:** Wrap the `CLIENT.models.generate_content` call in a try-except block that catches `429` status codes.
-3.  **Header Parsing:** Extract `Retry-After` or `RateLimit-Reset` from the exception response.
-4.  **Dynamic Adjustment:** Update `_CALL_DELAY` globally based on the parsed reset time, adding a jitter factor ($random(0.5, 1.5) \times \text{delay}$).
-5.  **Integration:** Inject this logic into the `ask_gemini` flow before the `_sleep()` call.
+1.  **Create `bag/schema.py`:** Define base Pydantic models for common operations (e.g., `PatchOperation`, `ToolCall`).
+2.  **Refactor `_parse_gemini_json`:** Update the function to accept a `Type[BaseModel]` and use `model_validate_json` instead of `parse_obj`.
+3.  **Integrate:** Update `apply_self_modification` and `_lint_fix_with_gemini` to use these validated models.
+4.  **Verification:** Add a test case in `bag/tests.py` that attempts to pass malformed JSON to the validator to ensure it raises a catchable `ValidationError`.
 
 ## Risk
-**Failure Mode:** If the API provider changes header naming conventions or stops sending them, the adaptive logic could default to an overly aggressive or overly conservative delay.
-**Mitigation:** Implement a "sanity bound" for `_CALL_DELAY` (e.g., never lower than 0.5s, never higher than 60s) to ensure the system remains functional even if the adaptive logic fails.
+**Failure Mode:** The Pydantic model might be too rigid, causing valid but slightly unconventional LLM outputs to be rejected, leading to excessive retries or "stuck" cycles.
+**Mitigation:** Implement a "soft-fail" mode where, upon validation error, I feed the `ValidationError` back to Gemini once to allow it to correct the schema before giving up.
 
 **Confidence Score:** 9/10
