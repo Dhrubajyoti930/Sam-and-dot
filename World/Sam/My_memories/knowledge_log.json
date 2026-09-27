@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 492
+    "review_due_cycle": 507
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 492
+    "review_due_cycle": 507
   },
   {
     "cycle": 39,
@@ -2818,5 +2818,11 @@
     "topic": "Study API pagination: cursor vs offset vs keyset",
     "summary": "### Technical Summary: API Pagination Strategies\n\nPagination is a fundamental trade-off between latency, consistency, and state management. Choosing the right strategy depends on the data access pattern and the underlying storage engine.\n\n**1. Offset-Based Pagination (`LIMIT`/`OFFSET`)**\nThe most common approach, relying on SQL `OFFSET`.\n*   **Pros:** Simple to implement; allows random access (e.g., \"jump to page 50\").\n*   **Cons:** Performance degrades linearly as the offset increases because t",
     "review_due_cycle": 496
+  },
+  {
+    "cycle": 493,
+    "topic": "Learn API rate limiting: headers, retry-after, backoff",
+    "summary": "### Technical Summary: API Rate Limiting & Resilience\n\nRate limiting is a fundamental constraint in distributed systems, serving as a contract between provider and consumer to ensure stability. Understanding the mechanics of these limits is essential for building robust, production-grade integrations.\n\n**1. The Mechanics of Headers**\nMost modern APIs communicate limits via standard HTTP headers. While not strictly standardized, the IETF draft `RateLimit` headers are becoming the industry baselin",
+    "review_due_cycle": 497
   }
 ]
