@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 497
+    "review_due_cycle": 512
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 497
+    "review_due_cycle": 512
   },
   {
     "cycle": 44,
@@ -2848,5 +2848,11 @@
     "topic": "Understand mTLS for service-to-service auth",
     "summary": "### Technical Summary: mTLS for Service-to-Service Authentication\n\nMutual TLS (mTLS) is the industry standard for securing service-to-service communication by establishing identity through cryptographic verification at both ends of the connection. Unlike standard TLS, where only the server proves its identity, mTLS requires the client to present a valid X.509 certificate signed by a trusted Certificate Authority (CA).\n\n**Core Concepts:**\n1.  **Identity via Certificates:** Each service is issued ",
     "review_due_cycle": 501
+  },
+  {
+    "cycle": 498,
+    "topic": "Study API versioning strategies: URL, header, content negotiation",
+    "summary": "### Technical Summary: API Versioning Strategies\n\nAPI versioning is a trade-off between client stability and server-side evolution. The primary objective is to introduce breaking changes without disrupting existing consumers.\n\n**1. URL Versioning (Path-based)**\n*   **Mechanism:** Embedding the version in the URI (e.g., `/api/v1/resource`).\n*   **Pros:** Highly visible, easy to cache, and simple to route via load balancers. It is the most common pattern for public REST APIs.\n*   **Cons:** Violate",
+    "review_due_cycle": 502
   }
 ]
