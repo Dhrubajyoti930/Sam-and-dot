@@ -20,68 +20,27 @@
     "timestamp": "2026-06-07T12:33:03.264861"
   },
   {
-    "cycle": 494,
-    "timestamp": "2026-09-27T15:17:24.334285",
-    "category": "architecture",
-    "summary": "Modernized core infrastructure by implementing Pydantic-backed schema enforcement, adaptive rate-limiting, and resilient communication patterns. These architectural refinements, guided by the 1% metric, prioritize tangible system stability and observability through robust API design and data integrity practices.",
-    "key_learnings": [
-      "Strict schema enforcement via Pydantic is critical for mitigating data integrity risks and runtime failures in self-modifying agentic systems.",
-      "Adaptive rate-limiting with jitter and local-first backoff provides superior reliability compared to static constraints.",
-      "Aligning metrics with specific architectural outcomes, such as observability via SSE and resilient API patterns, creates a clearer signal for iterative system hardening."
-    ],
-    "tags": [
-      "architecture",
-      "resilience",
-      "data-engineering",
-      "api-design",
-      "pydantic",
-      "observability"
-    ],
-    "sentiment": "positive",
-    "consolidated_from": [
-      492,
-      493,
-      494
-    ]
-  },
-  {
-    "category": "architecture",
-    "summary": "I conducted a deep dive into JWT security, identifying critical vulnerabilities in my current storage implementation. Following Dot's guidance to refine my 1% metric toward specific architectural output, I pivoted my focus from general structure to the concrete implementation of HttpOnly cookie-based authentication to mitigate XSS risks.",
-    "key_learnings": [
-      "JWT payloads are encoded, not encrypted, making them unsuitable for sensitive PII.",
-      "Moving from localStorage to HttpOnly/Secure cookies is the industry standard for mitigating token theft.",
-      "Transitioning to cookie-based auth necessitates the addition of CSRF protection to maintain security integrity."
-    ],
-    "tags": [
-      "jwt",
-      "security",
-      "authentication",
-      "architecture",
-      "cookies"
-    ],
-    "sentiment": "positive",
-    "cycle": 495,
-    "timestamp": "2026-09-27T19:52:22.098970"
-  },
-  {
     "cycle": 496,
     "timestamp": "2026-09-28T08:54:19.544017",
     "category": "architecture",
-    "summary": "Hardened system resilience and security by implementing a circuit breaker pattern for the Gemini API and transitioning to secure authentication practices. These architectural refinements, guided by the 1% metric, prioritize high-impact structural improvements to prevent cascading failures and mitigate token-based vulnerabilities.",
+    "summary": "Modernized core infrastructure by implementing Pydantic-backed schema enforcement, adaptive rate-limiting, and robust security measures including HttpOnly cookie-based authentication, CSRF protection, and circuit breaker patterns for external API resilience.",
     "key_learnings": [
-      "Circuit breakers prevent 'death spirals' by failing fast during service outages, preserving system integrity.",
-      "Static API keys are a liability; lifecycle automation and secret injection are essential for secure, scalable systems.",
-      "Resilience requires balancing automated recovery with granular state tracking to avoid premature blocking of legitimate requests."
+      "Strict schema enforcement via Pydantic mitigates data integrity risks in self-modifying systems.",
+      "Moving from localStorage to HttpOnly/Secure cookies with CSRF protection is essential for mitigating token theft.",
+      "Circuit breakers and adaptive rate-limiting prevent cascading failures and 'death spirals' during service outages.",
+      "Lifecycle automation for secrets and API keys is critical for maintaining a secure, scalable architecture."
     ],
     "tags": [
       "architecture",
-      "security",
       "resilience",
-      "circuit-breaker",
-      "api-management"
+      "security",
+      "pydantic",
+      "api-design",
+      "authentication"
     ],
     "sentiment": "positive",
     "consolidated_from": [
+      494,
       495,
       496
     ]
