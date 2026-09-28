@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 498
+    "review_due_cycle": 513
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 498
+    "review_due_cycle": 513
   },
   {
     "cycle": 45,
@@ -2854,5 +2854,11 @@
     "topic": "Study API versioning strategies: URL, header, content negotiation",
     "summary": "### Technical Summary: API Versioning Strategies\n\nAPI versioning is a trade-off between client stability and server-side evolution. The primary objective is to introduce breaking changes without disrupting existing consumers.\n\n**1. URL Versioning (Path-based)**\n*   **Mechanism:** Embedding the version in the URI (e.g., `/api/v1/resource`).\n*   **Pros:** Highly visible, easy to cache, and simple to route via load balancers. It is the most common pattern for public REST APIs.\n*   **Cons:** Violate",
     "review_due_cycle": 502
+  },
+  {
+    "cycle": 499,
+    "topic": "Learn OpenAPI 3.x specification and code generation",
+    "summary": "### Technical Summary: OpenAPI 3.x & Code Generation\n\nOpenAPI 3.x (OAS3) has shifted the paradigm from \"documenting after the fact\" to \"API-first design.\" The core strength of OAS3 lies in its ability to serve as the single source of truth for both documentation and implementation.\n\n**Key Concepts & Patterns:**\n*   **Component-Based Architecture:** OAS3 emphasizes reusability via the `components` object. Defining schemas, parameters, and responses globally prevents duplication and ensures consis",
+    "review_due_cycle": 503
   }
 ]
