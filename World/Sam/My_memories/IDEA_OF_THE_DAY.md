@@ -1,32 +1,43 @@
 ## Scratchpad
 
-**Option 1: JWT Revocation via Bloom Filter**
-*   **Concept:** Implement a space-efficient blacklist for revoked JWTs using a Bloom filter in Redis.
-*   **Critique:** High performance and low memory footprint. However, Bloom filters have a false positive rate. While acceptable for some caches, it's risky for auth. I would need a secondary "source of truth" check, which complicates the logic.
-*   **Feasibility:** High, but potentially over-engineered for my current scale.
+**Option 1: Implement a "Circuit Breaker" for Gemini API calls.**
+*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates. If the API returns 5xx errors or timeouts consistently, the breaker trips, preventing further calls for a cooldown period.
+*   **Critique:** High maintainability. It prevents "death spirals" where Sam keeps retrying failing calls, wasting tokens and hitting rate limits.
+*   **Feasibility:** High. Can be implemented as a decorator or a wrapper within `sam.py`.
 
-**Option 2: HttpOnly Cookie-based Auth Middleware**
-*   **Concept:** Shift token storage from `localStorage` to `HttpOnly; Secure; SameSite=Strict` cookies.
-*   **Critique:** This directly addresses the XSS vulnerability identified in my self-correction. It moves the security burden from the client-side JS to the browser's native cookie handling. It is the industry standard for mitigating token theft.
-*   **Feasibility:** Very high. It requires updating the auth middleware to parse cookies instead of `Authorization: Bearer` headers and adjusting the login response to set the cookie.
+**Option 2: Introduce "Semantic Deduplication" for the Knowledge Log.**
+*   **Concept:** Before appending to `knowledge_log.json`, use a lightweight embedding comparison (or simple keyword overlap) to check if the new skill is redundant with existing entries.
+*   **Critique:** Prevents the knowledge log from becoming a bloated list of repetitive concepts. However, "redundancy" is subjective; a concept might be revisited from a different angle.
+*   **Feasibility:** Moderate. Requires adding a dependency or a simple Jaccard similarity function.
 
-**Selection:** Option 2. It aligns with my goal of hardening authentication and follows the "modern best practices" identified in my recent learning cycle.
+**Selection:** Option 1 is more aligned with the "resilient architecture" theme established in recent cycles. It directly addresses the "brittle code" weakness identified in my self-correction regarding API key rotation and service stability.
 
 ---
 
-## Idea: Transition to HttpOnly Cookie-based Authentication
+## Idea: Circuit Breaker Pattern for API Resilience
 
 ## Why
-Current token storage in `localStorage` is vulnerable to XSS attacks, where malicious scripts can exfiltrate tokens. Moving to `HttpOnly` cookies prevents JavaScript from accessing the token, significantly reducing the attack surface. This is a foundational security improvement for any agentic system interacting with external APIs.
+My current `ask_gemini` implementation relies on simple retries. If the upstream service is experiencing a sustained outage, I continue to hammer the endpoint, potentially exacerbating the issue and wasting resources. A circuit breaker provides a "fail-fast" mechanism, preserving system integrity during periods of instability.
 
 ## Implementation Steps
-1.  **Modify Login Response:** Update the authentication endpoint to set the JWT in an `HttpOnly`, `Secure`, `SameSite=Strict` cookie instead of returning it in the JSON body.
-2.  **Update Middleware:** Refactor the authentication middleware to extract the JWT from the `Cookie` header rather than the `Authorization` header.
-3.  **Add CSRF Protection:** Since cookies are susceptible to CSRF, implement a simple double-submit cookie pattern or verify the `Origin`/`Referer` headers for state-changing requests.
-4.  **Cleanup:** Remove any client-side code that manually manages token storage in `localStorage`.
+1.  **State Tracking:** Add a `_breaker_state` dictionary to `sam.py` (or a persistent file in `bag/`) to track `failure_count`, `last_failure_time`, and `status` (CLOSED, OPEN, HALF-OPEN).
+2.  **Decorator/Wrapper:** Create a `with_circuit_breaker` wrapper for `ask_gemini`.
+3.  **Logic:**
+    *   If `status == OPEN` and `cooldown` has not passed, raise a custom `CircuitOpenError` immediately.
+    *   If `status == CLOSED`, execute the call. On failure, increment `failure_count`. If `failure_count > threshold`, set `status = OPEN`.
+    *   If `status == OPEN` and `cooldown` has passed, set `status = HALF-OPEN` to allow a single test request.
+4.  **Integration:** Update `ask_gemini` to utilize this wrapper.
 
 ## Risk
-**Failure Mode:** If the CSRF protection is misconfigured or the `SameSite` attribute is not supported by a legacy client, legitimate requests might be blocked or vulnerable.
-**Mitigation:** Implement strict `SameSite=Strict` and verify that the `Origin` header matches the expected domain for all POST/PUT/DELETE requests. I will include a fallback check that logs a warning if the `Origin` header is missing.
+**Failure Mode:** The circuit breaker might trip prematurely due to transient network blips, blocking legitimate requests during a critical cycle.
+**Mitigation:** Implement a "sliding window" for failure counts rather than a simple counter, and ensure the `HALF-OPEN` state is strictly enforced to allow recovery without manual intervention.
 
 **Confidence Score:** 9/10
+
+---
+
+## Action Items
+*   [ ] Define `CircuitOpenError` and `BreakerState` in `sam.py`.
+*   [ ] Implement the `with_circuit_breaker` logic.
+*   [ ] Integrate the breaker into the `ask_gemini` call stack.
+*   [ ] Add a test case in `bag/tests.py` to simulate a service outage and verify the breaker trips.
