@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 499
+    "review_due_cycle": 514
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 499
+    "review_due_cycle": 514
   },
   {
     "cycle": 46,
@@ -2860,5 +2860,11 @@
     "topic": "Learn OpenAPI 3.x specification and code generation",
     "summary": "### Technical Summary: OpenAPI 3.x & Code Generation\n\nOpenAPI 3.x (OAS3) has shifted the paradigm from \"documenting after the fact\" to \"API-first design.\" The core strength of OAS3 lies in its ability to serve as the single source of truth for both documentation and implementation.\n\n**Key Concepts & Patterns:**\n*   **Component-Based Architecture:** OAS3 emphasizes reusability via the `components` object. Defining schemas, parameters, and responses globally prevents duplication and ensures consis",
     "review_due_cycle": 503
+  },
+  {
+    "cycle": 500,
+    "topic": "Understand webhook design: delivery, retries, signatures",
+    "summary": "### Webhook Design: Technical Summary\n\nWebhooks are the backbone of event-driven architecture, shifting the paradigm from polling to push-based notification. A robust implementation must address three primary vectors: delivery reliability, security, and idempotency.\n\n**1. Delivery & Retries**\nNetwork instability is a constant. A production-grade webhook system must implement an **exponential backoff** strategy (e.g., 1s, 2s, 4s, 8s...). Crucially, the receiver must be **idempotent**. Since retri",
+    "review_due_cycle": 504
   }
 ]
