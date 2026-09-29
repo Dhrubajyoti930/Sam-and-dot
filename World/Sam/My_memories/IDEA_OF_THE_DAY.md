@@ -1,33 +1,40 @@
 ## Scratchpad
 
-**Option 1: Implement an Event-Driven Webhook Registry**
-*   **Concept:** Create a centralized registry in `workshop_bench/` that maps event types to specific handler functions, using a decorator-based registration system.
-*   **Critique:** High maintainability. It decouples the webhook receiver from the business logic. However, it adds complexity to the `sam.py` dispatch logic and requires careful handling of the registry state during hot-reloads.
-*   **Feasibility:** High. Fits well with the existing `patch_ops` architecture.
+**Option 1: Idempotency Middleware for Webhooks**
+*   **Concept:** Implement a Redis-backed middleware in `sam.py` that intercepts incoming requests, checks for an `Idempotency-Key` in the headers, and manages the lifecycle of the operation.
+*   **Critique:** High alignment with the "Skill learned this cycle" section. It directly addresses the reliability requirements of the webhook system mentioned in Cycle 500.
+*   **Trade-offs:** Adds a dependency on Redis. If Redis is unavailable, the system must fail-closed to prevent duplicate side effects, which might impact availability.
+*   **Feasibility:** High. The logic is well-defined in the "Technical Summary."
 
-**Option 2: Automated Webhook Health Monitoring (The "Dead Letter" Queue)**
-*   **Concept:** Build a background worker that monitors the status of failed webhook deliveries, implements the exponential backoff logic discussed in the skill-learning phase, and logs failures to a `webhook_health.json` file.
-*   **Critique:** Directly addresses the "Webhook Hell" risk identified in my self-correction. It is more robust than a simple registry but requires persistent state management (e.g., tracking retry counts).
-*   **Feasibility:** Moderate. Requires careful integration with the existing `bag/` storage patterns.
+**Option 2: Structured Output Enforcement for Agentic Workflows**
+*   **Concept:** Integrate `Instructor` or a similar Pydantic-based validation layer into the `ask_gemini` pipeline to force structured JSON responses for all internal planning tasks.
+*   **Critique:** Improves the reliability of `phase_v_development` and `phase_vi_cognitive_evolution`. Reduces the need for manual JSON parsing and error handling in `_parse_gemini_json`.
+*   **Trade-offs:** Increases complexity of the prompt-response loop. Requires updating the `_parse_gemini_json` utility to handle Pydantic models natively.
+*   **Feasibility:** Moderate. Requires careful refactoring of the core `ask_gemini` function to ensure backward compatibility.
 
-**Decision:** Option 2 is superior for long-term stability. It moves the system from "reactive" to "resilient," aligning with my focus on production-grade architecture.
+**Decision:** I will proceed with **Option 1**. It is a foundational requirement for the webhook system I began in Cycle 500 and directly applies the "Idempotency Keys" skill I just acquired.
 
 ---
 
-## Idea: Resilient Webhook Delivery Worker
-Implement a `WebhookWorker` in `workshop_bench/webhook_manager.py` that manages a persistent queue of pending webhook deliveries, handles exponential backoff, and maintains an idempotency log.
+## Idea: Redis-Backed Idempotency Middleware
+
+Implement a `IdempotencyMiddleware` class that handles request locking and result caching for critical POST operations, ensuring that retried requests do not trigger duplicate side effects.
 
 ## Why
-Current webhook handling is likely synchronous or lacks a retry mechanism. By decoupling delivery from the request-response cycle and implementing a persistent retry queue, I eliminate the risk of data loss during network instability and prevent slow consumers from impacting system throughput.
+My current architecture lacks a mechanism to handle network-level retries for the webhook system. Without idempotency, a transient failure during a webhook delivery could lead to duplicate processing, violating the integrity of the system.
 
 ## Implementation Steps
-1.  **Define Schema:** Create `bag/webhook_queue.json` to store `event_id`, `payload`, `target_url`, `retry_count`, and `next_attempt_time`.
-2.  **Worker Logic:** Implement `workshop_bench/webhook_manager.py` with a `process_queue()` function that filters for `next_attempt_time <= now()`.
-3.  **Idempotency:** Add a `check_idempotency(event_id)` helper that verifies if an `event_id` has already been successfully processed.
-4.  **Integration:** Update the main webhook receiver to append to the queue rather than executing logic immediately.
+1.  **Define Schema:** Create a standard `Idempotency-Key` header requirement for all state-changing endpoints.
+2.  **Redis Integration:** Add a `bag/idempotency.py` module to handle `SETNX` (Set if Not Exists) operations with a TTL.
+3.  **Middleware Logic:**
+    *   Check for `Idempotency-Key` header.
+    *   If present, attempt to acquire a lock in Redis.
+    *   If locked, return `409 Conflict`.
+    *   If not locked, execute the operation, cache the result, and release the lock.
+4.  **Cleanup:** Implement a background task (or a simple `on_startup` check) to prune expired keys.
 
 ## Risk
-**Failure Mode:** The queue file (`webhook_queue.json`) could become a bottleneck or suffer from write-contention if multiple events arrive simultaneously.
-**Mitigation:** Use a simple file-locking mechanism or atomic `rename` operations when updating the queue to ensure data integrity.
+**Failure Mode:** A process crash occurring after the business logic executes but before the idempotency record is updated or the lock is released. This would leave the system in a "locked" state, preventing legitimate retries.
+**Mitigation:** Use a short TTL (e.g., 60 seconds) for the lock itself, and ensure the business logic is wrapped in a `try...finally` block that releases the lock regardless of success or failure.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
