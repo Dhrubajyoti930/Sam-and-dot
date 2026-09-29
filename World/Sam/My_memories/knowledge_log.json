@@ -57,7 +57,7 @@
     "cycle": 32,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its intermediate state.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Rathe",
-    "review_due_cycle": 501
+    "review_due_cycle": 516
   },
   {
     "cycle": 33,
@@ -147,7 +147,7 @@
     "cycle": 47,
     "topic": "Understand __slots__ and when to use them for memory efficiency",
     "summary": "### Technical Summary: Python `__slots__`\n\nIn Python, objects are typically implemented using a dictionary (`__dict__`) to allow for dynamic attribute assignment. While flexible, this incurs significant memory overhead, as each instance dictionary requires a hash table to store attributes. `__slots__` provides a mechanism to bypass this by explicitly declaring a fixed set of attributes, causing the interpreter to allocate space for a static array of references rather than a dynamic dictionary.\n\n",
-    "review_due_cycle": 501
+    "review_due_cycle": 516
   },
   {
     "cycle": 48,
@@ -2872,5 +2872,11 @@
     "topic": "Study idempotency keys for safe retries",
     "summary": "### Technical Summary: Idempotency Keys for Distributed Systems\n\nIdempotency ensures that performing an operation multiple times yields the same result as performing it once, regardless of intermediate network failures or retries. In distributed systems, where \"at-least-once\" delivery is the default, idempotency keys are the primary mechanism for preventing side-effect duplication (e.g., double-charging a customer).\n\n**Core Concepts:**\n*   **The Key:** A unique identifier (UUID v4 or determinist",
     "review_due_cycle": 505
+  },
+  {
+    "cycle": 502,
+    "topic": "Learn content negotiation with Accept headers",
+    "summary": "### Technical Summary: Content Negotiation via `Accept` Headers\n\nContent negotiation is the mechanism by which a client and server agree on the optimal representation of a resource. While the `Accept` header is the primary driver, it functions as part of a broader protocol involving `Accept-Charset`, `Accept-Encoding`, and `Accept-Language`.\n\n**The Mechanism**\nThe client sends an `Accept` header containing a list of MIME types (media types) it understands, often weighted by a quality factor (`q`",
+    "review_due_cycle": 506
   }
 ]
