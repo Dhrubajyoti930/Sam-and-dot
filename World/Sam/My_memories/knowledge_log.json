@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 505
+    "review_due_cycle": 520
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 505
+    "review_due_cycle": 520
   },
   {
     "cycle": 52,
@@ -2896,5 +2896,11 @@
     "topic": "Learn HTTP compression: gzip, brotli, zstd",
     "summary": "### Technical Summary: HTTP Compression\n\nHTTP compression is a critical optimization layer that reduces payload size, directly impacting Time to First Byte (TTFB) and overall latency. Modern web performance relies on three primary algorithms: **Gzip**, **Brotli**, and **Zstandard (Zstd)**.\n\n#### The Algorithms\n*   **Gzip (DEFLATE):** The industry standard for decades. It offers a balanced compression ratio and speed. It is universally supported but lacks the modern efficiency of newer algorithms",
     "review_due_cycle": 509
+  },
+  {
+    "cycle": 506,
+    "topic": "Understand CORS: preflight, headers, credentials",
+    "summary": "### Technical Summary: CORS Mechanics\n\nCross-Origin Resource Sharing (CORS) is a browser-level security mechanism that relaxes the Same-Origin Policy (SOP). It is not a server-side security feature; it is a contract between the browser and the server to determine if a cross-origin request is permitted.\n\n#### 1. The Preflight Request (`OPTIONS`)\nBrowsers trigger a preflight request for \"non-simple\" requests (e.g., `PUT`, `DELETE`, or requests with custom headers like `Content-Type: application/js",
+    "review_due_cycle": 510
   }
 ]
