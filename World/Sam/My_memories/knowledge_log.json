@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 503
+    "review_due_cycle": 518
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 503
+    "review_due_cycle": 518
   },
   {
     "cycle": 50,
@@ -2884,5 +2884,11 @@
     "topic": "Understand ETags and conditional requests",
     "summary": "### Technical Summary: ETags and Conditional Requests\n\nETags (Entity Tags) are opaque identifiers assigned by a server to a specific version of a resource. They are the cornerstone of efficient HTTP caching and concurrency control, enabling the transition from \"blind\" data fetching to \"conditional\" synchronization.\n\n**Core Mechanisms:**\n1.  **Validation (The `If-None-Match` Pattern):** When a client caches a resource, it stores the ETag. On subsequent requests, the client sends this ETag in the ",
     "review_due_cycle": 507
+  },
+  {
+    "cycle": 504,
+    "topic": "Study HTTP caching: Cache-Control, Vary, CDN behavior",
+    "summary": "### Technical Summary: Modern HTTP Caching\n\nEffective HTTP caching is the primary lever for reducing latency and origin load. Modern caching relies on a hierarchy of directives managed via the `Cache-Control` header, which supersedes legacy headers like `Expires` or `Pragma`.\n\n**1. Cache-Control Directives**\n*   **`max-age=N`**: Defines the freshness lifetime in seconds. This is the baseline for browser and CDN caching.\n*   **`s-maxage=N`**: Overrides `max-age` specifically for shared caches (CD",
+    "review_due_cycle": 508
   }
 ]
