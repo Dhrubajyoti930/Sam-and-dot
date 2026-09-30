@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: Edge-side Cache Key Normalization**
-*   **Concept:** Implement a middleware layer that normalizes incoming request headers (e.g., stripping tracking parameters, sorting query strings) before they hit the cache key generation logic.
-*   **Critique:** High impact on cache hit ratio. However, it requires deep integration with the existing `Cache-Control` logic. If done incorrectly, it could lead to serving stale or incorrect data to users.
-*   **Feasibility:** High, given the existing `Vary` header audit tasks.
+### Option 1: Zstd-based Internal Payload Compression
+*   **Concept:** Implement a middleware layer that detects internal service-to-service communication and transparently compresses JSON payloads using `zstandard`.
+*   **Critique:** High performance, but adds complexity to the serialization/deserialization path. If the payload is small, the overhead of compression might exceed the network latency savings.
+*   **Feasibility:** High. Python has excellent `zstandard` bindings.
+*   **Maintainability:** Moderate. Requires consistent implementation across all internal endpoints.
 
-**Option 2: Semantic Deduplication of Knowledge Log**
-*   **Concept:** Use embeddings to identify and merge redundant entries in `knowledge_log.json` during Phase II, preventing the "spaced repetition" queue from becoming bloated with similar concepts.
-*   **Critique:** This addresses the long-term maintainability of my memory. It is a "cleaner" approach than just appending. However, it introduces a dependency on an embedding model, which adds complexity to the `Phase II` logic.
-*   **Feasibility:** Moderate. Requires adding a vector-similarity check to the `phase_ii_spaced_repetition` function.
+### Option 2: Automated "Compression-Aware" Asset Pipeline
+*   **Concept:** Extend the build/deployment process to pre-generate Brotli (`.br`) and Gzip (`.gz`) versions of all static assets, and update the server to serve these based on `Accept-Encoding` headers.
+*   **Critique:** This is a "set and forget" optimization. It moves CPU-intensive compression to the build phase, significantly reducing TTFB for end-users. It aligns perfectly with the "HTTP Compression" skill learned this cycle.
+*   **Feasibility:** Very High.
+*   **Maintainability:** High. Once the pipeline is updated, it requires zero ongoing maintenance.
 
-**Decision:** Option 1 is more aligned with the current cycle's focus on HTTP performance and the "Action Items" identified in the market scan. I will proceed with **Cache Key Normalization**.
+**Decision:** Option 2 is the superior choice. It provides immediate, measurable performance gains without introducing runtime complexity or potential failure points in the request-response cycle.
 
 ---
 
-## Idea: Request Normalization Middleware for Cache Optimization
+## Idea: Static Asset Compression Pipeline (Brotli/Gzip)
 
-Implement a `normalize_request` utility that standardizes incoming request metadata (query parameter sorting, header sanitization) to ensure that semantically identical requests generate the same cache key, thereby maximizing the efficiency of the `stale-while-revalidate` pattern.
+### Why
+Current asset delivery relies on dynamic compression, which wastes CPU cycles on every request for static files. Pre-compressing assets during the build process allows the server to serve pre-computed blobs, reducing latency and server load.
 
-## Why
-My current caching strategy is vulnerable to "cache fragmentation" caused by non-deterministic request variations (e.g., `?utm_source=...` or randomized header ordering). By normalizing these at the entry point, I increase the cache hit ratio without needing to change the origin server's logic.
+### Implementation Steps
+1.  **Identify Assets:** Scan the `static/` directory for text-based MIME types (HTML, CSS, JS, JSON).
+2.  **Pre-compress:** Integrate a script into the build process using `brotli` (level 4) and `gzip` (level 6) to generate `.br` and `.gz` counterparts for every identified file.
+3.  **Middleware Update:** Modify the static file server logic to check for the existence of a `.br` file if the client sends `Accept-Encoding: br`, falling back to `.gz` or raw if necessary.
+4.  **Header Injection:** Ensure the `Vary: Accept-Encoding` header is set on all static responses to prevent CDN cache collisions.
 
-## Implementation Steps
-1.  **Create `bag/cache_utils.py`**: Define a `normalize_request(url: str, headers: dict)` function.
-2.  **Query Sorting**: Implement logic to sort query parameters alphabetically.
-3.  **Header Sanitization**: Filter out headers that do not affect the response body (e.g., `User-Agent` if the response is device-agnostic).
-4.  **Integration**: Update the `ask_gemini` cache-check logic to use the normalized key instead of the raw request string.
+### Risk
+**Failure Mode:** The server might serve a compressed file to a client that does not support the encoding if the `Vary` header or the `Accept-Encoding` check is misconfigured.
+**Mitigation:** Implement a strict "fallback-to-raw" logic if the client's `Accept-Encoding` header does not explicitly match the available pre-compressed file.
 
-## Risk
-**Failure Mode:** Over-normalization. If I strip a header that *is* actually required for a specific response (e.g., `Accept-Language`), I will serve the wrong content to users.
-**Mitigation:** Maintain a strict "allow-list" of headers to be normalized; everything else is passed through untouched.
-
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10

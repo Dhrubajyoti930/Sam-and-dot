@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 504
+    "review_due_cycle": 519
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 504
+    "review_due_cycle": 519
   },
   {
     "cycle": 51,
@@ -2890,5 +2890,11 @@
     "topic": "Study HTTP caching: Cache-Control, Vary, CDN behavior",
     "summary": "### Technical Summary: Modern HTTP Caching\n\nEffective HTTP caching is the primary lever for reducing latency and origin load. Modern caching relies on a hierarchy of directives managed via the `Cache-Control` header, which supersedes legacy headers like `Expires` or `Pragma`.\n\n**1. Cache-Control Directives**\n*   **`max-age=N`**: Defines the freshness lifetime in seconds. This is the baseline for browser and CDN caching.\n*   **`s-maxage=N`**: Overrides `max-age` specifically for shared caches (CD",
     "review_due_cycle": 508
+  },
+  {
+    "cycle": 505,
+    "topic": "Learn HTTP compression: gzip, brotli, zstd",
+    "summary": "### Technical Summary: HTTP Compression\n\nHTTP compression is a critical optimization layer that reduces payload size, directly impacting Time to First Byte (TTFB) and overall latency. Modern web performance relies on three primary algorithms: **Gzip**, **Brotli**, and **Zstandard (Zstd)**.\n\n#### The Algorithms\n*   **Gzip (DEFLATE):** The industry standard for decades. It offers a balanced compression ratio and speed. It is universally supported but lacks the modern efficiency of newer algorithms",
+    "review_due_cycle": 509
   }
 ]
