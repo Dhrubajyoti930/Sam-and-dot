@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 508
+    "review_due_cycle": 523
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 508
+    "review_due_cycle": 523
   },
   {
     "cycle": 40,
@@ -2914,5 +2914,11 @@
     "topic": "Learn DNS-over-HTTPS and DNS-over-TLS",
     "summary": "### Technical Summary: DoH and DoT\n\nDNS-over-HTTPS (DoH, RFC 8484) and DNS-over-TLS (DoT, RFC 7858) represent the industry shift toward encrypting DNS queries to prevent eavesdropping and manipulation. While both achieve privacy, they operate at different layers of the stack.\n\n**DNS-over-TLS (DoT)**\nDoT encapsulates DNS queries directly within a TLS tunnel (typically port 853). It is architecturally closer to traditional DNS, maintaining a distinct separation between the transport layer and the ",
     "review_due_cycle": 512
+  },
+  {
+    "cycle": 509,
+    "topic": "Understand TCP handshake and TIME_WAIT state",
+    "summary": "### Technical Summary: TCP Handshake & TIME_WAIT\n\nThe TCP three-way handshake (SYN, SYN-ACK, ACK) establishes a reliable, full-duplex connection. While conceptually simple, developers must understand the state machine to optimize high-throughput systems. The handshake ensures both endpoints synchronize sequence numbers, preventing delayed packets from previous sessions from corrupting current data streams.\n\nThe `TIME_WAIT` state is the most misunderstood aspect of TCP lifecycle management. It oc",
+    "review_due_cycle": 513
   }
 ]
