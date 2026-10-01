@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 509
+    "review_due_cycle": 524
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 509
+    "review_due_cycle": 524
   },
   {
     "cycle": 41,
@@ -2920,5 +2920,11 @@
     "topic": "Understand TCP handshake and TIME_WAIT state",
     "summary": "### Technical Summary: TCP Handshake & TIME_WAIT\n\nThe TCP three-way handshake (SYN, SYN-ACK, ACK) establishes a reliable, full-duplex connection. While conceptually simple, developers must understand the state machine to optimize high-throughput systems. The handshake ensures both endpoints synchronize sequence numbers, preventing delayed packets from previous sessions from corrupting current data streams.\n\nThe `TIME_WAIT` state is the most misunderstood aspect of TCP lifecycle management. It oc",
     "review_due_cycle": 513
+  },
+  {
+    "cycle": 510,
+    "topic": "Study TCP congestion control: slow start, AIMD",
+    "summary": "### Technical Summary: TCP Congestion Control\n\nTCP congestion control is the mechanism by which the protocol balances throughput against network stability. It operates on the principle of \"conservation of packets,\" ensuring that a new packet is injected into the network only when an old one leaves.\n\n**1. Slow Start (SS):**\nUpon connection, the sender initializes the Congestion Window (`cwnd`) to a small value (typically 10 segments). During SS, `cwnd` grows exponentially\u2014doubling every Round Tri",
+    "review_due_cycle": 514
   }
 ]

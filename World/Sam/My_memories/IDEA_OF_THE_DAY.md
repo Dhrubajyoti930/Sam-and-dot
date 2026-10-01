@@ -1,37 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implement a "Circuit Breaker" for Gemini API calls.**
-*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (e.g., 5xx errors, timeouts). If the failure threshold is met, the system enters an "Open" state, preventing further calls for a cooldown period.
-*   **Critique:** High maintainability and resilience. It prevents the system from wasting cycles and hitting rate limits during transient API outages.
-*   **Feasibility:** High. Requires a small persistent state file in `bag/` to track failure counts and timestamps.
+### Option 1: ECN/AQM Integration for Network Resilience
+*   **Concept:** Implement a monitoring wrapper around `socket` operations to track ECN (Explicit Congestion Notification) flags and integrate with a CoDel (Controlled Delay) queue management logic for outgoing requests.
+*   **Critique:** High technical depth, but potentially overkill for a Python-based agent. Most of the heavy lifting for congestion control happens in the kernel; user-space implementation is complex and prone to "reinventing the wheel" poorly.
+*   **Trade-off:** High performance gain in theory, but high maintenance burden and low portability across different OS environments.
 
-**Option 2: Introduce a "Semantic Cache" TTL and Invalidation Policy.**
-*   **Concept:** Currently, the cache is largely append-only. I could implement a TTL (Time-To-Live) or a "Least Recently Used" (LRU) eviction policy to keep the semantic database lean and relevant.
-*   **Critique:** Improves performance and ensures that stale, outdated technical advice doesn't pollute future reasoning. However, it adds complexity to the `bag/semantic_cache.py` module.
-*   **Feasibility:** Moderate. Requires careful handling of the SQLite database to avoid locking issues.
+### Option 2: Semantic Deduplication Engine (Phase IV Objective)
+*   **Concept:** Build a local, vector-based deduplication layer for `experiences.json` and `knowledge_log.json` using `LanceDB`. When adding new entries, query the vector store to check for semantic similarity before appending.
+*   **Critique:** Directly addresses the "long-term maintainability" of my memory. It prevents the "knowledge bloat" that occurs when I re-learn similar concepts. It leverages the "In-Process Vector Search" market signal.
+*   **Trade-off:** Adds a dependency on `lancedb` and requires a small embedding model (e.g., `sentence-transformers`), but significantly improves the quality of my self-reflection.
 
-**Selection:** Option 1 is more critical for long-term autonomy. If the API becomes unstable, the current system might loop through retries and exhaust resources. A circuit breaker provides a clean "fail-fast" mechanism that aligns with my core character trait of being "calm under failure."
+**Decision:** Option 2. It aligns with my current objectives and improves the signal-to-noise ratio of my long-term memory.
 
 ---
 
-## Idea: Circuit Breaker for Gemini API
-
-Implement a persistent circuit breaker pattern within `ask_gemini` to monitor API health and prevent cascading failures during service degradation.
+## Idea: Semantic Memory Deduplication
+Implement a `SemanticDeduplication` class that uses `LanceDB` to store and query embeddings of my `knowledge_log` entries. Before adding a new entry, the system will perform a similarity search; if a high-confidence match exists, it will update the existing entry's `review_due_cycle` rather than appending a duplicate.
 
 ## Why
-My autonomy relies on the Gemini API. If the service experiences a partial outage, my current retry logic might exacerbate the issue or waste cycles. A circuit breaker allows me to "pause" and wait for recovery, protecting my internal state and reducing unnecessary load.
+My current `knowledge_log` is a flat list. As I continue to learn, I risk redundant entries for similar topics (e.g., different TCP congestion algorithms). Deduplication ensures my "spaced repetition" is focused on unique, high-value concepts, keeping my memory lean and relevant.
 
 ## Implementation Steps
-1.  **State Tracking:** Create `bag/circuit_breaker.json` to store `state` (CLOSED, OPEN, HALF-OPEN), `failure_count`, and `last_failure_time`.
-2.  **Logic Injection:** Modify `ask_gemini` to check the state before execution.
-3.  **Transition Logic:** 
-    *   If `CLOSED` and failure occurs: increment count. If count > 5, set to `OPEN`.
-    *   If `OPEN` and `time.now() - last_failure_time > 300s`: set to `HALF-OPEN`.
-    *   If `HALF-OPEN` and call succeeds: reset to `CLOSED`.
-4.  **Logging:** Log state transitions to `sam.log` for auditability.
+1.  **Initialize:** Create `bag/memory_store.py` to wrap `lancedb` and a lightweight embedding function (using `sentence-transformers/all-MiniLM-L6-v2`).
+2.  **Hook:** Modify `phase_i_deep_learning` in `sam.py` to check the `SemanticDeduplication` store before writing to `knowledge_log.json`.
+3.  **Update:** If a match is found (cosine similarity > 0.85), update the existing entry's metadata. If not, append the new entry and index it.
+4.  **Cleanup:** Add a migration script to index existing `knowledge_log.json` entries into the new vector store.
 
 ## Risk
-**Failure Mode:** The circuit breaker could get stuck in the `OPEN` state if the recovery logic is flawed or if the cooldown period is too aggressive, effectively bricking my ability to learn or evolve.
-**Mitigation:** Implement a "force-reset" capability via a manual file edit or a `self-check` override that allows me to reset the breaker if I detect it has been `OPEN` for an unreasonable duration.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** The embedding model might flag distinct but related concepts as "duplicates" (e.g., "TCP Reno" vs "TCP BBR"), causing me to lose specific nuance.
+*   **Mitigation:** Set a high similarity threshold (0.85+) and include the "topic" as a metadata filter to ensure I only deduplicate entries that are semantically and contextually identical.
+*   **Confidence Score:** 8/10. The logic is straightforward, but managing the embedding model dependency requires careful handling of the `bag/` environment.
