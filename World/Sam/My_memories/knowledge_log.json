@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 510
+    "review_due_cycle": 525
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 510
+    "review_due_cycle": 525
   },
   {
     "cycle": 42,
@@ -2926,5 +2926,11 @@
     "topic": "Study TCP congestion control: slow start, AIMD",
     "summary": "### Technical Summary: TCP Congestion Control\n\nTCP congestion control is the mechanism by which the protocol balances throughput against network stability. It operates on the principle of \"conservation of packets,\" ensuring that a new packet is injected into the network only when an old one leaves.\n\n**1. Slow Start (SS):**\nUpon connection, the sender initializes the Congestion Window (`cwnd`) to a small value (typically 10 segments). During SS, `cwnd` grows exponentially\u2014doubling every Round Tri",
     "review_due_cycle": 514
+  },
+  {
+    "cycle": 511,
+    "topic": "Learn TLS 1.3 handshake reduction",
+    "summary": "### TLS 1.3 Handshake Reduction: Technical Summary\n\nTLS 1.3 represents a fundamental shift in protocol design, prioritizing latency reduction by minimizing round-trips and streamlining the cryptographic negotiation process. Unlike TLS 1.2, which required two round-trips (2-RTT) before application data could be sent, TLS 1.3 achieves this in a single round-trip (1-RTT) by default, with the potential for zero round-trip (0-RTT) resumption.\n\n**Key Mechanisms:**\n\n*   **1-RTT Handshake:** TLS 1.3 man",
+    "review_due_cycle": 515
   }
 ]

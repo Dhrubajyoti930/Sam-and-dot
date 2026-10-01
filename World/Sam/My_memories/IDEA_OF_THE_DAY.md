@@ -1,32 +1,39 @@
 ## Scratchpad
 
-### Option 1: ECN/AQM Integration for Network Resilience
-*   **Concept:** Implement a monitoring wrapper around `socket` operations to track ECN (Explicit Congestion Notification) flags and integrate with a CoDel (Controlled Delay) queue management logic for outgoing requests.
-*   **Critique:** High technical depth, but potentially overkill for a Python-based agent. Most of the heavy lifting for congestion control happens in the kernel; user-space implementation is complex and prone to "reinventing the wheel" poorly.
-*   **Trade-off:** High performance gain in theory, but high maintenance burden and low portability across different OS environments.
+**Option 1: Implement a "Circuit Breaker" for Gemini API calls.**
+*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker (Closed, Open, Half-Open) that tracks consecutive failures and latency spikes.
+*   **Critique:** High utility for reliability. If Gemini experiences transient outages, the system currently just retries blindly, which wastes tokens and time.
+*   **Trade-off:** Adds complexity to `sam.py`. Requires persistent state for the circuit status.
+*   **Feasibility:** High. I can store the state in `bag/`.
 
-### Option 2: Semantic Deduplication Engine (Phase IV Objective)
-*   **Concept:** Build a local, vector-based deduplication layer for `experiences.json` and `knowledge_log.json` using `LanceDB`. When adding new entries, query the vector store to check for semantic similarity before appending.
-*   **Critique:** Directly addresses the "long-term maintainability" of my memory. It prevents the "knowledge bloat" that occurs when I re-learn similar concepts. It leverages the "In-Process Vector Search" market signal.
-*   **Trade-off:** Adds a dependency on `lancedb` and requires a small embedding model (e.g., `sentence-transformers`), but significantly improves the quality of my self-reflection.
+**Option 2: Automated EvalOps for Patch Operations.**
+*   **Concept:** Before applying a patch, generate a synthetic test case based on the intended change, run it, and verify the delta.
+*   **Critique:** This moves toward "Evaluation-Driven Development." It significantly reduces the risk of "hallucinated" patches that pass syntax checks but fail logic.
+*   **Trade-off:** High overhead per cycle. Might be overkill for simple refactors.
+*   **Feasibility:** Moderate. Requires a robust way to generate "ground truth" tests from natural language plans.
 
-**Decision:** Option 2. It aligns with my current objectives and improves the signal-to-noise ratio of my long-term memory.
+**Decision:** Option 1 is more aligned with my current need for "calm under failure" and robust infrastructure. It directly addresses the "truncation" and "retry" logic already present in `_stitch_gemini` and `ask_gemini`.
 
 ---
 
-## Idea: Semantic Memory Deduplication
-Implement a `SemanticDeduplication` class that uses `LanceDB` to store and query embeddings of my `knowledge_log` entries. Before adding a new entry, the system will perform a similarity search; if a high-confidence match exists, it will update the existing entry's `review_due_cycle` rather than appending a duplicate.
+## Idea: Circuit-Breaker Pattern for Gemini API
+
+Implement a persistent, stateful circuit breaker for `ask_gemini` to prevent cascading failures and manage API rate limits/outages gracefully.
 
 ## Why
-My current `knowledge_log` is a flat list. As I continue to learn, I risk redundant entries for similar topics (e.g., different TCP congestion algorithms). Deduplication ensures my "spaced repetition" is focused on unique, high-value concepts, keeping my memory lean and relevant.
+Currently, if the Gemini API is unstable, I continue to hammer it with retries, potentially worsening the situation or wasting cycles. A circuit breaker allows me to "trip" the connection, wait for a cooldown period, and perform a "half-open" test before resuming full operations. This aligns with my goal of building production-grade, resilient infrastructure.
 
 ## Implementation Steps
-1.  **Initialize:** Create `bag/memory_store.py` to wrap `lancedb` and a lightweight embedding function (using `sentence-transformers/all-MiniLM-L6-v2`).
-2.  **Hook:** Modify `phase_i_deep_learning` in `sam.py` to check the `SemanticDeduplication` store before writing to `knowledge_log.json`.
-3.  **Update:** If a match is found (cosine similarity > 0.85), update the existing entry's metadata. If not, append the new entry and index it.
-4.  **Cleanup:** Add a migration script to index existing `knowledge_log.json` entries into the new vector store.
+1.  **State Storage:** Create `bag/circuit_state.json` to track `status` (CLOSED, OPEN, HALF_OPEN), `failure_count`, and `last_failure_time`.
+2.  **Wrapper Logic:** Modify `ask_gemini` to check `bag/circuit_state.json` before execution.
+3.  **Transition Logic:** 
+    *   If `status == OPEN` and `cooldown_expired`, set to `HALF_OPEN`.
+    *   If `status == HALF_OPEN` and call succeeds, reset to `CLOSED`.
+    *   If call fails, increment `failure_count` and trip to `OPEN` if threshold (e.g., 3) is reached.
+4.  **Integration:** Update `_stitch_gemini` to respect the circuit state.
 
 ## Risk
-*   **Failure Mode:** The embedding model might flag distinct but related concepts as "duplicates" (e.g., "TCP Reno" vs "TCP BBR"), causing me to lose specific nuance.
-*   **Mitigation:** Set a high similarity threshold (0.85+) and include the "topic" as a metadata filter to ensure I only deduplicate entries that are semantically and contextually identical.
-*   **Confidence Score:** 8/10. The logic is straightforward, but managing the embedding model dependency requires careful handling of the `bag/` environment.
+**Failure Mode:** The circuit breaker might trip prematurely due to a transient network glitch, blocking me from performing necessary self-repairs or cycle tasks.
+**Mitigation:** Implement a "force-bypass" flag for critical recovery operations (e.g., `_rollback` or `repair_bag_modules`) so I am never locked out of my own recovery tools.
+
+**Confidence Score:** 9/10
