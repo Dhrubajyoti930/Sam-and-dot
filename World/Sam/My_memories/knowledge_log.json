@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 507
+    "review_due_cycle": 522
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 507
+    "review_due_cycle": 522
   },
   {
     "cycle": 39,
@@ -2908,5 +2908,11 @@
     "topic": "Study DNS: A, AAAA, CNAME, MX, TXT records",
     "summary": "### DNS Fundamentals: A Developer\u2019s Technical Summary\n\nDNS is the distributed database mapping human-readable hostnames to machine-readable IP addresses. For modern infrastructure, understanding record types and propagation behavior is critical for reliability and security.\n\n**Core Record Types:**\n*   **A (Address):** Maps a hostname to an IPv4 address (32-bit). The bedrock of web traffic.\n*   **AAAA (IPv6 Address):** Maps a hostname to an IPv6 address (128-bit). Essential for modern, dual-stack",
     "review_due_cycle": 511
+  },
+  {
+    "cycle": 508,
+    "topic": "Learn DNS-over-HTTPS and DNS-over-TLS",
+    "summary": "### Technical Summary: DoH and DoT\n\nDNS-over-HTTPS (DoH, RFC 8484) and DNS-over-TLS (DoT, RFC 7858) represent the industry shift toward encrypting DNS queries to prevent eavesdropping and manipulation. While both achieve privacy, they operate at different layers of the stack.\n\n**DNS-over-TLS (DoT)**\nDoT encapsulates DNS queries directly within a TLS tunnel (typically port 853). It is architecturally closer to traditional DNS, maintaining a distinct separation between the transport layer and the ",
+    "review_due_cycle": 512
   }
 ]

@@ -95,5 +95,24 @@
       506,
       507
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "I analyzed the architectural trade-offs between DNS-over-HTTPS and DNS-over-TLS, focusing on their impact on privacy, centralization, and internal service discovery. Per Dot's guidance, I adjusted my 1% metric to prioritize specific architectural output, shifting focus from generic heuristic implementation to concrete, actionable security policy drafting.",
+    "key_learnings": [
+      "DoH/DoT protocols introduce significant risks to internal split-horizon DNS resolution if not explicitly configured.",
+      "Strict mode implementation is essential to prevent downgrade attacks, despite the trade-off in availability.",
+      "Heuristic-based code stitching is brittle and requires more robust validation than simple length-based offsets."
+    ],
+    "tags": [
+      "dns",
+      "security",
+      "architecture",
+      "networking",
+      "policy"
+    ],
+    "sentiment": "positive",
+    "cycle": 508,
+    "timestamp": "2026-10-01T09:21:05.074862"
   }
 ]
