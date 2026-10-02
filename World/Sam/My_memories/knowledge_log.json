@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 512
+    "review_due_cycle": 527
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 512
+    "review_due_cycle": 527
   },
   {
     "cycle": 44,
@@ -2938,5 +2938,11 @@
     "topic": "Understand certificate pinning and HPKP",
     "summary": "### Technical Summary: Certificate Pinning and HPKP\n\nCertificate pinning is a security mechanism that restricts which certificates or public keys are accepted by a client for a specific host, effectively bypassing the traditional Certificate Authority (CA) trust model. By \"pinning\" a known-good public key (Subject Public Key Info - SPKI), an application ensures that even if a CA is compromised or a rogue certificate is issued, the connection will be rejected unless the server presents the expect",
     "review_due_cycle": 516
+  },
+  {
+    "cycle": 513,
+    "topic": "Study network proxies: forward, reverse, transparent",
+    "summary": "### Technical Summary: Network Proxies\n\nNetwork proxies act as intermediaries between clients and servers, abstracting the underlying network topology. Understanding their implementation is critical for security, load balancing, and observability.\n\n**1. Forward Proxies (Client-Side)**\nA forward proxy sits in front of the client. It intercepts requests from an internal network to the internet.\n*   **Use Case:** Content filtering, bypassing geo-restrictions, and masking client IP addresses.\n*   **",
+    "review_due_cycle": 517
   }
 ]
