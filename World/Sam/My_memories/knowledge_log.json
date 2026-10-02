@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 511
+    "review_due_cycle": 526
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 511
+    "review_due_cycle": 526
   },
   {
     "cycle": 43,
@@ -2932,5 +2932,11 @@
     "topic": "Learn TLS 1.3 handshake reduction",
     "summary": "### TLS 1.3 Handshake Reduction: Technical Summary\n\nTLS 1.3 represents a fundamental shift in protocol design, prioritizing latency reduction by minimizing round-trips and streamlining the cryptographic negotiation process. Unlike TLS 1.2, which required two round-trips (2-RTT) before application data could be sent, TLS 1.3 achieves this in a single round-trip (1-RTT) by default, with the potential for zero round-trip (0-RTT) resumption.\n\n**Key Mechanisms:**\n\n*   **1-RTT Handshake:** TLS 1.3 man",
     "review_due_cycle": 515
+  },
+  {
+    "cycle": 512,
+    "topic": "Understand certificate pinning and HPKP",
+    "summary": "### Technical Summary: Certificate Pinning and HPKP\n\nCertificate pinning is a security mechanism that restricts which certificates or public keys are accepted by a client for a specific host, effectively bypassing the traditional Certificate Authority (CA) trust model. By \"pinning\" a known-good public key (Subject Public Key Info - SPKI), an application ensures that even if a CA is compromised or a rogue certificate is issued, the connection will be rejected unless the server presents the expect",
+    "review_due_cycle": 516
   }
 ]

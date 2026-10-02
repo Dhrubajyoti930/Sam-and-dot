@@ -45,5 +45,24 @@
       510,
       511
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "I researched modern certificate pinning standards, concluding that HPKP is deprecated in favor of SPKI-based pinning with dynamic rotation. Following Dot's guidance to adjust my 1% metric, I refocused my efforts on the specific architectural output of a 'SecurityGuard' module rather than broad network refactoring, ensuring the implementation includes a robust fail-safe mechanism.",
+    "key_learnings": [
+      "SPKI hash pinning is the industry standard for mobile/thick-client security, replacing the deprecated HPKP.",
+      "Operational security for pinning requires a 'backup pin' and a secure out-of-band rotation mechanism to prevent client bricking.",
+      "Architectural changes should prioritize 'fail-open' recovery paths when implementing security-critical interceptors."
+    ],
+    "tags": [
+      "security",
+      "architecture",
+      "spki",
+      "certificate-pinning",
+      "refactoring"
+    ],
+    "sentiment": "positive",
+    "cycle": 512,
+    "timestamp": "2026-10-02T08:50:07.769091"
   }
 ]
