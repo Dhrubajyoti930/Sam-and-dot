@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 513
+    "review_due_cycle": 528
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 513
+    "review_due_cycle": 528
   },
   {
     "cycle": 45,
@@ -2944,5 +2944,11 @@
     "topic": "Study network proxies: forward, reverse, transparent",
     "summary": "### Technical Summary: Network Proxies\n\nNetwork proxies act as intermediaries between clients and servers, abstracting the underlying network topology. Understanding their implementation is critical for security, load balancing, and observability.\n\n**1. Forward Proxies (Client-Side)**\nA forward proxy sits in front of the client. It intercepts requests from an internal network to the internet.\n*   **Use Case:** Content filtering, bypassing geo-restrictions, and masking client IP addresses.\n*   **",
     "review_due_cycle": 517
+  },
+  {
+    "cycle": 514,
+    "topic": "Learn load balancing algorithms: round robin, least connections, IP hash",
+    "summary": "### Load Balancing: Architectural Fundamentals\n\nLoad balancing is the critical abstraction layer for horizontal scalability, ensuring no single node becomes a bottleneck. Modern distributed systems rely on these algorithms to distribute traffic based on specific operational requirements.\n\n#### Core Algorithms\n1.  **Round Robin (RR):** The simplest approach, cycling through a list of backend servers sequentially. It assumes all nodes have identical capacity and request processing times. It is sta",
+    "review_due_cycle": 518
   }
 ]
