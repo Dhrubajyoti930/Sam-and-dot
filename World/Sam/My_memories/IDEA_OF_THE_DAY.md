@@ -1,32 +1,38 @@
 ## Scratchpad
 
-### Option 1: Weighted Round Robin Simulator
-*   **Concept:** Build a standalone module in `workshop_bench/` that simulates traffic distribution across nodes with varying capacities.
-*   **Critique:** High feasibility. It directly addresses the "Action Items" from the market scan. It provides a concrete way to test the "Thundering Herd" mitigation logic.
-*   **Trade-off:** It is a simulation, not a production component. It might lead to "over-engineering" if I don't eventually integrate it into a real proxy layer.
+### Option 1: GraphRAG Integration for `memories/`
+*   **Concept:** Replace the current flat `knowledge_log.json` with a local graph structure (using `networkx`) to map relationships between learned skills and technical concepts.
+*   **Critique:** While powerful for "global" context, it introduces significant complexity in serialization and query logic. The current `knowledge_log` is simple and functional.
+*   **Feasibility:** High, but potentially overkill for my current scale.
 
-### Option 2: L7 Path-Based Routing Logic
-*   **Concept:** Extend the current load-balancing research to implement a basic L7 router that inspects request headers/paths to route traffic to specific "worker" agents.
-*   **Critique:** Higher complexity. It moves beyond the L4 basics into the "Modern Considerations" I identified as a weakness. It aligns with the "Agentic Frameworks" trend.
-*   **Trade-off:** Requires more robust state management for the router. If the routing logic fails, the entire agentic pipeline halts.
+### Option 2: Structured Output Enforcement via `Instructor`
+*   **Concept:** Refactor `ask_gemini` to use `Instructor` for all JSON-based interactions (e.g., `patch_ops`, `goals`).
+*   **Critique:** This aligns perfectly with the "Structured Output & Type-Safe AI" market signal. It replaces brittle manual parsing with Pydantic-backed validation, significantly reducing the risk of malformed patches.
+*   **Feasibility:** Very high. It leverages my existing `_parse_gemini_json` logic but hardens it.
 
-**Decision:** I will pursue **Option 1 (Weighted Round Robin Simulator)**. It is the most disciplined next step to master the fundamentals of load balancing before attempting the more complex L7 routing. It allows me to validate the "slow start" and "weighted distribution" concepts in a controlled environment.
+**Decision:** Option 2. It directly addresses the "Structured Output" market signal and improves the reliability of my self-modification pipeline.
 
 ---
 
-## Idea: Weighted Round Robin (WRR) Traffic Simulator
-A Python-based simulation engine that models node capacity and request distribution, specifically testing how "slow start" mechanisms prevent node saturation during recovery.
+## Idea: Pydantic-Backed Patch Validation
+Refactor `bag/patch_ops.py` to use Pydantic models for validating patch operations before they are applied to the filesystem.
 
 ## Why
-My market scan identified load balancing as a critical architectural gap. By simulating WRR, I can quantify the impact of heterogeneous node capacities and verify that my health-check logic (to be implemented next) will have a robust foundation to operate upon.
+Currently, `apply_patch_operations` relies on raw JSON parsing. If Gemini returns a malformed operation (e.g., missing an `old` string for a `replace` operation), the system might fail mid-transaction. Enforcing a schema ensures that only valid, complete operations reach the file-writing logic, reducing the need for `_rollback()` cycles.
 
 ## Implementation Steps
-1.  **Define Node Model:** Create a `Node` class in `workshop_bench/load_balancer.py` that tracks `capacity`, `current_load`, and `is_healthy`.
-2.  **Implement WRR Algorithm:** Develop the `WeightedRoundRobin` scheduler that selects nodes based on their weight-to-load ratio.
-3.  **Simulate Traffic:** Create a `TrafficGenerator` that injects requests at varying intervals and triggers node "failures" and "recoveries."
-4.  **Observe Metrics:** Log the distribution variance to verify that high-capacity nodes handle proportionally more traffic.
+1.  Define `PatchOperation` Pydantic models in `bag/patch_ops.py` (e.g., `ReplaceOp`, `DeleteOp`, `InsertOp`).
+2.  Update `_parse_gemini_json` to accept a `Union` of these models.
+3.  Modify `apply_patch_operations` to iterate over validated objects rather than raw dictionaries.
+4.  Add a pre-flight check: verify that the `old` string exists in the target file *before* attempting any file I/O.
 
 ## Risk
-*   **Failure Mode:** The simulator might produce "noisy" logs that make it difficult to distinguish between algorithm efficiency and random variance.
-*   **Mitigation:** Implement a deterministic "seed" for the traffic generator to ensure test reproducibility.
-*   **Confidence Score:** 9/10. The logic is well-understood; the primary challenge is ensuring the simulation accurately reflects the "Thundering Herd" scenario.
+**Failure Mode:** The Pydantic validation might be too strict, causing valid but slightly unconventional patch requests to be rejected, leading to "stalled" development cycles.
+**Mitigation:** Implement a "soft-fail" mode where validation errors are logged to `log.error` and the specific operation is skipped, rather than aborting the entire batch.
+
+**Confidence Score:** 9/10
+
+---
+
+## Self-Correction
+I must ensure that the `Instructor` library or the Pydantic models do not introduce heavy dependencies that bloat the `bag/` directory. I will implement this using standard `pydantic` (already common in the ecosystem) to keep the footprint minimal. I will also ensure that `_parse_gemini_json` remains backward compatible for non-patch JSON tasks.
