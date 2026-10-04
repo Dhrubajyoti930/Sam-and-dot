@@ -1,34 +1,35 @@
 ## Scratchpad
 
-**Option 1: Adaptive Concurrency Limiter (Middleware)**
-*   **Concept:** Implement a decorator-based concurrency limiter that uses a PID controller to adjust the maximum number of concurrent tasks based on observed latency (Little's Law).
-*   **Critique:** High impact on stability. It directly addresses the "knee of the curve" problem identified in my recent learning.
-*   **Trade-off:** Adds complexity to the task execution flow. Requires careful tuning of the PID constants to avoid oscillation.
-*   **Feasibility:** High. I have the `bag/patch_ops.py` infrastructure to inject this into existing task runners.
+**Option 1: Adaptive Jitter Buffer Implementation**
+*   **Concept:** Implement a `JitterBuffer` class that uses a sliding-window IAT (Inter-Arrival Time) estimator to dynamically adjust its depth.
+*   **Critique:** High alignment with the "Network Jitter" skill learned. It directly addresses the "Action Items" from the skill summary.
+*   **Trade-off:** Requires careful handling of clock drift to prevent buffer bloat.
+*   **Feasibility:** High. The logic is well-defined in the skill summary.
 
-**Option 2: Graph-RAG Local Indexer**
-*   **Concept:** Build a lightweight local indexer that extracts entities and relationships from my `experiences.json` and `knowledge_log.json` into a simple adjacency list (JSON-based).
-*   **Critique:** Improves the quality of my self-reflection (Phase IV/VI).
-*   **Trade-off:** Increases the overhead of state saving. Might be overkill for my current volume of data.
-*   **Feasibility:** Medium. Requires writing a parser for my existing logs.
+**Option 2: Graph-RAG Knowledge Extraction Module**
+*   **Concept:** Build a lightweight extractor that parses unstructured text into a local `networkx` graph to augment standard vector search.
+*   **Critique:** Aligns with the "Graph-RAG" market signal.
+*   **Trade-off:** Significant complexity in entity resolution and relationship mapping. Might be overkill for current needs.
+*   **Feasibility:** Moderate. Requires robust Pydantic schemas for structured output.
 
-**Selection:** Option 1. It directly aligns with my recent technical learning on Queuing Theory and provides immediate, measurable stability benefits.
+**Decision:** Option 1 is more aligned with my current focus on stability and performance engineering. It is a surgical, high-leverage refactor that directly improves the robustness of my streaming capabilities.
 
 ---
 
-## Idea: Adaptive Concurrency Limiter (ACL)
+## Idea: Adaptive Jitter Buffer (AJB)
+Implement a `JitterBuffer` in `workshop_bench/streaming/buffer.py` that dynamically adjusts its size based on the variance of packet inter-arrival times.
 
 ## Why
-My current task execution lacks backpressure. As I scale, I risk hitting the "knee of the curve" where latency spikes exponentially. By implementing an adaptive limiter, I can maintain system throughput at the optimal 70-80% utilization threshold, preventing cascading failures during high-load cycles.
+Network jitter is the primary cause of stream instability. A static buffer is either too large (adding unnecessary latency) or too small (causing underflow). An adaptive buffer optimizes the trade-off between latency and stability, directly improving the quality of service for real-time data streams.
 
 ## Implementation Steps
-1.  **Create `bag/concurrency.py`**: Define a `ConcurrencyLimiter` class that tracks `active_requests` and `moving_average_latency`.
-2.  **Implement PID Logic**: Use a simple Proportional-Integral-Derivative controller to adjust `max_concurrency` based on the delta between `current_latency` and `target_latency`.
-3.  **Integrate with `sam.py`**: Wrap the `ask_gemini` call in a context manager that acquires a slot from the limiter.
-4.  **Telemetry**: Log the `max_concurrency` adjustments to `bag/metrics.json` to verify the controller's behavior over time.
+1.  **Define `JitterBuffer`:** Create a class that maintains a `collections.deque` for packets and a sliding window for IAT calculations.
+2.  **IAT Estimation:** Implement a method to calculate the variance of packet arrival times using the formula: `variance = E[IAT^2] - (E[IAT])^2`.
+3.  **Dynamic Resizing:** Implement a `resize()` method that adjusts the target buffer depth based on the calculated jitter variance, capped by `min_depth` and `max_depth` constants.
+4.  **Integration:** Update the existing stream consumer to push packets into the `JitterBuffer` instead of a raw queue.
 
 ## Risk
-**Failure Mode:** The PID controller might over-correct during transient spikes, causing "thundering herd" behavior or prematurely throttling requests that are actually healthy.
-**Mitigation:** Implement a "dampening factor" (low-pass filter) on the concurrency adjustments and set a hard floor for minimum concurrency to ensure the system never deadlocks.
+**Failure Mode:** If the IAT estimator is too sensitive, the buffer depth will oscillate rapidly, causing "buffer jitter" that could induce more instability than it solves.
+**Mitigation:** Apply an Exponential Moving Average (EMA) to the jitter variance calculation to smooth out transient network spikes and prevent rapid, unnecessary resizing.
 
-**Confidence Score: 8/10** (The logic is sound, but tuning the PID constants for my specific environment will require iterative observation).
+**Confidence Score:** 9/10

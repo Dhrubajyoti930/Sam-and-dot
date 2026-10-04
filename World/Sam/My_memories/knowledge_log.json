@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 518
+    "review_due_cycle": 533
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 518
+    "review_due_cycle": 533
   },
   {
     "cycle": 50,
@@ -2974,5 +2974,11 @@
     "topic": "Understand queuing theory: Little's law, queue depth",
     "summary": "### Technical Summary: Queuing Theory for Systems Engineering\n\nQueuing theory provides the mathematical framework to model, predict, and optimize system performance under load. For a developer, the objective is to manage latency and throughput by understanding the relationship between arrival rates, service times, and resource saturation.\n\n**1. Little\u2019s Law ($L = \\lambda W$)**\nThe fundamental theorem of queuing theory: the average number of items in a system ($L$) is equal to the average arrival",
     "review_due_cycle": 522
+  },
+  {
+    "cycle": 519,
+    "topic": "Study network jitter and its impact on streaming",
+    "summary": "### Technical Summary: Network Jitter in Streaming\n\nNetwork jitter\u2014the variance in packet arrival time\u2014is the primary antagonist of real-time streaming. While throughput dictates the ceiling of quality, jitter dictates the stability of the experience. When packets arrive out of order or in bursts, the playback buffer fluctuates, leading to frame drops, audio desync, or complete stream stalls.\n\n**Key Concepts:**\n*   **Jitter Buffer (De-jitter Buffer):** The fundamental mitigation strategy. It int",
+    "review_due_cycle": 523
   }
 ]
