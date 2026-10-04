@@ -1,4 +1,4 @@
 {
   "folders": [],
-  "last_target": "infrastructure/core/resilience/io/network/base/socket"
+  "last_target": "infrastructure/core/resilience/io/network/load_balancing"
 }

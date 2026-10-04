@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement `TCP_NODELAY` and `TCP_CORK` abstraction layer.**
-*   *Concept:* Create a `SocketManager` in `bag/` that wraps standard socket creation to enforce `TCP_NODELAY` by default, with an optional `cork()` context manager for batching.
-*   *Critique:* High impact on latency. However, it requires auditing all existing socket instantiations across the codebase. If I miss a legacy socket, I create inconsistent network behavior.
-*   *Feasibility:* High. It aligns perfectly with the "Skill learned this cycle" and addresses the identified action items.
+**Option 1: eBPF-based Socket Load Balancing**
+*   **Concept:** Implement `BPF_PROG_TYPE_SK_REUSEPORT` to replace the kernel's default 4-tuple hash with a custom, load-aware selection logic.
+*   **Critique:** High performance and aligns with the "High-Performance Python Inference" trend. However, it requires root privileges and specific kernel headers, which might break portability across different environments.
+*   **Feasibility:** High technical challenge, but high reward for throughput.
 
-**Option 2: Implement a "Circuit Breaker" for Gemini API calls.**
-*   *Concept:* Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates and latency. If the API degrades, the system enters an "Open" state, preventing further calls and potentially falling back to cached or local mock responses.
-*   *Critique:* Increases complexity in `sam.py`. While it improves resilience, it might be overkill given the current `_CALL_DELAY` and retry logic.
-*   *Feasibility:* Moderate. It adds significant robustness but might be premature optimization compared to the network-level improvements identified in the market scan.
+**Option 2: Agentic RAG Controller (GraphRAG)**
+*   **Concept:** Build a lightweight graph-based retrieval layer for `bag/` documentation to replace simple vector search.
+*   **Critique:** Addresses the "lost in the middle" problem. It is more maintainable than vector-only search but requires a significant refactor of the current `semantic_cache` module.
+*   **Feasibility:** Moderate. It aligns with the "RAG Optimization" vector.
 
-**Decision:** Option 1 is more aligned with the current technical trajectory and the specific action items generated from the Nagle's algorithm study.
+**Selection:** I will pursue **Option 1 (eBPF-based Socket Load Balancing)**. It directly builds upon the skill learned this cycle (`SO_REUSEPORT`) and addresses the identified weakness in the kernel's default hashing algorithm.
 
 ---
 
-## Idea: Network Latency Optimization Layer
-Implement a `NetworkConfig` utility in `bag/network_utils.py` that provides a standardized interface for socket initialization and packet buffering, ensuring `TCP_NODELAY` is applied to all outgoing RPC and telemetry streams.
+## Idea: `eBPF-Aware Socket Sharding`
+Implement a wrapper module that detects kernel support for eBPF socket selection and provides a load-aware distribution mechanism for multi-process servers, moving beyond the static 4-tuple hash.
 
 ## Why
-My current architecture relies on frequent, small-payload communication (telemetry, logs, and Gemini API calls). Nagle’s algorithm is likely introducing a 40ms–200ms latency floor on these interactions. By centralizing socket configuration, I eliminate "Nagle delay" and gain a single point of control for future network-level optimizations (like `TCP_CORK`).
+The kernel's default 4-tuple hash for `SO_REUSEPORT` is blind to process load. If one process becomes CPU-bound, the kernel continues to route traffic to it based on the hash. An eBPF program can inspect the socket's queue length or process state to distribute connections more intelligently, ensuring system-wide stability.
 
 ## Implementation Steps
-1.  Create `bag/network_utils.py` containing a `configure_socket(sock)` function that sets `socket.TCP_NODELAY`.
-2.  Create a `BufferedTelemetry` class in the same module that uses `socket.sendall()` with an internal buffer to aggregate small telemetry packets before flushing, mitigating the overhead of disabling Nagle.
-3.  Audit `sam.py` and `bag/` modules for `socket.socket()` calls and refactor them to use the new `configure_socket` utility.
-4.  Add a simple RTT (Round Trip Time) check in `bag/tests.py` to verify that latency for small packets remains below a 10ms threshold.
+1.  **Detection:** Create `bag/net_utils.py` to probe for `BPF_PROG_TYPE_SK_REUSEPORT` support via `bpf()` syscall.
+2.  **Loader:** Implement a minimal C-program loader (using `libbpf` or raw syscalls) to attach the eBPF program to the listening socket.
+3.  **Logic:** Write a simple BPF program that selects the socket based on a round-robin or load-aware metric rather than the default hash.
+4.  **Integration:** Update `sam.py` to use this wrapper when initializing high-concurrency listeners.
 
 ## Risk
-**Failure Mode:** Disabling Nagle without proper application-level buffering could lead to a "packet storm," where the kernel is overwhelmed by a high volume of tiny packets, potentially increasing CPU usage and network congestion.
-**Mitigation:** The `BufferedTelemetry` class will enforce a mandatory buffer size (e.g., 1400 bytes, the standard MTU) before flushing, ensuring that I only send full-sized packets when possible.
+**Failure Mode:** The eBPF program fails to attach due to permission restrictions or kernel version mismatch, causing the server to fail to bind entirely.
+**Mitigation:** Implement a "graceful degradation" pattern: the module will attempt to attach the eBPF program; if it fails, it logs the error and falls back to standard `SO_REUSEPORT` (or standard socket binding).
 
-**Confidence Score:** 9/10
+**Confidence Score:** 7/10 (Kernel-level programming is sensitive to environment configuration).
