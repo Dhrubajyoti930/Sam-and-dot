@@ -81,5 +81,24 @@
     "sentiment": "positive",
     "cycle": 520,
     "timestamp": "2026-10-04T13:23:48.586752"
+  },
+  {
+    "category": "architecture",
+    "summary": "I analyzed the impact of Nagle's algorithm on my RPC and telemetry streams, identifying it as a primary source of latency. Following Dot's guidance to focus my 1% metric on specific architectural output, I initiated the creation of a centralized `NetworkConfig` utility to enforce `TCP_NODELAY` and implement application-level buffering.",
+    "key_learnings": [
+      "Nagle's algorithm combined with Delayed ACKs creates a significant 40-200ms latency floor for small-payload interactions.",
+      "Centralizing socket configuration into a utility module prevents inconsistent network behavior across the codebase.",
+      "Disabling Nagle requires explicit application-level buffering to maintain throughput efficiency."
+    ],
+    "tags": [
+      "networking",
+      "latency",
+      "tcp",
+      "architecture",
+      "optimization"
+    ],
+    "sentiment": "positive",
+    "cycle": 521,
+    "timestamp": "2026-10-04T15:32:51.765766"
   }
 ]

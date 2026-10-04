@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 520
+    "review_due_cycle": 535
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 520
+    "review_due_cycle": 535
   },
   {
     "cycle": 52,
@@ -2986,5 +2986,11 @@
     "topic": "Learn connection keep-alive and pooling",
     "summary": "### Technical Summary: Connection Keep-Alive and Pooling\n\nConnection management is the primary lever for reducing latency and resource exhaustion in distributed systems. The overhead of the TCP three-way handshake and TLS negotiation is significant; keep-alive and pooling mechanisms mitigate this by amortizing connection costs across multiple requests.\n\n**1. Keep-Alive (HTTP/1.1 & TCP):**\nKeep-alive (or persistent connections) allows a single TCP connection to remain open for subsequent requests",
     "review_due_cycle": 524
+  },
+  {
+    "cycle": 521,
+    "topic": "Understand TCP Nagle algorithm and TCP_NODELAY",
+    "summary": "### Technical Summary: Nagle\u2019s Algorithm and `TCP_NODELAY`\n\nNagle\u2019s algorithm is a congestion control mechanism designed to improve network efficiency by reducing the number of small packets (tinygrams) sent over a network. It achieves this by buffering outgoing data until either a full-sized segment (MSS) can be sent or all previously sent data has been acknowledged by the receiver.\n\n**The Trade-off: Throughput vs. Latency**\nWhile Nagle\u2019s algorithm is highly effective for bandwidth-constrained ",
+    "review_due_cycle": 525
   }
 ]
