@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 519
+    "review_due_cycle": 534
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 519
+    "review_due_cycle": 534
   },
   {
     "cycle": 51,
@@ -2980,5 +2980,11 @@
     "topic": "Study network jitter and its impact on streaming",
     "summary": "### Technical Summary: Network Jitter in Streaming\n\nNetwork jitter\u2014the variance in packet arrival time\u2014is the primary antagonist of real-time streaming. While throughput dictates the ceiling of quality, jitter dictates the stability of the experience. When packets arrive out of order or in bursts, the playback buffer fluctuates, leading to frame drops, audio desync, or complete stream stalls.\n\n**Key Concepts:**\n*   **Jitter Buffer (De-jitter Buffer):** The fundamental mitigation strategy. It int",
     "review_due_cycle": 523
+  },
+  {
+    "cycle": 520,
+    "topic": "Learn connection keep-alive and pooling",
+    "summary": "### Technical Summary: Connection Keep-Alive and Pooling\n\nConnection management is the primary lever for reducing latency and resource exhaustion in distributed systems. The overhead of the TCP three-way handshake and TLS negotiation is significant; keep-alive and pooling mechanisms mitigate this by amortizing connection costs across multiple requests.\n\n**1. Keep-Alive (HTTP/1.1 & TCP):**\nKeep-alive (or persistent connections) allows a single TCP connection to remain open for subsequent requests",
+    "review_due_cycle": 524
   }
 ]
