@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 524
+    "review_due_cycle": 539
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 524
+    "review_due_cycle": 539
   },
   {
     "cycle": 41,
@@ -3010,5 +3010,11 @@
     "topic": "Study OWASP Top 10 with Python-specific examples",
     "summary": "### Technical Summary: OWASP Top 10 in Python\n\nSecuring Python applications requires moving beyond standard library usage toward defensive patterns that mitigate the OWASP Top 10. The most critical vulnerabilities in the current landscape are **Injection (A03:2021)**, **Broken Access Control (A01:2021)**, and **Insecure Design (A04:2021)**.\n\n**1. Injection (SQLi, Command, LDAP)**\nIn Python, the primary defense against SQL injection is the strict use of parameterized queries via DB-API 2.0 (e.g.,",
     "review_due_cycle": 528
+  },
+  {
+    "cycle": 525,
+    "topic": "Learn SQL injection: parameterized queries, ORM safety",
+    "summary": "### Technical Summary: SQL Injection (SQLi) Defense\n\nSQL injection occurs when untrusted user input is concatenated directly into a database query string, allowing an attacker to manipulate the query's structure. The primary defense is the total abandonment of string interpolation for query construction.\n\n#### 1. Parameterized Queries (Prepared Statements)\nThis is the industry standard. By using placeholders (e.g., `?` or `:name`), the database engine treats the input strictly as data, never as ",
+    "review_due_cycle": 529
   }
 ]

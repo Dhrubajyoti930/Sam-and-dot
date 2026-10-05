@@ -1,33 +1,42 @@
 ## Scratchpad
 
-### Option 1: Implementing a "Circuit Breaker" for Gemini API Calls
-*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (timeouts, 5xx errors, truncation loops). If the error rate exceeds a threshold, the system enters an "Open" state, forcing a cooldown period or falling back to a local SLM (e.g., a quantized Llama-3-8B via `llama.cpp`).
-*   **Critique:** High feasibility. It directly addresses the "Calm under failure" trait. However, it adds complexity to the `sam.py` core.
-*   **Trade-off:** Increases robustness at the cost of potential "false positives" where the network is just momentarily jittery.
+**Option 1: Implement a "Circuit Breaker" for Gemini API calls.**
+*   *Concept:* Wrap `ask_gemini` in a stateful pattern that tracks failure rates (e.g., 5xx errors, timeouts) and trips a "breaker" to prevent further calls for a cooldown period.
+*   *Critique:* High utility for resilience. However, it requires persistent state across cycles (beyond just `goals.json`). If I implement this poorly, I might lock myself out of my own development loop.
+*   *Feasibility:* High. I have `bag/` storage and `sam.py` access.
 
-### Option 2: Semantic Deduplication for `knowledge_log.json`
-*   **Concept:** As the knowledge log grows, redundant entries (e.g., multiple entries on "Pydantic validation") waste space and confuse the Spaced Repetition engine. I could implement a routine that uses a simple embedding-based similarity check (or even just keyword-set intersection) to merge similar entries.
-*   **Critique:** High long-term maintainability. It keeps the "brain" lean.
-*   **Trade-off:** Requires adding a dependency or a simple vector-math utility to `bag/`.
+**Option 2: Structured Output Enforcement for `_parse_gemini_json`.**
+*   *Concept:* Integrate `instructor` or a lightweight Pydantic-based validator directly into `_parse_gemini_json` to enforce schema compliance at the parsing layer.
+*   *Critique:* This directly addresses the "Structured Output Enforcement" market trend. It makes my internal communication with Gemini more deterministic. It is less risky than the Circuit Breaker because it doesn't involve stateful blocking.
+*   *Feasibility:* Very high. I already use Pydantic in `_parse_gemini_json`.
 
-**Selection:** Option 1 is more critical for operational stability. Given the "Agentic Orchestration" trend, my reliance on Gemini is increasing; I must ensure my core loop doesn't hang or thrash during API instability.
+**Decision:** Option 2. It aligns with the current market trend of "Structured Output Enforcement" and improves the reliability of my self-correction loops.
 
 ---
 
-## Idea: Adaptive Circuit Breaker for Gemini API
-Implement a `CircuitBreaker` class in `bag/` that monitors `ask_gemini` success/failure. If failures exceed 3 in a 5-minute window, the breaker trips, preventing further calls for 10 minutes and logging an alert to Dot.
+## Idea: Pydantic-Native Schema Enforcement in `_parse_gemini_json`
 
-## Why
-My current `ask_gemini` has retry logic, but it lacks a "global" awareness of service health. If the API is down, I currently waste cycles and tokens on repeated failures. A circuit breaker allows me to "pause" and wait for recovery, preserving my state and preventing unnecessary log bloat.
+### Why
+My current `_parse_gemini_json` is a basic wrapper. By formalizing the schema validation using Pydantic models, I can catch malformed agentic outputs *before* they reach the patch-application logic, reducing the need for corrective linting/behaviour fixes.
 
-## Implementation Steps
-1.  **Create `bag/circuit_breaker.py`**: Define a class with `record_failure()`, `record_success()`, and `is_open()`.
-2.  **Integrate into `sam.py`**: Update `ask_gemini` to check `is_open()` before attempting a call.
-3.  **State Persistence**: Store the breaker state in `bag/` so it survives across cycle restarts.
-4.  **Alerting**: If the breaker trips, trigger `_alert_dot` to inform the owner of the service outage.
+### Implementation Steps
+1.  Define a `PatchOperation` Pydantic model in `sam.py` (or a new `bag/schemas.py`).
+2.  Update `_parse_gemini_json` to accept a `Type[BaseModel]` instead of a generic schema.
+3.  Modify `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to pass this specific model to the parser.
+4.  Add a `ValidationError` catch block to log specific field failures, allowing me to debug prompt-drift more effectively.
 
-## Risk
-**Failure Mode:** The breaker trips due to a transient network issue, blocking me from performing critical self-repairs or state-saving.
-**Mitigation:** Implement a "manual override" or a "force-reset" mechanism in `sam.py` that allows me to bypass the breaker if I detect that the failure was local (e.g., `TimeoutError` vs `ConnectionRefused`).
+### Risk
+*   **Failure Mode:** If the LLM output is structurally valid JSON but fails Pydantic validation (e.g., missing a required field), the current implementation might return `None` and silently fail the patch application.
+*   **Mitigation:** Ensure the `_parse_gemini_json` logs the specific Pydantic validation error details to `log.error` so I can see exactly which field caused the rejection.
 
 **Confidence Score:** 9/10
+
+---
+
+## Development Plan
+
+*   **Task:** Refactor `_parse_gemini_json` to enforce strict Pydantic model validation.
+*   **Priority:** High.
+*   **Metric:** Reduction in "corrective patch" cycles required for linting/behaviour fixes.
+
+*Self-Correction:* I must ensure that I do not break the existing `_parse_gemini_json` signature for non-schema calls. I will maintain the `schema=None` default to ensure backward compatibility with simple JSON parsing.
