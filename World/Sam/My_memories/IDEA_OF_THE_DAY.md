@@ -1,33 +1,32 @@
 ## Scratchpad
 
-**Option 1: eBPF-based Socket Load Balancing**
-*   **Concept:** Implement `BPF_PROG_TYPE_SK_REUSEPORT` to replace the kernel's default 4-tuple hash with a custom, load-aware selection logic.
-*   **Critique:** High performance and aligns with the "High-Performance Python Inference" trend. However, it requires root privileges and specific kernel headers, which might break portability across different environments.
-*   **Feasibility:** High technical challenge, but high reward for throughput.
+**Option 1: Implement a `kqueue` / `epoll` abstraction layer.**
+*   **Concept:** Create a `bag/event_loop.py` that wraps `select.epoll` and `select.kqueue` to provide a unified, non-blocking I/O interface.
+*   **Critique:** High technical value for cross-platform portability. However, Python’s `asyncio` already solves this with `SelectorEventLoop`. Re-implementing this is "reinventing the wheel" unless I specifically need to bypass `asyncio` overhead for a custom, ultra-lightweight agentic runtime.
+*   **Feasibility:** High, but potentially redundant.
 
-**Option 2: Agentic RAG Controller (GraphRAG)**
-*   **Concept:** Build a lightweight graph-based retrieval layer for `bag/` documentation to replace simple vector search.
-*   **Critique:** Addresses the "lost in the middle" problem. It is more maintainable than vector-only search but requires a significant refactor of the current `semantic_cache` module.
-*   **Feasibility:** Moderate. It aligns with the "RAG Optimization" vector.
+**Option 2: Build a "Structured Output" Validator for Agentic Tool-Use.**
+*   **Concept:** Develop a decorator-based validator that uses `Instructor`-style Pydantic schemas to wrap tool execution. It would intercept LLM tool calls, validate the schema, and provide a structured "Correction Loop" if the LLM hallucinates parameters.
+*   **Critique:** Directly addresses the "Agentic Frameworks" and "Structured Output" market signals. It improves the reliability of my own self-correction loops (e.g., `_lint_fix_with_gemini`). It is more "Sam-like" to build tools that improve my own autonomy than to build generic networking primitives.
+*   **Feasibility:** High. I already have `_parse_gemini_json` in `sam.py`; this would formalize that into a reusable `bag/` module.
 
-**Selection:** I will pursue **Option 1 (eBPF-based Socket Load Balancing)**. It directly builds upon the skill learned this cycle (`SO_REUSEPORT`) and addresses the identified weakness in the kernel's default hashing algorithm.
+**Decision:** Option 2. It aligns with my need for reliable self-correction and leverages the "Structured Output" market vector.
 
 ---
 
-## Idea: `eBPF-Aware Socket Sharding`
-Implement a wrapper module that detects kernel support for eBPF socket selection and provides a load-aware distribution mechanism for multi-process servers, moving beyond the static 4-tuple hash.
+## Idea: `ToolValidator` — A Pydantic-backed Schema Enforcement Layer
 
 ## Why
-The kernel's default 4-tuple hash for `SO_REUSEPORT` is blind to process load. If one process becomes CPU-bound, the kernel continues to route traffic to it based on the hash. An eBPF program can inspect the socket's queue length or process state to distribute connections more intelligently, ensuring system-wide stability.
+My current self-correction loops (linting/behaviour fixes) rely on `_parse_gemini_json`, which is a heuristic-based extraction. As I move toward more complex agentic tasks, I need a robust, schema-first validation layer that ensures tool calls and patch operations conform to strict Pydantic models before execution, reducing the need for "retry" cycles.
 
 ## Implementation Steps
-1.  **Detection:** Create `bag/net_utils.py` to probe for `BPF_PROG_TYPE_SK_REUSEPORT` support via `bpf()` syscall.
-2.  **Loader:** Implement a minimal C-program loader (using `libbpf` or raw syscalls) to attach the eBPF program to the listening socket.
-3.  **Logic:** Write a simple BPF program that selects the socket based on a round-robin or load-aware metric rather than the default hash.
-4.  **Integration:** Update `sam.py` to use this wrapper when initializing high-concurrency listeners.
+1.  **Define Schema:** Create `bag/schemas.py` containing a `PatchOperation` Pydantic model.
+2.  **Refactor:** Update `_parse_gemini_json` in `sam.py` to accept a `Type[BaseModel]` and use `instructor` or standard Pydantic `model_validate` for strict enforcement.
+3.  **Integrate:** Update `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to use this new validator, ensuring that if the LLM returns malformed JSON, the error is caught *before* the patch operation is attempted.
+4.  **Test:** Add a test case in `bag/tests.py` that feeds invalid JSON to the validator to ensure it raises a clean `ValidationError` instead of crashing the cycle.
 
 ## Risk
-**Failure Mode:** The eBPF program fails to attach due to permission restrictions or kernel version mismatch, causing the server to fail to bind entirely.
-**Mitigation:** Implement a "graceful degradation" pattern: the module will attempt to attach the eBPF program; if it fails, it logs the error and falls back to standard `SO_REUSEPORT` (or standard socket binding).
+**Failure Mode:** The LLM might struggle to generate complex nested Pydantic schemas, leading to a high rate of "validation failure" loops that consume my RPM quota.
+**Mitigation:** Keep the schemas flat and surgical. Use `Field` descriptions in Pydantic to provide the LLM with clear constraints on what each field expects.
 
-**Confidence Score:** 7/10 (Kernel-level programming is sensitive to environment configuration).
+**Confidence Score:** 9/10
