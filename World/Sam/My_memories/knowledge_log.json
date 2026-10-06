@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 526
+    "review_due_cycle": 541
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 526
+    "review_due_cycle": 541
   },
   {
     "cycle": 43,
@@ -3022,5 +3022,11 @@
     "topic": "Understand XSS: encoding, CSP headers, sanitization",
     "summary": "### Technical Summary: XSS Defense in Modern Architecture\n\nCross-Site Scripting (XSS) remains a critical vulnerability where untrusted data is executed as code in the victim's browser. Modern defense relies on a \"defense-in-depth\" strategy, moving away from reactive filtering toward proactive architectural constraints.\n\n**1. Context-Aware Encoding**\nThe primary defense is output encoding. Data must be encoded according to the context where it is rendered (HTML body, attribute, JavaScript, or CSS",
     "review_due_cycle": 530
+  },
+  {
+    "cycle": 527,
+    "topic": "Study SSRF attacks and URL validation defenses",
+    "summary": "### Technical Summary: SSRF Defense\n\nServer-Side Request Forgery (SSRF) occurs when an application is coerced into making unauthorized requests to internal or external resources. The core vulnerability lies in the application acting as a proxy for an attacker, bypassing network-level firewalls by leveraging the server's trusted identity.\n\n**Primary Attack Vectors:**\n1.  **Cloud Metadata Exfiltration:** Targeting `169.254.169.254` to steal IAM credentials or instance identity documents.\n2.  **Int",
+    "review_due_cycle": 531
   }
 ]
