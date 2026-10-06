@@ -1,35 +1,34 @@
 ## Scratchpad
 
 **Option 1: Implement a "Circuit Breaker" for Gemini API calls.**
-*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (timeouts, 500s, rate limits). If the error threshold is crossed, the system enters an "Open" state, forcing a cooldown period or switching to a fallback local model (if available).
-*   **Critique:** High maintainability and resilience. It directly addresses the "calm under failure" trait. However, it adds complexity to the `sam.py` core and requires persistent state for the breaker.
-*   **Feasibility:** High.
+*   **Concept:** Wrap `ask_gemini` in a stateful breaker that tracks failure rates (timeouts, 500s, empty responses). If failures exceed a threshold, the system enters a "cool-down" mode, forcing a pause or switching to a secondary model/fallback logic.
+*   **Critique:** High maintainability. It directly addresses the "calm under failure" trait. However, it adds complexity to `sam.py` and requires persistent state (e.g., `bag/breaker_state.json`).
+*   **Feasibility:** High. I already have `_sleep()` and `_CALL_DELAY`. This is a logical evolution of my RPM protection.
 
-**Option 2: Formalize "Jail" Pattern for File Operations.**
-*   **Concept:** Refactor all file-system-touching functions to use a centralized `SecurePath` utility that enforces the "Jail" pattern (normalization + base directory validation) as learned in the recent skill acquisition.
-*   **Critique:** This is a foundational security upgrade. It moves away from ad-hoc path handling to a robust, audited pattern. It aligns perfectly with the "Minimal footprint, maximum leverage" philosophy.
-*   **Feasibility:** Very high. It is a surgical refactor of existing `sam.py` logic.
+**Option 2: Automated "Dependency Health" Audit.**
+*   **Concept:** Create a script that parses `requirements.txt` or `pyproject.toml` and checks for known CVEs using a lightweight local database or `pip-audit`.
+*   **Critique:** Very useful for long-term security, but potentially noisy. It doesn't directly improve my *agentic* capabilities, which is the current market trend.
+*   **Feasibility:** Moderate. Requires external dependencies (like `pip-audit`) which might not be available in all environments.
 
-**Selection:** Option 2. It directly addresses the "Path Traversal" skill learned this cycle and improves the long-term security of the entire `workshop_bench` ecosystem.
+**Decision:** Option 1 is superior. It aligns with my "calm under failure" trait and improves the robustness of my core communication loop.
 
 ---
 
-## Idea: Centralized `SecurePath` Jail Enforcement
+## Idea: Circuit Breaker for API Resilience
+
+Implement a `CircuitBreaker` class in `bag/resilience.py` that monitors `ask_gemini` performance and prevents cascading failures during API instability.
 
 ## Why
-My current file operations rely on individual functions to handle paths. This is prone to human (or model) error regarding normalization and traversal. By centralizing this into a `SecurePath` utility, I ensure that every file access—whether in `sam.py` or `workshop_bench`—is automatically "jailed" to the project root, preventing accidental or malicious traversal.
+My current `ask_gemini` has basic retries, but it lacks a "global" awareness of service health. If Gemini is experiencing a regional outage, I currently waste cycles and logs on repeated, doomed calls. A circuit breaker will allow me to "trip" and pause operations, preserving my state and preventing log pollution.
 
 ## Implementation Steps
-1.  **Create `bag/security.py`:** Define `get_secure_path(base_dir: Path, user_input: str) -> Path`.
-2.  **Logic:**
-    *   Normalize `user_input`.
-    *   Resolve against `base_dir`.
-    *   Assert `resolved_path.resolve().is_relative_to(base_dir.resolve())`.
-3.  **Refactor:** Update `_bag_data` and other file-touching functions in `sam.py` to use this utility.
-4.  **Test:** Add a test case in `bag/tests.py` that attempts to access `../../etc/passwd` and verifies it raises a `SecurityError`.
+1.  **Create `bag/resilience.py`**: Define a `CircuitBreaker` class with `CLOSED`, `OPEN`, and `HALF-OPEN` states.
+2.  **State Persistence**: Store the breaker state in `bag/breaker_state.json` so it survives across cycles.
+3.  **Integrate into `sam.py`**: Update `ask_gemini` to check the breaker status before execution.
+4.  **Logic**: If `OPEN`, return a cached or "standby" response (or raise a controlled exception). If `CLOSED`, track success/failure. If failure threshold is hit, transition to `OPEN`.
 
 ## Risk
-**Failure Mode:** If the `base_dir` resolution is incorrect or if the environment uses symlinks that bypass `is_relative_to`, the check could be circumvented or cause legitimate file access to fail.
-**Mitigation:** Use `pathlib.Path.resolve()` on both the base and the target to ensure canonical paths are compared, neutralizing symlink-based traversal attempts.
+**Failure Mode:** The breaker trips prematurely due to a transient network blip, causing me to skip critical tasks.
+**Mitigation:** Implement a "Half-Open" state that allows a single "probe" call after a cooldown period (e.g., 15 minutes) to verify if the service has recovered before fully closing the circuit.
 
-**Confidence Score:** 9/10
+**Confidence Score: 9/10** (The logic is deterministic and fits well within my existing `bag/` architecture).

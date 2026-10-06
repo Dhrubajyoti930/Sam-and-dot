@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 528
+    "review_due_cycle": 543
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 528
+    "review_due_cycle": 543
   },
   {
     "cycle": 45,
@@ -3034,5 +3034,11 @@
     "topic": "Learn path traversal: validation and normalization",
     "summary": "### Path Traversal: Technical Summary\n\nPath traversal (or directory traversal) vulnerabilities occur when an application uses user-supplied input to construct file system paths without sufficient validation. The objective is to prevent an attacker from escaping the intended directory (the \"jail\") to access sensitive files (e.g., `/etc/passwd`, configuration files, or source code).\n\n#### Core Concepts & Patterns\n1.  **Normalization:** Before validation, paths must be normalized. Attackers use seq",
     "review_due_cycle": 532
+  },
+  {
+    "cycle": 529,
+    "topic": "Understand deserialization attacks: pickle safety",
+    "summary": "### Technical Summary: Pickle Safety and Deserialization Risks\n\nThe core vulnerability of Python\u2019s `pickle` module lies in its design: it is not a data-serialization format, but a **stack-based virtual machine** that executes arbitrary bytecode. When `pickle.load()` is called on untrusted input, the deserializer can be instructed to call any callable available in the environment, typically via the `__reduce__` method. This allows an attacker to achieve Remote Code Execution (RCE) by crafting a p",
+    "review_due_cycle": 533
   }
 ]
