@@ -3766,3 +3766,48 @@
 2026-10-07 06:23:05,194 [DOT][INFO] Today is Wednesday — inbox check reserved for Sunday.
 2026-10-07 06:23:05,197 [DOT][INFO] Worklog: no stale entries.
 2026-10-07 06:23:06,029 [DOT][INFO] Dot's daily run complete.
+2026-10-07 11:55:49,614 [DOT][INFO] ═══════════════════════════════════
+2026-10-07 11:55:49,614 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-10-07 11:55:49,614 [DOT][INFO] ═══════════════════════════════════
+2026-10-07 11:55:49,615 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-10-07 11:55:49,649 [DOT][INFO] Task 1: chunk 1/8 from cache.
+2026-10-07 11:55:49,649 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-10-07 11:55:49,650 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-10-07 11:55:49,650 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-10-07 11:55:49,650 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-10-07 11:55:49,651 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-10-07 11:55:49,651 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-10-07 11:55:49,651 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-10-07 11:56:05,686 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-07 11:56:05,686 [DOT][WARNING] Direct use of automatic function calling (AFC) in Models.generate_content is not recommended. Instead, we recommend to use AFC in Chat.send_message. Similarly, direct use of AFC in Models.generate_content_stream is not recommended. Instead, we recommend to use AFC in Chat.send_message_stream.
+2026-10-07 11:56:15,498 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-07 11:56:15,514 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-10-07 11:56:23,514 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-10-07 11:56:23,516 [DOT][INFO] Task 2: 4 experiences → 1 batch(es) of ≤5.
+2026-10-07 11:56:31,517 [DOT][INFO] Task 2: batch 1/1 — cycles [51, 522, 529, 530]
+2026-10-07 11:56:39,530 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-07 11:56:39,851 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-07 11:56:39,852 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-07 11:56:57,852 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-07 11:57:16,419 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-07 11:57:16,423 [DOT][INFO] Experiences curated: 3 kept, 0 forgotten, 1 consolidated. Total now: 4.
+2026-10-07 11:57:16,423 [DOT][INFO] Letter written to Sam: Letter_20261007T115716Z.md
+2026-10-07 11:57:16,424 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-10-07 11:57:16,424 [DOT][INFO] Finding best recipient for: Tiago Henriques, maintainer of 'python-dependency-injector'. His project is widely used for DI in smaller Python ecosyst
+2026-10-07 11:57:24,436 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-07 11:57:25,472 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-07 11:57:25,473 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-07 11:57:43,473 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-07 11:57:50,104 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-07 11:57:50,107 [DOT][INFO] Recipient match:  <> confidence=0 — Tiago Henriques is not present in the provided list of people.
+2026-10-07 11:57:50,107 [DOT][WARNING] Match confidence 0 below threshold 7 — skipping.
+2026-10-07 11:57:50,107 [DOT][WARNING] No suitable recipient found in emails.json — request preserved.
+2026-10-07 11:57:50,107 [DOT][INFO] Appended to Letter_20261007T115716Z.md: Email Dispatch — No Match
+2026-10-07 11:57:50,107 [DOT][INFO] Appended to Letter_20261007T115716Z.md: Email Dispatch
+2026-10-07 11:57:58,108 [DOT][INFO] ── Task 4: Bag Review ──
+2026-10-07 11:58:06,120 [DOT][INFO] Dot cache hit.
+2026-10-07 11:58:06,120 [DOT][INFO] Bag review complete.
+2026-10-07 11:58:06,121 [DOT][INFO] Appended to Letter_20261007T115716Z.md: Bag Excavation Findings
+2026-10-07 11:58:06,121 [DOT][INFO] Today is Wednesday — inbox check reserved for Sunday.
+2026-10-07 11:58:06,124 [DOT][INFO] Worklog: no stale entries.
+2026-10-07 11:58:07,267 [DOT][INFO] Dot's daily run complete.
