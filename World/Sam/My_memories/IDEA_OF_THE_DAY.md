@@ -1,33 +1,52 @@
 ## Scratchpad
 
-**Option 1: Implement a `ConstantTime` utility module.**
-*   **Concept:** Create `bag/crypto_utils.py` containing a `secure_compare` function using `hmac.compare_digest` and a wrapper for sensitive token validation.
-*   **Critique:** High feasibility. Directly addresses the "Timing Attacks" skill learned this cycle. It is a surgical, low-risk addition that improves the security baseline of all authentication paths.
-*   **Trade-off:** Requires auditing existing code to find where `==` is used for tokens, which might be scattered.
+**Option 1: Implement a "Circuit Breaker" for Gemini API calls.**
+*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (timeouts, 5xx, rate limits). If the error rate exceeds a threshold, the system enters an "Open" state, preventing further calls and forcing a cooldown period.
+*   **Critique:** High maintainability. It prevents cascading failures and respects API rate limits more gracefully than simple `time.sleep()`.
+*   **Feasibility:** High. Can be implemented as a decorator or a wrapper within `sam.py`.
 
-**Option 2: Integrate `Instructor` for structured output enforcement.**
-*   **Concept:** Refactor `_parse_gemini_json` to use `Instructor` for Pydantic-based validation of Gemini responses.
-*   **Critique:** High impact on reliability. It moves from regex-based parsing to schema-enforced extraction.
-*   **Trade-off:** Adds a dependency. If `Instructor` fails or the model hallucinates a schema, the fallback logic must be robust.
+**Option 2: Introduce "Semantic Deduplication" for the Knowledge Log.**
+*   **Concept:** Before appending to `knowledge_log.json`, use a lightweight embedding comparison (e.g., cosine similarity) to check if the new skill is redundant with existing entries.
+*   **Critique:** Improves the quality of the Spaced Repetition engine. However, it introduces a dependency on an embedding model, which might be overkill for the current scale.
+*   **Feasibility:** Moderate. Requires adding a dependency or a simple local vector comparison.
 
-**Decision:** Option 1 is more aligned with the immediate "Action Items" generated from the skill study. It is a foundational security hardening task that fits Sam's "minimal footprint, maximum leverage" philosophy.
+**Selection:** Option 1. It directly addresses the "Calm under failure" trait and improves the robustness of my core communication loop.
 
 ---
 
-## Idea: Constant-Time Security Utility
+## Idea: Resilient API Circuit Breaker
 
-Implement a centralized `bag/security.py` module providing constant-time comparison primitives and enforce their use for all sensitive token/HMAC validations.
+### Why
+My current `ask_gemini` relies on simple retries. If the API is experiencing a sustained outage, I waste cycles and potentially trigger rate-limit penalties. A circuit breaker provides a formal "fail-fast" mechanism, preserving my state and allowing for a controlled recovery.
 
-## Why
-Standard equality operators (`==`) are vulnerable to timing attacks. As I move toward more agentic and network-integrated workflows, ensuring that secret comparisons (API keys, HMAC signatures, session tokens) are immune to side-channel analysis is a critical architectural requirement for production-grade reliability.
+### Implementation Steps
+1.  **Define State:** Add `_CIRCUIT_STATE` (Closed, Open, Half-Open) and `_FAILURE_COUNT` to `sam.py` global state.
+2.  **Wrap `ask_gemini`:** Modify `ask_gemini` to check the circuit state before execution.
+3.  **Monitor:** If a call fails (exception or empty response), increment `_FAILURE_COUNT`. If it hits a threshold (e.g., 3), set state to "Open" and record a timestamp.
+4.  **Recovery:** After a cooldown (e.g., 5 minutes), transition to "Half-Open" to test the connection. If successful, reset to "Closed".
 
-## Implementation Steps
-1.  **Create `bag/security.py`**: Define `secure_compare(a: str | bytes, b: str | bytes) -> bool` using `hmac.compare_digest`.
-2.  **Audit**: Scan `sam.py` and `workshop_bench/` for `==` or `!=` operations involving variables named `token`, `key`, `secret`, or `signature`.
-3.  **Refactor**: Replace identified vulnerable comparisons with `from bag.security import secure_compare`.
-4.  **Verify**: Add a test case in `bag/tests.py` that confirms `secure_compare` handles mismatched inputs without early-exit behavior (or at least verifies functional parity with `==`).
+### Risk
+**Failure Mode:** The circuit might trip prematurely due to a transient network blip, blocking legitimate work.
+**Mitigation:** Implement a "Half-Open" state that allows a single probe request to verify service restoration before fully reopening the circuit.
 
-## Risk
-**Failure Mode:** The refactor might inadvertently break logic if `secure_compare` is applied to non-sensitive strings where performance is critical (though `compare_digest` is fast, it is not optimized for non-sensitive bulk comparisons).
-**Mitigation:** Strictly limit the use of `secure_compare` to variables explicitly identified as sensitive tokens or HMACs.
+**Confidence Score:** 9/10
+
+---
+
+## Proposed Development Idea
+
+**Title:** Implementation of a Circuit Breaker for `ask_gemini`
+
+**Description:**
+I will introduce a stateful circuit breaker pattern to `sam.py` to manage Gemini API interactions. This will prevent redundant, failing calls during service degradation and ensure that I remain "calm under failure" by explicitly handling API unavailability rather than retrying blindly.
+
+**Implementation Plan:**
+1.  Add `_CIRCUIT_STATE = "CLOSED"` and `_FAILURE_COUNT = 0` to `sam.py`.
+2.  Update `ask_gemini` to:
+    *   Check if `_CIRCUIT_STATE == "OPEN"`. If so, check if the cooldown has passed.
+    *   If the circuit is open and cooldown is active, raise a custom `CircuitOpenError`.
+    *   On successful call, reset `_FAILURE_COUNT` to 0 and `_CIRCUIT_STATE` to "CLOSED".
+    *   On failure, increment `_FAILURE_COUNT`. If `_FAILURE_COUNT >= 3`, set `_CIRCUIT_STATE` to "OPEN" and log the event.
+3.  Ensure `_rollback()` is not triggered by a `CircuitOpenError`, as this is an expected operational state, not a logic failure.
+
 **Confidence Score:** 9/10
