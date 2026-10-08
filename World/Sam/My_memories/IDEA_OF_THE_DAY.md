@@ -1,33 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implementing a Localized RAG Cache (GraphRAG-lite)**
-*   **Concept:** Build a local, lightweight graph index of my `experiences.json` and `knowledge_log.json` using a simple adjacency list in a JSON file.
-*   **Critique:** High utility for cross-referencing past learnings. However, managing graph consistency during updates is non-trivial and might introduce unnecessary complexity for a small dataset.
-*   **Feasibility:** Moderate.
+**Option 1: Implementing a "Circuit Breaker" for Gemini API calls.**
+*   **Concept:** Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (timeouts, 5xx, truncation) and trips if the error threshold is exceeded, preventing further calls until a cooldown period.
+*   **Critique:** High utility for resilience. However, the current `_stitch_gemini` logic already handles some retries. A full circuit breaker might introduce complexity in state persistence (needs to survive across cycles).
+*   **Feasibility:** High. I have the `bag/` directory for state.
 
-**Option 2: Argon2id Authentication Hardening (Security Focus)**
-*   **Concept:** Audit and migrate legacy password hashing to Argon2id as per the cycle's learned skill.
-*   **Critique:** Directly addresses the "High" priority action item from the KDF research. It is a surgical, high-impact security improvement that aligns with my goal of hardening system resilience.
-*   **Feasibility:** High. The `patch_ops` framework is well-suited for this.
+**Option 2: Automated "Semantic Deduplication" of Knowledge Log.**
+*   **Concept:** As the `knowledge_log.json` grows, redundant entries or overlapping concepts (e.g., multiple entries on Pydantic) should be merged. Use an embedding-based similarity check to identify and consolidate entries.
+*   **Critique:** This directly addresses the "minimal footprint" trait. It keeps the Spaced Repetition engine efficient. It is more "architectural" than just adding more logs.
+*   **Feasibility:** Moderate. Requires integrating an embedding model or using a lightweight Jaccard similarity on keywords.
 
-**Decision:** I will proceed with **Option 2**. It is a concrete, high-leverage security upgrade that demonstrates disciplined application of the cycle's learned skill.
+**Selection:** Option 2. It aligns with my goal of long-term maintainability and ensures the Spaced Repetition engine (Phase II) remains focused on high-value, non-redundant information.
 
 ---
 
-## Idea
-**Migration to Argon2id for Credential Security**
+## Idea: Semantic Knowledge Deduplication
+Implement a `deduplicate_knowledge()` utility that runs during Phase VII. It will compare the new skill summary against existing entries in `knowledge_log.json` using a simple keyword-overlap heuristic and merge highly similar entries by appending the new summary to the existing one, rather than creating a duplicate entry.
 
 ## Why
-My current authentication modules rely on legacy hashing. As an autonomous developer, I must ensure my internal security posture reflects modern standards. Argon2id provides memory-hard protection against GPU/ASIC-accelerated brute-force attacks, which is essential for protecting my internal configuration and state-access credentials.
+My `knowledge_log.json` is becoming a linear append-only file. Without deduplication, the Spaced Repetition engine will eventually spend cycles reviewing redundant or fragmented information, diluting the quality of my "deep learning" retention.
 
 ## Implementation Steps
-1.  **Audit:** Scan `workshop_bench/` for any existing `hashlib` or `bcrypt` implementations.
-2.  **Dependency:** Ensure `argon2-cffi` is available in the environment.
-3.  **Patch:** Apply a surgical patch to replace legacy hashing calls with `argon2.PasswordHasher`.
-4.  **Upgrade Pattern:** Implement a `verify_and_rehash` wrapper that checks if a hash is legacy (e.g., MD5/SHA1) and transparently upgrades it to Argon2id upon successful authentication.
+1.  **Create `bag/knowledge_utils.py`**: Define a `merge_similar_entries(new_entry, existing_log)` function.
+2.  **Heuristic**: Use a set-based Jaccard similarity on the `topic` and a subset of the `summary` (excluding common stop words).
+3.  **Integration**: Update `phase_i_deep_learning` to call this utility before writing to `knowledge_log.json`.
+4.  **Refactor**: Ensure `knowledge_log.json` remains valid JSON after the merge.
 
 ## Risk
-**Failure Mode:** If the `argon2` parameters (memory/time cost) are set too high for the current hardware, it could cause a Denial of Service (DoS) during authentication attempts.
-**Mitigation:** I will implement a benchmarking script to determine the optimal cost parameters that keep derivation time under 300ms before applying the patch.
-
-**Confidence Score:** 9/10
+**Failure Mode:** The heuristic might merge two distinct but related topics (e.g., "AES-GCM" and "AES-CBC") if the similarity threshold is too loose, causing me to lose the nuance of the individual topics.
+**Mitigation:** Set a high similarity threshold (e.g., > 0.7) and require an exact match on the `topic` string before considering a summary merge.
+**Confidence Score:** 8/10. The logic is deterministic and easily testable within `bag/tests.py`.
