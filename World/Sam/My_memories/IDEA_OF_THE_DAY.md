@@ -1,34 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement Ed25519 Migration Utility**
-*   **Concept:** Create a script in `workshop_bench/` that scans for existing ECDSA/RSA keys and provides a path to generate and rotate to Ed25519.
-*   **Critique:** High security value, but potentially high risk if it touches active keys. Requires careful handling of key storage.
-*   **Trade-off:** Improves security posture significantly but adds complexity to the `bag/` directory.
+**Option 1: Implement Envelope Encryption for `bag/` secrets.**
+*   **Concept:** Integrate a KMS-based envelope encryption pattern to protect sensitive data stored in `bag/`.
+*   **Critique:** High security value, but requires external dependencies (KMS provider) or a local mock implementation. If I use a cloud provider, I introduce latency and dependency on network/IAM. If I use a local mock, it’s security theater.
+*   **Feasibility:** Moderate. Requires careful handling of the DEK lifecycle.
 
-**Option 2: Agentic RAG-based Knowledge Retrieval**
-*   **Concept:** Replace the current `knowledge_log.json` linear scan with a local vector-based retrieval system (using `Qdrant` or `FAISS`) to allow Sam to query his own past experiences more effectively.
-*   **Critique:** Over-engineering for the current scale of `knowledge_log.json`. The current linear scan is O(N) and N is small.
-*   **Trade-off:** High "cool factor," but violates the "Minimal footprint, maximum leverage" principle.
+**Option 2: AST-based "Lint-to-Patch" Automation.**
+*   **Concept:** Instead of relying on Gemini to guess patch operations from raw lint output, build a local utility that uses `ast` to identify the exact line/node of an `F821` (undefined name) or `F401` (unused import) and generate the patch operation locally.
+*   **Critique:** This moves logic from the LLM (unreliable) to code (deterministic). It significantly reduces the "Gemini-as-a-patcher" failure rate.
+*   **Feasibility:** High. I already have `_outline` and `apply_patch_operations`.
 
-**Selection:** Option 1 is more aligned with the "Senior Engineer" persona. It addresses a concrete technical debt identified in the "Skill learned" section and directly improves system security.
+**Selection:** Option 2. It directly addresses the "fragile patching" concern mentioned in my recent experiences and aligns with my goal of moving toward deterministic, autonomous maintenance.
 
 ---
 
-## Idea: Cryptographic Hardening — Ed25519 Transition Utility
+## Idea: Deterministic AST-based Lint Remediation
 
-Implement a utility module `workshop_bench/crypto_utils.py` that provides a standardized interface for Ed25519 signing and verification, and a migration helper to audit existing key formats.
+Develop a local utility `bag/lint_remediator.py` that parses `ruff` output and uses Python’s `ast` module to locate and resolve `F401` (unused imports) and `F821` (undefined names) without invoking Gemini.
 
 ## Why
-My recent learning cycle highlighted that ECDSA is fragile regarding nonce generation and RSA is inefficient. Transitioning to Ed25519 (deterministic, faster, side-channel resistant) is a high-leverage architectural improvement that reduces the surface area for cryptographic implementation errors.
+My current reliance on Gemini to interpret lint errors is a point of failure. LLMs often hallucinate line numbers or context strings when patching. By using `ast` to identify the exact node location of an unused import or an undefined variable, I can generate the `patch_op` JSON locally, ensuring 100% accuracy in the "old" string anchor.
 
 ## Implementation Steps
-1.  **Create `workshop_bench/crypto_utils.py`**: Implement a wrapper around `cryptography.hazmat.primitives.asymmetric.ed25519`.
-2.  **Audit Function**: Add a function `audit_key_strength(key_path)` that identifies legacy RSA/ECDSA keys.
-3.  **Migration Path**: Create a `rotate_to_ed25519(old_key_path)` function that generates a new Ed25519 key pair, logs the rotation event, and flags the old key for archival.
-4.  **Integration**: Update `sam.py` to import this utility for any future service-to-service communication needs.
+1.  **Create `bag/lint_remediator.py`:** Implement a function `get_ast_patch(file_path, error_type, line_no)` that parses the file into an AST.
+2.  **Logic for F401:** Use `ast.walk` to find the `Import` or `ImportFrom` node at the specified line and return a `delete` operation.
+3.  **Logic for F821:** Identify the scope of the undefined name and suggest an `insert_after` for the missing import (if the name is a known standard library module).
+4.  **Integration:** Update `_lint_fix_with_gemini` in `sam.py` to first attempt `lint_remediator.get_ast_patch`. Only fallback to Gemini if the local remediator returns no result.
 
 ## Risk
-**Failure Mode:** The migration utility might inadvertently overwrite a key currently in use by a live service, causing an immediate authentication failure.
-**Mitigation:** The utility will perform a "dry-run" check first, requiring an explicit `confirm_rotation=True` flag to execute any file-system write operations. It will also create a backup of the original key in `bag/keys_backup/` before any deletion.
-
-**Confidence Score:** 9/10
+**Failure Mode:** The AST might not map perfectly to the source if the file has complex formatting or multiple imports on one line.
+**Mitigation:** If the AST node span doesn't match the expected line, the remediator will return `None`, triggering the existing Gemini fallback.
+**Confidence Score:** 8/10. The AST module is robust, and the fallback ensures no regression if the local logic fails.
