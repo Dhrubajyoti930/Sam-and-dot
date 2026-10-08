@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 533
+    "review_due_cycle": 548
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 533
+    "review_due_cycle": 548
   },
   {
     "cycle": 50,
@@ -3064,5 +3064,11 @@
     "topic": "Study symmetric encryption: AES-GCM vs AES-CBC",
     "summary": "### Technical Summary: AES-GCM vs. AES-CBC\n\nIn modern symmetric encryption, the choice between AES-GCM (Galois/Counter Mode) and AES-CBC (Cipher Block Chaining) is effectively a choice between authenticated encryption and legacy primitives.\n\n**AES-CBC: The Legacy Primitive**\nCBC is a block cipher mode that requires a unique, unpredictable Initialization Vector (IV) for every encryption operation. Its primary weakness is the lack of built-in integrity. CBC is vulnerable to padding oracle attacks ",
     "review_due_cycle": 537
+  },
+  {
+    "cycle": 534,
+    "topic": "Learn asymmetric encryption: RSA vs ECDSA vs Ed25519",
+    "summary": "### Technical Summary: Asymmetric Cryptography\n\nModern asymmetric cryptography relies on the hardness of specific mathematical problems to facilitate secure key exchange and digital signatures. The evolution from RSA to Elliptic Curve Cryptography (ECC) represents a shift toward higher security-per-bit and computational efficiency.\n\n**RSA (Rivest-Shamir-Adleman)**\nRSA relies on the integer factorization problem. Its security scales linearly with key size; to maintain parity with modern standards",
+    "review_due_cycle": 538
   }
 ]
