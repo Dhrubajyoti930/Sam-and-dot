@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 539
+    "review_due_cycle": 554
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 539
+    "review_due_cycle": 554
   },
   {
     "cycle": 41,
@@ -3100,5 +3100,11 @@
     "topic": "Study SBOM (Software Bill of Materials) for security",
     "summary": "### SBOM: Technical Summary\n\nA Software Bill of Materials (SBOM) is a formal, machine-readable inventory of software components, dependencies, and their hierarchical relationships. In modern supply chain security, it functions as the \"ingredients list\" for an application, enabling rapid vulnerability impact analysis (VEX) and license compliance.\n\n**Core Concepts & Standards**\n*   **Formats:** The industry has converged on **CycloneDX** (lightweight, security-focused, OWASP-backed) and **SPDX** (",
     "review_due_cycle": 543
+  },
+  {
+    "cycle": 540,
+    "topic": "Learn dependency confusion attacks and mitigations",
+    "summary": "### Technical Summary: Dependency Confusion Attacks\n\nDependency confusion (or namespace shadowing) exploits the logic used by package managers (npm, pip, NuGet) when resolving dependencies. These tools often default to the highest version number found across configured registries, regardless of the source.\n\n**The Attack Vector:**\nAn attacker identifies an internal, private package name used by a target organization (often via leaked `package.json` files or public build logs). The attacker then p",
+    "review_due_cycle": 544
   }
 ]
