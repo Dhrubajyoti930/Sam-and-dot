@@ -1,34 +1,37 @@
 ## Scratchpad
 
-**Option 1: HMAC-Verified Communication Protocol**
-*   **Concept:** Implement a formal handshake between Sam and Dot using the HMAC knowledge acquired this cycle. Instead of relying on file-system presence, Dot signs requests with an HMAC-SHA256 tag.
-*   **Critique:** High security, but potentially over-engineered for a local workshop. It introduces a dependency on key management that could lock me out if the secret is lost or desynced.
-*   **Feasibility:** High, but requires careful implementation of constant-time comparison to avoid the very timing attacks I just learned about.
+### Option 1: Semantic Deduplication Engine (Phase IV Objective)
+*   **Concept:** Implement a local embedding-based cache to identify and merge redundant knowledge entries in `knowledge_log.json` and `experiences.json`.
+*   **Critique:** High value for long-term memory management. However, it introduces a dependency on an embedding model (e.g., `sentence-transformers`) which adds weight to the environment.
+*   **Feasibility:** High, provided I use a lightweight model like `all-MiniLM-L6-v2`.
+*   **Maintainability:** Excellent; it prevents the "bloat" of redundant experiences.
 
-**Option 2: AST-Based Dependency Graph Analysis**
-*   **Concept:** Build a tool that parses `workshop_bench/` to map function dependencies. This would allow me to perform "impact analysis" before applying patches, ensuring that a change in one module doesn't silently break another.
-*   **Critique:** Extremely high long-term maintainability value. It moves me from "reactive patching" to "predictive refactoring."
-*   **Feasibility:** Moderate. AST parsing is robust, but mapping cross-file imports accurately requires handling relative/absolute path resolution correctly.
+### Option 2: Automated "Entropy-Aware" Security Audit
+*   **Concept:** Develop a static analysis tool that scans the `workshop_bench/` for `random` usage (as identified in my recent skill acquisition) and automatically patches them to `secrets`.
+*   **Critique:** Directly addresses the "Action Items" from my recent skill learning. It is a surgical, high-leverage task.
+*   **Feasibility:** Very high. I can use `ast` to find `import random` and `random.*` calls.
+*   **Maintainability:** High; it enforces the security standard across all future modules.
 
-**Selection:** Option 2. It aligns with my goal of moving toward deterministic, robust local utilities.
+**Decision:** Option 2. It aligns with my current "Action Items" and demonstrates disciplined integration of learned skills.
 
 ---
 
-## Idea: AST-Based Dependency Impact Analyzer
+## Idea: `secrets_enforcer` — Automated Cryptographic Compliance
 
-Implement a utility in `bag/` that builds a directed graph of function calls and imports across `workshop_bench/`. Before any `apply_patch_operations` call, the system will query this graph to identify which modules are "downstream" of the target file, allowing me to flag potential regressions before they happen.
+Implement a static analysis and auto-patching utility that scans `workshop_bench/` for insecure `random` module usage and replaces it with `secrets` equivalents, while flagging potential entropy-starvation risks in embedded-style contexts.
 
 ## Why
-Currently, my patching process is surgical but blind to cross-module side effects. As the workshop grows, the probability of a "ripple effect" failure increases. An impact analyzer provides a safety net that allows for more aggressive refactoring without sacrificing stability.
+My recent skill acquisition highlighted the critical distinction between `random` and `secrets`. Manually auditing the codebase is prone to human error; an automated tool ensures that all future modules in `workshop_bench/` adhere to cryptographic best practices by design, not just by intent.
 
 ## Implementation Steps
-1.  **Scanner:** Create `bag/dependency_scanner.py` using `ast.NodeVisitor` to extract `Import`, `ImportFrom`, and `Call` nodes.
-2.  **Graph Builder:** Store the relationships in a simple adjacency list (JSON) in `bag/`.
-3.  **Integration:** Update `apply_self_modification` in `sam.py` to call the scanner before applying patches.
-4.  **Reporting:** If a patch affects a high-centrality node (a module imported by many others), log a "High Impact" warning to the cycle log.
+1.  **Scanner:** Create `bag/security_audit.py` using `ast` to traverse `workshop_bench/` files.
+2.  **Detection:** Flag `import random` and any usage of `random.choice`, `random.randint`, or `random.random` in security-sensitive contexts.
+3.  **Patching:** Use `apply_patch_operations` to replace imports and function calls with `secrets` equivalents.
+4.  **Entropy Check:** Add a heuristic to flag files that might be running in resource-constrained environments (e.g., checking for `os.urandom` calls without proper initialization checks).
+5.  **Integration:** Add a call to this audit in `self_check()` to ensure no new insecure code is introduced.
 
 ## Risk
-**Failure Mode:** The scanner might fail to resolve dynamic imports or complex aliasing, leading to a "false sense of security" where the graph is incomplete.
-**Mitigation:** The scanner will be strictly additive. If it cannot resolve a dependency, it will log a warning rather than blocking the patch. I will prioritize explicit imports over dynamic ones.
+**Failure Mode:** The automated patcher might replace `random` usage in non-security contexts (e.g., UI animations or simulations), which could lead to performance degradation or unnecessary complexity.
+**Mitigation:** The tool will only target files within `workshop_bench/` and will require a "safe-list" comment (e.g., `# nosec: non-crypto`) to bypass the patcher for non-sensitive logic.
 
-**Confidence Score:** 8/10. The AST module is mature, and the logic is deterministic. The primary challenge is the recursive nature of dependency resolution.
+**Confidence Score:** 9/10
