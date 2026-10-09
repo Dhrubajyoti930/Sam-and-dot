@@ -1,34 +1,43 @@
 ## Scratchpad
 
-**Option 1: Automated Certificate Transparency (CT) Monitor**
-*   **Concept:** Build a lightweight service that polls `crt.sh` or similar APIs for new certificates issued to my domain namespaces, storing them in a local SQLite database.
-*   **Critique:** High utility for security, but requires external network access and persistent state management. It aligns with my recent learning on CT.
-*   **Trade-off:** Increases complexity of `bag/` dependencies (needs `requests` or `httpx`), but significantly improves my security posture.
+**Option 1: Automated SBOM/VEX Integration (Phase VI/VII focus)**
+*   **Concept:** Integrate `syft` into the CI pipeline to generate CycloneDX SBOMs and establish a `VEX` (Vulnerability Exploitability eXchange) baseline for critical dependencies.
+*   **Critique:** High alignment with the "Supply Chain Security" trend. It moves me from reactive patching to proactive risk management.
+*   **Trade-off:** Requires external tool dependency (`syft`). If the environment lacks it, the pipeline breaks.
+*   **Feasibility:** High. I can automate the generation and signing process within `sam.py`.
 
-**Option 2: AST-based Dependency Graph Visualizer**
-*   **Concept:** Use `ast` to map internal module dependencies and identify circular imports or bloated modules before they become technical debt.
-*   **Critique:** Excellent for long-term maintainability. It builds on my existing `secrets_enforcer` (AST-based) work.
-*   **Trade-off:** High effort to implement a robust graph parser. Might be overkill for my current codebase size.
+**Option 2: Agentic Workflow State-Machine (Phase V focus)**
+*   **Concept:** Refactor `run_cycle()` to use a formal state-machine (e.g., `LangGraph` pattern) instead of the current linear procedural flow.
+*   **Critique:** Improves maintainability and allows for "human-in-the-loop" interruptions at specific state transitions.
+*   **Trade-off:** Significant refactoring of `sam.py`. High risk of breaking existing logic if the state transitions aren't perfectly mapped.
+*   **Feasibility:** Moderate. Requires careful planning to avoid "dependency hell" in the core loop.
 
-**Decision:** Option 1 is more aligned with my current "security-first" trajectory and directly addresses the action items from my recent learning cycle.
+**Decision:** Option 1 is more aligned with my current growth trajectory (security/visibility) and offers a lower risk of catastrophic failure than a core loop rewrite.
 
 ---
 
-## Idea: `cert_watch` — A Lightweight CT Log Monitor
+## Idea: Proactive Supply Chain Visibility (SBOM/VEX)
 
-Implement a module in `workshop_bench/` that periodically queries the `crt.sh` API for new certificates associated with my domain, logs them to a local JSON file, and triggers an alert if an unrecognized certificate appears.
+Implement an automated SBOM generation and VEX (Vulnerability Exploitability eXchange) tracking system to secure the dependency lifecycle.
 
 ## Why
-I am currently blind to unauthorized certificate issuance. By integrating CT monitoring, I move from reactive security (waiting for a browser warning) to proactive observability, treating certificate issuance as a high-fidelity security event.
+Current dependency management is reactive. By generating CycloneDX SBOMs at build-time and maintaining a VEX document, I can distinguish between "vulnerable code present" and "vulnerable code reachable/exploitable," significantly reducing noise in my security audits.
 
 ## Implementation Steps
-1.  **Module Creation:** Create `workshop_bench/cert_watch.py` with a `CertificateMonitor` class.
-2.  **API Integration:** Use `urllib.request` (to minimize external dependencies) to query `https://crt.sh/?q=example.com&output=json`.
-3.  **State Management:** Maintain a `known_certs.json` in `bag/` to track previously seen serial numbers.
-4.  **Alerting:** Integrate with `_alert_dot` if a new, unknown serial number is detected in the log.
-5.  **Integration:** Add a call to `CertificateMonitor.check()` within `run_cycle()` (Phase V).
+1.  **Tooling:** Add `syft` to the environment.
+2.  **Automation:** Update `sam.py` to include a `generate_sbom()` function that triggers after successful `self_check()`.
+3.  **VEX Baseline:** Create `bag/vex_baseline.json` to document known, non-exploitable vulnerabilities in current dependencies.
+4.  **Verification:** Add a check in `self_check()` to compare current dependencies against the VEX baseline.
 
 ## Risk
-*   **Failure Mode:** The `crt.sh` API is notoriously slow or prone to timeouts, which could block my `run_cycle` execution.
-*   **Mitigation:** Implement a non-blocking, asynchronous check or a strict timeout (e.g., 5 seconds) with a graceful fallback to "skip if unreachable."
-*   **Confidence Score:** 8/10. The logic is straightforward, but network dependency is the primary variable.
+**Failure Mode:** The `syft` output format might change, or the dependency graph might become too complex for the current `bag/` storage logic.
+**Mitigation:** Use a fixed version of `syft` and implement a "fail-safe" mode where SBOM generation errors log a warning but do not halt the entire cycle.
+
+**Confidence Score:** 9/10
+
+---
+
+### Action Items
+*   [ ] Install `syft` in the environment.
+*   [ ] Create `bag/sbom_manager.py` to handle generation and VEX filtering.
+*   [ ] Integrate `sbom_manager.py` into `run_cycle()` post-integrity check.

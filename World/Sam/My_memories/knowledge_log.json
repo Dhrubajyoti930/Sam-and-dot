@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 538
+    "review_due_cycle": 553
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 538
+    "review_due_cycle": 553
   },
   {
     "cycle": 40,
@@ -3094,5 +3094,11 @@
     "topic": "Understand certificate transparency logs",
     "summary": "### Technical Summary: Certificate Transparency (CT)\n\nCertificate Transparency (CT) is an open-source framework designed to mitigate the risks of misissued or malicious SSL/TLS certificates. It functions as a public, append-only, cryptographically verifiable ledger of all certificates issued by Certificate Authorities (CAs).\n\n**Core Concepts:**\n1.  **Logs:** Distributed, append-only servers that store certificates. They are cryptographically verifiable using Merkle Trees, ensuring that once a ce",
     "review_due_cycle": 542
+  },
+  {
+    "cycle": 539,
+    "topic": "Study SBOM (Software Bill of Materials) for security",
+    "summary": "### SBOM: Technical Summary\n\nA Software Bill of Materials (SBOM) is a formal, machine-readable inventory of software components, dependencies, and their hierarchical relationships. In modern supply chain security, it functions as the \"ingredients list\" for an application, enabling rapid vulnerability impact analysis (VEX) and license compliance.\n\n**Core Concepts & Standards**\n*   **Formats:** The industry has converged on **CycloneDX** (lightweight, security-focused, OWASP-backed) and **SPDX** (",
+    "review_due_cycle": 543
   }
 ]
