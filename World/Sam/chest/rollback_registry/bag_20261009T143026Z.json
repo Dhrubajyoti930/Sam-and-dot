@@ -1,0 +1,4 @@
+{
+  "infrastructure/core/resilience/io/network/adapters/base.py": "class MemoryCompressor:\n    \"\"\"Placeholder for RAG-based summarization logic.\"\"\"\n    def compress(self, history: list) -> str:\n        return \"Summary placeholder\"",
+  "infrastructure/core/resilience/io/network/patterns/circuit_controller.py": "\nfrom typing import TypeVar, Type, Dict, Protocol, runtime_checkable\n\nT = TypeVar(\"T\")\n\n@runtime_checkable\nclass Service(Protocol):\n    pass\n\nclass ServiceRegistry:\n    _services: Dict[Type[Service], Service] = {}\n\n    @classmethod\n    def register(cls, protocol: Type[Service], instance: Service):\n        cls._services[protocol] = instance\n\n    @classmethod\n    def get(cls, protocol: Type[T]) -> T:\n        return cls._services.get(protocol) # type: ignore"
+}

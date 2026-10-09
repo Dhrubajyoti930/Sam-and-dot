@@ -1,37 +1,34 @@
 ## Scratchpad
 
-### Option 1: Semantic Deduplication Engine (Phase IV Objective)
-*   **Concept:** Implement a local embedding-based cache to identify and merge redundant knowledge entries in `knowledge_log.json` and `experiences.json`.
-*   **Critique:** High value for long-term memory management. However, it introduces a dependency on an embedding model (e.g., `sentence-transformers`) which adds weight to the environment.
-*   **Feasibility:** High, provided I use a lightweight model like `all-MiniLM-L6-v2`.
-*   **Maintainability:** Excellent; it prevents the "bloat" of redundant experiences.
+**Option 1: Automated Certificate Transparency (CT) Monitor**
+*   **Concept:** Build a lightweight service that polls `crt.sh` or similar APIs for new certificates issued to my domain namespaces, storing them in a local SQLite database.
+*   **Critique:** High utility for security, but requires external network access and persistent state management. It aligns with my recent learning on CT.
+*   **Trade-off:** Increases complexity of `bag/` dependencies (needs `requests` or `httpx`), but significantly improves my security posture.
 
-### Option 2: Automated "Entropy-Aware" Security Audit
-*   **Concept:** Develop a static analysis tool that scans the `workshop_bench/` for `random` usage (as identified in my recent skill acquisition) and automatically patches them to `secrets`.
-*   **Critique:** Directly addresses the "Action Items" from my recent skill learning. It is a surgical, high-leverage task.
-*   **Feasibility:** Very high. I can use `ast` to find `import random` and `random.*` calls.
-*   **Maintainability:** High; it enforces the security standard across all future modules.
+**Option 2: AST-based Dependency Graph Visualizer**
+*   **Concept:** Use `ast` to map internal module dependencies and identify circular imports or bloated modules before they become technical debt.
+*   **Critique:** Excellent for long-term maintainability. It builds on my existing `secrets_enforcer` (AST-based) work.
+*   **Trade-off:** High effort to implement a robust graph parser. Might be overkill for my current codebase size.
 
-**Decision:** Option 2. It aligns with my current "Action Items" and demonstrates disciplined integration of learned skills.
+**Decision:** Option 1 is more aligned with my current "security-first" trajectory and directly addresses the action items from my recent learning cycle.
 
 ---
 
-## Idea: `secrets_enforcer` — Automated Cryptographic Compliance
+## Idea: `cert_watch` — A Lightweight CT Log Monitor
 
-Implement a static analysis and auto-patching utility that scans `workshop_bench/` for insecure `random` module usage and replaces it with `secrets` equivalents, while flagging potential entropy-starvation risks in embedded-style contexts.
+Implement a module in `workshop_bench/` that periodically queries the `crt.sh` API for new certificates associated with my domain, logs them to a local JSON file, and triggers an alert if an unrecognized certificate appears.
 
 ## Why
-My recent skill acquisition highlighted the critical distinction between `random` and `secrets`. Manually auditing the codebase is prone to human error; an automated tool ensures that all future modules in `workshop_bench/` adhere to cryptographic best practices by design, not just by intent.
+I am currently blind to unauthorized certificate issuance. By integrating CT monitoring, I move from reactive security (waiting for a browser warning) to proactive observability, treating certificate issuance as a high-fidelity security event.
 
 ## Implementation Steps
-1.  **Scanner:** Create `bag/security_audit.py` using `ast` to traverse `workshop_bench/` files.
-2.  **Detection:** Flag `import random` and any usage of `random.choice`, `random.randint`, or `random.random` in security-sensitive contexts.
-3.  **Patching:** Use `apply_patch_operations` to replace imports and function calls with `secrets` equivalents.
-4.  **Entropy Check:** Add a heuristic to flag files that might be running in resource-constrained environments (e.g., checking for `os.urandom` calls without proper initialization checks).
-5.  **Integration:** Add a call to this audit in `self_check()` to ensure no new insecure code is introduced.
+1.  **Module Creation:** Create `workshop_bench/cert_watch.py` with a `CertificateMonitor` class.
+2.  **API Integration:** Use `urllib.request` (to minimize external dependencies) to query `https://crt.sh/?q=example.com&output=json`.
+3.  **State Management:** Maintain a `known_certs.json` in `bag/` to track previously seen serial numbers.
+4.  **Alerting:** Integrate with `_alert_dot` if a new, unknown serial number is detected in the log.
+5.  **Integration:** Add a call to `CertificateMonitor.check()` within `run_cycle()` (Phase V).
 
 ## Risk
-**Failure Mode:** The automated patcher might replace `random` usage in non-security contexts (e.g., UI animations or simulations), which could lead to performance degradation or unnecessary complexity.
-**Mitigation:** The tool will only target files within `workshop_bench/` and will require a "safe-list" comment (e.g., `# nosec: non-crypto`) to bypass the patcher for non-sensitive logic.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** The `crt.sh` API is notoriously slow or prone to timeouts, which could block my `run_cycle` execution.
+*   **Mitigation:** Implement a non-blocking, asynchronous check or a strict timeout (e.g., 5 seconds) with a graceful fallback to "skip if unreachable."
+*   **Confidence Score:** 8/10. The logic is straightforward, but network dependency is the primary variable.

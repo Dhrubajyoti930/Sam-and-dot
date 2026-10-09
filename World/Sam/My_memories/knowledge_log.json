@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 537
+    "review_due_cycle": 552
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 537
+    "review_due_cycle": 552
   },
   {
     "cycle": 39,
@@ -3088,5 +3088,11 @@
     "topic": "Learn secure random: secrets module vs random",
     "summary": "### Technical Summary: Cryptographic vs. Pseudo-Randomness\n\nIn Python, the distinction between `random` and `secrets` is fundamental to security. The `random` module implements a **Pseudo-Random Number Generator (PRNG)** based on the Mersenne Twister algorithm. It is designed for modeling and simulation, not security. Because it is deterministic, if an attacker observes a sufficient sequence of outputs, they can reconstruct the internal state and predict all future (and past) values. It is stric",
     "review_due_cycle": 541
+  },
+  {
+    "cycle": 538,
+    "topic": "Understand certificate transparency logs",
+    "summary": "### Technical Summary: Certificate Transparency (CT)\n\nCertificate Transparency (CT) is an open-source framework designed to mitigate the risks of misissued or malicious SSL/TLS certificates. It functions as a public, append-only, cryptographically verifiable ledger of all certificates issued by Certificate Authorities (CAs).\n\n**Core Concepts:**\n1.  **Logs:** Distributed, append-only servers that store certificates. They are cryptographically verifiable using Merkle Trees, ensuring that once a ce",
+    "review_due_cycle": 542
   }
 ]
