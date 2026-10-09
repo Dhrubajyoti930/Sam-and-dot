@@ -3986,3 +3986,67 @@
 2026-10-08 19:22:27,119 [DOT][INFO] Today is Thursday — inbox check reserved for Sunday.
 2026-10-08 19:22:27,122 [DOT][INFO] Worklog: no stale entries.
 2026-10-08 19:22:28,241 [DOT][INFO] Dot's daily run complete.
+2026-10-09 06:29:13,671 [DOT][INFO] ═══════════════════════════════════
+2026-10-09 06:29:13,671 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-10-09 06:29:13,671 [DOT][INFO] ═══════════════════════════════════
+2026-10-09 06:29:13,672 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-10-09 06:29:29,698 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:29:53,894 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-09 06:29:53,903 [DOT][INFO] Task 1: chunk 1/8 summarised.
+2026-10-09 06:30:09,915 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:30:46,731 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-09 06:30:46,732 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-09 06:31:04,732 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:31:20,076 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-09 06:31:20,080 [DOT][INFO] Task 1: chunk 2/8 summarised.
+2026-10-09 06:31:36,090 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:31:37,504 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-09 06:31:37,508 [DOT][INFO] Task 1: chunk 3/8 summarised.
+2026-10-09 06:31:53,517 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:32:32,001 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-09 06:32:32,002 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-09 06:32:50,002 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:33:03,054 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-09 06:33:03,057 [DOT][INFO] Task 1: chunk 4/8 summarised.
+2026-10-09 06:33:19,067 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:33:20,755 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-09 06:33:20,758 [DOT][INFO] Task 1: chunk 5/8 summarised.
+2026-10-09 06:33:36,767 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:33:47,761 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-09 06:33:47,764 [DOT][INFO] Task 1: chunk 6/8 summarised.
+2026-10-09 06:34:03,774 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:34:17,652 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-09 06:34:17,656 [DOT][INFO] Task 1: chunk 7/8 summarised.
+2026-10-09 06:34:33,666 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:34:35,298 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-09 06:34:35,301 [DOT][INFO] Task 1: chunk 8/8 summarised.
+2026-10-09 06:34:51,311 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:35:59,960 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-09 06:35:59,961 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-09 06:36:17,961 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:36:22,194 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-09 06:36:22,195 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-10-09 06:36:30,195 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-10-09 06:36:30,196 [DOT][INFO] Task 2: 5 experiences → 1 batch(es) of ≤5.
+2026-10-09 06:36:38,197 [DOT][INFO] Task 2: batch 1/1 — cycles [51, 522, 534, 535, 536]
+2026-10-09 06:36:46,206 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:36:48,597 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-09 06:36:48,602 [DOT][INFO] Experiences curated: 2 kept, 0 forgotten, 1 consolidated. Total now: 3.
+2026-10-09 06:36:48,602 [DOT][INFO] Letter written to Sam: Letter_20261009T063648Z.md
+2026-10-09 06:36:48,602 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-10-09 06:36:48,603 [DOT][INFO] Finding best recipient for: Tiago Henriques, maintainer of 'python-dependency-injector'. His project is widely used for DI in smaller Python ecosyst
+2026-10-09 06:36:56,613 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:36:57,260 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-09 06:36:57,263 [DOT][INFO] Recipient match:  <> confidence=0 — Tiago Henriques, the maintainer of 'python-dependency-injector', is not present in the provided list of people.
+2026-10-09 06:36:57,263 [DOT][WARNING] Match confidence 0 below threshold 7 — skipping.
+2026-10-09 06:36:57,263 [DOT][WARNING] No suitable recipient found in emails.json — request preserved.
+2026-10-09 06:36:57,263 [DOT][INFO] Appended to Letter_20261009T063648Z.md: Email Dispatch — No Match
+2026-10-09 06:36:57,263 [DOT][INFO] Appended to Letter_20261009T063648Z.md: Email Dispatch
+2026-10-09 06:37:05,263 [DOT][INFO] ── Task 4: Bag Review ──
+2026-10-09 06:37:21,274 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-09 06:37:31,852 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-09 06:37:31,854 [DOT][INFO] Bag review complete.
+2026-10-09 06:37:31,855 [DOT][INFO] Appended to Letter_20261009T063648Z.md: Bag Excavation Findings
+2026-10-09 06:37:31,855 [DOT][INFO] Today is Friday — inbox check reserved for Sunday.
+2026-10-09 06:37:31,857 [DOT][INFO] Worklog: no stale entries.
+2026-10-09 06:37:32,848 [DOT][INFO] Dot's daily run complete.
