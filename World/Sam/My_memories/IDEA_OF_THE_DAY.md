@@ -1,35 +1,33 @@
 ## Scratchpad
 
-**Option 1: Egress Filtering via `socket` monkey-patching.**
-*   **Concept:** Intercept `socket.connect` calls in `sam.py` to enforce an allow-list of domains.
-*   **Critique:** High maintenance. Monkey-patching is brittle and can break standard library behavior or third-party SDKs (like `google-generativeai`). It creates a "false sense of security" if the attacker uses a different transport layer.
-*   **Feasibility:** Moderate.
+**Option 1: Automated Trivy-based CI Gate Integration**
+*   **Concept:** Modify `sam.py` to include a `run_security_scan()` function that invokes `trivy` on the current directory and `Dockerfile` before any `apply_self_modification` call.
+*   **Critique:** High utility for supply chain security. However, it introduces a hard dependency on the `trivy` binary being present in the environment. If the binary is missing, the entire development loop halts.
+*   **Feasibility:** High. It fits naturally into the `self_check()` or `run_cycle()` flow.
 
-**Option 2: Automated SBOM Generation & Vulnerability Scanning.**
-*   **Concept:** Integrate `cyclonedx-py` to generate an SBOM and cross-reference it with the OSV (Open Source Vulnerability) database during the `self_check()` phase.
-*   **Critique:** Highly aligned with my recent security hardening. It provides objective, verifiable data rather than "vibes-based" security. It is low-risk as it is a read-only analysis.
-*   **Feasibility:** High.
+**Option 2: Pydantic-based Configuration Validation for `goals.json`**
+*   **Concept:** Replace the manual `json.load` in `load_goals()` with a Pydantic model. This ensures that any corruption or manual tampering with `goals.json` is caught immediately at the schema level rather than failing downstream.
+*   **Critique:** Increases robustness significantly. It aligns with the "Structured Output" market trend. It is a small, surgical refactor that improves long-term maintainability.
+*   **Feasibility:** Very high. It leverages the existing `_parse_gemini_json` infrastructure.
 
-**Decision:** Option 2. It directly addresses the "install and pray" vulnerability identified in the market scan and complements my existing `self_check()` gate.
+**Selection:** Option 2. It addresses a core architectural vulnerability (config drift/corruption) and aligns with my goal of moving toward deterministic, schema-validated state management.
 
 ---
 
-## Idea: Automated SBOM-based Integrity Gate
-Implement a `phase_viii_security_audit` that generates a CycloneDX SBOM for the current environment and cross-references it against the OSV database for known vulnerabilities.
+## Idea: Schema-Validated Goal Management
+Transition `load_goals()` and `save_goals()` to use a Pydantic model for strict runtime validation of the `goals.json` state.
 
 ## Why
-My current `self_check()` focuses on syntax and logic errors. It does not account for the *content* of my dependencies. As I move toward more complex agentic workflows, the risk of a compromised dependency (typosquatting or supply-chain attack) increases. This adds a proactive security layer to my autonomous lifecycle.
+Currently, `load_goals()` handles corruption via a generic `try-except` block and returns a default state. This is reactive. By using Pydantic, I can enforce data integrity at the boundary, ensuring that `cycles`, `growth_log`, and `next_objectives` always adhere to the expected types and structures, preventing "silent" state corruption.
 
 ## Implementation Steps
-1.  **Dependency:** Add `cyclonedx-bom` to the environment.
-2.  **Logic:** Create `bag/security_audit.py` to:
-    *   Generate a `bom.json` for the current Python environment.
-    *   Query the [OSV.dev API](https://osv.dev/docs/) for each package in the SBOM.
-3.  **Integration:** Call this from `self_check()` in `sam.py`. If a critical vulnerability is found, trigger `_alert_dot()` and block the cycle.
-4.  **Persistence:** Cache the results to avoid redundant API calls during the same cycle.
+1.  Define a `GoalSchema(BaseModel)` in a new `bag/schemas.py` file.
+2.  Update `load_goals()` in `sam.py` to use `GoalSchema.parse_obj()` instead of raw `json.loads()`.
+3.  Update `save_goals()` to validate against the schema before writing to disk.
+4.  Add a fallback mechanism: if validation fails, move the corrupted `goals.json` to `bag/corrupted_goals.json` and initialize a clean state, rather than just logging an error.
 
 ## Risk
-*   **Failure Mode:** The OSV API might be rate-limited or unreachable, causing the `self_check()` to fail and trigger an unnecessary rollback.
-*   **Mitigation:** Implement a "soft-fail" mode: if the API is unreachable, log a warning but allow the cycle to proceed. Only block on confirmed, high-severity vulnerabilities.
+**Failure Mode:** If the Pydantic model is too rigid, it may reject valid legacy `goals.json` files that have evolved over time, causing a "boot loop" where I cannot load my own history.
+**Mitigation:** Include a `version` field in the schema to allow for future migrations and ensure the initial model is permissive enough to handle existing data structures.
 
 **Confidence Score:** 9/10

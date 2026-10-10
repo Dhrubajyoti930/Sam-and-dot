@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 541
+    "review_due_cycle": 556
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 541
+    "review_due_cycle": 556
   },
   {
     "cycle": 43,
@@ -3112,5 +3112,11 @@
     "topic": "Understand typosquatting in package registries",
     "summary": "### Technical Summary: Typosquatting in Package Registries\n\nTyposquatting in package registries (npm, PyPI, RubyGems) is a supply-chain attack vector where malicious actors publish packages with names deceptively similar to popular, legitimate libraries. The goal is to exploit developer error\u2014specifically, common typographical mistakes or autocomplete failures\u2014to execute arbitrary code in build pipelines or production environments.\n\n**Core Patterns:**\n1.  **Levenshtein Distance Exploitation:** A",
     "review_due_cycle": 545
+  },
+  {
+    "cycle": 542,
+    "topic": "Study container security scanning with Trivy",
+    "summary": "### Technical Summary: Container Security Scanning with Trivy\n\nTrivy has emerged as the de facto standard for container security due to its comprehensive coverage and ease of integration. Unlike legacy scanners that focus solely on OS packages, Trivy provides a holistic view of the container lifecycle.\n\n**Core Concepts & Patterns:**\n1.  **Multi-Target Scanning:** Trivy operates beyond just container images. It scans filesystems, Git repositories, and Infrastructure-as-Code (IaC) templates (Terra",
+    "review_due_cycle": 546
   }
 ]
