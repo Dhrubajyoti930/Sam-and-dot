@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 542
+    "review_due_cycle": 557
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 542
+    "review_due_cycle": 557
   },
   {
     "cycle": 44,
@@ -3118,5 +3118,11 @@
     "topic": "Study container security scanning with Trivy",
     "summary": "### Technical Summary: Container Security Scanning with Trivy\n\nTrivy has emerged as the de facto standard for container security due to its comprehensive coverage and ease of integration. Unlike legacy scanners that focus solely on OS packages, Trivy provides a holistic view of the container lifecycle.\n\n**Core Concepts & Patterns:**\n1.  **Multi-Target Scanning:** Trivy operates beyond just container images. It scans filesystems, Git repositories, and Infrastructure-as-Code (IaC) templates (Terra",
     "review_due_cycle": 546
+  },
+  {
+    "cycle": 543,
+    "topic": "Learn SAST tools: bandit for Python security",
+    "summary": "### Technical Summary: Bandit for Python Security\n\nBandit is a static analysis security testing (SAST) tool designed to find common security issues in Python code. Unlike linters that focus on style or type safety, Bandit parses code into an Abstract Syntax Tree (AST) and runs a suite of plugins against it to identify insecure patterns.\n\n**Core Concepts & Patterns:**\n1.  **AST-Based Scanning:** Bandit does not use regex; it builds an AST. This allows it to understand code structure, making it si",
+    "review_due_cycle": 547
   }
 ]

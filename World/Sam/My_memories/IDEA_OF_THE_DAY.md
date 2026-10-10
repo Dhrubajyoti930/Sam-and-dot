@@ -1,33 +1,35 @@
 ## Scratchpad
 
-**Option 1: Automated Trivy-based CI Gate Integration**
-*   **Concept:** Modify `sam.py` to include a `run_security_scan()` function that invokes `trivy` on the current directory and `Dockerfile` before any `apply_self_modification` call.
-*   **Critique:** High utility for supply chain security. However, it introduces a hard dependency on the `trivy` binary being present in the environment. If the binary is missing, the entire development loop halts.
-*   **Feasibility:** High. It fits naturally into the `self_check()` or `run_cycle()` flow.
+**Option 1: Automated Bandit Integration (CI/CD Gate)**
+*   **Concept:** Integrate `bandit` into the pre-commit hook and CI pipeline to enforce security standards.
+*   **Critique:** High leverage, low complexity. It directly addresses the "Security" skill learned this cycle.
+*   **Trade-off:** Potential for "alert fatigue" if baseline is not managed correctly.
+*   **Feasibility:** High. The `self_check()` function is already modular enough to accept a new security gate.
 
-**Option 2: Pydantic-based Configuration Validation for `goals.json`**
-*   **Concept:** Replace the manual `json.load` in `load_goals()` with a Pydantic model. This ensures that any corruption or manual tampering with `goals.json` is caught immediately at the schema level rather than failing downstream.
-*   **Critique:** Increases robustness significantly. It aligns with the "Structured Output" market trend. It is a small, surgical refactor that improves long-term maintainability.
-*   **Feasibility:** Very high. It leverages the existing `_parse_gemini_json` infrastructure.
+**Option 2: Semantic Cache TTL/Invalidation Logic**
+*   **Concept:** Implement a time-to-live (TTL) or frequency-based invalidation for the `semantic_cache` to ensure Sam doesn't rely on stale "wisdom" from early cycles.
+*   **Critique:** Improves long-term accuracy but adds complexity to the `bag/semantic_cache.py` module.
+*   **Trade-off:** Might increase API costs if cache misses spike.
+*   **Feasibility:** Moderate. Requires modifying the `check_cache` logic.
 
-**Selection:** Option 2. It addresses a core architectural vulnerability (config drift/corruption) and aligns with my goal of moving toward deterministic, schema-validated state management.
+**Decision:** Option 1 is more aligned with the "Skill learned this cycle" and provides immediate, measurable security improvements. I will proceed with integrating Bandit.
 
 ---
 
-## Idea: Schema-Validated Goal Management
-Transition `load_goals()` and `save_goals()` to use a Pydantic model for strict runtime validation of the `goals.json` state.
+## Idea
+**Security-First Integrity Gate: Bandit Integration**
 
 ## Why
-Currently, `load_goals()` handles corruption via a generic `try-except` block and returns a default state. This is reactive. By using Pydantic, I can enforce data integrity at the boundary, ensuring that `cycles`, `growth_log`, and `next_objectives` always adhere to the expected types and structures, preventing "silent" state corruption.
+My current `self_check()` relies on `ruff` for syntax and logic errors. While effective for code quality, it ignores security vulnerabilities (e.g., `os.system`, `pickle`, `eval`). Integrating `bandit` creates a mandatory security baseline, ensuring that my self-modifications do not introduce common Python vulnerabilities.
 
 ## Implementation Steps
-1.  Define a `GoalSchema(BaseModel)` in a new `bag/schemas.py` file.
-2.  Update `load_goals()` in `sam.py` to use `GoalSchema.parse_obj()` instead of raw `json.loads()`.
-3.  Update `save_goals()` to validate against the schema before writing to disk.
-4.  Add a fallback mechanism: if validation fails, move the corrupted `goals.json` to `bag/corrupted_goals.json` and initialize a clean state, rather than just logging an error.
+1.  **Baseline Generation:** Run `bandit -r . -f json -o bandit_baseline.json` to suppress legacy technical debt.
+2.  **Update `self_check()`:** Modify `sam.py` to include a `bandit` execution step within the `self_check()` function.
+3.  **CI/CD Gate:** Configure the command to run `bandit -r . -c pyproject.toml --baseline bandit_baseline.json --severity-level HIGH`.
+4.  **Error Handling:** If `bandit` returns a non-zero exit code, trigger `_rollback()` and alert Dot via `_alert_dot()`.
 
 ## Risk
-**Failure Mode:** If the Pydantic model is too rigid, it may reject valid legacy `goals.json` files that have evolved over time, causing a "boot loop" where I cannot load my own history.
-**Mitigation:** Include a `version` field in the schema to allow for future migrations and ensure the initial model is permissive enough to handle existing data structures.
+**Failure Mode:** The "flow-insensitive" nature of Bandit may trigger false positives on sanitized inputs, causing unnecessary rollbacks and blocking legitimate development.
+**Mitigation:** I will implement a strict `# nosec` policy where any suppressed finding must be accompanied by a comment explaining the sanitization logic, which I will manually audit during the next cycle.
 
 **Confidence Score:** 9/10

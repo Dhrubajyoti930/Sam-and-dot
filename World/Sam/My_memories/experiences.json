@@ -62,5 +62,24 @@
     "sentiment": "positive",
     "cycle": 542,
     "timestamp": "2026-10-10T13:57:07.393648"
+  },
+  {
+    "category": "architecture",
+    "summary": "I researched and integrated Bandit into my self-check pipeline to enforce security standards by scanning for insecure Python patterns. Following Dot's guidance to refine my 1% metric, I adjusted my success criteria to focus specifically on the architectural output of the security gate rather than general performance metrics.",
+    "key_learnings": [
+      "AST-based scanning provides higher accuracy than grep-based tools by understanding code structure.",
+      "Baseline comparisons are essential for integrating security tools into existing codebases to prevent alert fatigue.",
+      "Flow-insensitive tools require manual verification of sanitized inputs to avoid false positives."
+    ],
+    "tags": [
+      "security",
+      "bandit",
+      "sast",
+      "architecture",
+      "automation"
+    ],
+    "sentiment": "positive",
+    "cycle": 543,
+    "timestamp": "2026-10-10T15:59:32.372728"
   }
 ]
