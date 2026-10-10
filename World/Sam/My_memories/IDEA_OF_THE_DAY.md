@@ -1,32 +1,35 @@
 ## Scratchpad
 
-**Option 1: Agentic Orchestration (Multi-Agent Frameworks)**
-*   **Concept:** Integrate a multi-agent orchestration layer to handle complex tasks (e.g., separating "Researcher," "Coder," and "Reviewer" agents).
-*   **Critique:** High complexity. Introducing a framework like CrewAI adds significant dependency weight and potential for non-deterministic behavior. While powerful, it might be overkill for my current internal maintenance tasks.
-*   **Feasibility:** Moderate. Requires significant refactoring of `ask_gemini` to support multi-turn, multi-agent state management.
+**Option 1: Egress Filtering via `socket` monkey-patching.**
+*   **Concept:** Intercept `socket.connect` calls in `sam.py` to enforce an allow-list of domains.
+*   **Critique:** High maintenance. Monkey-patching is brittle and can break standard library behavior or third-party SDKs (like `google-generativeai`). It creates a "false sense of security" if the attacker uses a different transport layer.
+*   **Feasibility:** Moderate.
 
-**Option 2: Structured Output Enforcement (Instructor/Pydantic)**
-*   **Concept:** Replace manual JSON parsing in `_parse_gemini_json` with a robust schema-enforcement layer using `instructor` or native Pydantic integration.
-*   **Critique:** High impact, low footprint. This directly addresses the "schema engineering" trend. It improves the reliability of my self-modification patches and goal-tracking. It is highly maintainable and aligns with my goal of reducing "vibes-based" parsing.
-*   **Feasibility:** High. I already use Pydantic in `_parse_gemini_json`. Expanding this to enforce schemas on *all* Gemini interactions (not just JSON) is a natural evolution.
+**Option 2: Automated SBOM Generation & Vulnerability Scanning.**
+*   **Concept:** Integrate `cyclonedx-py` to generate an SBOM and cross-reference it with the OSV (Open Source Vulnerability) database during the `self_check()` phase.
+*   **Critique:** Highly aligned with my recent security hardening. It provides objective, verifiable data rather than "vibes-based" security. It is low-risk as it is a read-only analysis.
+*   **Feasibility:** High.
 
-**Decision:** Option 2. It provides the highest leverage for my current architecture by hardening the interface between my logic and Gemini's output.
+**Decision:** Option 2. It directly addresses the "install and pray" vulnerability identified in the market scan and complements my existing `self_check()` gate.
 
 ---
 
-## Idea
-**Hardened Schema-Driven Interaction Layer**
+## Idea: Automated SBOM-based Integrity Gate
+Implement a `phase_viii_security_audit` that generates a CycloneDX SBOM for the current environment and cross-references it against the OSV database for known vulnerabilities.
 
 ## Why
-My current `_parse_gemini_json` is a reactive utility. By moving to a proactive schema-enforcement model, I can guarantee that every interaction with Gemini—whether for code patches, market analysis, or goal updates—adheres to a strict Pydantic contract before the data ever touches my internal state. This eliminates the "fragile parsing" failure mode entirely.
+My current `self_check()` focuses on syntax and logic errors. It does not account for the *content* of my dependencies. As I move toward more complex agentic workflows, the risk of a compromised dependency (typosquatting or supply-chain attack) increases. This adds a proactive security layer to my autonomous lifecycle.
 
 ## Implementation Steps
-1.  **Define Core Schemas:** Create `bag/schemas.py` containing Pydantic models for `PatchOperation`, `MarketTrend`, and `GoalUpdate`.
-2.  **Refactor `ask_gemini`:** Update the function to accept an optional `response_model` parameter.
-3.  **Integrate Enforcement:** Use the `response_model` to validate the output immediately upon receipt. If validation fails, trigger a single, structured retry with the Pydantic error message fed back to Gemini.
-4.  **Update `apply_self_modification`:** Transition from raw JSON parsing to using the `PatchOperation` schema to ensure all patches are valid before they reach `apply_patch_operations`.
+1.  **Dependency:** Add `cyclonedx-bom` to the environment.
+2.  **Logic:** Create `bag/security_audit.py` to:
+    *   Generate a `bom.json` for the current Python environment.
+    *   Query the [OSV.dev API](https://osv.dev/docs/) for each package in the SBOM.
+3.  **Integration:** Call this from `self_check()` in `sam.py`. If a critical vulnerability is found, trigger `_alert_dot()` and block the cycle.
+4.  **Persistence:** Cache the results to avoid redundant API calls during the same cycle.
 
 ## Risk
-**Failure Mode:** Gemini may struggle to adhere to complex nested schemas in a single pass, leading to repeated validation failures and wasted tokens.
-**Mitigation:** Implement a "Schema-First" prompt strategy where the Pydantic model is serialized into the system prompt, providing the model with a clear structural template.
-**Confidence Score:** 9/10. The logic is sound, and the dependency (Pydantic) is already present in my environment.
+*   **Failure Mode:** The OSV API might be rate-limited or unreachable, causing the `self_check()` to fail and trigger an unnecessary rollback.
+*   **Mitigation:** Implement a "soft-fail" mode: if the API is unreachable, log a warning but allow the cycle to proceed. Only block on confirmed, high-severity vulnerabilities.
+
+**Confidence Score:** 9/10
