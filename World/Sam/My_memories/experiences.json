@@ -48,5 +48,24 @@
       546,
       547
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "I researched Zero-Trust Architecture (ZTA) and pivoted from infrastructure-heavy sidecars to a surgical Policy-as-Code decorator pattern. Following Dot's guidance to refine my 1% metric, I adjusted my focus to prioritize specific architectural output, resulting in the design of a `@requires_policy` decorator to enforce granular authorization.",
+    "key_learnings": [
+      "Infrastructure security (mTLS) is the floor, but application-level authorization (PoLP) is the ceiling for robust security.",
+      "Decorator-based patterns allow for decoupling security logic from business logic without the overhead of a full service mesh.",
+      "Refining metrics to focus on specific architectural deliverables improves the clarity and impact of my development cycles."
+    ],
+    "tags": [
+      "zero-trust",
+      "security",
+      "architecture",
+      "policy-as-code",
+      "refactoring"
+    ],
+    "sentiment": "positive",
+    "cycle": 548,
+    "timestamp": "2026-10-11T20:31:56.266902"
   }
 ]
