@@ -1,33 +1,34 @@
 ## Scratchpad
 
-### Option 1: Domain-Driven Authorization (DDA) Layer
-*   **Concept:** Implement a decorator-based authorization layer that wraps service methods, checking user permissions against an object-level context (e.g., `can_edit(user, resource_id)`).
-*   **Critique:** High long-term value for security. However, it requires significant refactoring of existing service methods to inject user context.
-*   **Feasibility:** Moderate. Requires careful design to avoid "decorator hell" or circular dependencies.
+**Option 1: Implementing a BOLA/IDOR Protection Layer (Object-Level Authorization)**
+*   **Concept:** Introduce a decorator-based pattern that forces every database-accessing function to accept a `user_context` and automatically injects a `WHERE user_id = ?` clause into the query.
+*   **Critique:** High impact on security. However, it requires refactoring existing data-access layers, which risks breaking current functionality. It is highly maintainable once established but requires strict developer discipline to apply the decorator.
+*   **Feasibility:** High, as it aligns with my recent focus on API security.
 
-### Option 2: Automated "Vibe-Check" Evaluation Pipeline (LLM-as-a-Judge)
-*   **Concept:** Integrate a lightweight evaluation step in `phase_v_development` where a secondary, smaller model (e.g., GPT-4o-mini or a local SLM) validates the generated code against the `bag/tests.py` requirements before the actual `self_check()` runs.
-*   **Critique:** Directly addresses the "vibe-based" development risk. It adds latency but significantly reduces the frequency of `_rollback()` triggers.
-*   **Feasibility:** High. It leverages existing `ask_gemini` infrastructure.
+**Option 2: Automated EvalOps Pipeline (RAGAS Integration)**
+*   **Concept:** Integrate `Ragas` into the `bag/tests.py` suite to quantitatively measure the quality of my internal documentation retrieval and synthesis.
+*   **Critique:** Excellent for long-term quality, but might be overkill for my current scale. It adds a dependency on external evaluation metrics that may fluctuate based on model versions, potentially causing "flaky" tests.
+*   **Feasibility:** Moderate.
 
-**Decision:** Option 2 is the superior choice for this cycle. It aligns with the "Evaluation-Driven Development" market trend and directly improves my self-correction loop, reducing the "blast radius" of failed patches.
+**Selection:** Option 1. It directly addresses the self-identified weakness in my API security architecture (BOLA/IDOR) and provides a concrete, measurable improvement to my codebase's robustness.
 
 ---
 
-## Idea: Pre-Commit LLM-as-a-Judge (The "Critic" Pattern)
+## Idea: Mandatory Context-Aware Data Access (CADA) Pattern
 
-Implement a `_critic_check()` function that runs after a patch is generated but *before* it is applied. This function will send the proposed patch and the relevant file context to a secondary, specialized prompt that acts as a "Code Reviewer," specifically looking for logical inconsistencies or missing imports that `ruff` might miss.
+I will implement a `CADA` (Context-Aware Data Access) decorator that enforces object-level authorization at the function signature level. This ensures that no data-fetching operation can execute without a verified `user_context` object, preventing BOLA (Broken Object Level Authorization) vulnerabilities by design.
 
 ## Why
-My current `self_check()` is reactive (it catches errors after they are written to disk). By adding a proactive "Critic" layer, I can catch semantic errors (e.g., using a variable before it's defined, or incorrect API usage) before they break the system state, reducing the need for expensive rollbacks.
+My current security posture is strong on perimeter and transport, but vulnerable to IDOR/BOLA attacks where a user might manipulate a resource ID to access data they do not own. By forcing the `user_id` into the query scope via a decorator, I move security from a "check" to a "requirement."
 
 ## Implementation Steps
-1.  **Define `_critic_check(patch_ops, file_contexts)`:** Create a new function in `sam.py` that formats the proposed changes into a "Review Request" for Gemini.
-2.  **Integrate into `apply_self_modification`:** Insert a call to `_critic_check` immediately after the patch is generated but before `apply_patch_operations` is invoked.
-3.  **Feedback Loop:** If the Critic identifies a flaw, return the feedback to the original generator to refine the patch before application.
+1.  **Define the Decorator:** Create `bag/security_utils.py` with a `require_user_context` decorator that validates the presence of a `user_id` in the `kwargs`.
+2.  **Refactor Data Access:** Apply the decorator to the core data-fetching functions in `workshop_bench/`.
+3.  **Enforce Query Injection:** Update the data-fetching logic to automatically append `WHERE user_id = context.user_id` to the SQL/ORM query.
+4.  **Integrate Integrity Gate:** Add a static analysis check in `self_check()` to ensure all functions tagged with `@data_access` have the `@require_user_context` decorator.
 
 ## Risk
-*   **Failure Mode:** The Critic might hallucinate errors in perfectly valid code (False Positives), leading to unnecessary "refinement" loops that waste tokens and time.
-*   **Mitigation:** Implement a "Critic Override" flag. If the Critic rejects a patch, I will perform a secondary, lighter check; if the second check is ambiguous, I will proceed with the patch but log a warning to `goals.json` for manual review.
+**Failure Mode:** The decorator might inadvertently block legitimate system-level tasks that do not have a specific `user_id` (e.g., background maintenance or global reporting).
+**Mitigation:** Implement a `SystemContext` object that satisfies the decorator for non-user-specific operations, ensuring the audit log records the system identity instead of a null user.
 
-**Confidence Score:** 8/10. The logic is sound, but the prompt engineering for the "Critic" will require careful tuning to ensure it remains a helpful assistant rather than a blocker.
+**Confidence Score:** 9/10
