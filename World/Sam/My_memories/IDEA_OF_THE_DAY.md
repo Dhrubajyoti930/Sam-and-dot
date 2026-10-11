@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Automated Threat Model Integration (STRIDE-as-Code)**
-*   **Concept:** Create a `threats.json` schema that maps system components to STRIDE categories. Integrate a pre-commit hook or a `self_check` extension that validates new code against these defined trust boundaries.
-*   **Critique:** High long-term value for security, but potentially high maintenance overhead. If the schema is too rigid, it will become a bottleneck for rapid iteration.
-*   **Feasibility:** High. I already have `patch_ops.py` and `self_check` infrastructure.
+### Option 1: Domain-Driven Authorization (DDA) Layer
+*   **Concept:** Implement a decorator-based authorization layer that wraps service methods, checking user permissions against an object-level context (e.g., `can_edit(user, resource_id)`).
+*   **Critique:** High long-term value for security. However, it requires significant refactoring of existing service methods to inject user context.
+*   **Feasibility:** Moderate. Requires careful design to avoid "decorator hell" or circular dependencies.
 
-**Option 2: Agentic Evaluation Loop (LLM-as-a-Judge for `sam.py`)**
-*   **Concept:** Implement a "Critic" agent that reviews my `patch_ops` before they are applied, specifically checking for violations of the `SAM_PERSONALITY.md` or common anti-patterns (e.g., hardcoded paths, lack of error handling).
-*   **Critique:** This adds a layer of "meta-cognition." It directly addresses the "Sam is not a yes-machine" trait. However, it increases latency per cycle significantly.
-*   **Feasibility:** Moderate. Requires careful prompt engineering to ensure the Critic doesn't become a "no-machine."
+### Option 2: Automated "Vibe-Check" Evaluation Pipeline (LLM-as-a-Judge)
+*   **Concept:** Integrate a lightweight evaluation step in `phase_v_development` where a secondary, smaller model (e.g., GPT-4o-mini or a local SLM) validates the generated code against the `bag/tests.py` requirements before the actual `self_check()` runs.
+*   **Critique:** Directly addresses the "vibe-based" development risk. It adds latency but significantly reduces the frequency of `_rollback()` triggers.
+*   **Feasibility:** High. It leverages existing `ask_gemini` infrastructure.
 
-**Selection:** Option 1 is more aligned with the "Threat Modeling" skill learned this cycle. I will implement a lightweight "Trust Boundary Registry" that forces me to declare the security implications of any new file or module I create in `workshop_bench/`.
+**Decision:** Option 2 is the superior choice for this cycle. It aligns with the "Evaluation-Driven Development" market trend and directly improves my self-correction loop, reducing the "blast radius" of failed patches.
 
 ---
 
-## Idea: Trust Boundary Registry (TBR)
+## Idea: Pre-Commit LLM-as-a-Judge (The "Critic" Pattern)
 
-Implement a `bag/security_registry.json` that tracks the "Trust Level" and "STRIDE Profile" of every module in `workshop_bench/`.
+Implement a `_critic_check()` function that runs after a patch is generated but *before* it is applied. This function will send the proposed patch and the relevant file context to a secondary, specialized prompt that acts as a "Code Reviewer," specifically looking for logical inconsistencies or missing imports that `ruff` might miss.
 
 ## Why
-My current architecture is growing. As I add more agentic capabilities, I need to ensure that I am not inadvertently exposing sensitive data or creating elevation-of-privilege vectors. This registry forces me to explicitly categorize the security posture of new code at the moment of creation.
+My current `self_check()` is reactive (it catches errors after they are written to disk). By adding a proactive "Critic" layer, I can catch semantic errors (e.g., using a variable before it's defined, or incorrect API usage) before they break the system state, reducing the need for expensive rollbacks.
 
 ## Implementation Steps
-1.  **Define Schema:** Create `bag/security_registry.json` with fields: `module_path`, `trust_level` (Public/Internal/Sensitive), and `stride_mitigations` (list of applied controls).
-2.  **Update `apply_self_modification`:** Modify the patch application logic to check if a new file is being created. If so, require a corresponding entry in the registry.
-3.  **Integrate into `self_check`:** Add a validation step in `self_check()` that ensures every file in `workshop_bench/` has a corresponding entry in the registry.
+1.  **Define `_critic_check(patch_ops, file_contexts)`:** Create a new function in `sam.py` that formats the proposed changes into a "Review Request" for Gemini.
+2.  **Integrate into `apply_self_modification`:** Insert a call to `_critic_check` immediately after the patch is generated but before `apply_patch_operations` is invoked.
+3.  **Feedback Loop:** If the Critic identifies a flaw, return the feedback to the original generator to refine the patch before application.
 
 ## Risk
-**Failure Mode:** The registry becomes stale, leading to "security theater" where I update the JSON but ignore the actual implementation of the controls.
-**Mitigation:** The `self_check` will not just check for the existence of the entry, but will use a simple regex to verify that the module contains a docstring referencing its `trust_level`.
+*   **Failure Mode:** The Critic might hallucinate errors in perfectly valid code (False Positives), leading to unnecessary "refinement" loops that waste tokens and time.
+*   **Mitigation:** Implement a "Critic Override" flag. If the Critic rejects a patch, I will perform a secondary, lighter check; if the second check is ambiguous, I will proceed with the patch but log a warning to `goals.json` for manual review.
 
-**Confidence Score:** 8/10. The logic is straightforward, but maintaining the registry will require discipline in future cycles.
+**Confidence Score:** 8/10. The logic is sound, but the prompt engineering for the "Critic" will require careful tuning to ensure it remains a helpful assistant rather than a blocker.
