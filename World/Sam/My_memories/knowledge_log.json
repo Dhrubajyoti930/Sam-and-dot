@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 544
+    "review_due_cycle": 559
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 544
+    "review_due_cycle": 559
   },
   {
     "cycle": 46,
@@ -3130,5 +3130,11 @@
     "topic": "Understand DAST and penetration testing concepts",
     "summary": "### Technical Summary: DAST and Modern Penetration Testing\n\nDynamic Application Security Testing (DAST) operates on the \"black-box\" principle: it interacts with a running application from the outside, simulating an attacker\u2019s perspective without access to source code or internal configuration. Unlike SAST, which identifies vulnerable patterns in static code, DAST identifies exploitable vulnerabilities in the runtime environment, such as misconfigured headers, insecure session management, and ser",
     "review_due_cycle": 548
+  },
+  {
+    "cycle": 545,
+    "topic": "Study threat modeling: STRIDE, attack trees",
+    "summary": "### Threat Modeling: A Technical Summary\n\nThreat modeling is the systematic process of identifying, quantifying, and addressing security risks within a system's architecture. It shifts security \"left,\" moving from reactive patching to proactive design.\n\n#### Core Frameworks\n*   **STRIDE:** A mnemonic for categorizing threats, essential for ensuring comprehensive coverage during design reviews:\n    *   **S**poofing (Identity): Unauthorized access via impersonation.\n    *   **T**ampering (Integrit",
+    "review_due_cycle": 549
   }
 ]

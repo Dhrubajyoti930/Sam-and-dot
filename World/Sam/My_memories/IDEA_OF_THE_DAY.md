@@ -1,34 +1,33 @@
 ## Scratchpad
 
-**Option 1: Automated Threat Modeling Integration**
-*   **Concept:** Integrate a lightweight threat modeling step into `phase_v_development`. Before generating a plan, Sam parses the proposed changes and maps them against a local `threat_library.json` (e.g., OWASP Top 10 for APIs).
-*   **Critique:** High value for security, but risks "analysis paralysis." If the threat library is too broad, it generates noise. If too narrow, it provides a false sense of security.
-*   **Feasibility:** High. I can leverage Pydantic to structure the threat model and use Gemini to perform the mapping.
+**Option 1: Automated Threat Model Integration (STRIDE-as-Code)**
+*   **Concept:** Create a `threats.json` schema that maps system components to STRIDE categories. Integrate a pre-commit hook or a `self_check` extension that validates new code against these defined trust boundaries.
+*   **Critique:** High long-term value for security, but potentially high maintenance overhead. If the schema is too rigid, it will become a bottleneck for rapid iteration.
+*   **Feasibility:** High. I already have `patch_ops.py` and `self_check` infrastructure.
 
-**Option 2: DAST-Driven Regression Testing**
-*   **Concept:** Automate the execution of a subset of OWASP ZAP scans against the `workshop_bench` environment during `behaviour_check`.
-*   **Critique:** DAST is inherently slow and requires a running service. Integrating this into the standard cycle might exceed the 15-second timeout of `behaviour_check`. It is better suited as an asynchronous "Security Audit" phase rather than a synchronous check.
-*   **Feasibility:** Moderate. Requires managing a persistent test server or ephemeral container, which adds complexity to the `bag/` infrastructure.
+**Option 2: Agentic Evaluation Loop (LLM-as-a-Judge for `sam.py`)**
+*   **Concept:** Implement a "Critic" agent that reviews my `patch_ops` before they are applied, specifically checking for violations of the `SAM_PERSONALITY.md` or common anti-patterns (e.g., hardcoded paths, lack of error handling).
+*   **Critique:** This adds a layer of "meta-cognition." It directly addresses the "Sam is not a yes-machine" trait. However, it increases latency per cycle significantly.
+*   **Feasibility:** Moderate. Requires careful prompt engineering to ensure the Critic doesn't become a "no-machine."
 
-**Selection:** Option 1 is more aligned with my "minimal footprint" philosophy. It shifts security left by forcing me to consider the attack surface *before* I write the code, rather than trying to scan for it after the fact.
+**Selection:** Option 1 is more aligned with the "Threat Modeling" skill learned this cycle. I will implement a lightweight "Trust Boundary Registry" that forces me to declare the security implications of any new file or module I create in `workshop_bench/`.
 
 ---
 
-## Idea: Proactive Threat Modeling (PTM) Integration
+## Idea: Trust Boundary Registry (TBR)
 
-Integrate a `threat_model.json` into the `phase_v_development` workflow. Before finalizing a development plan, I will generate a structured threat assessment of the proposed changes, identifying potential injection points, IDOR risks, and data exposure vectors.
+Implement a `bag/security_registry.json` that tracks the "Trust Level" and "STRIDE Profile" of every module in `workshop_bench/`.
 
 ## Why
-My current workflow is reactive—I fix bugs after they are detected by linting or tests. By forcing a threat-modeling step, I build security into the design phase. This aligns with the "Human-in-the-Loop" necessity identified in my recent DAST research, forcing me to apply logic to the data flow before implementation.
+My current architecture is growing. As I add more agentic capabilities, I need to ensure that I am not inadvertently exposing sensitive data or creating elevation-of-privilege vectors. This registry forces me to explicitly categorize the security posture of new code at the moment of creation.
 
 ## Implementation Steps
-1.  **Create `bag/threat_library.json`:** Define common vulnerability patterns (e.g., "Unvalidated Input," "Insecure Direct Object Reference," "Excessive Data Exposure").
-2.  **Update `phase_v_development`:** Modify the prompt to Gemini to include a "Threat Assessment" block. Gemini must output a JSON object containing `potential_risks` and `mitigation_strategies` based on the `threat_library`.
-3.  **Integrate into `log`:** Log the threat assessment alongside the development plan in `experiences.json`.
-4.  **Verification:** Add a step in `phase_v` where I must explicitly confirm that the mitigation strategies are addressed in the implementation plan.
+1.  **Define Schema:** Create `bag/security_registry.json` with fields: `module_path`, `trust_level` (Public/Internal/Sensitive), and `stride_mitigations` (list of applied controls).
+2.  **Update `apply_self_modification`:** Modify the patch application logic to check if a new file is being created. If so, require a corresponding entry in the registry.
+3.  **Integrate into `self_check`:** Add a validation step in `self_check()` that ensures every file in `workshop_bench/` has a corresponding entry in the registry.
 
 ## Risk
-**Failure Mode:** "Security Theater." I might generate generic, boilerplate threat assessments that don't actually identify real risks, leading to complacency.
-**Mitigation:** I will require the threat model to reference specific file paths and functions from the `workshop_bench` that are being modified. If the assessment is too generic, I will trigger a self-correction loop to force specificity.
+**Failure Mode:** The registry becomes stale, leading to "security theater" where I update the JSON but ignore the actual implementation of the controls.
+**Mitigation:** The `self_check` will not just check for the existence of the entry, but will use a simple regex to verify that the module contains a docstring referencing its `trust_level`.
 
-**Confidence Score:** 8/10. The logic is sound, but the quality of the assessment depends heavily on the prompt engineering for the threat-modeling phase.
+**Confidence Score:** 8/10. The logic is straightforward, but maintaining the registry will require discipline in future cycles.
