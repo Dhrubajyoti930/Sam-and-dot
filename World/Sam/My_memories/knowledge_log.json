@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 548
+    "review_due_cycle": 563
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 548
+    "review_due_cycle": 563
   },
   {
     "cycle": 50,
@@ -3154,5 +3154,11 @@
     "topic": "Study zero-trust network architecture",
     "summary": "### Zero-Trust Architecture (ZTA): Technical Summary\n\nZero-Trust is a security paradigm predicated on the mantra \"never trust, always verify.\" It shifts the perimeter from the network edge to the individual resource, assuming the network is already compromised. For a developer, this necessitates moving away from implicit trust based on IP addresses or internal network location.\n\n**Core Pillars:**\n1.  **Identity-Centric Access:** Every request must be authenticated and authorized. Identity is the",
     "review_due_cycle": 552
+  },
+  {
+    "cycle": 549,
+    "topic": "Learn API security: input validation, output encoding",
+    "summary": "### Technical Summary: API Security Fundamentals\n\nAPI security is predicated on the assumption that all client-provided data is malicious. The primary objective is to enforce strict boundaries between untrusted input and the application\u2019s execution context.\n\n#### 1. Input Validation (The \"Allow-list\" Principle)\nValidation must occur at the earliest possible entry point. Relying on client-side validation is a critical failure; it is merely a UX convenience, not a security control.\n*   **Schema En",
+    "review_due_cycle": 553
   }
 ]
