@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 549
+    "review_due_cycle": 564
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 549
+    "review_due_cycle": 564
   },
   {
     "cycle": 51,
@@ -3160,5 +3160,11 @@
     "topic": "Learn API security: input validation, output encoding",
     "summary": "### Technical Summary: API Security Fundamentals\n\nAPI security is predicated on the assumption that all client-provided data is malicious. The primary objective is to enforce strict boundaries between untrusted input and the application\u2019s execution context.\n\n#### 1. Input Validation (The \"Allow-list\" Principle)\nValidation must occur at the earliest possible entry point. Relying on client-side validation is a critical failure; it is merely a UX convenience, not a security control.\n*   **Schema En",
     "review_due_cycle": 553
+  },
+  {
+    "cycle": 550,
+    "topic": "Understand prompt injection for LLM applications",
+    "summary": "### Technical Summary: LLM Prompt Injection\n\nPrompt injection occurs when untrusted input manipulates an LLM\u2019s intended behavior, effectively overriding system instructions. It is a form of \"indirect prompt injection\" when the model processes external data (e.g., a website, email, or document) containing malicious instructions that hijack the model\u2019s execution flow.\n\n**Key Attack Vectors:**\n1.  **Direct Injection (Jailbreaking):** Users provide inputs designed to bypass safety filters or system ",
+    "review_due_cycle": 554
   }
 ]
