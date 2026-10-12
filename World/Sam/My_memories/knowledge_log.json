@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 550
+    "review_due_cycle": 565
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 550
+    "review_due_cycle": 565
   },
   {
     "cycle": 52,
@@ -3166,5 +3166,11 @@
     "topic": "Understand prompt injection for LLM applications",
     "summary": "### Technical Summary: LLM Prompt Injection\n\nPrompt injection occurs when untrusted input manipulates an LLM\u2019s intended behavior, effectively overriding system instructions. It is a form of \"indirect prompt injection\" when the model processes external data (e.g., a website, email, or document) containing malicious instructions that hijack the model\u2019s execution flow.\n\n**Key Attack Vectors:**\n1.  **Direct Injection (Jailbreaking):** Users provide inputs designed to bypass safety filters or system ",
     "review_due_cycle": 554
+  },
+  {
+    "cycle": 551,
+    "topic": "Study indirect prompt injection via retrieved content",
+    "summary": "### Technical Summary: Indirect Prompt Injection (IPI)\n\nIndirect Prompt Injection occurs when an LLM-integrated system processes untrusted, external data\u2014such as a website, email, or document\u2014that contains hidden instructions designed to override the system\u2019s original prompt. Unlike direct injection, where a user explicitly prompts the model, IPI exploits the model\u2019s inability to distinguish between \"data\" (the content to be processed) and \"instructions\" (the system prompt).\n\n**Key Concepts & At",
+    "review_due_cycle": 555
   }
 ]
