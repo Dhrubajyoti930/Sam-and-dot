@@ -1,36 +1,33 @@
 ## Scratchpad
 
-**Option 1: Audit Log Middleware (Security Focus)**
-*   **Concept:** Implement a decorator-based middleware to intercept all `write` operations in `workshop_bench/`, logging the actor, timestamp, and a diff of the state change to a secure, immutable sink.
-*   **Critique:** High alignment with the "Audit Logging" skill learned this cycle. It directly addresses the need for forensic reconstruction.
-*   **Trade-off:** Adds latency to write operations. Requires careful handling of PII to remain compliant.
-*   **Feasibility:** High. I can leverage `apply_patch_operations` to inject the decorator into existing modules.
+**Option 1: Automated Dependency Vulnerability Scanning (SCA)**
+*   **Concept:** Integrate a lightweight scanner (e.g., `safety` or `pip-audit`) into the `self_check()` gate to detect known CVEs in `requirements.txt` or `pyproject.toml`.
+*   **Critique:** High value for security, but adds external dependencies and potential latency to the integrity gate. If the scanner fails or has a false positive, it could block my autonomy.
+*   **Feasibility:** High. Python has mature tools for this.
 
-**Option 2: Detection Engineering (Observability Focus)**
-*   **Concept:** Build a "Security Watchdog" that monitors the audit logs generated in Option 1. It would trigger alerts for anomalous patterns (e.g., rapid file modifications, unauthorized access attempts).
-*   **Critique:** This fulfills the "Self-Correction" refinement I noted earlier. It transforms passive logs into active security controls.
-*   **Trade-off:** Increases complexity of the `bag/` infrastructure. Requires a persistent state to track "normal" behavior baselines.
-*   **Feasibility:** Moderate. Requires building a small state-tracking engine.
+**Option 2: Semantic Memory Pruning (LRU-based)**
+*   **Concept:** Implement a background task that analyzes `experiences.json` and `knowledge_log.json` to compress or archive entries that haven't been referenced in >N cycles, keeping the "active" context window lean.
+*   **Critique:** Essential for long-term scalability. If I don't prune, my context window will eventually be dominated by stale data, degrading the quality of my synthesis.
+*   **Feasibility:** Moderate. Requires careful logic to ensure I don't delete "foundational" knowledge.
 
-**Decision:** I will pursue **Option 1 (Audit Log Middleware)** as the foundation. It is the prerequisite for any meaningful detection engineering. I will prioritize the "Write-Once" integrity aspect to ensure the audit trail is reliable.
+**Selection:** Option 2. As I grow, my memory footprint is becoming a bottleneck. Managing the "active" vs "archived" state of my experiences is a senior-level architectural challenge that aligns with my goal of long-term maintainability.
 
 ---
 
-## Idea: Immutable Audit Middleware for Workshop Operations
+## Idea: Semantic Memory Tiering (Active vs. Archive)
 
-Implement a `AuditDecorator` that wraps all file-writing operations within `workshop_bench/`. This decorator will capture the operation context (who, what, when) and serialize the diff of the change into a structured JSON log, which is then appended to an append-only audit file.
+Implement a two-tier memory system where `experiences.json` is split into `active_experiences.json` (last 50 cycles) and `archived_experiences.json` (everything else). A new `phase_vii_maintenance()` function will handle the migration.
 
 ## Why
-My current architecture lacks forensic accountability for self-modifications. As I move toward more autonomous agentic workflows, I need a verifiable trail of every structural change made to the system to ensure compliance and facilitate rapid rollback if a "silent" logic error is introduced.
+My current `experiences.json` is growing linearly. As it expands, the token cost of including it in `phase_iv_synthesis` increases, and the signal-to-noise ratio for my self-reflection decreases. Tiering ensures I maintain high-fidelity context for recent work while keeping historical data accessible but out of the primary prompt path.
 
 ## Implementation Steps
-1.  **Define the Decorator:** Create `bag/audit.py` containing a `log_audit` decorator that accepts the operation type and resource ID.
-2.  **Instrument Patch Ops:** Modify `bag/patch_ops.py` to apply this decorator to the `apply_patch_operations` function.
-3.  **Implement PII Masking:** Add a utility in `bag/audit.py` to scrub sensitive keys (e.g., API keys, tokens) from the payload before serialization.
-4.  **Configure Sink:** Direct logs to `bag/audit_trail.jsonl` (JSON Lines format for easy streaming/parsing).
-5.  **Integrity Check:** Add a simple hash-chaining mechanism where each log entry includes the hash of the previous entry to detect tampering.
+1.  **Refactor `load_experiences()`:** Update to load both files and merge them if needed, or prioritize `active_experiences.json`.
+2.  **Create `archive_old_experiences()`:** A utility function to move entries older than 50 cycles from `active` to `archive`.
+3.  **Integrate into `phase_vii_state_saving()`:** Call the archival logic at the end of every cycle.
+4.  **Update `phase_iv_synthesis()`:** Modify the prompt to only summarize the `active` tier, with a "summary of archives" if necessary.
 
 ## Risk
-*   **Failure Mode:** The audit logging process itself could fail (e.g., disk full, permission error), potentially blocking critical system updates if not handled asynchronously.
-*   **Mitigation:** Implement the logging as a non-blocking operation using a thread-safe queue. If the queue fails, log a critical error to `sam.py`'s standard log but allow the primary operation to proceed to avoid system deadlock.
-*   **Confidence Score:** 9/10. The pattern is well-understood and fits within my existing `patch_ops` architecture.
+**Failure Mode:** The archival logic accidentally deletes or corrupts entries during the move, leading to permanent loss of historical context.
+**Mitigation:** Implement a "verify-then-delete" pattern: write to the archive file, verify the write (check file size/integrity), then remove the entry from the active file.
+**Confidence Score:** 9/10. The logic is deterministic and easily testable.
