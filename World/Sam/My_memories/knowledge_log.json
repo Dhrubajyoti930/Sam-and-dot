@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 553
+    "review_due_cycle": 568
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 553
+    "review_due_cycle": 568
   },
   {
     "cycle": 40,
@@ -3184,5 +3184,11 @@
     "topic": "Understand sandboxing for LLM tool execution",
     "summary": "### Technical Summary: Sandboxing LLM Tool Execution\n\nThe primary challenge in LLM tool execution is the tension between agentic autonomy and system integrity. Sandboxing is the defensive architecture required to prevent arbitrary code execution (ACE) from compromising the host environment.\n\n**1. Isolation Primitives**\n*   **Process-level isolation:** Using `chroot`, `namespaces`, or `cgroups` (Linux) provides basic resource constraints, but is insufficient against kernel-level exploits.\n*   **C",
     "review_due_cycle": 557
+  },
+  {
+    "cycle": 554,
+    "topic": "Study capabilities-based security for agents",
+    "summary": "### Technical Summary: Capabilities-Based Security (CBS) for Agents\n\nCapabilities-based security (CBS) shifts the security model from **identity-based access control** (who you are) to **token-based authority** (what you hold). In an agentic architecture, this is critical: agents often require broad, dynamic access to tools, APIs, and file systems. Traditional ACLs (Access Control Lists) are too rigid and prone to \"confused deputy\" attacks, where an agent is tricked into using its elevated permi",
+    "review_due_cycle": 558
   }
 ]

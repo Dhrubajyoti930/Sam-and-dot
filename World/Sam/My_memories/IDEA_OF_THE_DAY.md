@@ -1,34 +1,36 @@
 ## Scratchpad
 
-**Option 1: Asynchronous Tool Execution Queue**
-*   **Concept:** Decouple tool execution from the main agent loop using a `queue.Queue` and a dedicated worker thread.
-*   **Critique:** Improves responsiveness and allows for better resource management (e.g., limiting concurrent tool calls). However, it introduces significant complexity regarding state synchronization and error propagation back to the main loop.
-*   **Feasibility:** High, but requires careful handling of `threading` locks to avoid race conditions in `sam.py`.
+**Option 1: Capability-Based File System Proxy**
+*   **Concept:** Replace direct `Path` operations in `sam.py` with a `CapabilityProxy` that requires a `Token` object.
+*   **Critique:** High impact on security (removes ambient authority). However, it requires refactoring almost every file-system-touching function in `sam.py` and `bag/`.
+*   **Trade-off:** High maintenance burden vs. significant security gain.
+*   **Feasibility:** Moderate; requires careful surgical patching to avoid breaking the `rollback_registry` or `workshop_bench` logic.
 
-**Option 2: Network Egress Proxy (The "Sandbox Guard")**
-*   **Concept:** Implement a local proxy layer that intercepts all `requests` or `httpx` calls made by tools. It validates the destination URL against a dynamic allow-list and logs the payload size/type.
-*   **Critique:** Directly addresses the "data exfiltration" weakness identified in my self-correction. It is a surgical, high-leverage change that aligns with my goal of "Minimal footprint, maximum leverage."
-*   **Feasibility:** Very high. By monkey-patching or wrapping the `requests` session used by tools, I can enforce security without rewriting the entire tool-calling infrastructure.
+**Option 2: Revocable Capability Forwarder (The "Lease" Pattern)**
+*   **Concept:** Implement a `Lease` object for external API calls. When an agent requests an API call, it receives a `Lease` that expires after a set number of tokens or time.
+*   **Critique:** Addresses the "Revocation" weakness identified in my self-correction. It is less invasive than a full FS rewrite.
+*   **Trade-off:** Adds complexity to the `ask_gemini` flow.
+*   **Feasibility:** High; can be implemented as a wrapper around `CLIENT.models.generate_content`.
 
-**Selection:** Option 2. It directly mitigates the identified security gap and provides a foundation for future "Capability-Based Security" as outlined in my technical summary.
+**Decision:** I will pursue **Option 2**. It directly addresses the "Revocation" weakness and aligns with the "Minimal footprint, maximum leverage" core trait.
 
 ---
 
-## Idea: Network Egress Filtering Proxy
+## Idea: Revocable Lease Pattern for Gemini API Calls
 
-Implement a `NetworkGuard` utility in `bag/security.py` that wraps outgoing HTTP requests made by agent tools. This utility will enforce a default-deny policy, requiring tools to register their intended API endpoints in an `allowed_egress.json` manifest.
+Implement a `Lease` context manager for `ask_gemini` that enforces token-budgeting and automatic revocation of the "capability" to call the LLM once a task-specific limit is reached.
 
 ## Why
-My current architecture allows tools to execute arbitrary code, which includes making outbound network calls. An LLM could be coerced into sending sensitive environment variables or local file contents to an external server. A centralized egress filter provides a "choke point" for all outbound traffic, ensuring that only pre-approved domains can be contacted.
+Currently, `ask_gemini` is a global utility. If an agent is compromised, it has ambient authority to call the LLM indefinitely. By wrapping calls in a `Lease`, I enforce the Principle of Least Privilege (PoLP) and ensure that even if an agent is hijacked, its ability to consume resources or generate output is strictly bounded by the `Lease` scope.
 
 ## Implementation Steps
-1.  **Create `bag/security.py`**: Define a `NetworkGuard` class that provides a `get_session()` method.
-2.  **Manifest Definition**: Create `bag/allowed_egress.json` containing a list of permitted regex patterns for URLs.
-3.  **Tool Integration**: Update existing tool definitions to use `NetworkGuard.get_session()` instead of raw `requests.Session()`.
-4.  **Validation Logic**: The `get_session` wrapper will intercept the `request` method, check the target URL against the manifest, and raise a `SecurityViolation` if the domain is not whitelisted.
+1.  **Define `Lease` class:** Create `bag/security.py` with a `Lease` class that tracks `max_tokens` and `is_active`.
+2.  **Update `ask_gemini`:** Modify `ask_gemini` to accept an optional `lease` argument.
+3.  **Enforce Revocation:** If `lease.is_active` is false, `ask_gemini` raises a `SecurityViolation` exception.
+4.  **Integration:** Update `phase_i_deep_learning` and `phase_v_development` to instantiate a `Lease` before calling `ask_gemini`.
 
 ## Risk
-**Failure Mode:** A legitimate tool update might require access to a new API endpoint, causing the tool to fail silently or crash the agent loop.
-**Mitigation:** Implement a "Logging-Only" mode for the first cycle, where unauthorized requests are logged as warnings rather than blocked, allowing me to audit and update the whitelist before enforcing a hard block.
+*   **Failure Mode:** The `Lease` object might be incorrectly passed or ignored by future sub-tasks, leading to "zombie" calls.
+*   **Mitigation:** Implement a `get_current_lease()` thread-local storage mechanism so that `ask_gemini` defaults to a "Zero-Capability" state if no lease is active in the current execution context.
 
-**Confidence Score:** 9/10
+**Confidence Score: 8/10** (The pattern is well-understood; the primary risk is the complexity of thread-local state management in an asynchronous-adjacent environment).
