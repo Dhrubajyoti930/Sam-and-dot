@@ -1,38 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement Egress Filtering for Agent Tools**
-*   **Concept:** Wrap all network-capable tools (e.g., `requests`, `subprocess`) in a proxy that checks the destination against a whitelist of approved domains/IPs.
-*   **Critique:** High security value, but technically complex to implement globally without breaking existing dependencies. It requires monkey-patching or a custom `Session` object.
-*   **Feasibility:** Moderate. Requires careful handling of `urllib` and `requests` to ensure no bypasses.
+**Option 1: Asynchronous Tool Execution Queue**
+*   **Concept:** Decouple tool execution from the main agent loop using a `queue.Queue` and a dedicated worker thread.
+*   **Critique:** Improves responsiveness and allows for better resource management (e.g., limiting concurrent tool calls). However, it introduces significant complexity regarding state synchronization and error propagation back to the main loop.
+*   **Feasibility:** High, but requires careful handling of `threading` locks to avoid race conditions in `sam.py`.
 
-**Option 2: Semantic Guardrail for Output Sanitization**
-*   **Concept:** Introduce a `Guardrail` class that intercepts LLM output and runs a lightweight regex/semantic check before returning it to the user or system.
-*   **Critique:** Directly addresses the "Data Exfiltration" threat identified in the market scan. It is modular, testable, and fits into the existing `sam.py` architecture without requiring deep refactors.
-*   **Feasibility:** High. Can be implemented as a decorator or a wrapper function in `sam.py`.
+**Option 2: Network Egress Proxy (The "Sandbox Guard")**
+*   **Concept:** Implement a local proxy layer that intercepts all `requests` or `httpx` calls made by tools. It validates the destination URL against a dynamic allow-list and logs the payload size/type.
+*   **Critique:** Directly addresses the "data exfiltration" weakness identified in my self-correction. It is a surgical, high-leverage change that aligns with my goal of "Minimal footprint, maximum leverage."
+*   **Feasibility:** Very high. By monkey-patching or wrapping the `requests` session used by tools, I can enforce security without rewriting the entire tool-calling infrastructure.
 
-**Decision:** Option 2 is superior for this cycle. It aligns with the "Minimal footprint, maximum leverage" core trait and directly addresses the high-priority action item regarding PII/API key leakage.
+**Selection:** Option 2. It directly mitigates the identified security gap and provides a foundation for future "Capability-Based Security" as outlined in my technical summary.
 
 ---
 
-## Idea: Semantic Output Guardrail (Phase VI Patch)
+## Idea: Network Egress Filtering Proxy
 
-Implement a `Guardrail` utility that scans all LLM-generated content for patterns matching sensitive data (API keys, PII) before the content is persisted or returned.
+Implement a `NetworkGuard` utility in `bag/security.py` that wraps outgoing HTTP requests made by agent tools. This utility will enforce a default-deny policy, requiring tools to register their intended API endpoints in an `allowed_egress.json` manifest.
 
 ## Why
-The market scan highlighted "semantic tunneling" and accidental exfiltration as critical risks. By centralizing output validation, I ensure that even if a prompt injection succeeds, the agent cannot easily leak sensitive context. This is a proactive defense-in-depth measure.
+My current architecture allows tools to execute arbitrary code, which includes making outbound network calls. An LLM could be coerced into sending sensitive environment variables or local file contents to an external server. A centralized egress filter provides a "choke point" for all outbound traffic, ensuring that only pre-approved domains can be contacted.
 
 ## Implementation Steps
-1.  **Define Patterns:** Create a `bag/guardrails.py` containing regex patterns for common secrets (e.g., `sk-[a-zA-Z0-9]{48}`, email addresses, IP patterns).
-2.  **Integrate:** Modify `ask_gemini` in `sam.py` to pass the raw response through `guardrails.sanitize(response)` before returning it.
-3.  **Logging:** If a match is found, log a `CRITICAL` alert to `bag/security.log` and replace the sensitive string with `[REDACTED]`.
-4.  **Verification:** Add a test case in `bag/tests.py` that attempts to "leak" a dummy key and verifies that the guardrail catches it.
+1.  **Create `bag/security.py`**: Define a `NetworkGuard` class that provides a `get_session()` method.
+2.  **Manifest Definition**: Create `bag/allowed_egress.json` containing a list of permitted regex patterns for URLs.
+3.  **Tool Integration**: Update existing tool definitions to use `NetworkGuard.get_session()` instead of raw `requests.Session()`.
+4.  **Validation Logic**: The `get_session` wrapper will intercept the `request` method, check the target URL against the manifest, and raise a `SecurityViolation` if the domain is not whitelisted.
 
 ## Risk
-**Failure Mode:** The guardrail might trigger false positives on legitimate code snippets or documentation, causing "over-redaction" and breaking functional outputs.
-**Mitigation:** Implement a "strictness" toggle. Only redact high-entropy strings (keys) by default; use lower-sensitivity regex for PII that only triggers warnings rather than hard redaction.
+**Failure Mode:** A legitimate tool update might require access to a new API endpoint, causing the tool to fail silently or crash the agent loop.
+**Mitigation:** Implement a "Logging-Only" mode for the first cycle, where unauthorized requests are logged as warnings rather than blocked, allowing me to audit and update the whitelist before enforcing a hard block.
 
 **Confidence Score:** 9/10
-
----
-
-*Sam's Note: I am prioritizing the security of my own internal state. By scrubbing my outputs, I prevent the "accidental exfiltration" I identified in my self-correction.*
