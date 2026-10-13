@@ -1,36 +1,36 @@
 ## Scratchpad
 
-**Option 1: Capability-Based File System Proxy**
-*   **Concept:** Replace direct `Path` operations in `sam.py` with a `CapabilityProxy` that requires a `Token` object.
-*   **Critique:** High impact on security (removes ambient authority). However, it requires refactoring almost every file-system-touching function in `sam.py` and `bag/`.
-*   **Trade-off:** High maintenance burden vs. significant security gain.
-*   **Feasibility:** Moderate; requires careful surgical patching to avoid breaking the `rollback_registry` or `workshop_bench` logic.
+**Option 1: Audit Log Middleware (Security Focus)**
+*   **Concept:** Implement a decorator-based middleware to intercept all `write` operations in `workshop_bench/`, logging the actor, timestamp, and a diff of the state change to a secure, immutable sink.
+*   **Critique:** High alignment with the "Audit Logging" skill learned this cycle. It directly addresses the need for forensic reconstruction.
+*   **Trade-off:** Adds latency to write operations. Requires careful handling of PII to remain compliant.
+*   **Feasibility:** High. I can leverage `apply_patch_operations` to inject the decorator into existing modules.
 
-**Option 2: Revocable Capability Forwarder (The "Lease" Pattern)**
-*   **Concept:** Implement a `Lease` object for external API calls. When an agent requests an API call, it receives a `Lease` that expires after a set number of tokens or time.
-*   **Critique:** Addresses the "Revocation" weakness identified in my self-correction. It is less invasive than a full FS rewrite.
-*   **Trade-off:** Adds complexity to the `ask_gemini` flow.
-*   **Feasibility:** High; can be implemented as a wrapper around `CLIENT.models.generate_content`.
+**Option 2: Detection Engineering (Observability Focus)**
+*   **Concept:** Build a "Security Watchdog" that monitors the audit logs generated in Option 1. It would trigger alerts for anomalous patterns (e.g., rapid file modifications, unauthorized access attempts).
+*   **Critique:** This fulfills the "Self-Correction" refinement I noted earlier. It transforms passive logs into active security controls.
+*   **Trade-off:** Increases complexity of the `bag/` infrastructure. Requires a persistent state to track "normal" behavior baselines.
+*   **Feasibility:** Moderate. Requires building a small state-tracking engine.
 
-**Decision:** I will pursue **Option 2**. It directly addresses the "Revocation" weakness and aligns with the "Minimal footprint, maximum leverage" core trait.
+**Decision:** I will pursue **Option 1 (Audit Log Middleware)** as the foundation. It is the prerequisite for any meaningful detection engineering. I will prioritize the "Write-Once" integrity aspect to ensure the audit trail is reliable.
 
 ---
 
-## Idea: Revocable Lease Pattern for Gemini API Calls
+## Idea: Immutable Audit Middleware for Workshop Operations
 
-Implement a `Lease` context manager for `ask_gemini` that enforces token-budgeting and automatic revocation of the "capability" to call the LLM once a task-specific limit is reached.
+Implement a `AuditDecorator` that wraps all file-writing operations within `workshop_bench/`. This decorator will capture the operation context (who, what, when) and serialize the diff of the change into a structured JSON log, which is then appended to an append-only audit file.
 
 ## Why
-Currently, `ask_gemini` is a global utility. If an agent is compromised, it has ambient authority to call the LLM indefinitely. By wrapping calls in a `Lease`, I enforce the Principle of Least Privilege (PoLP) and ensure that even if an agent is hijacked, its ability to consume resources or generate output is strictly bounded by the `Lease` scope.
+My current architecture lacks forensic accountability for self-modifications. As I move toward more autonomous agentic workflows, I need a verifiable trail of every structural change made to the system to ensure compliance and facilitate rapid rollback if a "silent" logic error is introduced.
 
 ## Implementation Steps
-1.  **Define `Lease` class:** Create `bag/security.py` with a `Lease` class that tracks `max_tokens` and `is_active`.
-2.  **Update `ask_gemini`:** Modify `ask_gemini` to accept an optional `lease` argument.
-3.  **Enforce Revocation:** If `lease.is_active` is false, `ask_gemini` raises a `SecurityViolation` exception.
-4.  **Integration:** Update `phase_i_deep_learning` and `phase_v_development` to instantiate a `Lease` before calling `ask_gemini`.
+1.  **Define the Decorator:** Create `bag/audit.py` containing a `log_audit` decorator that accepts the operation type and resource ID.
+2.  **Instrument Patch Ops:** Modify `bag/patch_ops.py` to apply this decorator to the `apply_patch_operations` function.
+3.  **Implement PII Masking:** Add a utility in `bag/audit.py` to scrub sensitive keys (e.g., API keys, tokens) from the payload before serialization.
+4.  **Configure Sink:** Direct logs to `bag/audit_trail.jsonl` (JSON Lines format for easy streaming/parsing).
+5.  **Integrity Check:** Add a simple hash-chaining mechanism where each log entry includes the hash of the previous entry to detect tampering.
 
 ## Risk
-*   **Failure Mode:** The `Lease` object might be incorrectly passed or ignored by future sub-tasks, leading to "zombie" calls.
-*   **Mitigation:** Implement a `get_current_lease()` thread-local storage mechanism so that `ask_gemini` defaults to a "Zero-Capability" state if no lease is active in the current execution context.
-
-**Confidence Score: 8/10** (The pattern is well-understood; the primary risk is the complexity of thread-local state management in an asynchronous-adjacent environment).
+*   **Failure Mode:** The audit logging process itself could fail (e.g., disk full, permission error), potentially blocking critical system updates if not handled asynchronously.
+*   **Mitigation:** Implement the logging as a non-blocking operation using a thread-safe queue. If the queue fails, log a critical error to `sam.py`'s standard log but allow the primary operation to proceed to avoid system deadlock.
+*   **Confidence Score:** 9/10. The pattern is well-understood and fits within my existing `patch_ops` architecture.
