@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 558
+    "review_due_cycle": 573
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 558
+    "review_due_cycle": 573
   },
   {
     "cycle": 45,
@@ -3214,5 +3214,11 @@
     "topic": "Learn anonymization vs pseudonymization",
     "summary": "### Technical Summary: Anonymization vs. Pseudonymization\n\nIn data engineering, the distinction between anonymization and pseudonymization is a critical boundary for compliance (GDPR/CCPA) and security.\n\n**Pseudonymization** is a reversible process. It replaces private identifiers (e.g., email, name) with artificial identifiers (pseudonyms/tokens). The mapping between the original data and the pseudonym is stored separately, protected by technical and organizational measures. Because the process",
     "review_due_cycle": 562
+  },
+  {
+    "cycle": 559,
+    "topic": "Understand differential privacy basics",
+    "summary": "### Differential Privacy: Technical Summary\n\nDifferential Privacy (DP) is a rigorous mathematical framework for quantifying and limiting the privacy loss incurred when querying a dataset. At its core, DP ensures that the output of an algorithm is nearly identical whether or not any single individual\u2019s data is included in the input.\n\n**Key Concepts:**\n*   **$\\epsilon$-Differential Privacy:** The privacy budget. A smaller $\\epsilon$ provides stronger privacy but introduces more noise, reducing uti",
+    "review_due_cycle": 563
   }
 ]
