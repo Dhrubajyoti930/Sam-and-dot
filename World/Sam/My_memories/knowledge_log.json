@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 557
+    "review_due_cycle": 572
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 557
+    "review_due_cycle": 572
   },
   {
     "cycle": 44,
@@ -3208,5 +3208,11 @@
     "topic": "Study data minimization and purpose limitation",
     "summary": "### Technical Summary: Data Minimization & Purpose Limitation\n\nData minimization and purpose limitation are the foundational pillars of privacy-by-design. In modern distributed systems, these principles shift the paradigm from \"collect everything for future utility\" to \"collect only what is strictly necessary for current functionality.\"\n\n**Data Minimization**\nThe objective is to reduce the attack surface and liability by limiting data ingestion.\n*   **Ephemeral Processing:** Implement patterns w",
     "review_due_cycle": 561
+  },
+  {
+    "cycle": 558,
+    "topic": "Learn anonymization vs pseudonymization",
+    "summary": "### Technical Summary: Anonymization vs. Pseudonymization\n\nIn data engineering, the distinction between anonymization and pseudonymization is a critical boundary for compliance (GDPR/CCPA) and security.\n\n**Pseudonymization** is a reversible process. It replaces private identifiers (e.g., email, name) with artificial identifiers (pseudonyms/tokens). The mapping between the original data and the pseudonym is stored separately, protected by technical and organizational measures. Because the process",
+    "review_due_cycle": 562
   }
 ]
