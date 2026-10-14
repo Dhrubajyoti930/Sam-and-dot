@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 556
+    "review_due_cycle": 571
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 556
+    "review_due_cycle": 571
   },
   {
     "cycle": 43,
@@ -3202,5 +3202,11 @@
     "topic": "Understand GDPR implications for AI systems",
     "summary": "### Technical Summary: GDPR for AI Systems\n\nGDPR compliance in AI is not a checkbox; it is an architectural constraint. The core tension lies between the \"Right to be Forgotten\" (Article 17) and the immutable nature of trained model weights.\n\n**1. Data Minimization & Purpose Limitation (Article 5)**\nAI systems often suffer from \"data hoarding.\" Developers must implement strict data lifecycle policies. If a model can be trained on synthetic or anonymized data, it must be. Pseudonymization is a ba",
     "review_due_cycle": 560
+  },
+  {
+    "cycle": 557,
+    "topic": "Study data minimization and purpose limitation",
+    "summary": "### Technical Summary: Data Minimization & Purpose Limitation\n\nData minimization and purpose limitation are the foundational pillars of privacy-by-design. In modern distributed systems, these principles shift the paradigm from \"collect everything for future utility\" to \"collect only what is strictly necessary for current functionality.\"\n\n**Data Minimization**\nThe objective is to reduce the attack surface and liability by limiting data ingestion.\n*   **Ephemeral Processing:** Implement patterns w",
+    "review_due_cycle": 561
   }
 ]
