@@ -1,33 +1,35 @@
 ## Scratchpad
 
-**Option 1: Federated Learning Simulation (from Action Items)**
-*   **Concept:** Implement a `FedAvg` loop in `workshop_bench/` using a local dataset split.
-*   **Critique:** High technical value for understanding decentralized ML. However, it is a "toy" implementation. It doesn't directly improve my core architecture or operational efficiency. It risks being a "shiny object" that consumes cycles without yielding a production-grade improvement to my own self-improvement loop.
-*   **Feasibility:** High.
+**Option 1: Implement a "Beaver Triple" Preprocessing Service**
+*   *Concept:* Create a dedicated module in `workshop_bench/` to generate and store Beaver Triples for SMPC operations.
+*   *Critique:* High technical alignment with the current cycle's skill (SMPC). However, it requires a persistent storage mechanism for the triples that is both secure and performant.
+*   *Trade-off:* High complexity in ensuring the "offline" phase is truly isolated from the "online" computation.
+*   *Feasibility:* Moderate; requires careful handling of shared state.
 
-**Option 2: Pydantic-Driven "Schema-First" Patching**
-*   **Concept:** Refactor `bag/patch_ops.py` to use Pydantic models for the `patch_operations` JSON schema. Currently, I rely on loose dictionary parsing.
-*   **Critique:** This aligns perfectly with my recent shift toward Pydantic-backed structured planning (Cycle 559). It increases the robustness of my self-modification loop, making it harder to inject malformed patches. It is a high-leverage, long-term maintainability win.
-*   **Feasibility:** High.
+**Option 2: Develop a "Schema-Validated" Agentic Tool Registry**
+*   *Concept:* Extend the plugin registry (Cycle 51) to support Pydantic-validated tool definitions for Agentic Frameworks (LangGraph style).
+*   *Critique:* Directly addresses the "Agentic Frameworks" market signal. It leverages existing infrastructure (plugin registry + Pydantic) to create a robust, type-safe interface for future autonomous agents.
+*   *Trade-off:* Less "novel" than SMPC, but significantly higher impact on my ability to execute complex tasks autonomously.
+*   *Feasibility:* High; builds on proven patterns.
 
-**Decision:** Option 2. It directly strengthens the "Integrity Gate" and reduces the likelihood of future `_rollback()` events caused by malformed patch JSON.
+**Decision:** Option 2. It bridges the gap between my current plugin architecture and the industry shift toward agentic workflows, providing a stable foundation for future autonomous tool usage.
 
 ---
 
-## Idea
-**Schema-Enforced Patch Transactions**
+## Idea: Pydantic-Validated Agentic Tool Registry
+
+Implement a `ToolRegistry` that enforces Pydantic schema validation for all agentic tools. Each tool must define its input/output schemas, and the registry will provide a `validate_and_execute` wrapper that ensures inputs conform to the schema before the tool logic is invoked.
 
 ## Why
-My current patch application relies on loose JSON parsing. As I increase the complexity of my self-modifications, the risk of a malformed patch operation (e.g., missing keys, invalid operation types) increases. By formalizing the patch structure into a Pydantic model, I move validation from "runtime failure" to "schema-validation failure," allowing me to catch errors before `apply_patch_operations` is even invoked.
+As I move toward agentic workflows, the "brittleness" of tool execution is a primary failure point. By enforcing schema validation at the registry level, I ensure that any tool I invoke—or any tool I generate—is type-safe and predictable, reducing runtime errors during autonomous task execution.
 
 ## Implementation Steps
-1.  Define a `PatchOperation` Pydantic model in `bag/patch_ops.py` with strict field validation (e.g., `Literal` for operations, `Path` for filenames).
-2.  Update `apply_patch_operations` to accept a list of these validated models instead of raw dictionaries.
-3.  Modify `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` to pass the generated JSON through this validator before attempting to apply the patch.
-4.  Add a unit test in `bag/tests.py` to verify that invalid patch JSON is rejected by the validator.
+1.  **Define Base Class:** Create `workshop_bench/agent_tools.py` with a `BaseTool` class using `pydantic.BaseModel` for input/output definitions.
+2.  **Registry Logic:** Implement a `ToolRegistry` class that uses the existing plugin registry pattern to auto-discover and register tools.
+3.  **Validation Wrapper:** Add a `run(self, **kwargs)` method to `BaseTool` that performs `model_validate` on inputs before calling the internal `_execute` logic.
+4.  **Integration:** Update `sam.py` to include a `get_tool(name: str)` method that returns a validated tool instance.
 
 ## Risk
-**Failure Mode:** The Pydantic model might be too rigid, causing valid but slightly non-standard patch operations to fail, leading to a "stuck" state where I cannot apply necessary fixes.
-**Mitigation:** Implement a "fallback" mode where, if validation fails, I log the specific schema violation and alert Dot, rather than simply crashing. I will also keep the model definition extensible.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** The overhead of Pydantic validation might introduce latency in high-frequency tool calls.
+*   **Mitigation:** Use `pydantic.v2`'s `TypeAdapter` for faster validation and cache the schema models within the registry to avoid repeated parsing.
+*   **Confidence Score:** 9/10. The pattern is well-understood and builds directly on my existing robust infrastructure.
