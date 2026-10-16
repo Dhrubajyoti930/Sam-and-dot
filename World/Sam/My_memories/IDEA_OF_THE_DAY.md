@@ -1,33 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implement `py-spy` integration for automated latency profiling.**
-*   *Concept:* Add a `profile_service()` function that triggers a `py-spy` record session when a specific latency threshold is exceeded in the service.
-*   *Critique:* High utility for identifying bottlenecks. However, `py-spy` requires `sudo` or `CAP_SYS_PTRACE`, which complicates containerized deployment.
-*   *Feasibility:* High, provided the environment allows the necessary permissions.
+**Option 1: Memory-Budgeted CI Gate**
+*   **Concept:** Integrate `memray` into the `self_check()` workflow to enforce a hard memory ceiling (e.g., 50MB) on core modules.
+*   **Critique:** High feasibility. It directly addresses the "Action Items" from the recent skill acquisition. It provides a quantitative guardrail against memory bloat.
+*   **Trade-off:** Adds overhead to the integrity gate. If the threshold is too tight, it may trigger false-positive rollbacks during complex operations.
 
-**Option 2: Semantic Deduplication Engine for `experiences.json`.**
-*   *Concept:* Use the embeddings generated during Phase IV to cluster past experiences and merge redundant entries, keeping the "memory" concise.
-*   *Critique:* Directly addresses the "memory bloat" issue. It requires a stable embedding model (e.g., `sentence-transformers`) and a vector store.
-*   *Feasibility:* Moderate; adds a dependency on an embedding library, but significantly improves long-term context quality.
+**Option 2: GraphRAG-lite for Experience Logs**
+*   **Concept:** Implement a simple entity-relationship extraction for `experiences.json` to move beyond flat list storage, enabling better semantic retrieval for the Spaced Repetition engine.
+*   **Critique:** High complexity. Requires building a schema for the graph and updating the `phase_ii_spaced_repetition` logic.
+*   **Trade-off:** Significant long-term benefit for memory recall, but risks over-engineering if the current flat structure is still performant.
 
-**Decision:** I will proceed with **Option 1**. It aligns with the "Skill learned this cycle" and provides immediate, actionable data for the current service architecture. I will focus on the `top` mode for real-time diagnostics rather than full `record` to minimize permission complexity.
+**Selection:** Option 1 is the superior choice for this cycle. It aligns with my current focus on architectural stability and provides immediate, measurable feedback on system health, fulfilling the "Minimal footprint, maximum leverage" core trait.
 
 ---
 
-## Idea
-**Dynamic Latency Diagnostics via `py-spy` Integration.**
+## Idea: Memory-Budgeted Integrity Gate (`memray` integration)
 
 ## Why
-My current architecture lacks visibility into "hot paths" during execution. By integrating `py-spy` as a diagnostic tool, I can move from guessing where latency originates to empirical observation. This directly supports my goal of maintaining a lean, high-performance system.
+My current `self_check()` validates syntax and logic, but it is blind to resource consumption. As I integrate more complex agentic frameworks, I need an automated "resource budget" to prevent memory leaks from degrading performance before they become critical.
 
 ## Implementation Steps
-1.  **Dependency Check:** Verify `py-spy` is available in the environment.
-2.  **Diagnostic Wrapper:** Create `bag/diagnostics.py` containing a `run_top_profile(pid: int, duration: int)` function that executes `py-spy top` and captures the output.
-3.  **Trigger Logic:** Update `sam.py` to include a conditional check: if a task execution time exceeds a defined threshold (e.g., 5 seconds), trigger the diagnostic capture.
-4.  **Logging:** Redirect `py-spy` output to a dedicated `logs/diagnostics/` directory for post-mortem analysis.
+1.  **Dependency Check:** Verify `memray` is available in the environment; if not, log a warning and skip memory profiling (graceful degradation).
+2.  **Wrapper Implementation:** Create `bag/perf_utils.py` with a `profile_memory(func, threshold_mb)` decorator.
+3.  **Integrity Gate Update:** Modify `self_check()` in `sam.py` to execute a representative subset of core modules (e.g., `ask_gemini` logic) wrapped in the memory profiler.
+4.  **Threshold Enforcement:** If `memray` reports a peak allocation exceeding the threshold, trigger an `_alert_dot` with the generated flame graph path and rollback to the last known stable state.
 
 ## Risk
-**Failure Mode:** The `py-spy` process might hang or fail to attach due to insufficient permissions, potentially causing the main execution thread to block or crash.
-**Mitigation:** Wrap the `py-spy` call in a non-blocking `subprocess.run` with a strict `timeout` and `capture_output=True`. If it fails, log the error and continue execution without the diagnostic data.
+**Failure Mode:** The profiling overhead might cause the `self_check()` to exceed its 20-second timeout, leading to a false-positive rollback.
+**Mitigation:** Use `memray`'s sampling mode or restrict profiling to a single, high-risk module per cycle rather than the entire suite.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10

@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 565
+    "review_due_cycle": 580
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 565
+    "review_due_cycle": 580
   },
   {
     "cycle": 52,
@@ -3256,5 +3256,11 @@
     "topic": "Understand py-spy for sampling profiler without code changes",
     "summary": "### Technical Summary: Sampling Profiling with `py-spy`\n\n`py-spy` is a sampling profiler for Python that operates out-of-process, meaning it requires zero instrumentation or modification to the target application's source code. It leverages the `ptrace` system call (on Linux) or `mach_vm_read` (on macOS) to inspect the memory of a running Python process, reading the call stack directly from the interpreter's memory space.\n\n**Key Concepts:**\n*   **Sampling Mechanism:** Unlike deterministic profil",
     "review_due_cycle": 569
+  },
+  {
+    "cycle": 566,
+    "topic": "Study memray for memory profiling in Python",
+    "summary": "### Technical Summary: Memory Profiling with `memray`\n\n`memray` is a high-performance memory profiler for Python that tracks allocations in both Python and native C/C++ extensions. Unlike standard library tools like `tracemalloc`, `memray` captures the full call stack for every allocation, providing granular visibility into memory leaks and bloat that are otherwise invisible to pure-Python profilers.\n\n**Core Concepts:**\n1.  **Allocation Tracking:** `memray` uses a custom `ptrace` or pre-load mec",
+    "review_due_cycle": 570
   }
 ]
