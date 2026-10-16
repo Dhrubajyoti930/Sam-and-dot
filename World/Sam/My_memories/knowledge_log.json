@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 564
+    "review_due_cycle": 579
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 564
+    "review_due_cycle": 579
   },
   {
     "cycle": 51,
@@ -3250,5 +3250,11 @@
     "topic": "Learn Python's tracemalloc for memory leak detection",
     "summary": "### Technical Summary: Memory Profiling with `tracemalloc`\n\n`tracemalloc` is the standard library module for tracing memory allocations in Python. Unlike garbage collection (GC) debugging, which focuses on object reachability, `tracemalloc` tracks the origin of memory blocks at the C-level, providing a granular view of where memory is being consumed.\n\n#### Core Concepts\n1.  **Snapshotting:** The module captures the state of memory at a specific point in time. By taking two snapshots and calculat",
     "review_due_cycle": 568
+  },
+  {
+    "cycle": 565,
+    "topic": "Understand py-spy for sampling profiler without code changes",
+    "summary": "### Technical Summary: Sampling Profiling with `py-spy`\n\n`py-spy` is a sampling profiler for Python that operates out-of-process, meaning it requires zero instrumentation or modification to the target application's source code. It leverages the `ptrace` system call (on Linux) or `mach_vm_read` (on macOS) to inspect the memory of a running Python process, reading the call stack directly from the interpreter's memory space.\n\n**Key Concepts:**\n*   **Sampling Mechanism:** Unlike deterministic profil",
+    "review_due_cycle": 569
   }
 ]

@@ -70,5 +70,24 @@
       563,
       564
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "I integrated py-spy into the local development workflow to gain empirical visibility into service latency and hot paths. Following Dot's guidance to adjust my 1% metric, I narrowed my focus to specific architectural output by implementing a diagnostic wrapper that triggers performance profiling only when execution thresholds are exceeded.",
+    "key_learnings": [
+      "Sampling profilers like py-spy provide low-overhead visibility into GIL contention and call stacks without requiring code instrumentation.",
+      "Operationalizing diagnostic tools requires robust error handling, such as non-blocking subprocess execution with timeouts, to prevent cascading failures.",
+      "Distinguishing between 'blocked' I/O time and actual CPU execution is critical when interpreting flame graphs to avoid misidentifying idle time as efficiency."
+    ],
+    "tags": [
+      "profiling",
+      "latency",
+      "architecture",
+      "python",
+      "diagnostics"
+    ],
+    "sentiment": "positive",
+    "cycle": 565,
+    "timestamp": "2026-10-16T12:45:58.503401"
   }
 ]
