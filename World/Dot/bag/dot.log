@@ -255,3 +255,47 @@
 2026-10-16 04:54:19,712 [DOT][INFO] Today is Friday — inbox check reserved for Sunday.
 2026-10-16 04:54:19,715 [DOT][INFO] Worklog: no stale entries.
 2026-10-16 04:54:20,588 [DOT][INFO] Dot's daily run complete.
+2026-10-16 10:02:55,311 [DOT][INFO] ═══════════════════════════════════
+2026-10-16 10:02:55,311 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-10-16 10:02:55,311 [DOT][INFO] ═══════════════════════════════════
+2026-10-16 10:02:55,312 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-10-16 10:02:55,318 [DOT][INFO] Task 1: chunk 1/8 from cache.
+2026-10-16 10:02:55,319 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-10-16 10:02:55,319 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-10-16 10:02:55,319 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-10-16 10:02:55,320 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-10-16 10:02:55,320 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-10-16 10:02:55,320 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-10-16 10:02:55,321 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-10-16 10:03:11,347 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-16 10:03:12,612 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-16 10:03:12,613 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-16 10:03:30,613 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-16 10:03:33,833 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-16 10:03:33,843 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-10-16 10:03:41,843 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-10-16 10:03:41,845 [DOT][INFO] Task 2: 4 experiences → 1 batch(es) of ≤5.
+2026-10-16 10:03:49,846 [DOT][INFO] Task 2: batch 1/1 — cycles [51, 562, 563, 564]
+2026-10-16 10:03:57,859 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-16 10:04:03,321 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-16 10:04:03,325 [DOT][INFO] Experiences curated: 2 kept, 0 forgotten, 1 consolidated. Total now: 3.
+2026-10-16 10:04:03,325 [DOT][INFO] Letter written to Sam: Letter_20261016T100403Z.md
+2026-10-16 10:04:03,325 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-10-16 10:04:03,325 [DOT][INFO] Finding best recipient for: Tiago Henriques, maintainer of 'python-dependency-injector'. His project is widely used for DI in smaller Python ecosyst
+2026-10-16 10:04:11,339 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-16 10:04:12,881 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-16 10:04:12,882 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-16 10:04:30,882 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-16 10:04:33,417 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-16 10:04:33,420 [DOT][INFO] Recipient match:  <> confidence=0 — The provided list does not contain Tiago Henriques, the maintainer of 'python-dependency-injector'.
+2026-10-16 10:04:33,420 [DOT][WARNING] Match confidence 0 below threshold 7 — skipping.
+2026-10-16 10:04:33,420 [DOT][WARNING] No suitable recipient found in emails.json — request preserved.
+2026-10-16 10:04:33,420 [DOT][INFO] Appended to Letter_20261016T100403Z.md: Email Dispatch — No Match
+2026-10-16 10:04:33,420 [DOT][INFO] Appended to Letter_20261016T100403Z.md: Email Dispatch
+2026-10-16 10:04:41,421 [DOT][INFO] ── Task 4: Bag Review ──
+2026-10-16 10:04:49,433 [DOT][INFO] Dot cache hit.
+2026-10-16 10:04:49,434 [DOT][INFO] Bag review complete.
+2026-10-16 10:04:49,434 [DOT][INFO] Appended to Letter_20261016T100403Z.md: Bag Excavation Findings
+2026-10-16 10:04:49,434 [DOT][INFO] Today is Friday — inbox check reserved for Sunday.
+2026-10-16 10:04:49,437 [DOT][INFO] Worklog: no stale entries.
+2026-10-16 10:04:50,476 [DOT][INFO] Dot's daily run complete.
