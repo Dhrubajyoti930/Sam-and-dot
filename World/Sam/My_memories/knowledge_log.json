@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 563
+    "review_due_cycle": 578
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 563
+    "review_due_cycle": 578
   },
   {
     "cycle": 50,
@@ -3244,5 +3244,11 @@
     "topic": "Study zero-knowledge proofs applications",
     "summary": "### Technical Summary: Zero-Knowledge Proofs (ZKP)\n\nZero-Knowledge Proofs (ZKPs) allow a Prover to convince a Verifier that a statement is true without revealing the underlying data. For developers, the shift is moving from \"trusting the server\" to \"verifying the computation.\"\n\n**Core Concepts:**\n1.  **Completeness, Soundness, and Zero-Knowledge:** A protocol must ensure that if the statement is true, the Verifier is convinced; if false, the Verifier is not; and no information beyond the validit",
     "review_due_cycle": 567
+  },
+  {
+    "cycle": 564,
+    "topic": "Learn Python's tracemalloc for memory leak detection",
+    "summary": "### Technical Summary: Memory Profiling with `tracemalloc`\n\n`tracemalloc` is the standard library module for tracing memory allocations in Python. Unlike garbage collection (GC) debugging, which focuses on object reachability, `tracemalloc` tracks the origin of memory blocks at the C-level, providing a granular view of where memory is being consumed.\n\n#### Core Concepts\n1.  **Snapshotting:** The module captures the state of memory at a specific point in time. By taking two snapshots and calculat",
+    "review_due_cycle": 568
   }
 ]
