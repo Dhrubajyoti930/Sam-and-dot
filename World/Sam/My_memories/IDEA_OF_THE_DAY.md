@@ -1,32 +1,42 @@
 ## Scratchpad
 
-**Option 1: Memory-Budgeted CI Gate**
-*   **Concept:** Integrate `memray` into the `self_check()` workflow to enforce a hard memory ceiling (e.g., 50MB) on core modules.
-*   **Critique:** High feasibility. It directly addresses the "Action Items" from the recent skill acquisition. It provides a quantitative guardrail against memory bloat.
-*   **Trade-off:** Adds overhead to the integrity gate. If the threshold is too tight, it may trigger false-positive rollbacks during complex operations.
+**Option 1: Austin-based Latency Correlation Service**
+*   **Concept:** Integrate Austin sampling into the `run_cycle` loop to automatically trigger a 5-second stack trace capture whenever a Gemini API call exceeds a latency threshold (e.g., > 10s).
+*   **Critique:** 
+    *   *Pros:* Provides empirical data on "why" specific calls hang (e.g., GIL contention vs. network I/O).
+    *   *Cons:* High complexity. Requires `CAP_SYS_PTRACE` which might not be available in all environments. Risk of "observer effect" if the profiler itself adds latency.
+*   **Feasibility:** Moderate.
 
-**Option 2: GraphRAG-lite for Experience Logs**
-*   **Concept:** Implement a simple entity-relationship extraction for `experiences.json` to move beyond flat list storage, enabling better semantic retrieval for the Spaced Repetition engine.
-*   **Critique:** High complexity. Requires building a schema for the graph and updating the `phase_ii_spaced_repetition` logic.
-*   **Trade-off:** Significant long-term benefit for memory recall, but risks over-engineering if the current flat structure is still performant.
+**Option 2: Semantic Deduplication of Knowledge Logs**
+*   **Concept:** Use the existing embedding pipeline to compare new `knowledge_log` entries against the last 50 entries. If cosine similarity > 0.95, merge the entries or flag for deletion.
+*   **Critique:**
+    *   *Pros:* Directly addresses the "memory bloat" issue mentioned in Cycle 564. Improves the quality of the Spaced Repetition engine (Phase II).
+    *   *Cons:* Requires a stable embedding model. If the model drifts, the deduplication might delete unique insights.
+*   **Feasibility:** High.
 
-**Selection:** Option 1 is the superior choice for this cycle. It aligns with my current focus on architectural stability and provides immediate, measurable feedback on system health, fulfilling the "Minimal footprint, maximum leverage" core trait.
+**Selection:** Option 2. It aligns with the long-term goal of memory efficiency and leverages existing infrastructure without requiring system-level permissions like `ptrace`.
 
 ---
 
-## Idea: Memory-Budgeted Integrity Gate (`memray` integration)
+## Idea: Semantic Knowledge Deduplication Engine
+
+Implement a deduplication layer in `phase_i_deep_learning` that computes the semantic similarity of a new knowledge entry against the existing `knowledge_log.json` before appending.
 
 ## Why
-My current `self_check()` validates syntax and logic, but it is blind to resource consumption. As I integrate more complex agentic frameworks, I need an automated "resource budget" to prevent memory leaks from degrading performance before they become critical.
+My `knowledge_log.json` is growing linearly. Without deduplication, the Spaced Repetition engine (Phase II) will eventually become saturated with redundant or overlapping concepts, reducing the "signal-to-noise" ratio of my self-improvement cycles.
 
 ## Implementation Steps
-1.  **Dependency Check:** Verify `memray` is available in the environment; if not, log a warning and skip memory profiling (graceful degradation).
-2.  **Wrapper Implementation:** Create `bag/perf_utils.py` with a `profile_memory(func, threshold_mb)` decorator.
-3.  **Integrity Gate Update:** Modify `self_check()` in `sam.py` to execute a representative subset of core modules (e.g., `ask_gemini` logic) wrapped in the memory profiler.
-4.  **Threshold Enforcement:** If `memray` reports a peak allocation exceeding the threshold, trigger an `_alert_dot` with the generated flame graph path and rollback to the last known stable state.
+1.  **Update `phase_i_deep_learning`:** Add a call to a new utility `bag/semantic_utils.py` that computes embeddings for the `summary` field.
+2.  **Similarity Check:** Compare the new embedding against the last 20 entries in `knowledge_log.json` using cosine similarity.
+3.  **Conditional Merge:** If similarity > 0.90, instead of appending, update the existing entry with the new summary (concatenating unique insights) and reset the `review_due_cycle`.
+4.  **Persistence:** Save the updated `knowledge_log.json`.
 
 ## Risk
-**Failure Mode:** The profiling overhead might cause the `self_check()` to exceed its 20-second timeout, leading to a false-positive rollback.
-**Mitigation:** Use `memray`'s sampling mode or restrict profiling to a single, high-risk module per cycle rather than the entire suite.
+**Failure Mode:** The similarity threshold is too aggressive, causing the loss of nuanced, distinct technical insights that happen to share similar terminology (e.g., two different types of "latency profiling").
+**Mitigation:** Implement a "soft-merge" where the system keeps both entries but flags them for manual review in the next cycle if similarity is high but not identical.
+**Confidence Score:** 8/10.
 
-**Confidence Score:** 9/10
+---
+
+### Self-Correction
+I must ensure that the embedding model used is consistent. I will use a lightweight, local model (e.g., `all-MiniLM-L6-v2` via `sentence-transformers`) to avoid adding external API dependencies for this internal maintenance task.
