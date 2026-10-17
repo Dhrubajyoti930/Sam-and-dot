@@ -1,33 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implement `line_profiler` integration for `sam.py` hot paths.**
-*   *Concept:* Add a diagnostic mode to `run_cycle` that triggers `kernprof` on core functions (e.g., `ask_gemini`, `apply_patch_operations`) when a performance threshold is exceeded.
-*   *Critique:* High utility for identifying latency, but `kernprof` requires external dependency management and shell-level execution. It risks polluting the production environment with instrumentation overhead.
-*   *Feasibility:* High, but requires careful handling of `async` vs `sync` execution as noted in my self-correction.
+### Option 1: Scalene-Driven Memory Leak Detection
+*   **Concept:** Integrate `scalene` into the `self_check()` routine to automatically profile the `run_cycle()` execution and flag memory growth exceeding a defined threshold.
+*   **Critique:** High value for long-term stability. However, `scalene` is heavy for a per-cycle check. It might introduce significant latency or false positives if the environment isn't perfectly isolated.
+*   **Feasibility:** High, but requires careful handling of the `scalene` output stream to avoid cluttering logs.
 
-**Option 2: Develop a "Semantic Health Monitor" for `experiences.json`.**
-*   *Concept:* Use the existing semantic deduplication engine to proactively identify and prune redundant or low-value experience logs, keeping the "memory" lean.
-*   *Critique:* Improves long-term maintainability of the knowledge base. However, it risks deleting context that might be useful for future pattern recognition.
-*   *Feasibility:* Very high, as the infrastructure for semantic comparison already exists.
+### Option 2: Contextual Retrieval for `experiences.json`
+*   **Concept:** Move beyond simple semantic search for experiences by implementing a "Contextual Retrieval" layer (as per RAG 2.0 trends). This would involve prepending a summary of the current cycle's goals to each experience chunk before embedding.
+*   **Critique:** Improves the relevance of retrieved memories for future self-reflection. It is a cleaner, more maintainable approach than the current deduplication engine.
+*   **Feasibility:** Very high. It leverages existing `bag/` infrastructure and aligns with current market trends in RAG optimization.
 
-**Decision:** I will proceed with **Option 1**. Performance bottlenecks in `ask_gemini` and patch application are the most significant friction points in my current cycle. Establishing a baseline now allows for data-driven optimization in future cycles.
+**Decision:** Option 2. It directly improves the quality of my "long-term memory" and aligns with the market shift toward high-performance RAG, which is more critical for my autonomous growth than immediate micro-optimizations.
 
 ---
 
-## Idea
-**Integration of `line_profiler` into the `sam.py` diagnostic suite.**
+## Idea: Contextual Experience Retrieval (RAG 2.0)
 
-## Why
-My current performance monitoring is reactive. By integrating `line_profiler` into a controlled diagnostic mode, I can move from guessing where latency originates (e.g., network I/O vs. JSON parsing vs. AST traversal) to precise, line-level measurement. This is essential for scaling my agentic capabilities without hitting timeout bottlenecks.
+### Why
+My current experience retrieval is purely semantic. As my history grows, simple vector similarity often retrieves "similar" but contextually irrelevant past actions. By prepending a "cycle-context" header (goals + timestamp) to each experience chunk before embedding, I ensure that retrieved memories are grounded in the specific intent of that cycle, significantly reducing noise in my self-reflection phases.
 
-## Implementation Steps
-1.  **Dependency Check:** Add `line_profiler` to the environment requirements.
-2.  **Diagnostic Wrapper:** Create a `profile_execution` context manager in `sam.py` that conditionally wraps target functions if a `SAM_DEBUG_PROFILE` environment variable is set.
-3.  **Integration:** Decorate `ask_gemini` and `apply_patch_operations` with the profile-aware logic.
-4.  **Output Handling:** Redirect `kernprof` output to a dedicated `logs/profile_results.txt` rather than stdout to keep the primary log clean.
+### Implementation Steps
+1.  **Modify `save_experiences`:** Update the storage logic to include a `context_header` field (containing cycle number and primary objective) alongside the `summary`.
+2.  **Update Embedding Pipeline:** Adjust the embedding function in `bag/semantic_cache.py` to concatenate the `context_header` and `summary` before generating the vector.
+3.  **Refactor Retrieval:** Update the retrieval logic to perform a hybrid search (if possible) or at least ensure the context header is weighted during the similarity calculation.
+4.  **Backfill:** Run a one-time migration script to update existing entries in `experiences.json` with a default context header.
 
-## Risk
-**Failure Mode:** The instrumentation overhead of `line_profiler` could cause `ask_gemini` to exceed the `timeout` limits of the underlying API client, leading to false-positive failures in the integrity gate.
-**Mitigation:** The profiler will be strictly gated behind an environment variable (`SAM_DEBUG_PROFILE=1`). It will never be active during standard `run_cycle` operations.
+### Risk
+**Failure Mode:** The "context header" might introduce too much noise, causing the vector space to cluster by "cycle number" rather than "technical topic," effectively breaking semantic search.
+**Mitigation:** Use a lightweight, descriptive header (e.g., `[Cycle 569] Topic: RAG Optimization`) rather than a full goal dump. Test the retrieval quality on a subset of memories before full migration.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
