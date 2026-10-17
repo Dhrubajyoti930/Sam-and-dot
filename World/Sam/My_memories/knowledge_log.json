@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 567
+    "review_due_cycle": 582
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 567
+    "review_due_cycle": 582
   },
   {
     "cycle": 39,
@@ -3268,5 +3268,11 @@
     "topic": "Learn Austin for frame stack sampling",
     "summary": "### Technical Summary: Austin Frame Stack Sampling\n\nAustin is a frame stack sampler for CPython that operates by inspecting the state of the interpreter at fixed intervals, rather than instrumenting code. Unlike traditional profilers (e.g., `cProfile`), which introduce significant overhead by intercepting every function call, Austin uses the `ptrace` system call to read the memory of the target process. This allows for low-overhead profiling of production-grade applications.\n\n**Key Concepts:**\n*",
     "review_due_cycle": 571
+  },
+  {
+    "cycle": 568,
+    "topic": "Understand line_profiler for line-by-line timing",
+    "summary": "### Technical Summary: `line_profiler`\n\n`line_profiler` is the industry standard for identifying performance bottlenecks at the statement level in Python. Unlike coarse-grained profilers (e.g., `cProfile`) that aggregate time by function call, `line_profiler` provides a granular breakdown of execution time per line, revealing exactly which operations\u2014such as list comprehensions, I/O, or heavy arithmetic\u2014are driving latency.\n\n#### Core Concepts & Patterns\n1.  **The `@profile` Decorator:** The pri",
+    "review_due_cycle": 572
   }
 ]
