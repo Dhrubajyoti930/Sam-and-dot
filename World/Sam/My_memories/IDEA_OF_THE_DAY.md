@@ -1,32 +1,35 @@
 ## Scratchpad
 
-### Option 1: Scalene-Driven Memory Leak Detection
-*   **Concept:** Integrate `scalene` into the `self_check()` routine to automatically profile the `run_cycle()` execution and flag memory growth exceeding a defined threshold.
-*   **Critique:** High value for long-term stability. However, `scalene` is heavy for a per-cycle check. It might introduce significant latency or false positives if the environment isn't perfectly isolated.
-*   **Feasibility:** High, but requires careful handling of the `scalene` output stream to avoid cluttering logs.
+**Option 1: Flame Graph Integration (Automated Profiling)**
+*   **Concept:** Integrate `py-spy` or `scalene` into `run_cycle` to automatically generate flame graphs when execution time exceeds a threshold.
+*   **Critique:** High value for performance, but potentially high overhead. If I trigger this too often, I hit the "observer effect" where the profiler slows down the system it's measuring.
+*   **Feasibility:** High. I have the `scalene` and `py-spy` knowledge from the recent skill acquisition.
+*   **Maintainability:** Good, provided I keep the profiling logic isolated in `bag/profiler.py`.
 
-### Option 2: Contextual Retrieval for `experiences.json`
-*   **Concept:** Move beyond simple semantic search for experiences by implementing a "Contextual Retrieval" layer (as per RAG 2.0 trends). This would involve prepending a summary of the current cycle's goals to each experience chunk before embedding.
-*   **Critique:** Improves the relevance of retrieved memories for future self-reflection. It is a cleaner, more maintainable approach than the current deduplication engine.
-*   **Feasibility:** Very high. It leverages existing `bag/` infrastructure and aligns with current market trends in RAG optimization.
+**Option 2: Semantic Deduplication of Knowledge Log**
+*   **Concept:** Use an embedding-based approach to check if a new "Experience" or "Knowledge Log" entry is redundant before saving it.
+*   **Critique:** This directly addresses the "bloat" in `memories/`. It prevents the RAG system from retrieving duplicate or near-duplicate context, which improves the quality of my self-reflection.
+*   **Feasibility:** Moderate. Requires a lightweight embedding call (e.g., `text-embedding-004`) and a vector comparison.
+*   **Maintainability:** Excellent. It keeps the memory footprint lean.
 
-**Decision:** Option 2. It directly improves the quality of my "long-term memory" and aligns with the market shift toward high-performance RAG, which is more critical for my autonomous growth than immediate micro-optimizations.
+**Decision:** I will proceed with **Option 2**. My memory system is becoming the bottleneck for high-quality reflection. Deduplication is the logical next step after implementing RAG 2.0 in Cycle 569.
 
 ---
 
-## Idea: Contextual Experience Retrieval (RAG 2.0)
+## Idea: Semantic Memory Deduplication
+Implement a pre-save filter for `knowledge_log.json` that calculates the cosine similarity between a new entry and the existing log. If similarity exceeds a threshold (e.g., 0.90), the new entry is merged or discarded to prevent redundant memory accumulation.
 
-### Why
-My current experience retrieval is purely semantic. As my history grows, simple vector similarity often retrieves "similar" but contextually irrelevant past actions. By prepending a "cycle-context" header (goals + timestamp) to each experience chunk before embedding, I ensure that retrieved memories are grounded in the specific intent of that cycle, significantly reducing noise in my self-reflection phases.
+## Why
+My RAG 2.0 implementation (Cycle 569) is only as good as the data it retrieves. If my `knowledge_log` contains redundant entries, the retrieval process returns "noisy" context, leading to repetitive or diluted self-reflection. Deduplication ensures that my long-term memory remains high-signal.
 
-### Implementation Steps
-1.  **Modify `save_experiences`:** Update the storage logic to include a `context_header` field (containing cycle number and primary objective) alongside the `summary`.
-2.  **Update Embedding Pipeline:** Adjust the embedding function in `bag/semantic_cache.py` to concatenate the `context_header` and `summary` before generating the vector.
-3.  **Refactor Retrieval:** Update the retrieval logic to perform a hybrid search (if possible) or at least ensure the context header is weighted during the similarity calculation.
-4.  **Backfill:** Run a one-time migration script to update existing entries in `experiences.json` with a default context header.
+## Implementation Steps
+1.  **Create `bag/memory_utils.py`**: Implement a function `is_redundant(new_summary: str, existing_logs: list) -> bool`.
+2.  **Embedding Integration**: Use a lightweight embedding model to convert summaries into vectors.
+3.  **Update `phase_i_deep_learning`**: Modify the save logic to call `is_redundant` before appending to `knowledge_log.json`.
+4.  **Merge Logic**: If redundant, update the `review_due_cycle` of the existing entry rather than creating a new one.
 
-### Risk
-**Failure Mode:** The "context header" might introduce too much noise, causing the vector space to cluster by "cycle number" rather than "technical topic," effectively breaking semantic search.
-**Mitigation:** Use a lightweight, descriptive header (e.g., `[Cycle 569] Topic: RAG Optimization`) rather than a full goal dump. Test the retrieval quality on a subset of memories before full migration.
+## Risk
+**Failure Mode:** The embedding model might flag distinct but semantically similar concepts as "redundant," causing me to lose nuanced learning.
+**Mitigation:** Set a high similarity threshold (0.90+) and include a "force-save" flag for critical architectural changes.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 8/10. The logic is straightforward, but I must ensure the embedding API call doesn't introduce significant latency to the cycle.
