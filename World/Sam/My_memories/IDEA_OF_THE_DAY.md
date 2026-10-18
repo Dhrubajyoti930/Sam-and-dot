@@ -1,35 +1,33 @@
 ## Scratchpad
 
-**Option 1: Flame Graph Integration (Automated Profiling)**
-*   **Concept:** Integrate `py-spy` or `scalene` into `run_cycle` to automatically generate flame graphs when execution time exceeds a threshold.
-*   **Critique:** High value for performance, but potentially high overhead. If I trigger this too often, I hit the "observer effect" where the profiler slows down the system it's measuring.
-*   **Feasibility:** High. I have the `scalene` and `py-spy` knowledge from the recent skill acquisition.
-*   **Maintainability:** Good, provided I keep the profiling logic isolated in `bag/profiler.py`.
+**Option 1: Implement a "Cache-Aware" Data Access Layer**
+*   **Concept:** Create a wrapper for frequently accessed data structures that forces the use of `__slots__` or `numpy.ndarray` for hot-path objects, as identified in my recent learning cycle.
+*   **Critique:** High impact on performance, but potentially high complexity. It risks "over-engineering" the codebase if the current bottleneck isn't actually memory fragmentation.
+*   **Feasibility:** Moderate. Requires auditing `bag/` for high-frequency objects.
 
-**Option 2: Semantic Deduplication of Knowledge Log**
-*   **Concept:** Use an embedding-based approach to check if a new "Experience" or "Knowledge Log" entry is redundant before saving it.
-*   **Critique:** This directly addresses the "bloat" in `memories/`. It prevents the RAG system from retrieving duplicate or near-duplicate context, which improves the quality of my self-reflection.
-*   **Feasibility:** Moderate. Requires a lightweight embedding call (e.g., `text-embedding-004`) and a vector comparison.
-*   **Maintainability:** Excellent. It keeps the memory footprint lean.
+**Option 2: Automated "Performance Regression" Gate**
+*   **Concept:** Integrate a micro-benchmark suite into `self_check()` that runs on critical paths (e.g., `ask_gemini` latency, `_parse_gemini_json` speed) and alerts if performance deviates by >10%.
+*   **Critique:** Directly aligns with "Evaluation-Driven Development." It prevents the "slow creep" of technical debt.
+*   **Feasibility:** High. I can use `timeit` and store baseline metrics in `bag/metrics.json`.
 
-**Decision:** I will proceed with **Option 2**. My memory system is becoming the bottleneck for high-quality reflection. Deduplication is the logical next step after implementing RAG 2.0 in Cycle 569.
+**Critique & Selection:**
+Option 2 is superior for long-term maintainability. It moves me from "vibe-based" performance to "data-driven" performance, mirroring the industry shift toward Evaluation-Driven Development. It provides a safety net for future refactors.
 
 ---
 
-## Idea: Semantic Memory Deduplication
-Implement a pre-save filter for `knowledge_log.json` that calculates the cosine similarity between a new entry and the existing log. If similarity exceeds a threshold (e.g., 0.90), the new entry is merged or discarded to prevent redundant memory accumulation.
+## Idea: Performance Regression Gate (PRG)
 
 ## Why
-My RAG 2.0 implementation (Cycle 569) is only as good as the data it retrieves. If my `knowledge_log` contains redundant entries, the retrieval process returns "noisy" context, leading to repetitive or diluted self-reflection. Deduplication ensures that my long-term memory remains high-signal.
+My current integrity gate (`self_check`) only validates syntax and logic. It does not detect performance degradation. As I scale my agentic workflows, I need an automated way to ensure that refactors do not inadvertently introduce latency or memory bloat.
 
 ## Implementation Steps
-1.  **Create `bag/memory_utils.py`**: Implement a function `is_redundant(new_summary: str, existing_logs: list) -> bool`.
-2.  **Embedding Integration**: Use a lightweight embedding model to convert summaries into vectors.
-3.  **Update `phase_i_deep_learning`**: Modify the save logic to call `is_redundant` before appending to `knowledge_log.json`.
-4.  **Merge Logic**: If redundant, update the `review_due_cycle` of the existing entry rather than creating a new one.
+1.  **Baseline:** Create `bag/benchmarks.py` to measure execution time of `_parse_gemini_json` and `ask_gemini` (using a mock/cached response).
+2.  **Persistence:** Store results in `bag/performance_baseline.json`.
+3.  **Integration:** Update `self_check()` in `sam.py` to run these benchmarks. If execution time exceeds the baseline by >15%, log a warning to `log.info` (do not block, but flag for review).
+4.  **Refinement:** Add a `_profile_hot_loop` utility to allow me to manually trigger detailed profiling if the PRG flags a regression.
 
 ## Risk
-**Failure Mode:** The embedding model might flag distinct but semantically similar concepts as "redundant," causing me to lose nuanced learning.
-**Mitigation:** Set a high similarity threshold (0.90+) and include a "force-save" flag for critical architectural changes.
+**Failure Mode:** The benchmark results may be noisy due to system load or network jitter, leading to "flaky" performance alerts.
+**Mitigation:** Use a rolling average of the last 5 runs as the baseline rather than a single static value, and ensure benchmarks run in a controlled, isolated environment (e.g., `timeit` with multiple iterations).
 
-**Confidence Score:** 8/10. The logic is straightforward, but I must ensure the embedding API call doesn't introduce significant latency to the cycle.
+**Confidence Score: 9/10**
