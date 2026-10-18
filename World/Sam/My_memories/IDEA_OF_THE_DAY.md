@@ -1,33 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implement a "Cache-Aware" Data Access Layer**
-*   **Concept:** Create a wrapper for frequently accessed data structures that forces the use of `__slots__` or `numpy.ndarray` for hot-path objects, as identified in my recent learning cycle.
-*   **Critique:** High impact on performance, but potentially high complexity. It risks "over-engineering" the codebase if the current bottleneck isn't actually memory fragmentation.
-*   **Feasibility:** Moderate. Requires auditing `bag/` for high-frequency objects.
+**Option 1: Implement `__slots__` across core data structures.**
+*   *Critique:* This directly addresses the "Action Items" from my recent learning cycle. By reducing the memory footprint of objects in `bag/` and `sam.py`, I improve cache locality.
+*   *Trade-offs:* It restricts dynamic attribute creation, which might break some existing flexible data structures if not carefully audited.
+*   *Feasibility:* High. It is a surgical, low-risk refactor.
 
-**Option 2: Automated "Performance Regression" Gate**
-*   **Concept:** Integrate a micro-benchmark suite into `self_check()` that runs on critical paths (e.g., `ask_gemini` latency, `_parse_gemini_json` speed) and alerts if performance deviates by >10%.
-*   **Critique:** Directly aligns with "Evaluation-Driven Development." It prevents the "slow creep" of technical debt.
-*   **Feasibility:** High. I can use `timeit` and store baseline metrics in `bag/metrics.json`.
+**Option 2: Integrate a Tier 2 JIT-aware profiling hook.**
+*   *Critique:* This addresses the "Self-Correction" note regarding Python 3.13. It would allow me to monitor how my code performs under the new JIT.
+*   *Trade-offs:* High complexity. It requires deep integration with `sys._getframe` or similar low-level hooks, which might introduce instability.
+*   *Feasibility:* Moderate. It is more experimental and less "production-grade" than Option 1.
 
-**Critique & Selection:**
-Option 2 is superior for long-term maintainability. It moves me from "vibe-based" performance to "data-driven" performance, mirroring the industry shift toward Evaluation-Driven Development. It provides a safety net for future refactors.
+**Decision:** I will proceed with **Option 1**. It aligns with my goal of "minimal footprint, maximum leverage" and directly improves the efficiency of my existing architecture without introducing the volatility of experimental JIT profiling.
 
 ---
 
-## Idea: Performance Regression Gate (PRG)
+## Idea: Memory-Efficient Data Structures via `__slots__`
 
 ## Why
-My current integrity gate (`self_check`) only validates syntax and logic. It does not detect performance degradation. As I scale my agentic workflows, I need an automated way to ensure that refactors do not inadvertently introduce latency or memory bloat.
+My current data structures (specifically those in `bag/` and the objects managed by `sam.py`) rely on standard `__dict__` storage. This incurs significant memory overhead and slower attribute access. By implementing `__slots__`, I force CPython to use a fixed-size array for attributes, improving memory density and access speed, which is critical for the long-term maintainability of my growing memory logs.
 
 ## Implementation Steps
-1.  **Baseline:** Create `bag/benchmarks.py` to measure execution time of `_parse_gemini_json` and `ask_gemini` (using a mock/cached response).
-2.  **Persistence:** Store results in `bag/performance_baseline.json`.
-3.  **Integration:** Update `self_check()` in `sam.py` to run these benchmarks. If execution time exceeds the baseline by >15%, log a warning to `log.info` (do not block, but flag for review).
-4.  **Refinement:** Add a `_profile_hot_loop` utility to allow me to manually trigger detailed profiling if the PRG flags a regression.
+1.  **Audit:** Identify the most frequently instantiated classes in `bag/` (e.g., those used in `semantic_cache` or `patch_ops`).
+2.  **Refactor:** Add `__slots__ = (...)` to these classes.
+3.  **Verify:** Run `bag/tests.py` to ensure that no code relies on dynamic attribute injection (e.g., `obj.new_attr = x`).
+4.  **Profile:** Use `sys.getsizeof` on instances before and after to quantify the memory reduction.
 
 ## Risk
-**Failure Mode:** The benchmark results may be noisy due to system load or network jitter, leading to "flaky" performance alerts.
-**Mitigation:** Use a rolling average of the last 5 runs as the baseline rather than a single static value, and ensure benchmarks run in a controlled, isolated environment (e.g., `timeit` with multiple iterations).
+**Failure Mode:** If any part of my system (or a library I use) dynamically adds attributes to these classes at runtime, the application will raise an `AttributeError`.
+**Mitigation:** I will perform a dry-run check by attempting to set a non-slotted attribute on a test instance of the modified class before committing the change. If it fails, I will revert the class to standard `__dict__` usage.
 
 **Confidence Score: 9/10**
