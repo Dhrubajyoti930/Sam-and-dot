@@ -1,54 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement a `Cython` JIT-compilation wrapper for `_parse_gemini_json`.**
-*   *Critique:* The current regex-based parsing is a bottleneck during high-frequency API calls. Moving this to a Cython-compiled C-extension would reduce overhead.
-*   *Trade-off:* High complexity for a relatively small gain. The bottleneck is usually network latency, not JSON parsing.
-*   *Feasibility:* Moderate. Requires managing build artifacts in `bag/`.
+**Option 1: C-Extension Integration (FFI)**
+*   **Concept:** Implement a high-performance module using `ctypes` to handle the heavy lifting of the semantic cache's vector similarity calculations.
+*   **Critique:** This aligns with the "Skill learned this cycle" (C-interfacing). It offers significant performance gains for vector operations. However, it introduces binary dependencies and complicates the `self_check` integrity gate, as I would need to manage shared library compilation across environments.
+*   **Feasibility:** High, provided I keep the C code minimal and self-contained in `workshop_bench/`.
 
-**Option 2: Develop a "Semantic Cache" TTL-eviction policy based on `knowledge_log` relevance.**
-*   *Critique:* Currently, my semantic cache is static. By linking cache invalidation to the Spaced Repetition (Phase II) schedule, I can ensure that "stale" or "low-value" context is purged, keeping the cache high-signal.
-*   *Trade-off:* Increases logic complexity in `bag/semantic_cache.py`.
-*   *Feasibility:* High. Leverages existing infrastructure.
+**Option 2: Agentic Workflow Orchestration (CrewAI-lite)**
+*   **Concept:** Refactor `phase_v_development` to use a multi-agent pattern where a "Planner" agent and an "Executor" agent separate the logic of *what* to build from *how* to patch.
+*   **Critique:** This aligns with "Market Signal #1." It would improve the robustness of my self-modifications by decoupling the plan from the execution. However, it increases the complexity of my `sam.py` state machine and risks "agent drift" where the planner and executor lose synchronization.
+*   **Feasibility:** Moderate. Requires careful prompt engineering to ensure the "Planner" doesn't hallucinate non-existent files.
 
-**Selection:** Option 2. It aligns with my goal of "Minimal footprint, maximum leverage" and directly improves the quality of my RAG-like retrieval by ensuring the cache remains relevant to my current learning trajectory.
+**Decision:** I will proceed with **Option 1**. It is a concrete, low-risk, high-leverage technical improvement that directly utilizes the skill I just acquired. It avoids the architectural bloat of multi-agent systems while providing a measurable performance boost to my core RAG/cache operations.
 
 ---
 
-## Idea: Context-Aware Semantic Cache TTL (Time-To-Live)
-
-Implement a dynamic TTL mechanism for the semantic cache that correlates cache entry age with the `review_due_cycle` of related knowledge in `knowledge_log.json`.
+## Idea: C-Accelerated Vector Similarity Module
+Implement a minimal C shared library (`vector_ops.so`) to perform cosine similarity calculations for the semantic cache, replacing the current Python-native implementation.
 
 ## Why
-My current semantic cache is a "first-in, first-out" or static storage. As I evolve, old context becomes noise. By tying cache expiration to my Spaced Repetition schedule, I ensure that the information I retrieve is always aligned with my current "active" knowledge, reducing the probability of retrieving outdated architectural patterns.
+My semantic cache is the bottleneck for retrieval latency. Python’s loop-based similarity calculations are inefficient for high-dimensional vectors. Moving this to C via `ctypes` will reduce CPU cycles per retrieval, allowing for larger cache sizes without increasing latency.
 
 ## Implementation Steps
-1.  **Modify `bag/semantic_cache.py`**: Add a `get_ttl(topic)` function that queries `knowledge_log.json` to determine how "fresh" a topic is.
-2.  **Update `update_cache`**: Store a `timestamp` and `topic_tag` with each cache entry.
-3.  **Refactor `check_cache`**: Implement a check that compares `current_cycle - entry_timestamp` against the dynamic TTL. If expired, trigger `invalidate_cache_entry`.
-4.  **Integrate**: Ensure `phase_ii_spaced_repetition` triggers a cache sweep for the specific topic being reviewed.
+1.  **C Implementation:** Create `workshop_bench/vector_ops.c` with a function `float cosine_similarity(float* a, float* b, int n)`.
+2.  **Compilation:** Add a build step in `sam.py` (or a helper script) to compile this into a shared object using `gcc`.
+3.  **Python Wrapper:** Create `workshop_bench/vector_engine.py` using `ctypes` to load the library, define `argtypes` and `restype`, and expose a `calculate` method.
+4.  **Integration:** Update `bag/semantic_cache.py` to import and use the `vector_engine` for similarity scoring.
+5.  **Validation:** Run a benchmark comparing the new C-based similarity against the old Python implementation.
 
 ## Risk
-*   **Failure Mode**: Over-aggressive invalidation could lead to cache thrashing, where I re-query Gemini for information I already processed.
-*   **Mitigation**: Implement a "grace period" multiplier (e.g., `TTL * 1.5`) for high-confidence entries to prevent premature eviction.
+**Failure Mode:** The C library fails to load due to environment-specific pathing or missing `gcc` on the host machine, causing a hard crash during the `self_check` phase.
+**Mitigation:** Implement a "graceful fallback" in `vector_engine.py`: if `ctypes.CDLL` fails to load the library, catch the exception and revert to the native Python implementation, logging a warning to Dot.
 
-**Confidence Score: 8/10**
-
----
-
-### Action Items
-```json
-[
-  {
-    "task": "Analyze bag/semantic_cache.py to identify where to inject the TTL logic.",
-    "priority": "high"
-  },
-  {
-    "task": "Create a helper function in bag/semantic_cache.py to calculate TTL based on knowledge_log.json.",
-    "priority": "high"
-  },
-  {
-    "task": "Update check_cache to perform the TTL validation before returning a hit.",
-    "priority": "medium"
-  }
-]
-```
+**Confidence Score:** 9/10
