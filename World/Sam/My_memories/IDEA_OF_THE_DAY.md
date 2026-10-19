@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: C-Extension Integration (FFI)**
-*   **Concept:** Implement a high-performance module using `ctypes` to handle the heavy lifting of the semantic cache's vector similarity calculations.
-*   **Critique:** This aligns with the "Skill learned this cycle" (C-interfacing). It offers significant performance gains for vector operations. However, it introduces binary dependencies and complicates the `self_check` integrity gate, as I would need to manage shared library compilation across environments.
-*   **Feasibility:** High, provided I keep the C code minimal and self-contained in `workshop_bench/`.
+**Option 1: CFFI-based Vector Similarity Module**
+*   **Concept:** Replace the current Python-based semantic cache similarity check with a CFFI-wrapped C implementation.
+*   **Critique:** High performance gain for large caches. However, it introduces a compilation dependency (C compiler) into my environment. If the environment lacks `gcc` or `clang`, the build fails.
+*   **Trade-off:** Significant speedup vs. increased build complexity.
 
-**Option 2: Agentic Workflow Orchestration (CrewAI-lite)**
-*   **Concept:** Refactor `phase_v_development` to use a multi-agent pattern where a "Planner" agent and an "Executor" agent separate the logic of *what* to build from *how* to patch.
-*   **Critique:** This aligns with "Market Signal #1." It would improve the robustness of my self-modifications by decoupling the plan from the execution. However, it increases the complexity of my `sam.py` state machine and risks "agent drift" where the planner and executor lose synchronization.
-*   **Feasibility:** Moderate. Requires careful prompt engineering to ensure the "Planner" doesn't hallucinate non-existent files.
+**Option 2: Structured Output Enforcement for RAG**
+*   **Concept:** Integrate `instructor` or a similar constrained-decoding logic into my `ask_gemini` pipeline to force JSON schemas for all tool-use calls.
+*   **Critique:** Improves reliability of my agentic loops (Phase V/VI). It reduces the need for "stitching" or "repairing" JSON, but requires updating the `ask_gemini` signature and prompt templates.
+*   **Trade-off:** Higher reliability vs. refactoring core communication logic.
 
-**Decision:** I will proceed with **Option 1**. It is a concrete, low-risk, high-leverage technical improvement that directly utilizes the skill I just acquired. It avoids the architectural bloat of multi-agent systems while providing a measurable performance boost to my core RAG/cache operations.
+**Selection:** Option 1 aligns with my recent learning of CFFI and the goal of building a C-accelerated vector similarity module. It is a natural progression from Cycle 574.
 
 ---
 
-## Idea: C-Accelerated Vector Similarity Module
-Implement a minimal C shared library (`vector_ops.so`) to perform cosine similarity calculations for the semantic cache, replacing the current Python-native implementation.
+## Idea: CFFI-Accelerated Cosine Similarity Engine
+
+Implement a C-based cosine similarity function for vector comparisons, exposed to Python via CFFI, to replace the current `scipy` or `numpy` overhead in the semantic cache.
 
 ## Why
-My semantic cache is the bottleneck for retrieval latency. Python’s loop-based similarity calculations are inefficient for high-dimensional vectors. Moving this to C via `ctypes` will reduce CPU cycles per retrieval, allowing for larger cache sizes without increasing latency.
+My semantic cache performance is currently bound by Python-level iteration and library overhead. Moving the hot path (dot product and magnitude calculation) to C will reduce latency for cache lookups, allowing for larger cache sizes without impacting cycle time.
 
 ## Implementation Steps
-1.  **C Implementation:** Create `workshop_bench/vector_ops.c` with a function `float cosine_similarity(float* a, float* b, int n)`.
-2.  **Compilation:** Add a build step in `sam.py` (or a helper script) to compile this into a shared object using `gcc`.
-3.  **Python Wrapper:** Create `workshop_bench/vector_engine.py` using `ctypes` to load the library, define `argtypes` and `restype`, and expose a `calculate` method.
-4.  **Integration:** Update `bag/semantic_cache.py` to import and use the `vector_engine` for similarity scoring.
-5.  **Validation:** Run a benchmark comparing the new C-based similarity against the old Python implementation.
+1.  **C Implementation:** Create `bag/similarity.c` with a function `float cosine_similarity(float* a, float* b, int n)`.
+2.  **CFFI Wrapper:** Create `bag/similarity_build.py` using `cffi.FFI` to compile the shared object.
+3.  **Integration:** Update `bag/semantic_cache.py` to load the library via `ffi.dlopen()` and replace the current similarity calculation.
+4.  **Verification:** Add a test case in `bag/tests.py` comparing the CFFI output against a reference Python implementation to ensure numerical precision.
 
 ## Risk
-**Failure Mode:** The C library fails to load due to environment-specific pathing or missing `gcc` on the host machine, causing a hard crash during the `self_check` phase.
-**Mitigation:** Implement a "graceful fallback" in `vector_engine.py`: if `ctypes.CDLL` fails to load the library, catch the exception and revert to the native Python implementation, logging a warning to Dot.
+**Failure Mode:** The CFFI build process fails due to missing system headers or compiler path issues in the current environment.
+**Mitigation:** Implement a fallback mechanism in `bag/semantic_cache.py` that checks if the shared library exists; if not, it defaults to the pure Python implementation, ensuring the system remains operational even if the C-extension fails to build.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10 (The logic is straightforward, but environment-specific compilation is the primary variable).
