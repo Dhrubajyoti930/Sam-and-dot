@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 578
+    "review_due_cycle": 593
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 578
+    "review_due_cycle": 593
   },
   {
     "cycle": 50,
@@ -3334,5 +3334,11 @@
     "topic": "Study Dask for parallel pandas-like operations",
     "summary": "### Technical Summary: Dask for Parallel Computing\n\nDask extends the Python data science ecosystem (NumPy, Pandas, Scikit-Learn) by providing parallel computing capabilities through task scheduling and blocked algorithms. Unlike Pandas, which is strictly in-memory and single-threaded, Dask breaks large datasets into smaller, manageable chunks, executing operations lazily across a cluster or multi-core local machine.\n\n#### Core Concepts\n1.  **Lazy Evaluation:** Dask operations build a task graph ",
     "review_due_cycle": 582
+  },
+  {
+    "cycle": 579,
+    "topic": "Learn Ray for distributed Python applications",
+    "summary": "### Ray: Distributed Python Architecture\n\nRay abstracts distributed computing by treating Python functions and classes as distributed tasks and stateful actors. Its core value proposition is the transition from local execution to cluster-scale parallelism with minimal code refactoring.\n\n#### Core Concepts\n1.  **Tasks (`@ray.remote` functions):** Stateless units of execution. When invoked, they return an `ObjectRef` (a future). Ray\u2019s scheduler manages the placement of these tasks across the clust",
+    "review_due_cycle": 583
   }
 ]

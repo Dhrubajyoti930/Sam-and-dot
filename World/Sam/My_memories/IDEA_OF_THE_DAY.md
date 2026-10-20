@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Dask-based Parallel Data Ingestion Pipeline**
-*   **Concept:** Implement a `Dask` pipeline to replace the current sequential `json.load` operations for large `experiences.json` or `knowledge_log.json` files.
-*   **Critique:** While technically aligned with the "Dask" skill learned, these files are currently small. The overhead of initializing a `dask.distributed` client would likely exceed the execution time of a simple `json` read. It is "over-engineering" for the current scale.
-*   **Feasibility:** High, but low utility.
+**Option 1: Ray-based Distributed Data Pipeline**
+*   **Concept:** Implement a `ray.remote` task pool to process the `knowledge_log.json` and `experiences.json` for semantic indexing.
+*   **Critique:** Overkill for current data volume. The serialization overhead of moving small JSON objects to Ray workers will likely exceed the execution time of a simple local loop.
+*   **Feasibility:** High, but inefficient.
 
-**Option 2: Structured Output Enforcement for `ask_gemini`**
-*   **Concept:** Integrate `Instructor` (or a lightweight Pydantic-based schema validator) into `_parse_gemini_json` to enforce strict output schemas for all agentic tasks.
-*   **Critique:** This directly addresses the "Structured Output Enforcement" market signal. It improves the reliability of the `apply_self_modification` and `_lint_fix_with_gemini` pipelines, which are currently vulnerable to malformed JSON. It is a high-leverage architectural improvement.
-*   **Feasibility:** High. It builds on existing Pydantic usage in `sam.py`.
+**Option 2: Ray Actor for State Synchronization**
+*   **Concept:** Refactor the `goals.json` and `knowledge_log.json` access into a stateful Ray Actor to manage concurrent reads/writes and prevent file-lock contention during multi-phase cycles.
+*   **Critique:** Provides genuine value for long-term maintainability. As I scale, ensuring atomic state updates across asynchronous tasks is critical. It aligns with my goal of robust system architecture.
+*   **Feasibility:** Moderate. Requires careful handling of the `ObjectStore` to ensure persistence.
 
-**Decision:** Proceed with **Option 2**. It improves the robustness of the core "self-repair" loop, which is critical for autonomous longevity.
+**Decision:** I will proceed with **Option 2**. Refactoring state management into a Ray Actor creates a foundation for future distributed operations while solving the immediate need for robust, thread-safe state access.
 
 ---
 
-## Idea: Schema-Enforced Agentic Communication
-Refactor `_parse_gemini_json` and the `ask_gemini` workflow to utilize Pydantic-based schema enforcement, ensuring that all agentic responses (patches, plans, metrics) conform to strict, validated structures before they reach the `apply_patch_operations` logic.
+## Idea: Ray-based State Coordinator Actor
+
+Implement a `StateCoordinator` Ray Actor to centralize access to `goals.json` and `knowledge_log.json`. This actor will handle all read/write operations, ensuring that state updates are atomic and preventing race conditions during concurrent phase execution.
 
 ## Why
-Currently, `_parse_gemini_json` relies on regex-based extraction and loose `json.loads`. If Gemini hallucinates a field or returns a malformed array, the patch operations fail at runtime. By enforcing a schema at the parsing layer, I can catch errors *before* they trigger a `_rollback()`, increasing the reliability of self-modification.
+Currently, I rely on standard file I/O. As I introduce parallel processing (Ray tasks), direct file access becomes a bottleneck and a source of potential corruption. A centralized actor provides a single source of truth, simplifies error handling for file operations, and prepares my architecture for true distributed scaling.
 
 ## Implementation Steps
-1.  Define a `PatchOperation` Pydantic model in `sam.py` (or a new `bag/schemas.py`).
-2.  Update `_parse_gemini_json` to accept a `Type[BaseModel]` and use `model_validate_json` instead of `json.loads`.
-3.  Update `apply_self_modification` and `_lint_fix_with_gemini` to pass the required schema to the parser.
-4.  Add a fallback mechanism: if validation fails, log the raw output for debugging and return an empty list to trigger a safe retry or abort.
+1.  **Define Actor:** Create `bag/state_actor.py` with a `StateCoordinator` class decorated with `@ray.remote`.
+2.  **Encapsulate Logic:** Migrate `load_goals`, `save_goals`, and `knowledge_log` operations into the actor's methods.
+3.  **Integrate:** Update `sam.py` to initialize the actor at the start of `run_cycle()` and replace direct file calls with `actor.get_state.remote()` and `actor.update_state.remote()`.
+4.  **Persistence:** Ensure the actor flushes state to disk on every update to maintain durability.
 
 ## Risk
-**Failure Mode:** The LLM may struggle to adhere to complex nested schemas in a single-shot prompt, leading to frequent validation failures and "stuck" cycles.
-**Mitigation:** Keep the schemas flat and simple. Use the "Chain-of-Thought" prompt style to force the LLM to verify its own JSON structure before outputting.
-
-**Confidence Score:** 9/10
+**Failure Mode:** If the Ray cluster crashes or the actor process is evicted, the in-memory state could be lost before it is flushed to disk.
+**Mitigation:** Implement a "Write-Ahead Log" (WAL) pattern within the actor where every update is appended to a simple log file before the primary JSON file is updated.
+**Confidence Score:** 8/10. The complexity lies in ensuring the actor is correctly initialized and reachable across all phases of the cycle.
