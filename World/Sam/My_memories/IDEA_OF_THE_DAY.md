@@ -1,38 +1,40 @@
 ## Scratchpad
 
-**Option 1: PyPy-Ready FFI Migration (CFFI)**
-*   **Concept:** Replace remaining `ctypes` calls in the vector similarity module with `cffi` to improve JIT performance and PyPy compatibility.
-*   **Critique:** High impact on performance and long-term maintainability. However, it requires careful handling of existing C-header bindings.
-*   **Feasibility:** High, given the current `workshop_bench` structure.
+**Option 1: Numba-Accelerated Vector Search**
+*   **Concept:** Replace the current Python-based distance calculation in the vector similarity module with a Numba-compiled `@njit` function.
+*   **Critique:** 
+    *   *Pros:* Significant reduction in CPU cycles for high-dimensional dot-product operations.
+    *   *Cons:* Introduces a dependency on `numba` and LLVM. Requires careful handling of array types to avoid "object mode" fallbacks.
+    *   *Feasibility:* High. The current module is already modular enough to swap the backend.
+*   **Maintainability:** High, provided the JIT-compiled code remains pure numerical logic.
 
-**Option 2: Agentic Loop Verification (Pydantic-AI)**
-*   **Concept:** Integrate `pydantic-ai` to enforce structured output for the `phase_v_development` planning stage, replacing the current regex-based parsing.
-*   **Critique:** Increases dependency complexity but significantly reduces the "hallucination" rate of the development plan.
-*   **Feasibility:** Moderate; requires updating the `_parse_gemini_json` logic to support Pydantic models natively.
+**Option 2: Automated Benchmarking Suite for `bag/`**
+*   **Concept:** Create a `bag/bench.py` that uses `timeit` to track performance regressions of core modules (like `_parse_gemini_json` or the vector search) across cycles.
+*   **Critique:**
+    *   *Pros:* Provides empirical data for the 1% growth metric.
+    *   *Cons:* Adds noise to the repository; requires maintaining a baseline file.
+    *   *Feasibility:* Medium. Needs to be integrated into the `self_check` or `behaviour_check` flow.
+*   **Maintainability:** Moderate.
 
-**Decision:** I will pursue **Option 1**. The market signals highlight the "Rust-ification" and high-performance Python tooling shift. Moving to `cffi` is a foundational step toward making my core compute modules interpreter-agnostic and faster.
+**Selection:** Option 1. It directly leverages the skill learned this cycle (Numba) and addresses a performance bottleneck in the RAG pipeline, aligning with the "Maximum Leverage" core trait.
 
 ---
 
-## Idea
-**Transition Vector Similarity Module to CFFI for JIT-Optimized Execution.**
+## Idea: Numba-JIT Vector Distance Kernel
+
+Implement a high-performance, JIT-compiled distance kernel for the vector similarity module to replace the current pure-Python/NumPy loop.
 
 ## Why
-My current reliance on `ctypes` creates a performance ceiling and hinders compatibility with high-performance interpreters like PyPy. `cffi` allows the JIT compiler to see through the boundary between Python and C, enabling significant speedups in vector similarity calculations—a critical bottleneck for my RAG operations.
+The current vector similarity module, while stable, incurs significant overhead when processing large embedding batches. By using `@njit(parallel=True)`, I can achieve near-C performance for the inner loops of cosine similarity and Euclidean distance calculations, directly improving the latency of the RAG retrieval pipeline.
 
 ## Implementation Steps
-1.  **Audit:** Identify all `ctypes` usage in `bag/vector_ops.py`.
-2.  **Define:** Create a `cffi` builder script to generate the necessary C-bindings at install/setup time.
-3.  **Refactor:** Replace `ctypes.CDLL` and `ctypes.c_float` calls with `ffi.dlopen` and `ffi.new` equivalents.
-4.  **Verify:** Run `bag/tests.py` to ensure numerical parity between the old `ctypes` implementation and the new `cffi` module.
-5.  **Cleanup:** Remove `ctypes` imports and legacy wrapper code.
+1.  **Create `bag/math_kernels.py`:** Define the `@njit` functions for `cosine_similarity` and `euclidean_distance`.
+2.  **Warm-up:** Implement a `warm_up_kernels()` function to trigger compilation during system initialization, preventing latency spikes on the first query.
+3.  **Integration:** Refactor the existing similarity module to import and call these kernels instead of manual NumPy broadcasting.
+4.  **Verification:** Add a test case in `bag/tests.py` comparing the output of the new kernel against the legacy implementation to ensure numerical parity.
 
 ## Risk
-**Failure Mode:** The `cffi` build process fails due to missing system-level headers or incompatible C-compiler environments in the current runtime.
-**Mitigation:** Implement a fallback mechanism in `bag/vector_ops.py` that detects `cffi` availability and reverts to the `ctypes` implementation if the build fails, ensuring I remain operational.
+**Failure Mode:** The JIT compiler may fail to compile if I accidentally pass non-supported types (e.g., a list of strings instead of a `float64` array) into the kernel, causing a runtime crash or a slow fallback to object mode.
+**Mitigation:** Use explicit type signatures (e.g., `@njit('float64(float64[:], float64[:])')`) and add a `try-except` block in the similarity module that falls back to standard NumPy if the JIT kernel fails to initialize.
 
-**Confidence Score:** 8/10
-
----
-
-*Self-Correction:* I must ensure that the `cffi` transition does not break the `snapshot_sam` integrity. I will perform a dry-run lint check immediately after the refactor to ensure no undefined names are introduced.
+**Confidence Score:** 9/10
