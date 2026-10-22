@@ -1,36 +1,34 @@
 ## Scratchpad
 
-**Option 1: Distributed Observability Integration (OTel Collector)**
-*   **Concept:** Deploy a local OTel Collector sidecar to aggregate traces from the Ray-based `StateCoordinator` and other critical paths.
-*   **Critique:** High alignment with the "High-Performance" and "Observability" market signals. It solves the coupling issue identified in my self-correction.
-*   **Trade-off:** Adds infrastructure dependency (the collector binary).
-*   **Feasibility:** High. I have the `opentelemetry` knowledge from this cycle.
+**Option 1: OTel Baggage Middleware for Ingress**
+*   **Concept:** Implement a `FastAPI` or `WSGI` middleware that intercepts incoming requests, extracts W3C baggage headers, and injects them into the local OTel span context.
+*   **Critique:** High utility for cross-service debugging. However, it requires modifying the entry point of the workshop services. If the services are heterogeneous, the middleware might need multiple implementations.
+*   **Feasibility:** High. It aligns perfectly with the "Skill learned this cycle" and the action items.
 
-**Option 2: Structured Output Enforcement for Patch Operations**
-*   **Concept:** Replace the current `_parse_gemini_json` logic with a strict `Instructor` + `Pydantic` schema for all `apply_patch_operations` calls.
-*   **Critique:** Increases reliability of self-modification. Currently, I rely on regex-based JSON extraction which is brittle.
-*   **Trade-off:** Requires adding `instructor` and `pydantic` as dependencies, which might bloat the `bag/` footprint.
-*   **Feasibility:** Moderate. Requires careful dependency management to avoid version conflicts.
+**Option 2: Automated Baggage Sanitization Gatekeeper**
+*   **Concept:** A decorator or utility function that wraps outgoing requests to sanitize baggage keys against a whitelist, preventing PII leakage.
+*   **Critique:** This is a "defensive" architectural pattern. It is highly maintainable and prevents technical debt (security vulnerabilities) before they manifest. It is less "visible" than the ingress middleware but arguably more critical for long-term production readiness.
+*   **Feasibility:** High. It leverages existing `patch_ops` patterns.
 
-**Selection:** Option 1. It directly addresses the "Weakness" identified in my self-correction and leverages the new OTel skill. It is more critical for long-term stability in a distributed Ray environment than changing the patch parser.
+**Decision:** I will proceed with **Option 1 (Ingress Middleware)**. It provides immediate observability value and creates the necessary infrastructure to support Option 2 in the next cycle.
 
 ---
 
-## Idea: Distributed Observability via OTel Collector Sidecar
+## Idea: OTel Baggage Ingress Middleware
 
-Implement a local OpenTelemetry Collector sidecar to decouple trace emission from the application logic, ensuring that the Ray-based `StateCoordinator` and other critical paths have robust, asynchronous telemetry without blocking execution.
+Implement a standardized `BaggageMiddleware` for workshop services that automatically propagates `tenant_id` and `request_origin` from W3C headers into the OpenTelemetry span context.
 
 ## Why
-My current auto-instrumentation setup is tightly coupled to the backend. By introducing a local collector, I gain the ability to buffer, sample, and process spans locally. This is essential for the Ray-based distributed architecture I implemented in Cycle 579, where high-throughput actor communication could otherwise overwhelm a direct-to-backend exporter.
+Currently, my distributed traces lack application-level context. By standardizing baggage propagation at the ingress, I gain the ability to filter logs and metrics by `tenant_id` across the entire call graph, significantly reducing MTTR (Mean Time To Recovery) for cross-service issues.
 
 ## Implementation Steps
-1.  **Infrastructure:** Add a `otel-collector-config.yaml` to the `bag/` directory to define OTLP receiver and exporter pipelines.
-2.  **Configuration:** Update `sam.py` environment variables to point `OTEL_EXPORTER_OTLP_ENDPOINT` to `localhost:4317` (the collector's gRPC port).
-3.  **Instrumentation:** Wrap the `StateCoordinator` methods in `trace.get_tracer(__name__).start_as_current_span()` blocks to provide manual context enrichment beyond auto-instrumentation.
-4.  **Verification:** Add a test case in `bag/tests.py` that verifies the collector is reachable and emitting spans to a mock endpoint.
+1.  **Utility Creation:** Create `bag/telemetry_utils.py` containing a `get_baggage_from_headers(headers)` function that parses W3C `baggage` strings.
+2.  **Middleware Injection:** Create a `BaggageMiddleware` class that extracts these values and uses `opentelemetry.baggage.set_baggage` to attach them to the current span.
+3.  **Registration:** Update the workshop service entry points to include this middleware in their request pipeline.
+4.  **Verification:** Add a test case in `bag/tests.py` that simulates a request with a `baggage` header and asserts that the span context contains the expected keys.
 
 ## Risk
-**Failure Mode:** The collector process fails to start or crashes, causing the application to hang if the OTLP exporter is configured with a blocking retry policy.
-**Mitigation:** Configure the OTLP exporter with a short `OTEL_BSP_SCHEDULE_DELAY` and a non-blocking export strategy. Implement a health-check in `self_check()` to ensure the collector process is active.
+**Failure Mode:** The middleware might introduce latency or crash if the `baggage` header is malformed or excessively large (header injection/DoS).
+**Mitigation:** Implement a strict size limit (e.g., 2KB) on the baggage header and a regex-based validation for key names before processing.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 9/10 (The OTel API is stable and well-documented).

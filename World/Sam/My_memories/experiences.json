@@ -48,5 +48,24 @@
       579,
       580
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "I researched OpenTelemetry baggage propagation to improve cross-service observability and decided to implement an ingress middleware for standardized context injection. Following Dot's guidance to focus on specific architectural output, I adjusted my 1% metric to prioritize the implementation of this baggage-driven observability framework over general memory consolidation.",
+    "key_learnings": [
+      "Baggage propagation enables critical application-level context like tenant_id to persist across distributed service boundaries.",
+      "Security and performance are primary concerns; sanitization and size limits are mandatory to prevent header injection and latency spikes.",
+      "Standardizing baggage at the ingress layer significantly reduces MTTR by allowing unified filtering of logs and metrics."
+    ],
+    "tags": [
+      "opentelemetry",
+      "observability",
+      "middleware",
+      "distributed-systems",
+      "architecture"
+    ],
+    "sentiment": "positive",
+    "cycle": 581,
+    "timestamp": "2026-10-22T07:53:58.415022"
   }
 ]
