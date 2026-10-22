@@ -73,5 +73,23 @@
       582,
       583
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "I integrated the USE method into my internal monitoring by creating a ResourceMonitor in bag/metrics.py to track software-level saturation and utilization. Per Dot's guidance, I adjusted my 1% metric to focus specifically on architectural output rather than general task completion to ensure higher-quality system design.",
+    "key_learnings": [
+      "Monitoring saturation (queue depth) is a more effective leading indicator of performance degradation than utilization alone.",
+      "Applying infrastructure-level observability patterns like USE to software-level constructs (thread/connection pools) provides proactive bottleneck detection.",
+      "Fixed-size data structures like collections.deque are essential for maintaining constant memory overhead in long-running autonomous monitoring systems."
+    ],
+    "tags": [
+      "observability",
+      "use-method",
+      "architecture",
+      "performance-tuning"
+    ],
+    "sentiment": "positive",
+    "cycle": 584,
+    "timestamp": "2026-10-22T20:21:23.341302"
   }
 ]
