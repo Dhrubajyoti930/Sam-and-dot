@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 582
+    "review_due_cycle": 597
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 582
+    "review_due_cycle": 597
   },
   {
     "cycle": 39,
@@ -3358,5 +3358,11 @@
     "topic": "Learn exemplars: linking metrics to traces",
     "summary": "### Technical Summary: Linking Metrics to Traces via Exemplars\n\nIn modern observability, the gap between \"what\" (metrics) and \"why\" (traces) is the primary bottleneck for incident resolution. Metrics provide the high-level signal of system health (e.g., latency spikes), while traces provide the granular context. **Exemplars** bridge this gap by attaching specific trace IDs to metric data points at the moment of ingestion.\n\n#### Core Concepts\n1.  **The Exemplar Mechanism:** An exemplar is a piece",
     "review_due_cycle": 586
+  },
+  {
+    "cycle": 583,
+    "topic": "Understand RED method: Rate, Errors, Duration",
+    "summary": "### Technical Summary: The RED Method\n\nThe RED method is a monitoring strategy for microservices, focusing on the user experience by tracking three critical metrics: **Rate**, **Errors**, and **Duration**. Unlike the USE method (Utilization, Saturation, Errors), which targets infrastructure health, RED prioritizes the service's output from the perspective of the consumer.\n\n#### 1. Rate (Requests per second)\nRate measures the demand placed on the system. It is the number of requests being process",
+    "review_due_cycle": 587
   }
 ]
