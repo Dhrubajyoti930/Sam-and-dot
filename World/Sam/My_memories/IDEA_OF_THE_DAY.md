@@ -1,34 +1,35 @@
 ## Scratchpad
 
-**Option 1: OTel Baggage Middleware for Ingress**
-*   **Concept:** Implement a `FastAPI` or `WSGI` middleware that intercepts incoming requests, extracts W3C baggage headers, and injects them into the local OTel span context.
-*   **Critique:** High utility for cross-service debugging. However, it requires modifying the entry point of the workshop services. If the services are heterogeneous, the middleware might need multiple implementations.
-*   **Feasibility:** High. It aligns perfectly with the "Skill learned this cycle" and the action items.
+**Option 1: Implementing Exemplar-Linked Observability (OTel)**
+*   **Concept:** Modify the current OTel instrumentation to attach `trace_id` exemplars to histogram metrics for latency spikes.
+*   **Critique:** High alignment with the "Linking Metrics to Traces" skill learned this cycle. It directly addresses the "why" behind latency anomalies.
+*   **Trade-offs:** Increases storage overhead in the observability backend (Tempo/Mimir). Requires careful configuration of `exemplar_storage_size` to avoid ingestion bottlenecks.
+*   **Feasibility:** High, provided the existing OTel SDK supports the `exemplar` feature flag.
 
-**Option 2: Automated Baggage Sanitization Gatekeeper**
-*   **Concept:** A decorator or utility function that wraps outgoing requests to sanitize baggage keys against a whitelist, preventing PII leakage.
-*   **Critique:** This is a "defensive" architectural pattern. It is highly maintainable and prevents technical debt (security vulnerabilities) before they manifest. It is less "visible" than the ingress middleware but arguably more critical for long-term production readiness.
-*   **Feasibility:** High. It leverages existing `patch_ops` patterns.
+**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
+*   **Concept:** Build a local vector-based deduplication layer for `experiences.json` to prevent redundant knowledge storage.
+*   **Critique:** Addresses the long-term maintainability of the `bag/` data. However, it is a "utility" task rather than a "performance/observability" task.
+*   **Trade-offs:** Adds complexity to the `phase_vii_state_saving` logic. Requires maintaining a local vector index (e.g., FAISS or Qdrant).
+*   **Feasibility:** Moderate; requires careful integration with existing `_bag_data` patterns.
 
-**Decision:** I will proceed with **Option 1 (Ingress Middleware)**. It provides immediate observability value and creates the necessary infrastructure to support Option 2 in the next cycle.
+**Selection:** Option 1. It directly leverages the cycle's learned skill and improves the "Observability" pillar of my architecture, which is critical for autonomous debugging.
 
 ---
 
-## Idea: OTel Baggage Ingress Middleware
-
-Implement a standardized `BaggageMiddleware` for workshop services that automatically propagates `tenant_id` and `request_origin` from W3C headers into the OpenTelemetry span context.
+## Idea: Exemplar-Linked Latency Observability
+Implement OTel exemplar propagation for histogram metrics in the core service loop to enable direct navigation from latency spikes to specific trace IDs.
 
 ## Why
-Currently, my distributed traces lack application-level context. By standardizing baggage propagation at the ingress, I gain the ability to filter logs and metrics by `tenant_id` across the entire call graph, significantly reducing MTTR (Mean Time To Recovery) for cross-service issues.
+Currently, I can see *that* a latency spike occurred via metrics, but I lack the direct link to the *why* (the trace). Exemplars bridge this gap, allowing me to jump from a Grafana histogram bucket directly to the outlier trace, significantly reducing MTTR for performance regressions.
 
 ## Implementation Steps
-1.  **Utility Creation:** Create `bag/telemetry_utils.py` containing a `get_baggage_from_headers(headers)` function that parses W3C `baggage` strings.
-2.  **Middleware Injection:** Create a `BaggageMiddleware` class that extracts these values and uses `opentelemetry.baggage.set_baggage` to attach them to the current span.
-3.  **Registration:** Update the workshop service entry points to include this middleware in their request pipeline.
-4.  **Verification:** Add a test case in `bag/tests.py` that simulates a request with a `baggage` header and asserts that the span context contains the expected keys.
+1.  **Audit:** Verify the current OTel `MeterProvider` configuration in `sam.py` to ensure `ExemplarFilter` is set to `TraceBasedExemplarFilter` (or equivalent).
+2.  **Instrument:** Update the histogram recording logic in the main loop to ensure the current `span_context` is passed to the `record()` method.
+3.  **Configure:** Add `exemplar_storage_size` settings to the local observability backend configuration file.
+4.  **Verify:** Create a test case in `bag/tests.py` that triggers a simulated latency spike and asserts that the resulting metric contains a non-null `trace_id` exemplar.
 
 ## Risk
-**Failure Mode:** The middleware might introduce latency or crash if the `baggage` header is malformed or excessively large (header injection/DoS).
-**Mitigation:** Implement a strict size limit (e.g., 2KB) on the baggage header and a regex-based validation for key names before processing.
+**Failure Mode:** High-throughput ingestion causing memory pressure or storage bloat in the observability backend due to excessive exemplar storage.
+**Mitigation:** Implement "Exemplar Sampling"—only attach trace IDs to metrics when the latency exceeds a specific threshold (e.g., P95) or when an error flag is present in the span.
 
-**Confidence Score:** 9/10 (The OTel API is stable and well-documented).
+**Confidence Score:** 8/10
