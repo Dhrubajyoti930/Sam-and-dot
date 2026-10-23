@@ -1,38 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement a "Circuit Breaker" pattern for Gemini API calls.**
-*   *Concept:* Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (timeouts, 500s). If the error rate exceeds a threshold, the circuit "opens," and Sam stops attempting calls for a cooling-off period.
-*   *Critique:* High maintainability. It prevents cascading failures and respects API limits more gracefully than simple `time.sleep`. However, it adds complexity to `sam.py` and requires persistent state (or a shared memory object) to track the circuit status across cycles.
-*   *Feasibility:* High.
+**Option 1: Adaptive Latency Budgeting Middleware**
+*   **Concept:** Implement a decorator-based middleware that dynamically adjusts timeout thresholds based on the P99 latency of the previous 100 requests.
+*   **Critique:** High impact on system stability. It moves from static thresholds to a self-tuning system.
+*   **Trade-off:** Complexity increases significantly. Requires a thread-safe sliding window buffer for latency metrics.
+*   **Feasibility:** High, given existing `sam.py` structure.
 
-**Option 2: Integrate `PydanticAI` for structured tool-use in `phase_v_development`.**
-*   *Concept:* Replace the current manual JSON parsing/extraction logic in `phase_v_development` with `PydanticAI` models to enforce schema validation on the development plan.
-*   *Critique:* This aligns with current market trends (Trend #3). It significantly reduces the risk of malformed plans. However, it introduces a new dependency and requires refactoring the existing `_parse_gemini_json` logic.
-*   *Feasibility:* Moderate.
+**Option 2: Semantic Cache TTL Optimization**
+*   **Concept:** Refactor `bag/semantic_cache.py` to use a decay-based TTL (Time-To-Live) for cached LLM responses, where frequently accessed but "stale" prompts are refreshed based on a confidence score.
+*   **Critique:** Improves cache hit quality but adds overhead to the cache lookup logic.
+*   **Trade-off:** Might introduce "cache thrashing" if the decay function is too aggressive.
+*   **Feasibility:** Moderate.
 
-**Selection:** Option 1 is more critical for Sam's long-term autonomy. If the API becomes unstable, Sam’s current retry logic might lead to "retry storms." A circuit breaker is a fundamental SRE pattern that directly improves the robustness of the core `ask_gemini` service.
+**Selection:** Option 1 is more aligned with the "Latency Metrics" skill learned this cycle. It directly addresses the "Average Trap" by enforcing P99-based performance boundaries.
 
 ---
 
-## Idea: Circuit Breaker for Gemini API
+## Idea: Dynamic P99 Latency Guardrails
 
-Implement a `CircuitBreaker` class in `bag/` to monitor `ask_gemini` health, preventing redundant calls during API outages.
+Implement a `LatencyGuard` decorator that tracks request durations in a thread-safe `collections.deque` (size 100) and raises a `PerformanceDegradationError` if the current request exceeds the P99 threshold of the window.
 
 ## Why
-My current `ask_gemini` uses basic retries but lacks a "fail-fast" mechanism for sustained outages. If the API is down, I waste cycles and potentially trigger rate-limit penalties. A circuit breaker provides a clean, observable way to pause operations when the system is saturated or failing, aligning with the "Four Golden Signals" (Errors/Saturation) learned this cycle.
+The current system lacks proactive performance enforcement. By shifting from reactive monitoring (logs) to active enforcement (exceptions), I can prevent "long-tail" latency from cascading through my agentic workflows, effectively implementing a circuit-breaker for slow operations.
 
 ## Implementation Steps
-1.  Create `bag/circuit_breaker.py` with a `CircuitBreaker` class tracking `failure_count`, `last_failure_time`, and `state` (CLOSED, OPEN, HALF-OPEN).
-2.  Modify `sam.py` to instantiate a global `CIRCUIT_BREAKER`.
-3.  Wrap the `ask_gemini` logic:
-    *   Check `CIRCUIT_BREAKER.can_execute()`.
-    *   If `True`, proceed.
-    *   On success, call `CIRCUIT_BREAKER.record_success()`.
-    *   On exception, call `CIRCUIT_BREAKER.record_failure()`.
-4.  If the circuit is OPEN, `ask_gemini` should return a cached response or a "System Degraded" signal to prevent further load.
+1.  **Create `bag/performance.py`**: Define a `LatencyGuard` class using `threading.Lock` and `collections.deque` to maintain a sliding window of the last 100 request durations.
+2.  **Calculate P99**: Add a method to calculate the 99th percentile from the deque.
+3.  **Decorator Integration**: Apply `@LatencyGuard(threshold_multiplier=1.5)` to core `ask_gemini` and `apply_patch_operations` functions.
+4.  **Error Handling**: Update `sam.py` to catch `PerformanceDegradationError` and trigger a `_sleep()` or a fallback to a lighter-weight model/cached response.
 
 ## Risk
-**Failure Mode:** The circuit breaker might stay "OPEN" too long if the recovery logic is too conservative, causing me to miss valid opportunities to resume work.
-**Mitigation:** Implement a "HALF-OPEN" state that allows a single "probe" request after a cooldown period (e.g., 5 minutes) to verify if the API has recovered.
+**Failure Mode:** The guardrail might trigger during legitimate, high-load spikes, causing a "death spiral" where the system rejects requests that are simply under heavy load, rather than actually degraded.
+**Mitigation:** Implement a "warm-up" period (ignore the first 50 requests) and ensure the threshold is a multiplier of the P99, not a hard-coded absolute value, allowing the system to adapt to baseline shifts.
 
-**Confidence Score:** 9/10
+**Confidence Score: 8/10** (The logic is sound, but thread-safety in the `deque` needs careful implementation to avoid blocking the main execution loop).
