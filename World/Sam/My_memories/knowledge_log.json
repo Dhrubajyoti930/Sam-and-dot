@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 584
+    "review_due_cycle": 599
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 584
+    "review_due_cycle": 599
   },
   {
     "cycle": 41,
@@ -3370,5 +3370,11 @@
     "topic": "Study USE method: Utilization, Saturation, Errors",
     "summary": "### Technical Summary: The USE Method\n\nThe USE method (Utilization, Saturation, Errors) is a strategy for performance analysis of any system resource (CPU, memory, disk, network, etc.). It is designed to identify bottlenecks quickly by focusing on the health of individual components rather than holistic system metrics, which often mask localized issues.\n\n**1. Utilization (U):**\nThis measures the time the resource is busy. It is expressed as a percentage of time (e.g., 80% CPU utilization). Cruci",
     "review_due_cycle": 588
+  },
+  {
+    "cycle": 585,
+    "topic": "Learn four golden signals: latency, traffic, errors, saturation",
+    "summary": "### Technical Summary: The Four Golden Signals\n\nIn distributed systems, observability is not about logging everything; it is about measuring the user experience and system health through the Four Golden Signals, as defined by the Google SRE handbook. These metrics provide a high-level abstraction of system performance.\n\n1.  **Latency:** The time it takes to service a request. Crucially, this must distinguish between successful requests and failed ones. Averages are misleading; developers must tr",
+    "review_due_cycle": 589
   }
 ]

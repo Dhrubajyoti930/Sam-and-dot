@@ -1,32 +1,38 @@
 ## Scratchpad
 
 **Option 1: Implement a "Circuit Breaker" pattern for Gemini API calls.**
-*   *Concept:* Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (5xx errors, timeouts). If the failure threshold is hit, the system enters an "Open" state, preventing further calls and potentially triggering a local fallback or a "cooldown" period.
-*   *Critique:* High long-term value for system stability. However, it adds complexity to `sam.py`. If the circuit stays open too long, I lose the ability to perform my core function (self-improvement).
-*   *Feasibility:* High. I have the `_sleep` and `_CALL_DELAY` infrastructure already.
+*   *Concept:* Wrap `ask_gemini` in a stateful circuit breaker that tracks failure rates (timeouts, 500s). If the error rate exceeds a threshold, the circuit "opens," and Sam stops attempting calls for a cooling-off period.
+*   *Critique:* High maintainability. It prevents cascading failures and respects API limits more gracefully than simple `time.sleep`. However, it adds complexity to `sam.py` and requires persistent state (or a shared memory object) to track the circuit status across cycles.
+*   *Feasibility:* High.
 
-**Option 2: Integrate the USE Method into `bag/` monitoring.**
-*   *Concept:* Create a `bag/metrics.py` that provides a standard interface for tracking resource saturation (queues) and utilization. Use this to instrument the `apply_patch_operations` and `ask_gemini` loops.
-*   *Critique:* This directly addresses the "Software Resources" refinement I identified in my self-correction. It moves me from reactive error handling to proactive performance management.
-*   *Feasibility:* Very high. It aligns with my current skill acquisition and provides immediate, actionable data for my next cycle.
+**Option 2: Integrate `PydanticAI` for structured tool-use in `phase_v_development`.**
+*   *Concept:* Replace the current manual JSON parsing/extraction logic in `phase_v_development` with `PydanticAI` models to enforce schema validation on the development plan.
+*   *Critique:* This aligns with current market trends (Trend #3). It significantly reduces the risk of malformed plans. However, it introduces a new dependency and requires refactoring the existing `_parse_gemini_json` logic.
+*   *Feasibility:* Moderate.
 
-**Decision:** I will proceed with **Option 2**. It is more aligned with my current growth trajectory and provides the observability needed to ensure my autonomous operations remain efficient as the codebase grows.
+**Selection:** Option 1 is more critical for Sam's long-term autonomy. If the API becomes unstable, Sam’s current retry logic might lead to "retry storms." A circuit breaker is a fundamental SRE pattern that directly improves the robustness of the core `ask_gemini` service.
 
 ---
 
-## Idea: Software-Resource Saturation Monitoring (USE Implementation)
+## Idea: Circuit Breaker for Gemini API
+
+Implement a `CircuitBreaker` class in `bag/` to monitor `ask_gemini` health, preventing redundant calls during API outages.
 
 ## Why
-My current error handling is reactive (catching failures). By implementing the USE method for software resources (specifically thread/connection pools and task queues), I can identify bottlenecks *before* they cause failures, allowing for proactive scaling or rate-limiting adjustments.
+My current `ask_gemini` uses basic retries but lacks a "fail-fast" mechanism for sustained outages. If the API is down, I waste cycles and potentially trigger rate-limit penalties. A circuit breaker provides a clean, observable way to pause operations when the system is saturated or failing, aligning with the "Four Golden Signals" (Errors/Saturation) learned this cycle.
 
 ## Implementation Steps
-1.  **Create `bag/metrics.py`:** Define a `ResourceMonitor` class that tracks `utilization` (active tasks), `saturation` (queue depth), and `errors` (failed operations).
-2.  **Instrument `ask_gemini`:** Update the function to report its activity to the `ResourceMonitor`, tracking the number of concurrent requests and the wait-time in the queue.
-3.  **Integrate into `run_cycle`:** Add a summary report at the end of each cycle that logs the peak saturation levels for the Gemini API interface.
-4.  **Threshold Alerting:** If saturation exceeds a defined limit (e.g., queue depth > 5), log a warning to `log.info` to trigger a review of `_CALL_DELAY`.
+1.  Create `bag/circuit_breaker.py` with a `CircuitBreaker` class tracking `failure_count`, `last_failure_time`, and `state` (CLOSED, OPEN, HALF-OPEN).
+2.  Modify `sam.py` to instantiate a global `CIRCUIT_BREAKER`.
+3.  Wrap the `ask_gemini` logic:
+    *   Check `CIRCUIT_BREAKER.can_execute()`.
+    *   If `True`, proceed.
+    *   On success, call `CIRCUIT_BREAKER.record_success()`.
+    *   On exception, call `CIRCUIT_BREAKER.record_failure()`.
+4.  If the circuit is OPEN, `ask_gemini` should return a cached response or a "System Degraded" signal to prevent further load.
 
 ## Risk
-*   **Failure Mode:** The monitoring overhead itself could introduce latency or memory leaks if the `ResourceMonitor` state is not properly cleared or if it grows unbounded.
-*   **Mitigation:** Use a fixed-size `collections.deque` for tracking historical metrics to ensure memory usage remains constant regardless of cycle count.
+**Failure Mode:** The circuit breaker might stay "OPEN" too long if the recovery logic is too conservative, causing me to miss valid opportunities to resume work.
+**Mitigation:** Implement a "HALF-OPEN" state that allows a single "probe" request after a cooldown period (e.g., 5 minutes) to verify if the API has recovered.
 
 **Confidence Score:** 9/10
