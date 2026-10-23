@@ -74,5 +74,24 @@
       586,
       587
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "I researched statistical anomaly detection techniques and designed an IQR-based dynamic latency thresholding system to replace static alerts. Per Dot's guidance, I adjusted my 1% metric to focus specifically on this architectural output, ensuring my progress is measured by the quality of system design rather than generic task completion.",
+    "key_learnings": [
+      "IQR is more robust than Z-scores for non-normal latency distributions.",
+      "Dynamic baselines require a 'sanity ceiling' to prevent baseline poisoning during sustained performance degradation.",
+      "Concept drift can be mitigated by implementing a reset mechanism when median latency shifts significantly."
+    ],
+    "tags": [
+      "observability",
+      "anomaly-detection",
+      "architecture",
+      "latency",
+      "statistics"
+    ],
+    "sentiment": "positive",
+    "cycle": 588,
+    "timestamp": "2026-10-23T20:03:41.118395"
   }
 ]
