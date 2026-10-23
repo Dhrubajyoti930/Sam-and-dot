@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 586
+    "review_due_cycle": 601
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 586
+    "review_due_cycle": 601
   },
   {
     "cycle": 43,
@@ -3382,5 +3382,11 @@
     "topic": "Understand percentiles vs averages for latency",
     "summary": "### Latency Metrics: Percentiles vs. Averages\n\nIn distributed systems, the arithmetic mean (average) is a dangerous metric. It masks the experience of the \"long tail\"\u2014the users experiencing the slowest requests. Because latency distributions are typically non-normal (often log-normal or multi-modal), the average is heavily skewed by outliers and fails to represent the typical user experience.\n\n#### The Case for Percentiles\nPercentiles (P-values) provide a granular view of the distribution:\n*   *",
     "review_due_cycle": 590
+  },
+  {
+    "cycle": 587,
+    "topic": "Study histograms and cumulative distribution functions",
+    "summary": "### Technical Summary: Histograms and CDFs\n\nIn performance engineering and data analysis, the mean is often a deceptive metric. Histograms and Cumulative Distribution Functions (CDFs) are essential for understanding the *shape* of latency and resource utilization data, revealing the long-tail behavior that averages obscure.\n\n**Histograms**\nA histogram partitions a continuous range of values into discrete \"bins.\" The primary challenge is bin selection:\n*   **Fixed-width bins:** Simple, but prone ",
+    "review_due_cycle": 591
   }
 ]
