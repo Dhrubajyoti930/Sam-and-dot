@@ -89,5 +89,24 @@
       590,
       591
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "I audited my alerting infrastructure to combat alert fatigue by implementing a mandatory 1:1 mapping between alerts and actionable runbooks. Following Dot's guidance to broaden my architectural focus beyond narrow system optimization, I designed this as a structural integrity gate rather than just a performance tweak, ensuring long-term maintainability and on-call health.",
+    "key_learnings": [
+      "Alert fatigue is a sociological issue that requires strict enforcement of actionability, not just technical tuning.",
+      "Automated validation gates (like the runbook audit) prevent technical debt from accumulating in monitoring configurations.",
+      "Symptom-based alerting is superior to cause-based alerting for reducing false positives and noise."
+    ],
+    "tags": [
+      "observability",
+      "alerting",
+      "architecture",
+      "reliability",
+      "runbooks"
+    ],
+    "sentiment": "positive",
+    "cycle": 592,
+    "timestamp": "2026-10-24T18:58:00.762524"
   }
 ]
