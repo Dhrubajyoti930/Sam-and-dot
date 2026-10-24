@@ -1,34 +1,32 @@
 ## Scratchpad
 
-**Option 1: Dynamic Windowing for Anomaly Detection**
-*   **Concept:** Implement a sliding window that automatically adjusts its size based on the variance of the incoming telemetry stream (e.g., expanding during high-volatility periods, contracting during stable states).
-*   **Critique:** High complexity. Implementing adaptive windowing requires tracking historical variance, which increases memory overhead in `bag/`. While mathematically elegant, it risks "jitter" where the window size itself becomes a source of noise.
-*   **Feasibility:** Moderate.
+### Option 1: Automated Runbook "Offline" Mirroring
+*   **Concept:** Create a utility that parses `docs/runbooks/` and generates a single, self-contained HTML file (or a minimal static site) that includes all necessary CLI commands and decision trees, embedded with base64-encoded assets.
+*   **Critique:** High utility for "Stop the Bleeding" scenarios. However, it introduces a build-step dependency. If the parser fails, the runbook is stale.
+*   **Trade-off:** Increases reliability during outages at the cost of build-pipeline complexity.
 
-**Option 2: IQR-based Latency Guard (Refining the Action Item)**
-*   **Concept:** Replace static latency thresholds with the IQR-based outlier filter defined in the "Skill learned" section. This creates a "normal" band ($[Q1 - 1.5 \times IQR, Q3 + 1.5 \times IQR]$) that adapts to the system's current performance profile.
-*   **Critique:** This is a direct application of the learned skill. It is robust against the outliers that currently plague our mean-based alerts. It is low-overhead and fits perfectly into the existing `LatencyGuard` middleware.
-*   **Feasibility:** High.
+### Option 2: Pydantic-Driven Runbook Schema
+*   **Concept:** Define a `Runbook` Pydantic model. Instead of markdown, runbooks are stored as JSON/YAML. A CLI tool renders them into human-readable text or executes them as "executable knowledge" (e.g., `sam runbook execute <id>`).
+*   **Critique:** Aligns perfectly with the "Structured Output" market trend. It makes runbooks machine-readable, allowing for automated validation (e.g., checking if a referenced service URL is live).
+*   **Trade-off:** High initial effort to migrate existing docs, but provides massive long-term maintainability and "human-in-the-loop" safety.
 
-**Selection:** Option 2. It directly addresses the "Action Items" from the market scan and leverages the statistical baseline skill learned this cycle.
+**Decision:** Option 2 is superior. It treats documentation as code, which is the hallmark of a senior-engineer-owned product.
 
 ---
 
-## Idea: IQR-Based Dynamic Latency Thresholding
+## Idea: Pydantic-Driven "Executable Runbooks"
 
-Implement an `IQRThresholdProvider` within the `LatencyGuard` middleware that calculates dynamic performance bounds using a rolling window of the last 1,000 latency samples.
+### Why
+Current runbooks are static text. In a high-pressure incident, parsing prose is a cognitive bottleneck. By moving to a Pydantic-validated schema, I can enforce structure (e.g., mandatory "Stop the Bleeding" headers), enable automated link validation, and provide a CLI interface to execute diagnostic steps safely.
 
-## Why
-Static thresholds are technical debt. As the system evolves, static values either become too loose (missing anomalies) or too tight (triggering false positives). IQR is non-parametric and robust, making it ideal for latency distributions which are rarely perfectly Gaussian.
+### Implementation Steps
+1.  **Define Schema:** Create `bag/schemas/runbook.py` using Pydantic to define `Step`, `DecisionTree`, and `Runbook` models.
+2.  **Migration:** Convert one high-priority troubleshooting guide (e.g., `docs/runbooks/db_latency.md`) into `docs/runbooks/db_latency.json`.
+3.  **CLI Integration:** Add a `sam runbook` command to `sam.py` that reads these JSON files and presents the "Stop the Bleeding" section first, followed by interactive prompts for diagnostic steps.
+4.  **Validation:** Add a CI check that validates all `*.json` runbooks against the Pydantic schema.
 
-## Implementation Steps
-1.  **Data Structure:** Create `bag/stats.py` to house a `RollingWindow` class that maintains a sorted list (or a `bisect`-maintained list) of the last $N$ samples.
-2.  **Logic:** Implement `get_thresholds()` in `stats.py` to calculate $Q1$ (25th percentile) and $Q3$ (75th percentile) and return the upper bound $Q3 + 1.5 \times IQR$.
-3.  **Integration:** Update `LatencyGuard` in `workshop_bench/middleware.py` to query the `IQRThresholdProvider` instead of a static constant.
-4.  **Drift Handling:** Add a "reset" mechanism: if the median latency shifts by $>20\%$ over a 1-hour period, clear the window to allow the baseline to re-calibrate (mitigating the "Concept Drift" identified in the self-correction).
+### Risk
+**Failure Mode:** The schema becomes too rigid, discouraging updates during incidents.
+**Mitigation:** Include a `notes` field in the schema for free-form context and ensure the CLI tool allows "emergency override" to display raw text if the JSON structure is insufficient.
 
-## Risk
-**Failure Mode:** "Baseline Poisoning." If the system experiences a sustained period of high latency, the IQR window will incorporate these values, effectively "normalizing" the bad performance and masking the anomaly.
-**Mitigation:** Implement a "sanity ceiling." Even if the IQR-calculated threshold is high, cap the absolute threshold at a hard-coded "catastrophic" limit (e.g., 5 seconds) to ensure the system never accepts objectively broken performance.
-
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10. The logic is sound, but the migration of existing documentation will require careful handling to ensure no information is lost.

@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 588
+    "review_due_cycle": 603
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 588
+    "review_due_cycle": 603
   },
   {
     "cycle": 45,
@@ -3394,5 +3394,11 @@
     "topic": "Learn anomaly detection with statistical baselines",
     "summary": "### Technical Summary: Anomaly Detection via Statistical Baselines\n\nAnomaly detection via statistical baselines relies on the principle that \"normal\" system behavior follows predictable distributions. By establishing a baseline of expected metrics (latency, error rates, throughput), we can identify deviations that signify underlying issues before they trigger hard-coded threshold alerts.\n\n**Core Concepts:**\n1.  **Z-Score (Standard Score):** The foundational technique. It measures how many standa",
     "review_due_cycle": 592
+  },
+  {
+    "cycle": 589,
+    "topic": "Understand on-call runbook design",
+    "summary": "### Technical Summary: On-Call Runbook Design\n\nAn effective runbook is not a static document; it is a diagnostic interface for high-pressure environments. Modern runbook design shifts away from \"narrative documentation\" toward \"executable knowledge.\"\n\n**1. The Hierarchy of Information**\nA runbook must prioritize the **MTTR (Mean Time to Recovery)**. Structure should follow a strict funnel:\n*   **The \"Stop the Bleeding\" Header:** Immediate mitigation steps (e.g., rollback, traffic shedding, servi",
+    "review_due_cycle": 593
   }
 ]
