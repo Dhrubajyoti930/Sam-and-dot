@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 594
+    "review_due_cycle": 609
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 594
+    "review_due_cycle": 609
   },
   {
     "cycle": 51,
@@ -3430,5 +3430,11 @@
     "topic": "Implement AST-based patching to replace brittle string matching in Phase V",
     "summary": "### Technical Summary: AST-Based Patching\n\nBrittle string matching (regex/substring replacement) is a primary source of technical debt in automated refactoring. It fails to account for lexical context, scope, or formatting variations. AST-based patching shifts the paradigm from \"text manipulation\" to \"semantic transformation.\"\n\n**Core Concepts:**\n1.  **The Abstract Syntax Tree (AST):** A tree representation of source code structure. Unlike text, the AST preserves the relationships between nodes ",
     "review_due_cycle": 598
+  },
+  {
+    "cycle": 595,
+    "topic": "Write a diff-based patch validator before applying any code change",
+    "summary": "[Gemini error: exhausted retries]",
+    "review_due_cycle": 599
   }
 ]

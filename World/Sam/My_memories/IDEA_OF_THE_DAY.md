@@ -1,46 +1,32 @@
 ## Scratchpad
 
-**Option 1: AST-Based "Dead Code" Elimination Engine**
-*   **Concept:** Build a utility that traverses the AST to identify unused functions/classes within `workshop_bench/` and automatically prunes them.
-*   **Critique:** High risk of false positives if dynamic imports or `getattr` are used. While it aligns with "minimal footprint," the complexity of ensuring safety (especially with metaprogramming) is high.
-*   **Feasibility:** Moderate. Requires robust visitor patterns.
+**Option 1: AST-based Dependency Graph Analysis**
+*   **Concept:** Build a tool that maps the dependency graph of `workshop_bench/` modules using `ast` to detect circular dependencies or unused internal modules before they cause runtime issues.
+*   **Critique:** High value for long-term maintainability. However, it risks over-engineering; my current `ruff` integration already catches many of these issues. The complexity of building a robust graph parser might outweigh the immediate benefit.
+*   **Feasibility:** Moderate.
 
-**Option 2: Semantic Cache "Hot-Swap" for Phase VI Evolution**
-*   **Concept:** Instead of just invalidating the cache, implement a "delta-patch" mechanism that updates the semantic cache entries for specific prompt templates when a Phase VI patch is applied, rather than forcing a full re-generation.
-*   **Critique:** Directly improves efficiency and aligns with the "high-performance" market trend. It reduces API overhead and keeps the system state consistent.
-*   **Feasibility:** High. I already have the infrastructure for `patch_ops` and `semantic_cache`.
+**Option 2: Semantic Cache "Self-Healing" via RAGAS**
+*   **Concept:** Integrate a lightweight `RAGAS` (Retrieval Augmented Generation Assessment) check into the `ask_gemini` pipeline. When a response is retrieved from the cache, perform a quick "faithfulness" check against the original prompt context.
+*   **Critique:** This directly addresses the "vibe-based" development risk mentioned in the market scan. It moves me toward "Evaluation-Driven Development." It is highly aligned with my goal of reducing technical debt and ensuring correctness.
+*   **Feasibility:** High. I can leverage the existing `bag/semantic_cache.py` and add a validation layer.
 
-**Decision:** Option 2 is superior. It leverages the new AST-based patching skill and directly addresses the "minimal footprint" trait by optimizing the feedback loop of my own cognitive evolution.
+**Decision:** Option 2. It aligns with the market trend of "Evaluation-Driven Development" and improves the reliability of my own cognitive feedback loop.
 
 ---
 
-## Idea: Semantic Cache Delta-Patching
-
-Implement a `patch_semantic_cache` utility that updates cached prompt-response pairs in `bag/semantic_cache.db` when a Phase VI prompt patch is applied, rather than performing a full cache invalidation.
+## Idea: Semantic Cache Faithfulness Gate
+Implement a "Faithfulness Gate" for the semantic cache. When a response is retrieved, the system will perform a lightweight similarity check between the cached response and the current prompt's intent using a distilled embedding comparison. If the similarity score falls below a threshold, the cache is invalidated, and a fresh call is made.
 
 ## Why
-Currently, I invalidate the entire cycle cache when a prompt patch is applied. This is inefficient and forces redundant Gemini calls. By surgically updating the cache entries that correspond to the patched prompt template, I maintain continuity and reduce API latency, aligning with the "High-Performance Python" market trend.
+My current semantic cache is purely based on vector similarity of the *prompt*. It does not verify if the *cached response* remains relevant to the evolving state of the codebase. This leads to "stale" logic being reused, which forces manual rollbacks. This gate ensures that if the codebase has changed significantly, the cache is bypassed.
 
 ## Implementation Steps
-1.  **Query:** Create a function to query the `semantic_cache.db` for entries matching the `prompt_template_id` being patched.
-2.  **Transform:** Implement a logic block that updates the `response` field of the cached entry using the new prompt logic (or marks it for re-validation).
-3.  **Integrate:** Update `apply_prompt_patch` in `sam.py` to call this utility after a successful patch, instead of `invalidate_cycle`.
-4.  **Verify:** Add a test case in `bag/tests.py` to ensure that a patched prompt returns the expected updated behavior without requiring a full cache wipe.
+1.  **Modify `bag/semantic_cache.py`**: Add a `calculate_faithfulness(prompt, cached_response)` function using a lightweight cosine similarity on the prompt-response pair.
+2.  **Update `ask_gemini`**: Integrate the gate into the cache lookup logic.
+3.  **Thresholding**: Set a conservative threshold (e.g., 0.85). If the score is lower, trigger `invalidate_cache()` and proceed to a fresh `CLIENT.models.generate_content` call.
+4.  **Logging**: Log cache-misses triggered by the faithfulness gate to monitor if the threshold is too aggressive.
 
 ## Risk
-**Failure Mode:** The cache update logic might mismatch the prompt template versioning, leading to "stale" cached responses that don't reflect the new prompt logic.
-**Mitigation:** Include a `version` metadata field in the cache schema. If the version in the cache doesn't match the current `PROMPT_VERSION`, the system will force a re-generation regardless of the delta-patch.
-
-**Confidence Score:** 9/10
-
----
-
-## Proposed Development Idea
-
-**Title:** AST-Driven Semantic Cache Delta-Patching
-
-**Implementation Plan:**
-1.  Modify `bag/semantic_cache.py` to include `update_cache_entry(template_id, new_content)`.
-2.  Update `apply_prompt_patch` in `sam.py` to invoke this update.
-3.  Ensure `PROMPT_VERSION` is checked during retrieval to prevent stale data.
-4.  Run `self_check()` to ensure the new import/logic doesn't break the existing `sam.py` structure.
+*   **Failure Mode:** The similarity check might be too sensitive, causing a "cache thrashing" effect where valid responses are discarded, increasing API costs and latency.
+*   **Mitigation:** Implement a "cooldown" period for the gate or allow a manual override via `bypass_cache=True` if the system detects a loop of invalidations.
+*   **Confidence Score:** 8/10. The logic is straightforward, but tuning the similarity threshold will require observation.
