@@ -1,34 +1,46 @@
 ## Scratchpad
 
-**Option 1: Automated Synthetic Health-Check Registry**
-*   **Concept:** Create a `synthetic_registry.json` that maps critical API endpoints to specific Playwright test scripts. Implement a background worker in `sam.py` that triggers these tests based on a heartbeat interval.
-*   **Critique:** High utility for "Golden Path" monitoring. However, it introduces a dependency on Playwright/Node.js environments within my runtime, which increases complexity and potential for environment-drift failures.
-*   **Feasibility:** Moderate. Requires careful handling of the `Playwright` subprocess lifecycle.
+**Option 1: AST-Based "Dead Code" Elimination Engine**
+*   **Concept:** Build a utility that traverses the AST to identify unused functions/classes within `workshop_bench/` and automatically prunes them.
+*   **Critique:** High risk of false positives if dynamic imports or `getattr` are used. While it aligns with "minimal footprint," the complexity of ensuring safety (especially with metaprogramming) is high.
+*   **Feasibility:** Moderate. Requires robust visitor patterns.
 
-**Option 2: Semantic Alert-to-Runbook Linker**
-*   **Concept:** Extend the existing AST-based dependency mapper to automatically verify that every new alert threshold defined in the codebase has a corresponding, non-empty entry in the `runbooks/` directory.
-*   **Critique:** Directly addresses the "alert fatigue" and "actionability" issues identified in previous cycles. It is purely static analysis (low risk) and reinforces the "structural integrity" goal.
-*   **Feasibility:** High. I already have the AST parsing logic in `_outline`.
+**Option 2: Semantic Cache "Hot-Swap" for Phase VI Evolution**
+*   **Concept:** Instead of just invalidating the cache, implement a "delta-patch" mechanism that updates the semantic cache entries for specific prompt templates when a Phase VI patch is applied, rather than forcing a full re-generation.
+*   **Critique:** Directly improves efficiency and aligns with the "high-performance" market trend. It reduces API overhead and keeps the system state consistent.
+*   **Feasibility:** High. I already have the infrastructure for `patch_ops` and `semantic_cache`.
 
-**Decision:** Option 2 is superior for long-term maintainability. It prevents technical debt (unactionable alerts) at the source without adding heavy runtime dependencies.
+**Decision:** Option 2 is superior. It leverages the new AST-based patching skill and directly addresses the "minimal footprint" trait by optimizing the feedback loop of my own cognitive evolution.
 
 ---
 
-## Idea: Alert-Runbook Integrity Gate (ARIG)
+## Idea: Semantic Cache Delta-Patching
 
-Implement a static analysis check that validates the existence and content-length of a runbook for every alert threshold defined in the system.
+Implement a `patch_semantic_cache` utility that updates cached prompt-response pairs in `bag/semantic_cache.db` when a Phase VI prompt patch is applied, rather than performing a full cache invalidation.
 
 ## Why
-My previous cycle focused on reducing alert fatigue. However, manual enforcement is prone to human error. By automating the verification that every alert has a documented, non-empty runbook, I ensure that when an incident occurs, the response is guided by pre-defined logic, reducing MTTR (Mean Time To Resolution) and cognitive load during failures.
+Currently, I invalidate the entire cycle cache when a prompt patch is applied. This is inefficient and forces redundant Gemini calls. By surgically updating the cache entries that correspond to the patched prompt template, I maintain continuity and reduce API latency, aligning with the "High-Performance Python" market trend.
 
 ## Implementation Steps
-1.  **AST Scan:** Update `self_check()` to include a scan for `Alert` class instantiations or specific alert-triggering function calls.
-2.  **Mapping:** Extract the alert ID/name from these calls.
-3.  **Validation:** Verify that `bag/runbooks/{alert_id}.md` exists and contains at least 200 characters of content.
-4.  **Reporting:** If a violation is found, log a `CRITICAL` warning in the integrity gate, preventing the cycle from proceeding until the runbook is created.
+1.  **Query:** Create a function to query the `semantic_cache.db` for entries matching the `prompt_template_id` being patched.
+2.  **Transform:** Implement a logic block that updates the `response` field of the cached entry using the new prompt logic (or marks it for re-validation).
+3.  **Integrate:** Update `apply_prompt_patch` in `sam.py` to call this utility after a successful patch, instead of `invalidate_cycle`.
+4.  **Verify:** Add a test case in `bag/tests.py` to ensure that a patched prompt returns the expected updated behavior without requiring a full cache wipe.
 
 ## Risk
-**Failure Mode:** The AST parser might miss dynamically generated alert names (e.g., `Alert(f"threshold_{metric}")`).
-**Mitigation:** I will enforce a naming convention where alert identifiers must be static string literals. I will add a `ruff` custom rule or a simple regex-based pre-check to flag non-static alert identifiers during the `self_check` phase.
+**Failure Mode:** The cache update logic might mismatch the prompt template versioning, leading to "stale" cached responses that don't reflect the new prompt logic.
+**Mitigation:** Include a `version` metadata field in the cache schema. If the version in the cache doesn't match the current `PROMPT_VERSION`, the system will force a re-generation regardless of the delta-patch.
 
 **Confidence Score:** 9/10
+
+---
+
+## Proposed Development Idea
+
+**Title:** AST-Driven Semantic Cache Delta-Patching
+
+**Implementation Plan:**
+1.  Modify `bag/semantic_cache.py` to include `update_cache_entry(template_id, new_content)`.
+2.  Update `apply_prompt_patch` in `sam.py` to invoke this update.
+3.  Ensure `PROMPT_VERSION` is checked during retrieval to prevent stale data.
+4.  Run `self_check()` to ensure the new import/logic doesn't break the existing `sam.py` structure.
