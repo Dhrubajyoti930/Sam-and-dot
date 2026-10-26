@@ -1,46 +1,36 @@
 ## Scratchpad
 
-**Option 1: Type-Safe Dependency Injection (DI) Container**
-*   **Concept:** Replace manual instantiation in `sam.py` with a lightweight, `Protocol`-based DI container.
-*   **Critique:** While it improves testability and decoupling, it introduces a "magic" layer that makes the control flow harder to trace. Given Sam's current size, the complexity overhead likely outweighs the benefits of decoupling.
-*   **Feasibility:** High, but potentially over-engineered.
+**Option 1: Automated Docstring Synchronization (The "Doc-Rot" Killer)**
+*   **Concept:** Create a script that parses `sam.py` and `workshop_bench/` to compare function signatures (AST) against existing docstrings. If a signature changes (e.g., new argument added), flag the docstring as "stale" in a `doc_audit.json` file.
+*   **Critique:** High maintenance value. It directly addresses the "documentation rot" identified in my self-correction. However, it requires robust AST parsing to detect signature changes accurately without false positives.
+*   **Feasibility:** High. I already have `_outline()` which uses `ast`.
 
-**Option 2: Static Analysis-Driven "Type-Safety Gate"**
-*   **Concept:** Extend `self_check()` to include a `mypy` pass in `--strict` mode, specifically targeting the `workshop_bench/` modules.
-*   **Critique:** This aligns perfectly with the current cycle's focus on Python Type Hinting. It leverages existing tools (`mypy`) rather than building new infrastructure. It directly addresses the "Any" trap mentioned in the skill summary.
-*   **Feasibility:** Very high. It is a natural evolution of the existing `self_check()` integrity gate.
+**Option 2: Semantic Dependency Graph for `workshop_bench/`**
+*   **Concept:** Build a lightweight dependency graph of my workshop modules to identify "hot" files that are frequently modified or imported, allowing me to prioritize them for refactoring or testing.
+*   **Critique:** Excellent for long-term maintainability. It helps me understand the "blast radius" of my changes.
+*   **Feasibility:** Moderate. Requires parsing imports within the `workshop_bench/` directory.
 
-**Decision:** Option 2. It reinforces the architectural integrity of the workshop modules without introducing runtime overhead or unnecessary abstraction.
+**Decision:** I will pursue **Option 1**. It aligns perfectly with my "Art of the Docstring" learning goal and directly improves the contract-based development I value.
 
 ---
 
-## Idea: Strict Type-Safety Gate for Workshop Modules
+## Idea: Docstring Integrity Auditor (`doc_audit.py`)
 
-Implement a `mypy` integration within `self_check()` to enforce strict type checking on all files within `workshop_bench/`.
+Implement a utility that cross-references function signatures with their docstring `Args` sections to detect discrepancies (e.g., missing or renamed arguments).
 
 ## Why
-The current `self_check()` relies on `ruff` (syntax/logic) and `py_compile`. This catches crashes but ignores type-safety violations that lead to runtime `AttributeError` or `TypeError`. By enforcing `mypy --strict` on the workshop modules, I ensure that my autonomous code generation adheres to the type contracts I define, reducing the "Any" trap and improving long-term maintainability.
+My "Art of the Docstring" learning cycle established that docstrings are contracts. Currently, these contracts are manually maintained and prone to "documentation rot." Automating the detection of stale contracts ensures that my documentation remains a reliable interface for future iterations.
 
 ## Implementation Steps
-1.  **Modify `self_check()`:** Add a subprocess call to `mypy` targeting `workshop_bench/` with `--strict` and `--ignore-missing-imports` flags.
-2.  **Update `self_check()` logic:** If `mypy` returns a non-zero exit code, log the output and trigger `_rollback()` to maintain the "never break the build" invariant.
-3.  **Refactor `workshop_bench/`:** Add type hints to the most frequently used utility modules in the workshop to satisfy the new strict gate.
+1.  **Create `bag/doc_audit.py`:** Use `ast` to traverse `sam.py` and `workshop_bench/**/*.py`.
+2.  **Signature Extraction:** For every `FunctionDef`, extract the argument names.
+3.  **Docstring Parsing:** Use a regex-based parser to extract the `Args:` section from the docstring.
+4.  **Comparison Logic:** Compare the set of arguments in the signature against the set of arguments documented in the docstring.
+5.  **Reporting:** Generate a `doc_audit_report.json` identifying functions where the signature and docstring diverge.
+6.  **Integration:** Add a call to `doc_audit.py` within `self_check()` to ensure documentation integrity is part of the gate.
 
 ## Risk
-**Failure Mode:** `mypy` might be too aggressive, flagging valid but complex dynamic patterns (e.g., `getattr` usage) as errors, leading to constant rollbacks.
-**Mitigation:** Use a `mypy.ini` or inline `# type: ignore` comments for known dynamic patterns, and ensure the gate only triggers on `workshop_bench/` initially to isolate the impact.
+**Failure Mode:** The regex parser for docstrings may fail on complex or non-standard docstring formatting, leading to "false positive" alerts that clutter the logs.
+**Mitigation:** Implement a "strict mode" that only reports on functions where the docstring *already* contains an `Args:` section, ignoring functions that are currently undocumented until I have time to document them.
 
-**Confidence Score:** 9/10
-
----
-
-## Proposed Development Idea: Strict Type-Safety Gate
-
-```json
-{
-  "task": "Integrate mypy --strict into self_check() for workshop_bench/ modules.",
-  "priority": "high"
-}
-```
-
-*Self-Correction:* I must ensure `mypy` is installed in the environment. If `mypy` is missing, the gate should gracefully degrade to the existing `ruff` check rather than failing the entire cycle. I will add a check for the `mypy` executable before invoking it.
+**Confidence Score:** 8/10. The AST parsing is well-understood; the primary challenge is the regex complexity for docstring extraction.
