@@ -1793,3 +1793,58 @@
 2026-10-26 11:26:56,360 [DOT][INFO] Today is Monday — inbox check reserved for Sunday.
 2026-10-26 11:26:56,363 [DOT][INFO] Worklog: no stale entries.
 2026-10-26 11:26:57,572 [DOT][INFO] Dot's daily run complete.
+2026-10-26 19:27:45,963 [DOT][INFO] ═══════════════════════════════════
+2026-10-26 19:27:45,964 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-10-26 19:27:45,964 [DOT][INFO] ═══════════════════════════════════
+2026-10-26 19:27:45,964 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-10-26 19:27:45,973 [DOT][INFO] Task 1: chunk 1/8 from cache.
+2026-10-26 19:27:45,973 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-10-26 19:27:45,973 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-10-26 19:27:45,974 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-10-26 19:27:45,974 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-10-26 19:27:45,975 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-10-26 19:27:45,975 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-10-26 19:27:45,976 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-10-26 19:28:02,003 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-26 19:28:05,627 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-26 19:28:05,638 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-10-26 19:28:13,638 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-10-26 19:28:13,640 [DOT][INFO] Task 2: 4 experiences → 1 batch(es) of ≤5.
+2026-10-26 19:28:21,641 [DOT][INFO] Task 2: batch 1/1 — cycles [51, 596, 597, 598]
+2026-10-26 19:28:29,656 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-26 19:28:35,691 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-26 19:28:35,692 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-26 19:28:53,693 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-26 19:29:01,244 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-10-26 19:29:01,248 [DOT][INFO] Experiences curated: 1 kept, 0 forgotten, 1 consolidated. Total now: 2.
+2026-10-26 19:29:01,248 [DOT][INFO] Letter written to Sam: Letter_20261026T192901Z.md
+2026-10-26 19:29:01,249 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-10-26 19:29:01,249 [DOT][INFO] Finding best recipient for: Tiago Henriques, maintainer of 'python-dependency-injector'. His project is widely used for DI in smaller Python ecosyst
+2026-10-26 19:29:09,263 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-26 19:29:10,209 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-26 19:29:10,209 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-26 19:29:28,210 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-26 19:29:29,018 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-26 19:29:29,019 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-26 19:29:47,019 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-26 19:29:47,544 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-26 19:29:47,545 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-26 19:29:57,545 [DOT][WARNING] find_best_recipient: could not parse Gemini response.
+2026-10-26 19:29:57,545 [DOT][WARNING] No suitable recipient found in emails.json — request preserved.
+2026-10-26 19:29:57,546 [DOT][INFO] Appended to Letter_20261026T192901Z.md: Email Dispatch — No Match
+2026-10-26 19:29:57,546 [DOT][INFO] Appended to Letter_20261026T192901Z.md: Email Dispatch
+2026-10-26 19:30:05,546 [DOT][INFO] ── Task 4: Bag Review ──
+2026-10-26 19:30:21,560 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-26 19:30:22,380 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-26 19:30:22,381 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-26 19:30:40,382 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-26 19:30:51,893 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-26 19:30:51,894 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-26 19:31:09,894 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-10-26 19:31:11,002 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-10-26 19:31:11,003 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-10-26 19:31:21,003 [DOT][INFO] Bag review complete.
+2026-10-26 19:31:21,004 [DOT][INFO] Appended to Letter_20261026T192901Z.md: Bag Excavation Findings
+2026-10-26 19:31:21,004 [DOT][INFO] Today is Monday — inbox check reserved for Sunday.
+2026-10-26 19:31:21,008 [DOT][INFO] Worklog: no stale entries.
+2026-10-26 19:31:21,880 [DOT][INFO] Dot's daily run complete.
