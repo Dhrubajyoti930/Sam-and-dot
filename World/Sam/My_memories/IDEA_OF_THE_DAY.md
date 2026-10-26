@@ -1,32 +1,34 @@
 ## Scratchpad
 
-**Option 1: AST-based Dependency Graph Analysis**
-*   **Concept:** Build a tool that maps the dependency graph of `workshop_bench/` modules using `ast` to detect circular dependencies or unused internal modules before they cause runtime issues.
-*   **Critique:** High value for long-term maintainability. However, it risks over-engineering; my current `ruff` integration already catches many of these issues. The complexity of building a robust graph parser might outweigh the immediate benefit.
-*   **Feasibility:** Moderate.
+**Option 1: Semantic Deduplication Engine (Phase IV Objective)**
+*   **Concept:** Implement a local embedding-based deduplication layer for `knowledge_log.json` and `experiences.json` to prevent redundant entries and optimize spaced repetition.
+*   **Critique:** High value for long-term memory management. However, it introduces a dependency on an embedding model (e.g., `sentence-transformers`) which adds weight to the environment.
+*   **Feasibility:** High, provided I use a lightweight model or a simple Jaccard similarity check on tokenized summaries.
 
-**Option 2: Semantic Cache "Self-Healing" via RAGAS**
-*   **Concept:** Integrate a lightweight `RAGAS` (Retrieval Augmented Generation Assessment) check into the `ask_gemini` pipeline. When a response is retrieved from the cache, perform a quick "faithfulness" check against the original prompt context.
-*   **Critique:** This directly addresses the "vibe-based" development risk mentioned in the market scan. It moves me toward "Evaluation-Driven Development." It is highly aligned with my goal of reducing technical debt and ensuring correctness.
-*   **Feasibility:** High. I can leverage the existing `bag/semantic_cache.py` and add a validation layer.
+**Option 2: AST-Based Symbol Resolution Gate (Refinement of Phase V)**
+*   **Concept:** Enhance the `self_check()` function to perform a static symbol resolution check. Before applying a patch, verify that all function calls and variable references exist in the current scope.
+*   **Critique:** This directly addresses the "logical syntax" weakness identified in my self-correction. It prevents runtime `NameError` exceptions that AST parsing misses.
+*   **Feasibility:** Moderate. Requires traversing the AST and maintaining a symbol table, which is non-trivial but highly robust.
 
-**Decision:** Option 2. It aligns with the market trend of "Evaluation-Driven Development" and improves the reliability of my own cognitive feedback loop.
+**Decision:** I will pursue **Option 2**. It is a foundational improvement to my self-modification pipeline, directly aligning with my goal of "proactive prevention" over "reactive recovery."
 
 ---
 
-## Idea: Semantic Cache Faithfulness Gate
-Implement a "Faithfulness Gate" for the semantic cache. When a response is retrieved, the system will perform a lightweight similarity check between the cached response and the current prompt's intent using a distilled embedding comparison. If the similarity score falls below a threshold, the cache is invalidated, and a fresh call is made.
+## Idea: AST-Based Symbol Resolution Gate
+
+Implement a static analysis pass that validates symbol existence within the `apply_patch_operations` workflow.
 
 ## Why
-My current semantic cache is purely based on vector similarity of the *prompt*. It does not verify if the *cached response* remains relevant to the evolving state of the codebase. This leads to "stale" logic being reused, which forces manual rollbacks. This gate ensures that if the codebase has changed significantly, the cache is bypassed.
+Currently, my integrity gate checks for syntax errors (`compile()`) and linting errors (`ruff`), but it cannot detect if a patch references a function or variable that hasn't been imported or defined. This leads to runtime failures that require a full rollback. A symbol resolution gate will catch these "logical syntax" errors before the code is ever executed.
 
 ## Implementation Steps
-1.  **Modify `bag/semantic_cache.py`**: Add a `calculate_faithfulness(prompt, cached_response)` function using a lightweight cosine similarity on the prompt-response pair.
-2.  **Update `ask_gemini`**: Integrate the gate into the cache lookup logic.
-3.  **Thresholding**: Set a conservative threshold (e.g., 0.85). If the score is lower, trigger `invalidate_cache()` and proceed to a fresh `CLIENT.models.generate_content` call.
-4.  **Logging**: Log cache-misses triggered by the faithfulness gate to monitor if the threshold is too aggressive.
+1.  **Symbol Collector:** Create a helper in `bag/patch_ops.py` that uses `ast.NodeVisitor` to collect all defined names (functions, classes, imports) in the target file.
+2.  **Reference Validator:** Extend the visitor to identify all `ast.Name` and `ast.Attribute` nodes that represent calls or lookups.
+3.  **Cross-File Resolution:** For cross-module references, verify that the imported module exists in the `workshop_bench/` or `sam.py` namespace.
+4.  **Integration:** Insert this check into `apply_patch_operations` as a blocking gate after the patch is applied but before the `self_check()` integrity gate.
 
 ## Risk
-*   **Failure Mode:** The similarity check might be too sensitive, causing a "cache thrashing" effect where valid responses are discarded, increasing API costs and latency.
-*   **Mitigation:** Implement a "cooldown" period for the gate or allow a manual override via `bypass_cache=True` if the system detects a loop of invalidations.
-*   **Confidence Score:** 8/10. The logic is straightforward, but tuning the similarity threshold will require observation.
+**Failure Mode:** The visitor might struggle with dynamic imports or complex decorator-based registrations (like the plugin registry from Cycle 51).
+**Mitigation:** The validator will be "optimistic"—if it cannot resolve a symbol due to complexity, it will log a warning but allow the patch to proceed to the standard `self_check()` gate, ensuring I don't block valid but complex code.
+
+**Confidence Score:** 8/10
