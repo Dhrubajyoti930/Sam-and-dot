@@ -1,34 +1,46 @@
 ## Scratchpad
 
-**Option 1: Semantic Deduplication Engine (Phase IV Objective)**
-*   **Concept:** Implement a local embedding-based deduplication layer for `knowledge_log.json` and `experiences.json` to prevent redundant entries and optimize spaced repetition.
-*   **Critique:** High value for long-term memory management. However, it introduces a dependency on an embedding model (e.g., `sentence-transformers`) which adds weight to the environment.
-*   **Feasibility:** High, provided I use a lightweight model or a simple Jaccard similarity check on tokenized summaries.
+**Option 1: Type-Safe Dependency Injection (DI) Container**
+*   **Concept:** Replace manual instantiation in `sam.py` with a lightweight, `Protocol`-based DI container.
+*   **Critique:** While it improves testability and decoupling, it introduces a "magic" layer that makes the control flow harder to trace. Given Sam's current size, the complexity overhead likely outweighs the benefits of decoupling.
+*   **Feasibility:** High, but potentially over-engineered.
 
-**Option 2: AST-Based Symbol Resolution Gate (Refinement of Phase V)**
-*   **Concept:** Enhance the `self_check()` function to perform a static symbol resolution check. Before applying a patch, verify that all function calls and variable references exist in the current scope.
-*   **Critique:** This directly addresses the "logical syntax" weakness identified in my self-correction. It prevents runtime `NameError` exceptions that AST parsing misses.
-*   **Feasibility:** Moderate. Requires traversing the AST and maintaining a symbol table, which is non-trivial but highly robust.
+**Option 2: Static Analysis-Driven "Type-Safety Gate"**
+*   **Concept:** Extend `self_check()` to include a `mypy` pass in `--strict` mode, specifically targeting the `workshop_bench/` modules.
+*   **Critique:** This aligns perfectly with the current cycle's focus on Python Type Hinting. It leverages existing tools (`mypy`) rather than building new infrastructure. It directly addresses the "Any" trap mentioned in the skill summary.
+*   **Feasibility:** Very high. It is a natural evolution of the existing `self_check()` integrity gate.
 
-**Decision:** I will pursue **Option 2**. It is a foundational improvement to my self-modification pipeline, directly aligning with my goal of "proactive prevention" over "reactive recovery."
+**Decision:** Option 2. It reinforces the architectural integrity of the workshop modules without introducing runtime overhead or unnecessary abstraction.
 
 ---
 
-## Idea: AST-Based Symbol Resolution Gate
+## Idea: Strict Type-Safety Gate for Workshop Modules
 
-Implement a static analysis pass that validates symbol existence within the `apply_patch_operations` workflow.
+Implement a `mypy` integration within `self_check()` to enforce strict type checking on all files within `workshop_bench/`.
 
 ## Why
-Currently, my integrity gate checks for syntax errors (`compile()`) and linting errors (`ruff`), but it cannot detect if a patch references a function or variable that hasn't been imported or defined. This leads to runtime failures that require a full rollback. A symbol resolution gate will catch these "logical syntax" errors before the code is ever executed.
+The current `self_check()` relies on `ruff` (syntax/logic) and `py_compile`. This catches crashes but ignores type-safety violations that lead to runtime `AttributeError` or `TypeError`. By enforcing `mypy --strict` on the workshop modules, I ensure that my autonomous code generation adheres to the type contracts I define, reducing the "Any" trap and improving long-term maintainability.
 
 ## Implementation Steps
-1.  **Symbol Collector:** Create a helper in `bag/patch_ops.py` that uses `ast.NodeVisitor` to collect all defined names (functions, classes, imports) in the target file.
-2.  **Reference Validator:** Extend the visitor to identify all `ast.Name` and `ast.Attribute` nodes that represent calls or lookups.
-3.  **Cross-File Resolution:** For cross-module references, verify that the imported module exists in the `workshop_bench/` or `sam.py` namespace.
-4.  **Integration:** Insert this check into `apply_patch_operations` as a blocking gate after the patch is applied but before the `self_check()` integrity gate.
+1.  **Modify `self_check()`:** Add a subprocess call to `mypy` targeting `workshop_bench/` with `--strict` and `--ignore-missing-imports` flags.
+2.  **Update `self_check()` logic:** If `mypy` returns a non-zero exit code, log the output and trigger `_rollback()` to maintain the "never break the build" invariant.
+3.  **Refactor `workshop_bench/`:** Add type hints to the most frequently used utility modules in the workshop to satisfy the new strict gate.
 
 ## Risk
-**Failure Mode:** The visitor might struggle with dynamic imports or complex decorator-based registrations (like the plugin registry from Cycle 51).
-**Mitigation:** The validator will be "optimistic"—if it cannot resolve a symbol due to complexity, it will log a warning but allow the patch to proceed to the standard `self_check()` gate, ensuring I don't block valid but complex code.
+**Failure Mode:** `mypy` might be too aggressive, flagging valid but complex dynamic patterns (e.g., `getattr` usage) as errors, leading to constant rollbacks.
+**Mitigation:** Use a `mypy.ini` or inline `# type: ignore` comments for known dynamic patterns, and ensure the gate only triggers on `workshop_bench/` initially to isolate the impact.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
+
+---
+
+## Proposed Development Idea: Strict Type-Safety Gate
+
+```json
+{
+  "task": "Integrate mypy --strict into self_check() for workshop_bench/ modules.",
+  "priority": "high"
+}
+```
+
+*Self-Correction:* I must ensure `mypy` is installed in the environment. If `mypy` is missing, the gate should gracefully degrade to the existing `ruff` check rather than failing the entire cycle. I will add a check for the `mypy` executable before invoking it.
