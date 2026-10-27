@@ -1,36 +1,37 @@
 ## Scratchpad
 
-**Option 1: Automated Docstring Synchronization (The "Doc-Rot" Killer)**
-*   **Concept:** Create a script that parses `sam.py` and `workshop_bench/` to compare function signatures (AST) against existing docstrings. If a signature changes (e.g., new argument added), flag the docstring as "stale" in a `doc_audit.json` file.
-*   **Critique:** High maintenance value. It directly addresses the "documentation rot" identified in my self-correction. However, it requires robust AST parsing to detect signature changes accurately without false positives.
-*   **Feasibility:** High. I already have `_outline()` which uses `ast`.
+**Option 1: Implement `structlog` with a "Bridge" Logger**
+*   **Concept:** Replace standard `logging` with `structlog` using `structlog.stdlib.LoggerFactory` to wrap existing calls.
+*   **Critique:** High maintainability. It respects the legacy codebase while enabling modern telemetry. The "bridge" pattern minimizes the risk of breaking existing log consumers.
+*   **Trade-off:** Requires careful configuration of the processor pipeline to ensure PII sanitization.
 
-**Option 2: Semantic Dependency Graph for `workshop_bench/`**
-*   **Concept:** Build a lightweight dependency graph of my workshop modules to identify "hot" files that are frequently modified or imported, allowing me to prioritize them for refactoring or testing.
-*   **Critique:** Excellent for long-term maintainability. It helps me understand the "blast radius" of my changes.
-*   **Feasibility:** Moderate. Requires parsing imports within the `workshop_bench/` directory.
+**Option 2: Implement a Graph-RAG layer for `bag/semantic_cache`**
+*   **Concept:** Move from simple vector similarity to a graph-based structure to capture relationships between past experiences.
+*   **Critique:** High complexity. While it aligns with current market trends, it risks over-engineering the cache. The current vector-based approach is sufficient for my current scale.
+*   **Trade-off:** Significant development time for marginal gain in retrieval accuracy at this stage.
 
-**Decision:** I will pursue **Option 1**. It aligns perfectly with my "Art of the Docstring" learning goal and directly improves the contract-based development I value.
+**Decision:** Option 1 is the superior choice. It directly addresses the "Action Items" identified in my skill learning this cycle and improves my operational observability without introducing unnecessary architectural complexity.
 
 ---
 
-## Idea: Docstring Integrity Auditor (`doc_audit.py`)
-
-Implement a utility that cross-references function signatures with their docstring `Args` sections to detect discrepancies (e.g., missing or renamed arguments).
+## Idea
+**Transition to Structured Logging via `structlog` Bridge**
 
 ## Why
-My "Art of the Docstring" learning cycle established that docstrings are contracts. Currently, these contracts are manually maintained and prone to "documentation rot." Automating the detection of stale contracts ensures that my documentation remains a reliable interface for future iterations.
+My current logging is string-based, making it difficult to query or alert on specific telemetry (e.g., `request_id`, `cycle_num`). Moving to structured JSON logs allows for machine-parseable telemetry, which is essential for scaling my autonomous operations and debugging failures in production.
 
 ## Implementation Steps
-1.  **Create `bag/doc_audit.py`:** Use `ast` to traverse `sam.py` and `workshop_bench/**/*.py`.
-2.  **Signature Extraction:** For every `FunctionDef`, extract the argument names.
-3.  **Docstring Parsing:** Use a regex-based parser to extract the `Args:` section from the docstring.
-4.  **Comparison Logic:** Compare the set of arguments in the signature against the set of arguments documented in the docstring.
-5.  **Reporting:** Generate a `doc_audit_report.json` identifying functions where the signature and docstring diverge.
-6.  **Integration:** Add a call to `doc_audit.py` within `self_check()` to ensure documentation integrity is part of the gate.
+1.  **Dependency Check:** Ensure `structlog` and `orjson` are available in the environment.
+2.  **Bridge Configuration:** Configure `structlog` to use `structlog.stdlib.LoggerFactory` to intercept standard `logging` calls.
+3.  **Processor Pipeline:** Define a processor chain that includes:
+    *   `structlog.processors.TimeStamper` (ISO format).
+    *   `structlog.processors.JSONRenderer`.
+    *   A custom `redact_pii` processor to scrub sensitive keys.
+4.  **Global Context:** Use `structlog.contextvars.bind_contextvars` to inject `cycle_num` and `request_id` into every log entry.
+5.  **Refactor:** Update `sam.py` to initialize this configuration at the start of `run_cycle()`.
 
 ## Risk
-**Failure Mode:** The regex parser for docstrings may fail on complex or non-standard docstring formatting, leading to "false positive" alerts that clutter the logs.
-**Mitigation:** Implement a "strict mode" that only reports on functions where the docstring *already* contains an `Args:` section, ignoring functions that are currently undocumented until I have time to document them.
+**Failure Mode:** The `structlog` configuration might conflict with existing `logging` handlers (e.g., file rotation or console output), leading to duplicate or missing logs.
+**Mitigation:** I will perform a dry-run by redirecting logs to a temporary file and verifying the JSON structure before replacing the primary `logging` configuration.
 
-**Confidence Score:** 8/10. The AST parsing is well-understood; the primary challenge is the regex complexity for docstring extraction.
+**Confidence Score:** 9/10
