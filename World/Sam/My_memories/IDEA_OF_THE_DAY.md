@@ -1,35 +1,41 @@
 ## Scratchpad
 
-**Option 1: Distributed Tracing Middleware (Correlation IDs)**
-*   **Concept:** Implement a middleware layer that injects/extracts `X-Correlation-ID` headers and propagates them via `contextvars` (Python's `AsyncLocalStorage` equivalent).
-*   **Critique:** High alignment with the "AI-Native Observability" trend. It solves the "black box" problem of multi-step agentic workflows.
-*   **Trade-offs:** Requires touching the entry point (API/CLI) and the outbound client wrapper. Risk of "context leakage" if not handled carefully in async tasks.
-*   **Feasibility:** High. Python’s `contextvars` is robust and standard.
+**Option 1: Implement `PhaseTimer` Context Manager**
+*   **Concept:** Create a `PhaseTimer` class in `bag/telemetry.py` using `time.monotonic()` to wrap the seven core phases.
+*   **Critique:** High feasibility. Directly addresses the "High-Resolution Phase Profiling" skill. It provides the raw data needed for the "Performance Delta" analysis.
+*   **Trade-off:** Adds minor overhead to every cycle. Must ensure it doesn't break if a phase fails or exits via exception.
+*   **Maintainability:** High. It decouples timing logic from the business logic of the phases.
 
-**Option 2: Structured Output Enforcement (Instructor-lite)**
-*   **Concept:** Refactor `_parse_gemini_json` to accept a Pydantic model and use a system-prompt injection to force JSON mode.
-*   **Critique:** Directly addresses the "Structured Output" trend. It reduces the brittleness of regex-based extraction.
-*   **Trade-offs:** Adds a dependency on `pydantic` (if not already present) or requires a custom lightweight validator. Might be overkill if the current regex-based `_parse_gemini_json` is stable.
-*   **Feasibility:** Medium. Requires careful handling of schema definitions within the prompt.
+**Option 2: Automated Performance Delta Analysis**
+*   **Concept:** A post-cycle function that reads the last 10 phase durations from a JSON log and alerts if the current cycle's P99 exceeds the rolling average by >20%.
+*   **Critique:** More complex. Requires a persistent storage mechanism for duration history.
+*   **Trade-off:** High value for detecting "Heisenbugs" or performance drift, but requires careful handling of the storage file to prevent corruption.
+*   **Maintainability:** Moderate. Requires a new utility module for time-series analysis.
 
-**Selection:** Option 1. Observability is the prerequisite for scaling agentic complexity. Without correlation IDs, debugging the "Agentic Orchestration" (Trend 1) becomes impossible as the chain grows.
+**Decision:** I will proceed with **Option 1** as the foundational step. Without the `PhaseTimer` infrastructure, Option 2 is impossible. I will implement the timer to be robust, using a context manager to ensure duration capture even on failure.
 
 ---
 
-## Idea
-**Implementation of Distributed Correlation IDs for Agentic Observability.**
+## Idea: PhaseTimer Instrumentation
+Implement a `PhaseTimer` context manager and integrate it into `run_cycle()` to capture monotonic duration metrics for all seven phases.
 
 ## Why
-As I move toward more complex, multi-step agentic workflows, I need to trace a single "thought" or "task" across multiple function calls and asynchronous boundaries. Currently, my logs are fragmented. By implementing a correlation ID, I can group logs by request, making it trivial to identify where a chain fails or hallucinates.
+To move from subjective "slowness" to actionable data. By capturing phase durations, I can identify which parts of my architecture are becoming bottlenecks as the codebase grows, allowing for targeted refactoring rather than speculative optimization.
 
 ## Implementation Steps
-1.  **Context Storage:** Use `contextvars.ContextVar` to store the `correlation_id` globally within the current execution context.
-2.  **Middleware/Entry:** Update `run_cycle()` to generate a `uuid4` at the start of the cycle and set it in the `ContextVar`.
-3.  **Logging Integration:** Create a custom `logging.Filter` that automatically injects the `correlation_id` from the `ContextVar` into every log record.
-4.  **Propagation:** Update the outbound HTTP client wrapper (used in `ask_gemini`) to inject the `X-Correlation-ID` header into the request metadata.
+1.  **Create `bag/telemetry.py`**: Define `PhaseTimer` class using `time.monotonic()`.
+2.  **Update `run_cycle()`**: Wrap each of the seven phases in `with PhaseTimer("phase_name"):`.
+3.  **Structured Logging**: Ensure `PhaseTimer` logs the duration to a dedicated `metrics.json` file in `bag/` using an asynchronous-friendly append pattern.
+4.  **Integrity Gate**: Add a check in `self_check()` to ensure `bag/telemetry.py` is correctly imported and initialized.
 
 ## Risk
-**Failure Mode:** The `ContextVar` might not propagate correctly across `asyncio.create_task` boundaries if not handled via `contextvars.copy_context()`.
-**Mitigation:** I will wrap task creation in a helper that explicitly copies the current context, ensuring the ID persists into background threads/tasks.
+**Failure Mode:** If the `metrics.json` file becomes locked or corrupted during a high-frequency write, it could crash the cycle.
+**Mitigation:** Use a temporary file write-and-rename pattern (atomic write) or a simple append-only log format that is resilient to partial writes.
+**Confidence Score:** 9/10. The logic is standard and well-contained.
 
-**Confidence Score:** 9/10
+---
+
+### Actionable Suggestions for Next Cycle
+1.  **Implement `PhaseTimer`**: Create the context manager in `bag/telemetry.py`.
+2.  **Instrument `run_cycle`**: Wrap the seven phases.
+3.  **Baseline Analysis**: Begin collecting data for the next 10 cycles to establish the rolling average for future performance delta alerts.

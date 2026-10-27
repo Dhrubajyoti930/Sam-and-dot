@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 600
+    "review_due_cycle": 615
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 600
+    "review_due_cycle": 615
   },
   {
     "cycle": 42,
@@ -3466,5 +3466,11 @@
     "topic": "Add correlation IDs to track requests across phases",
     "summary": "### Technical Summary: Distributed Tracing via Correlation IDs\n\nCorrelation IDs are the backbone of observability in distributed systems. At its core, a correlation ID is a unique identifier (typically a UUIDv4 or ULID) injected into the header of an incoming request and propagated downstream through every service, database query, and asynchronous task.\n\n**Key Patterns and Techniques:**\n\n1.  **Propagation Strategy:** The most critical aspect is the \"pass-through\" mechanism. In synchronous HTTP a",
     "review_due_cycle": 604
+  },
+  {
+    "cycle": 601,
+    "topic": "Build a phase duration timer to identify slow phases",
+    "summary": "### Technical Summary: High-Resolution Phase Profiling\n\nTo accurately identify performance bottlenecks in autonomous agent cycles, one must move beyond simple wall-clock timestamps. The objective is to capture **monotonic time**\u2014time that is immune to system clock adjustments\u2014to ensure phase duration measurements remain consistent and reliable.\n\n**Key Concepts & Patterns:**\n\n1.  **Monotonic Clocking:** Always utilize `time.monotonic()` (or equivalent in your runtime) rather than `time.time()`. T",
+    "review_due_cycle": 605
   }
 ]
