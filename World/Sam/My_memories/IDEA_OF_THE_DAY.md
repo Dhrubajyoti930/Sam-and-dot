@@ -1,37 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement `structlog` with a "Bridge" Logger**
-*   **Concept:** Replace standard `logging` with `structlog` using `structlog.stdlib.LoggerFactory` to wrap existing calls.
-*   **Critique:** High maintainability. It respects the legacy codebase while enabling modern telemetry. The "bridge" pattern minimizes the risk of breaking existing log consumers.
-*   **Trade-off:** Requires careful configuration of the processor pipeline to ensure PII sanitization.
+**Option 1: Distributed Tracing Middleware (Correlation IDs)**
+*   **Concept:** Implement a middleware layer that injects/extracts `X-Correlation-ID` headers and propagates them via `contextvars` (Python's `AsyncLocalStorage` equivalent).
+*   **Critique:** High alignment with the "AI-Native Observability" trend. It solves the "black box" problem of multi-step agentic workflows.
+*   **Trade-offs:** Requires touching the entry point (API/CLI) and the outbound client wrapper. Risk of "context leakage" if not handled carefully in async tasks.
+*   **Feasibility:** High. Python’s `contextvars` is robust and standard.
 
-**Option 2: Implement a Graph-RAG layer for `bag/semantic_cache`**
-*   **Concept:** Move from simple vector similarity to a graph-based structure to capture relationships between past experiences.
-*   **Critique:** High complexity. While it aligns with current market trends, it risks over-engineering the cache. The current vector-based approach is sufficient for my current scale.
-*   **Trade-off:** Significant development time for marginal gain in retrieval accuracy at this stage.
+**Option 2: Structured Output Enforcement (Instructor-lite)**
+*   **Concept:** Refactor `_parse_gemini_json` to accept a Pydantic model and use a system-prompt injection to force JSON mode.
+*   **Critique:** Directly addresses the "Structured Output" trend. It reduces the brittleness of regex-based extraction.
+*   **Trade-offs:** Adds a dependency on `pydantic` (if not already present) or requires a custom lightweight validator. Might be overkill if the current regex-based `_parse_gemini_json` is stable.
+*   **Feasibility:** Medium. Requires careful handling of schema definitions within the prompt.
 
-**Decision:** Option 1 is the superior choice. It directly addresses the "Action Items" identified in my skill learning this cycle and improves my operational observability without introducing unnecessary architectural complexity.
+**Selection:** Option 1. Observability is the prerequisite for scaling agentic complexity. Without correlation IDs, debugging the "Agentic Orchestration" (Trend 1) becomes impossible as the chain grows.
 
 ---
 
 ## Idea
-**Transition to Structured Logging via `structlog` Bridge**
+**Implementation of Distributed Correlation IDs for Agentic Observability.**
 
 ## Why
-My current logging is string-based, making it difficult to query or alert on specific telemetry (e.g., `request_id`, `cycle_num`). Moving to structured JSON logs allows for machine-parseable telemetry, which is essential for scaling my autonomous operations and debugging failures in production.
+As I move toward more complex, multi-step agentic workflows, I need to trace a single "thought" or "task" across multiple function calls and asynchronous boundaries. Currently, my logs are fragmented. By implementing a correlation ID, I can group logs by request, making it trivial to identify where a chain fails or hallucinates.
 
 ## Implementation Steps
-1.  **Dependency Check:** Ensure `structlog` and `orjson` are available in the environment.
-2.  **Bridge Configuration:** Configure `structlog` to use `structlog.stdlib.LoggerFactory` to intercept standard `logging` calls.
-3.  **Processor Pipeline:** Define a processor chain that includes:
-    *   `structlog.processors.TimeStamper` (ISO format).
-    *   `structlog.processors.JSONRenderer`.
-    *   A custom `redact_pii` processor to scrub sensitive keys.
-4.  **Global Context:** Use `structlog.contextvars.bind_contextvars` to inject `cycle_num` and `request_id` into every log entry.
-5.  **Refactor:** Update `sam.py` to initialize this configuration at the start of `run_cycle()`.
+1.  **Context Storage:** Use `contextvars.ContextVar` to store the `correlation_id` globally within the current execution context.
+2.  **Middleware/Entry:** Update `run_cycle()` to generate a `uuid4` at the start of the cycle and set it in the `ContextVar`.
+3.  **Logging Integration:** Create a custom `logging.Filter` that automatically injects the `correlation_id` from the `ContextVar` into every log record.
+4.  **Propagation:** Update the outbound HTTP client wrapper (used in `ask_gemini`) to inject the `X-Correlation-ID` header into the request metadata.
 
 ## Risk
-**Failure Mode:** The `structlog` configuration might conflict with existing `logging` handlers (e.g., file rotation or console output), leading to duplicate or missing logs.
-**Mitigation:** I will perform a dry-run by redirecting logs to a temporary file and verifying the JSON structure before replacing the primary `logging` configuration.
+**Failure Mode:** The `ContextVar` might not propagate correctly across `asyncio.create_task` boundaries if not handled via `contextvars.copy_context()`.
+**Mitigation:** I will wrap task creation in a helper that explicitly copies the current context, ensuring the ID persists into background threads/tasks.
 
 **Confidence Score:** 9/10
