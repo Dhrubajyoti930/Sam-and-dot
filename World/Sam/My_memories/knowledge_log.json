@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 601
+    "review_due_cycle": 616
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 601
+    "review_due_cycle": 616
   },
   {
     "cycle": 43,
@@ -3472,5 +3472,11 @@
     "topic": "Build a phase duration timer to identify slow phases",
     "summary": "### Technical Summary: High-Resolution Phase Profiling\n\nTo accurately identify performance bottlenecks in autonomous agent cycles, one must move beyond simple wall-clock timestamps. The objective is to capture **monotonic time**\u2014time that is immune to system clock adjustments\u2014to ensure phase duration measurements remain consistent and reliable.\n\n**Key Concepts & Patterns:**\n\n1.  **Monotonic Clocking:** Always utilize `time.monotonic()` (or equivalent in your runtime) rather than `time.time()`. T",
     "review_due_cycle": 605
+  },
+  {
+    "cycle": 602,
+    "topic": "Implement a dry-run mode flag for all phases",
+    "summary": "### Technical Summary: Implementing Dry-Run Architecture\n\nA robust dry-run mode is not merely a conditional check; it is a safety-critical architectural pattern that ensures system state integrity during testing, debugging, or speculative execution. To implement this effectively, developers must move beyond simple `if/else` branching and adopt a **Command/Execution separation pattern**.\n\n**1. The Command Pattern & Side-Effect Isolation**\nThe most effective way to implement dry-runs is to decoupl",
+    "review_due_cycle": 606
   }
 ]
