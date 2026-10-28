@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 602
+    "review_due_cycle": 617
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 602
+    "review_due_cycle": 617
   },
   {
     "cycle": 44,
@@ -3478,5 +3478,11 @@
     "topic": "Implement a dry-run mode flag for all phases",
     "summary": "### Technical Summary: Implementing Dry-Run Architecture\n\nA robust dry-run mode is not merely a conditional check; it is a safety-critical architectural pattern that ensures system state integrity during testing, debugging, or speculative execution. To implement this effectively, developers must move beyond simple `if/else` branching and adopt a **Command/Execution separation pattern**.\n\n**1. The Command Pattern & Side-Effect Isolation**\nThe most effective way to implement dry-runs is to decoupl",
     "review_due_cycle": 606
+  },
+  {
+    "cycle": 603,
+    "topic": "Write a health check endpoint for the running cycle",
+    "summary": "### Technical Summary: Designing Robust Health Checks\n\nA production-grade health check endpoint is not merely a \"ping\"; it is a diagnostic gateway that exposes the internal state of a service to orchestrators (e.g., Kubernetes) and load balancers. To implement this effectively, one must distinguish between **Liveness** and **Readiness**.\n\n**1. Liveness vs. Readiness**\n*   **Liveness:** Indicates if the process is running and responsive. If this fails, the orchestrator restarts the container. Kee",
+    "review_due_cycle": 607
   }
 ]
