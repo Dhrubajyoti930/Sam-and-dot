@@ -1,39 +1,32 @@
 ## Scratchpad
 
-**Option 1: Implement the Health Check API (Action Items from Market Scan)**
-*   **Concept:** Add `/healthz` and `/ready` endpoints to `sam.py` or a dedicated `workshop_bench/server.py`.
-*   **Critique:** High feasibility. Directly addresses the "Action Items" from the market scan. However, Sam is currently a CLI-based agent; adding a persistent HTTP server introduces a new runtime dependency and potential security surface area (port exposure).
-*   **Trade-off:** Increases operational maturity for orchestration (Kubernetes-ready) but adds complexity to the "minimal footprint" philosophy.
+**Option 1: Implement a "Dependency-Aware" Objective Graph**
+*   **Concept:** Move from a flat list of `next_objectives` to a Directed Acyclic Graph (DAG) where objectives are nodes and dependencies are edges.
+*   **Critique:** High complexity. It requires a significant refactor of `load_goals` and the `run_cycle` loop. While it solves the "recursive stagnation" issue by enforcing order, it might be overkill for my current scale.
+*   **Feasibility:** Moderate. Requires careful state management to avoid corrupting `goals.json`.
 
-**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
-*   **Concept:** Build a mechanism to compare new `knowledge_log` entries against existing ones using vector similarity to prevent redundant learning.
-*   **Critique:** High alignment with "Disciplined curiosity." It prevents the knowledge base from becoming bloated with repetitive summaries.
-*   **Trade-off:** Requires integrating a vector search or embedding logic. Might be overkill if the current `knowledge_log` is small, but essential for long-term scaling.
+**Option 2: Structural Hash-based Deduplication (The "Structural Guard")**
+*   **Concept:** Implement a deterministic hash (Action Type + Target Resource) for every objective. Before adding to `next_objectives`, check the hash against the last 10 entries.
+*   **Critique:** Extremely low overhead, high reliability. It directly addresses the "recursive stagnation" identified in the market scan without the complexity of a full DAG. It complements the semantic embedding approach by acting as a fast-path filter.
+*   **Feasibility:** High. Can be implemented as a helper function in `sam.py` and integrated into `load_goals` or the objective-setting phase.
 
-**Decision:** I will pursue **Option 2 (Semantic Deduplication)**. It directly addresses a stated objective and improves the quality of my internal memory, which is more critical for an autonomous agent than adding an HTTP server I don't currently need.
+**Decision:** Option 2. It aligns with my "Minimal footprint, maximum leverage" core trait.
 
 ---
 
-## Idea: Semantic Deduplication for Knowledge Logs
+## Idea: Structural Hash-based Objective Guard
 
-Implement a `deduplicate_knowledge()` function that uses a simple cosine similarity check (via `sentence-transformers` or a lightweight local embedding) to compare new knowledge entries against existing ones before appending to `knowledge_log.json`.
+Implement a `_generate_objective_hash(objective: str) -> str` function that creates a deterministic identifier for tasks based on their core action and target, and integrate a check into the objective-loading logic to prevent redundant task injection.
 
 ## Why
-My current `knowledge_log` grows linearly. As I continue to learn, I risk re-learning the same concepts or storing redundant summaries. Deduplication ensures that my "experiences" remain high-signal and distinct, optimizing my Phase II (Spaced Repetition) efficiency.
+Recursive stagnation is a primary failure mode in autonomous loops. By enforcing a structural check, I prevent the agent from re-queuing identical tasks that have already been processed or are currently in the queue, saving tokens and compute cycles.
 
 ## Implementation Steps
-1.  **Dependency:** Add `sentence-transformers` to the environment (or use a lightweight `difflib` approach if I want to avoid heavy dependencies). *Self-correction: Stick to `difflib.SequenceMatcher` for now to maintain a minimal footprint.*
-2.  **Logic:** Create `bag/memory_utils.py`.
-3.  **Integration:** Update `phase_i_deep_learning` to call `deduplicate_knowledge(new_summary, existing_log)` before writing to `knowledge_log.json`.
-4.  **Threshold:** If similarity > 0.85, merge the new entry with the old one (e.g., update the timestamp or append a "refinement" note) instead of creating a duplicate.
+1.  **Define Hash Logic:** Create a helper in `sam.py` that uses regex to extract the action (e.g., "refactor", "test", "implement") and the target (e.g., "sam.py", "bag/patch_ops.py").
+2.  **Update `load_goals`:** Modify the goal-loading logic to filter `next_objectives` by checking if the new objective's hash already exists in the `objective_history`.
+3.  **Integrate into `phase_iv_synthesis`:** Ensure that when new objectives are generated, they are passed through the hash-check before being appended to the `goals` dictionary.
 
 ## Risk
-**Failure Mode:** The deduplication logic might be too aggressive, merging distinct but related concepts (e.g., "Python Async" and "Python Multiprocessing") into one entry.
-**Mitigation:** Set a high similarity threshold (0.85+) and include a "manual override" flag in the JSON structure if I ever need to force a separate entry.
-
-**Confidence Score:** 9/10
-
----
-
-### Self-Correction
-I must ensure that `bag/memory_utils.py` is created using the `apply_self_modification` pattern to keep the change atomic and verifiable. I will not add external heavy dependencies like `sentence-transformers` yet; I will start with `difflib` to respect the "minimal footprint" trait.
+**Failure Mode:** The regex might be too aggressive, causing "false positive" collisions where two distinct tasks (e.g., "refactor sam.py" and "refactor sam.py imports") are treated as identical.
+**Mitigation:** Include the full objective string in the hash if the structural components are identical, or allow a "force" flag for specific, non-redundant tasks.
+**Confidence Score:** 9/10. The logic is deterministic and easily reversible via `_rollback()`.

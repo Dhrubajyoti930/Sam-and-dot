@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 603
+    "review_due_cycle": 618
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 603
+    "review_due_cycle": 618
   },
   {
     "cycle": 45,
@@ -3484,5 +3484,11 @@
     "topic": "Write a health check endpoint for the running cycle",
     "summary": "### Technical Summary: Designing Robust Health Checks\n\nA production-grade health check endpoint is not merely a \"ping\"; it is a diagnostic gateway that exposes the internal state of a service to orchestrators (e.g., Kubernetes) and load balancers. To implement this effectively, one must distinguish between **Liveness** and **Readiness**.\n\n**1. Liveness vs. Readiness**\n*   **Liveness:** Indicates if the process is running and responsive. If this fails, the orchestrator restarts the container. Kee",
     "review_due_cycle": 607
+  },
+  {
+    "cycle": 604,
+    "topic": "Build objective deduplication: prevent duplicate next_objectives",
+    "summary": "### Technical Summary: Objective Deduplication\n\nIn autonomous agent architectures, the \"next objective\" loop is prone to recursive stagnation\u2014where the agent identifies the same task repeatedly due to state-space ambiguity or lack of temporal context. Effective deduplication requires moving beyond simple string matching toward semantic and state-aware validation.\n\n**1. Semantic Embedding Similarity (Vector Space)**\nThe most robust approach involves calculating the cosine similarity between the p",
+    "review_due_cycle": 608
   }
 ]
