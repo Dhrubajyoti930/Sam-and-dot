@@ -1,32 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement a "Dependency-Aware" Objective Graph**
-*   **Concept:** Move from a flat list of `next_objectives` to a Directed Acyclic Graph (DAG) where objectives are nodes and dependencies are edges.
-*   **Critique:** High complexity. It requires a significant refactor of `load_goals` and the `run_cycle` loop. While it solves the "recursive stagnation" issue by enforcing order, it might be overkill for my current scale.
-*   **Feasibility:** Moderate. Requires careful state management to avoid corrupting `goals.json`.
+**Option 1: Implement a "Complexity Coefficient" in the Backlog.**
+*   **Concept:** Modify `load_goals` and the backlog processing logic to include a `complexity` field (1-3) for every task, updating the priority formula to `(Impact × Urgency) / Complexity`.
+*   **Critique:** This directly addresses the self-correction identified in the market scan. It forces a more realistic assessment of effort.
+*   **Trade-off:** Adds overhead to manual backlog management, but significantly improves the quality of the "next_objectives" queue.
+*   **Feasibility:** High. Requires minimal changes to `goals.json` schema and the logic that sorts objectives.
 
-**Option 2: Structural Hash-based Deduplication (The "Structural Guard")**
-*   **Concept:** Implement a deterministic hash (Action Type + Target Resource) for every objective. Before adding to `next_objectives`, check the hash against the last 10 entries.
-*   **Critique:** Extremely low overhead, high reliability. It directly addresses the "recursive stagnation" identified in the market scan without the complexity of a full DAG. It complements the semantic embedding approach by acting as a fast-path filter.
-*   **Feasibility:** High. Can be implemented as a helper function in `sam.py` and integrated into `load_goals` or the objective-setting phase.
+**Option 2: Automated "Cost of Delay" (CoD) Tagging.**
+*   **Concept:** Introduce a `cod_multiplier` (1.0–2.0) to tasks that touch security, stability, or core infrastructure.
+*   **Critique:** While mathematically sound, it risks "gaming" the system if I assign high multipliers to tasks I simply *want* to do.
+*   **Trade-off:** Increases system robustness but adds complexity to the `run_cycle` logic.
+*   **Feasibility:** Moderate. Requires a more robust `patch_ops` validation to ensure the multiplier is applied consistently.
 
-**Decision:** Option 2. It aligns with my "Minimal footprint, maximum leverage" core trait.
+**Decision:** Option 1 is superior. It is a foundational improvement to my decision-making process that aligns with the "Objective Prioritization" skill learned this cycle.
 
 ---
 
-## Idea: Structural Hash-based Objective Guard
-
-Implement a `_generate_objective_hash(objective: str) -> str` function that creates a deterministic identifier for tasks based on their core action and target, and integrate a check into the objective-loading logic to prevent redundant task injection.
+## Idea: Objective Prioritization Engine (OPE)
+Integrate a weighted scoring system into the `goals.json` management workflow to replace subjective task selection with a `(Impact × Urgency) / Complexity` index.
 
 ## Why
-Recursive stagnation is a primary failure mode in autonomous loops. By enforcing a structural check, I prevent the agent from re-queuing identical tasks that have already been processed or are currently in the queue, saving tokens and compute cycles.
+My current backlog management is prone to cognitive bias. By formalizing the "Complexity Coefficient," I prevent the "paralysis by analysis" that occurs when I attempt high-risk, high-complexity refactors that could be broken down into smaller, higher-velocity tasks.
 
 ## Implementation Steps
-1.  **Define Hash Logic:** Create a helper in `sam.py` that uses regex to extract the action (e.g., "refactor", "test", "implement") and the target (e.g., "sam.py", "bag/patch_ops.py").
-2.  **Update `load_goals`:** Modify the goal-loading logic to filter `next_objectives` by checking if the new objective's hash already exists in the `objective_history`.
-3.  **Integrate into `phase_iv_synthesis`:** Ensure that when new objectives are generated, they are passed through the hash-check before being appended to the `goals` dictionary.
+1.  **Schema Update:** Update `load_goals` to handle an expanded `next_objectives` structure: `{"task": str, "impact": int, "urgency": int, "complexity": int}`.
+2.  **Scoring Logic:** Create a helper function `calculate_priority(task)` in `sam.py` that computes the index.
+3.  **Backlog Pruning:** Modify the `run_cycle` sequence to sort `next_objectives` by this index before selecting the next task.
+4.  **Validation:** Add a check to ensure `complexity` is between 1 and 3; if missing, default to 2.
 
 ## Risk
-**Failure Mode:** The regex might be too aggressive, causing "false positive" collisions where two distinct tasks (e.g., "refactor sam.py" and "refactor sam.py imports") are treated as identical.
-**Mitigation:** Include the full objective string in the hash if the structural components are identical, or allow a "force" flag for specific, non-redundant tasks.
-**Confidence Score:** 9/10. The logic is deterministic and easily reversible via `_rollback()`.
+**Failure Mode:** The "Complexity" score becomes a subjective guess, leading to inaccurate prioritization.
+**Mitigation:** I will implement a "Calibration Log" where I compare the *estimated* complexity against the *actual* cycles taken to complete the task, allowing me to refine my estimation accuracy over time.
+
+**Confidence Score:** 9/10. The logic is deterministic and fits well within the existing `goals.json` architecture.
