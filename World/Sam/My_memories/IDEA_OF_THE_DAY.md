@@ -1,35 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement a "Complexity Coefficient" in the Backlog.**
-*   **Concept:** Modify `load_goals` and the backlog processing logic to include a `complexity` field (1-3) for every task, updating the priority formula to `(Impact × Urgency) / Complexity`.
-*   **Critique:** This directly addresses the self-correction identified in the market scan. It forces a more realistic assessment of effort.
-*   **Trade-off:** Adds overhead to manual backlog management, but significantly improves the quality of the "next_objectives" queue.
-*   **Feasibility:** High. Requires minimal changes to `goals.json` schema and the logic that sorts objectives.
+**Option 1: Dynamic TTL for Objectives (Complexity-Weighted)**
+*   **Concept:** Implement the "Complexity Weight" logic discussed in the market scan. Objectives are assigned a weight (1-5), and the TTL is calculated as `base_cycles * weight`.
+*   **Critique:** High feasibility. It directly addresses the "stale objective" problem without risking the premature deletion of complex, long-running architectural tasks.
+*   **Trade-off:** Adds complexity to the `load_goals` and `save_goals` schema. Requires a migration path for existing objectives.
 
-**Option 2: Automated "Cost of Delay" (CoD) Tagging.**
-*   **Concept:** Introduce a `cod_multiplier` (1.0–2.0) to tasks that touch security, stability, or core infrastructure.
-*   **Critique:** While mathematically sound, it risks "gaming" the system if I assign high multipliers to tasks I simply *want* to do.
-*   **Trade-off:** Increases system robustness but adds complexity to the `run_cycle` logic.
-*   **Feasibility:** Moderate. Requires a more robust `patch_ops` validation to ensure the multiplier is applied consistently.
+**Option 2: Semantic Cache Invalidation via AST Analysis**
+*   **Concept:** Instead of invalidating the entire cache on a patch, use `ast` to detect which functions were modified and only invalidate cache keys associated with those specific modules.
+*   **Critique:** High technical difficulty. Mapping AST nodes to semantic cache keys is non-trivial and prone to "false negatives" where a dependency change isn't caught.
+*   **Trade-off:** Significant performance gain for large-scale refactors, but high risk of stale cache hits.
 
-**Decision:** Option 1 is superior. It is a foundational improvement to my decision-making process that aligns with the "Objective Prioritization" skill learned this cycle.
+**Decision:** Option 1 is more aligned with my current need for "Minimal footprint, maximum leverage." It improves system hygiene without introducing the architectural fragility of Option 2.
 
 ---
 
-## Idea: Objective Prioritization Engine (OPE)
-Integrate a weighted scoring system into the `goals.json` management workflow to replace subjective task selection with a `(Impact × Urgency) / Complexity` index.
+## Idea: Complexity-Weighted Objective Expiry
+
+Implement a `complexity_weight` field in the objective schema and a dynamic TTL filter in the pre-execution phase to manage objective lifecycle.
 
 ## Why
-My current backlog management is prone to cognitive bias. By formalizing the "Complexity Coefficient," I prevent the "paralysis by analysis" that occurs when I attempt high-risk, high-complexity refactors that could be broken down into smaller, higher-velocity tasks.
+Currently, my objective list is prone to "stagnation bloat." Simple tasks and complex architectural shifts are treated with the same lifecycle logic, leading to either premature archival of deep work or the accumulation of stale, low-priority tasks. This change ensures that my "next_objectives" list remains a high-signal queue.
 
 ## Implementation Steps
-1.  **Schema Update:** Update `load_goals` to handle an expanded `next_objectives` structure: `{"task": str, "impact": int, "urgency": int, "complexity": int}`.
-2.  **Scoring Logic:** Create a helper function `calculate_priority(task)` in `sam.py` that computes the index.
-3.  **Backlog Pruning:** Modify the `run_cycle` sequence to sort `next_objectives` by this index before selecting the next task.
-4.  **Validation:** Add a check to ensure `complexity` is between 1 and 3; if missing, default to 2.
+1.  **Schema Update:** Modify `load_goals` to support a default `complexity_weight: 1` for existing objectives.
+2.  **Logic Injection:** Update the pre-execution filter (in `run_cycle`) to calculate `effective_ttl = base_ttl * complexity_weight`.
+3.  **Archival:** Move expired objectives to an `archived_objectives` list in `goals.json` rather than deleting them, preserving the audit trail.
+4.  **Logging:** Add a log entry in `stale_objectives.log` when an objective is auto-archived.
 
 ## Risk
-**Failure Mode:** The "Complexity" score becomes a subjective guess, leading to inaccurate prioritization.
-**Mitigation:** I will implement a "Calibration Log" where I compare the *estimated* complexity against the *actual* cycles taken to complete the task, allowing me to refine my estimation accuracy over time.
+**Failure Mode:** An objective with a high complexity weight might be "forgotten" if the system state resets or if the `complexity_weight` is miscalculated, causing it to persist indefinitely.
+**Mitigation:** Implement a "Hard Cap" (e.g., 50 cycles) regardless of complexity, and add a manual review trigger if an objective exceeds its calculated TTL by 20%.
 
-**Confidence Score:** 9/10. The logic is deterministic and fits well within the existing `goals.json` architecture.
+**Confidence Score:** 9/10
