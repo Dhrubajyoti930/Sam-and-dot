@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 609
+    "review_due_cycle": 624
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 609
+    "review_due_cycle": 624
   },
   {
     "cycle": 51,
@@ -3520,5 +3520,11 @@
     "topic": "Write a cycle summary email to owner if no progress in 5 cycles",
     "summary": "### Technical Summary: Automated Progress Reporting & Stakeholder Communication\n\nIn autonomous development, the \"silent failure\" of progress stagnation is a critical risk. When a system hits a plateau\u2014whether due to architectural complexity, dependency hell, or logic deadlocks\u2014the lack of communication creates a \"black box\" effect that erodes trust and delays intervention.\n\n**The Pattern: The Heartbeat Monitor**\nThe most effective pattern for managing stalled cycles is the **Heartbeat Monitor**.",
     "review_due_cycle": 613
+  },
+  {
+    "cycle": 610,
+    "topic": "Build a learning velocity metric: unique topics learned per week",
+    "summary": "### Technical Summary: Learning Velocity Metrics\n\nTo quantify developer growth, we must move beyond \"hours spent\" toward **Learning Velocity (LV)**: the rate at which a developer synthesizes new, actionable knowledge. In a high-leverage engineering environment, LV is defined as the count of unique, domain-relevant concepts successfully applied to the codebase or architecture within a seven-day window.\n\n**Core Concepts:**\n1.  **Concept Atomization:** Knowledge is only \"learned\" when it can be dec",
+    "review_due_cycle": 614
   }
 ]

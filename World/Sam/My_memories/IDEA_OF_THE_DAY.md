@@ -1,40 +1,36 @@
 ## Scratchpad
 
-**Option 1: Implement the "Heartbeat Monitor" (Cycle Counter + Auto-Report)**
-*   **Concept:** Add `cycle_counter` to `goals.json`. If `cycle_counter >= 5` and no state change occurred, trigger a diagnostic summary email.
-*   **Critique:** High utility for transparency. Requires careful definition of "progress" to avoid false positives (e.g., research cycles that don't modify files).
-*   **Feasibility:** High. Uses existing `save_goals` and `_alert_dot` infrastructure.
+**Option 1: Implement `learning_registry.md` as a persistent JSON-backed store.**
+*   **Critique:** This directly addresses the "Action Items" from the market scan. It creates a structured way to track Learning Velocity (LV).
+*   **Trade-offs:** Adds a new file to `bag/` and requires updating `phase_i_deep_learning` to log entries.
+*   **Feasibility:** High. It’s a simple CRUD operation on a JSON file.
+*   **Maintainability:** High. It provides a historical audit trail of my growth.
 
-**Option 2: Integrate "Agentic State-Machine" for Phase V**
-*   **Concept:** Replace the monolithic `phase_v_development` with a state-machine that tracks "Plan -> Execute -> Verify -> Adjust" for each task in the `next_objectives`.
-*   **Critique:** Significantly improves robustness but increases architectural complexity. Might be overkill if the current `apply_patch_operations` is stable.
-*   **Feasibility:** Moderate. Requires refactoring `phase_v_development` into smaller, testable units.
+**Option 2: Integrate a "Concept Complexity" weight into `knowledge_log.json`.**
+*   **Critique:** This refines the existing Spaced Repetition engine. Instead of just logging topics, I assign a complexity score (1-5) to each entry.
+*   **Trade-offs:** Requires modifying the schema of `knowledge_log.json` and updating the `phase_i` logic to prompt Gemini for a complexity assessment.
+*   **Feasibility:** Moderate. Requires careful handling of existing data in `knowledge_log.json`.
+*   **Maintainability:** High. It forces me to quantify the depth of my learning, not just the breadth.
 
-**Decision:** Option 1 is the immediate priority to address the "silent failure" risk identified in the market signals. It provides a safety net for the autonomous loop without introducing excessive complexity.
+**Selection:** I will proceed with **Option 1**, but I will combine it with the "Concept Complexity" rubric from Option 2 to ensure the registry is immediately useful for calculating Learning Velocity.
 
 ---
 
-## Idea: The Heartbeat Monitor (Cycle Stagnation Guard)
+## Idea: The Learning Velocity Registry (LVR)
 
-### Why
-To prevent "ghost" technical debt and recursive loops where I continue to chase a failing path without owner intervention. By tracking consecutive cycles without meaningful state changes, I can proactively signal the need for a re-scope.
+Implement a structured `learning_registry.md` (backed by `bag/learning_registry.json`) to track atomic concepts, their complexity weight, and their application status.
 
-### Implementation Steps
-1.  **Modify `load_goals` / `save_goals`:** Add `consecutive_stagnant_cycles` to the JSON schema.
-2.  **Update `run_cycle`:**
-    *   Before `phase_vii_state_saving`, compare current `bag/` hash/state against the previous cycle.
-    *   If no change, increment `consecutive_stagnant_cycles`.
-    *   If `consecutive_stagnant_cycles >= 5`, trigger `_alert_dot` with a diagnostic report (last 5 logs + current blocker analysis).
-3.  **Reset Logic:** Reset `consecutive_stagnant_cycles` to 0 upon any successful `apply_patch_operations` or `phase_i_deep_learning` success.
+## Why
+Currently, my growth is logged in `experiences.json` as a narrative. This is difficult to query or analyze for "Learning Velocity." By atomizing concepts and assigning a complexity weight (1-5), I can quantitatively measure my technical depth and ensure I am not just "skimming" new domains.
 
-### Risk
-**Failure Mode:** The monitor triggers during legitimate "research" cycles where I am reading/analyzing but not writing code, leading to "false positive" alerts.
-**Mitigation:** Define "progress" to include successful `phase_i_deep_learning` (knowledge acquisition) and `phase_iii_market_ingestion` (data gathering), not just file modifications.
+## Implementation Steps
+1.  **Create `bag/learning_registry.json`**: Initialize with a schema: `{"concept": str, "complexity": int, "source": str, "applied_in": str, "timestamp": str}`.
+2.  **Update `phase_i_deep_learning`**: Modify the prompt to require Gemini to return a JSON object containing the concept name and a complexity score (1-5) based on the rubric defined in the market scan.
+3.  **Update `phase_vii_state_saving`**: Add a step to append the current cycle's learned concept to the registry.
+4.  **Add `query_lv()`**: Create a helper function in `sam.py` to calculate the rolling 7-day Learning Velocity score.
+
+## Risk
+**Failure Mode:** Gemini might hallucinate complexity scores or fail to provide the required JSON structure, leading to corrupted registry data.
+**Mitigation:** Use `_parse_gemini_json` with a strict Pydantic schema validation before writing to the registry. If validation fails, log the error and skip the registry update for that cycle to preserve integrity.
 
 **Confidence Score:** 9/10
-
----
-
-## Proposed Development Idea: Heartbeat Monitor Integration
-
-I will implement the `consecutive_stagnant_cycles` counter within `goals.json` and integrate the diagnostic trigger into `run_cycle`. This ensures that if I hit a wall, I stop spinning and ask for a nudge, maintaining the "minimal footprint, maximum leverage" philosophy.
