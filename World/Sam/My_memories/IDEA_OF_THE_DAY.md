@@ -1,39 +1,40 @@
 ## Scratchpad
 
-**Option 1: Vector-based Semantic Deduplication**
-*   *Concept:* Integrate `sentence-transformers` to embed objectives and compare against `knowledge_log`.
-*   *Critique:* High accuracy, but introduces a heavy dependency (`torch`/`transformers`) into the `bag/` environment. This violates the "minimal footprint" principle.
-*   *Feasibility:* Moderate. Requires managing a local model or an API call for embeddings.
+**Option 1: Implement the "Heartbeat Monitor" (Cycle Counter + Auto-Report)**
+*   **Concept:** Add `cycle_counter` to `goals.json`. If `cycle_counter >= 5` and no state change occurred, trigger a diagnostic summary email.
+*   **Critique:** High utility for transparency. Requires careful definition of "progress" to avoid false positives (e.g., research cycles that don't modify files).
+*   **Feasibility:** High. Uses existing `save_goals` and `_alert_dot` infrastructure.
 
-**Option 2: Keyword-Frequency & Metadata-Aware Objective Filtering**
-*   *Concept:* Enhance `load_goals` to filter `next_objectives` by checking against `knowledge_log` using Jaccard similarity on keyword sets and status-based filtering (ignoring `success` tags).
-*   *Critique:* Extremely lightweight, zero external dependencies, and aligns perfectly with the current `sam.py` architecture. It leverages the existing `knowledge_log` structure.
-*   *Feasibility:* High. Can be implemented as a pure Python utility within `sam.py`.
+**Option 2: Integrate "Agentic State-Machine" for Phase V**
+*   **Concept:** Replace the monolithic `phase_v_development` with a state-machine that tracks "Plan -> Execute -> Verify -> Adjust" for each task in the `next_objectives`.
+*   **Critique:** Significantly improves robustness but increases architectural complexity. Might be overkill if the current `apply_patch_operations` is stable.
+*   **Feasibility:** Moderate. Requires refactoring `phase_v_development` into smaller, testable units.
 
-**Decision:** Option 2. It respects the "minimal footprint" constraint while providing the requested "Semantic Deduplication" functionality via a robust heuristic approach.
-
----
-
-## Idea
-**Implementation of a Metadata-Aware Objective Filter (MAOF)**
-
-## Why
-The current objective generator is prone to "looping behavior" where it re-proposes tasks that have already been marked as `success` or `failure` in the `knowledge_log`. By filtering the `next_objectives` list against the `knowledge_log` using status-based exclusion and keyword-frequency analysis, I can prune redundant tasks before they reach the execution phase.
-
-## Implementation Steps
-1.  **Modify `load_goals`:** Add a post-processing step that reads `knowledge_log.json`.
-2.  **Status Filtering:** Identify all objectives in the `knowledge_log` with `status: "success"`.
-3.  **Keyword Pruning:** For each `next_objective`, calculate a keyword overlap score against the `success` entries. If the overlap exceeds a threshold (e.g., 2+ shared technical terms), discard the objective.
-4.  **Negative Constraint Injection:** Update the `phase_iv_synthesis` prompt to explicitly include the last 5 `knowledge_log` entries as "Forbidden Paths" to ensure the LLM doesn't re-generate the pruned objectives.
-
-## Risk
-*   **Failure Mode:** Over-aggressive filtering might discard a valid "re-attempt" on a task that was previously marked `inconclusive` but is now necessary due to a change in the environment.
-*   **Mitigation:** Only filter objectives that are strictly marked as `success`. Keep `inconclusive` or `failure` entries in the pool, but pass them to the LLM with the `knowledge_log` context so it can adjust its strategy.
-*   **Confidence Score:** 9/10.
+**Decision:** Option 1 is the immediate priority to address the "silent failure" risk identified in the market signals. It provides a safety net for the autonomous loop without introducing excessive complexity.
 
 ---
 
-### Action Items
-*   [ ] Refactor `load_goals` to perform the metadata-aware filter.
-*   [ ] Update `phase_iv_synthesis` prompt template to ingest `knowledge_log` context.
-*   [ ] Add `status` and `tags` fields to `knowledge_log` entries during `phase_i_deep_learning`.
+## Idea: The Heartbeat Monitor (Cycle Stagnation Guard)
+
+### Why
+To prevent "ghost" technical debt and recursive loops where I continue to chase a failing path without owner intervention. By tracking consecutive cycles without meaningful state changes, I can proactively signal the need for a re-scope.
+
+### Implementation Steps
+1.  **Modify `load_goals` / `save_goals`:** Add `consecutive_stagnant_cycles` to the JSON schema.
+2.  **Update `run_cycle`:**
+    *   Before `phase_vii_state_saving`, compare current `bag/` hash/state against the previous cycle.
+    *   If no change, increment `consecutive_stagnant_cycles`.
+    *   If `consecutive_stagnant_cycles >= 5`, trigger `_alert_dot` with a diagnostic report (last 5 logs + current blocker analysis).
+3.  **Reset Logic:** Reset `consecutive_stagnant_cycles` to 0 upon any successful `apply_patch_operations` or `phase_i_deep_learning` success.
+
+### Risk
+**Failure Mode:** The monitor triggers during legitimate "research" cycles where I am reading/analyzing but not writing code, leading to "false positive" alerts.
+**Mitigation:** Define "progress" to include successful `phase_i_deep_learning` (knowledge acquisition) and `phase_iii_market_ingestion` (data gathering), not just file modifications.
+
+**Confidence Score:** 9/10
+
+---
+
+## Proposed Development Idea: Heartbeat Monitor Integration
+
+I will implement the `consecutive_stagnant_cycles` counter within `goals.json` and integrate the diagnostic trigger into `run_cycle`. This ensures that if I hit a wall, I stop spinning and ask for a nudge, maintaining the "minimal footprint, maximum leverage" philosophy.
