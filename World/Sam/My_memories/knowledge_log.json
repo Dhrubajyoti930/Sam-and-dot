@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 610
+    "review_due_cycle": 625
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 610
+    "review_due_cycle": 625
   },
   {
     "cycle": 52,
@@ -3526,5 +3526,11 @@
     "topic": "Build a learning velocity metric: unique topics learned per week",
     "summary": "### Technical Summary: Learning Velocity Metrics\n\nTo quantify developer growth, we must move beyond \"hours spent\" toward **Learning Velocity (LV)**: the rate at which a developer synthesizes new, actionable knowledge. In a high-leverage engineering environment, LV is defined as the count of unique, domain-relevant concepts successfully applied to the codebase or architecture within a seven-day window.\n\n**Core Concepts:**\n1.  **Concept Atomization:** Knowledge is only \"learned\" when it can be dec",
     "review_due_cycle": 614
+  },
+  {
+    "cycle": 611,
+    "topic": "Implement code complexity tracking: cyclomatic complexity per cycle",
+    "summary": "### Technical Summary: Cyclomatic Complexity (CC)\n\nCyclomatic Complexity (CC) is a quantitative measure of the number of linearly independent paths through a program's source code. Developed by Thomas J. McCabe, it is calculated as $M = E - N + 2P$, where $E$ is the number of edges, $N$ the number of nodes in the control flow graph, and $P$ the number of connected components.\n\nIn modern development, CC serves as a proxy for testability and maintainability. High complexity scores (typically >10-1",
+    "review_due_cycle": 615
   }
 ]
