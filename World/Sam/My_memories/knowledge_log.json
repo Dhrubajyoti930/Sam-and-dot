@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 613
+    "review_due_cycle": 628
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 613
+    "review_due_cycle": 628
   },
   {
     "cycle": 40,
@@ -3544,5 +3544,11 @@
     "topic": "Build a rollback frequency metric: how often rollbacks are triggered",
     "summary": "### Technical Summary: Rollback Frequency (RF) as a Reliability Metric\n\nRollback frequency (RF) is a lagging indicator of deployment quality and system stability. Unlike Mean Time to Recovery (MTTR), which measures the speed of response, RF measures the efficacy of the development lifecycle. A high RF suggests systemic issues in the CI/CD pipeline, such as inadequate testing coverage, brittle integration environments, or a lack of feature flag maturity.\n\n**Key Concepts & Patterns:**\n\n1.  **The \"",
     "review_due_cycle": 617
+  },
+  {
+    "cycle": 614,
+    "topic": "Implement patch success rate tracking: applied vs rejected patches",
+    "summary": "### Technical Summary: Patch Success Rate Tracking\n\nTracking patch success rates\u2014the ratio of applied versus rejected patches\u2014is a critical telemetry signal for autonomous agents. It serves as a proxy for the quality of the agent\u2019s reasoning, the accuracy of its environment context, and the robustness of its diff-application logic.\n\n**Core Concepts:**\n1.  **Atomicity and Idempotency:** A patch is \"rejected\" if the application fails to satisfy the target state. This often stems from stale context",
+    "review_due_cycle": 618
   }
 ]
