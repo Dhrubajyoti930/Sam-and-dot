@@ -87,7 +87,7 @@
     "cycle": 37,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector stores) and immediate execution logic.\n\n#### Key Concepts & Patterns\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scra",
-    "review_due_cycle": 611
+    "review_due_cycle": 626
   },
   {
     "cycle": 38,
@@ -177,7 +177,7 @@
     "cycle": 52,
     "topic": "Learn Python's abstract base classes (ABCs) with abc module",
     "summary": "### Technical Summary: Python Abstract Base Classes (ABCs)\n\nAbstract Base Classes (ABCs) in Python provide a formal mechanism for defining interfaces and enforcing structural contracts in a dynamic language. By leveraging the `abc` module, developers can define a blueprint for subclasses, ensuring that specific methods are implemented before an object can be instantiated.\n\n**Key Concepts:**\n*   **`ABC` and `@abstractmethod`:** Inheriting from `abc.ABC` marks a class as abstract. Decorating metho",
-    "review_due_cycle": 611
+    "review_due_cycle": 626
   },
   {
     "cycle": 53,
@@ -3532,5 +3532,11 @@
     "topic": "Implement code complexity tracking: cyclomatic complexity per cycle",
     "summary": "### Technical Summary: Cyclomatic Complexity (CC)\n\nCyclomatic Complexity (CC) is a quantitative measure of the number of linearly independent paths through a program's source code. Developed by Thomas J. McCabe, it is calculated as $M = E - N + 2P$, where $E$ is the number of edges, $N$ the number of nodes in the control flow graph, and $P$ the number of connected components.\n\nIn modern development, CC serves as a proxy for testability and maintainability. High complexity scores (typically >10-1",
     "review_due_cycle": 615
+  },
+  {
+    "cycle": 612,
+    "topic": "Write a test coverage tracker: % of sam.py covered by dot's tests",
+    "summary": "### Technical Summary: Automated Test Coverage Tracking\n\nAchieving high-fidelity test coverage tracking for a codebase like `sam.py` requires moving beyond simple line-counting. The objective is to map the execution path of Dot\u2019s test suite against the source, identifying not just what is executed, but the quality of that coverage.\n\n**1. Instrumentation vs. Sampling**\nModern coverage tools (e.g., `coverage.py` for Python) utilize `sys.settrace` to hook into the interpreter. While precise, this i",
+    "review_due_cycle": 616
   }
 ]
