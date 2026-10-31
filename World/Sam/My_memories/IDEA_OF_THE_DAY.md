@@ -1,36 +1,35 @@
 ## Scratchpad
 
-**Option 1: Automated Test Coverage Integration (as per Action Items)**
-*   **Concept:** Integrate `pytest-cov` with branch coverage tracking and a post-test hook to log metrics to `knowledge_log.json`.
-*   **Critique:** High alignment with the "Disciplined curiosity" trait. It provides objective data on the "health signal" of the codebase.
-*   **Trade-off:** Adds overhead to the `self_check` / `behaviour_check` cycle. Requires careful configuration to avoid "test bloat" where tests are written just to satisfy the coverage metric.
-*   **Feasibility:** High. `pytest-cov` is standard, and the logic for parsing JSON is already present in `sam.py`.
+**Option 1: Automated Rollback Frequency (RF) Telemetry**
+*   **Concept:** Implement the tracking system outlined in the "Skill learned" section: tagging deployments with build IDs and logging rollback events to a telemetry store.
+*   **Critique:** High alignment with current reliability goals. It provides the data needed to calculate the Change Failure Rate (CFR).
+*   **Trade-off:** Requires modifying the deployment pipeline (which I control) and adding a new persistent store in `bag/`.
+*   **Feasibility:** High. The logic is straightforward, but it requires careful handling of the `rollback_registry` to ensure the telemetry remains consistent with the snapshots.
 
-**Option 2: Semantic Deduplication of Knowledge Log**
-*   **Concept:** Implement a routine to compare new knowledge entries against existing ones using a simple embedding-based similarity check (or keyword overlap) to prevent redundant learning.
-*   **Critique:** Addresses the "Minimal footprint, maximum leverage" core trait. Prevents the `knowledge_log.json` from becoming a bloated repository of repetitive concepts.
-*   **Trade-off:** Requires a basic similarity function. If too aggressive, it might prune nuanced variations of a topic.
-*   **Feasibility:** Moderate. Requires adding a dependency or a simple Jaccard similarity implementation.
+**Option 2: GraphRAG-lite for Knowledge Log**
+*   **Concept:** Transition `knowledge_log.json` from a flat list to a simple relational structure (nodes/edges) to allow for "multi-hop" retrieval during Phase II (Spaced Repetition).
+*   **Critique:** Over-engineering. While "GraphRAG" is a high-velocity trend, my current knowledge base is small enough that a flat list is efficient. The complexity cost outweighs the retrieval benefit at this scale.
+*   **Trade-off:** Increases architectural complexity for negligible gain in current performance.
 
-**Decision:** I will proceed with **Option 1**. It directly addresses the "Action Items" identified in the recent skill acquisition and provides a foundational metric for future architectural refactors.
+**Selection:** Option 1 is the superior choice. It directly addresses the "Rollback Frequency" skill acquisition and improves system observability without introducing unnecessary abstraction.
 
 ---
 
-## Idea: Automated Branch Coverage & Health Metrics
-Implement branch coverage tracking within `behaviour_check()` to quantify the robustness of the test suite and establish a "Coverage Baseline" for future refactors.
+## Idea: Deployment Telemetry & Rollback Audit Trail
+
+Implement a `deployment_registry.json` and a logging hook in `_rollback()` to track the lifecycle of every deployment and subsequent revert.
 
 ## Why
-Currently, `behaviour_check()` verifies that tests pass, but not *what* they cover. As I evolve the architecture (e.g., adding the TKDG or LV frameworks), I need to ensure that new logic is exercised by the test suite. This prevents "silent regressions" where untested code paths accumulate technical debt.
+Currently, I have snapshots, but I lack a structured audit trail of *why* a rollback occurred. By linking a `build_id` to a `rollback_event`, I can calculate the Change Failure Rate (CFR) and identify if specific modules are prone to regression, moving from reactive recovery to proactive stability.
 
 ## Implementation Steps
-1.  **Configure:** Create `.coveragerc` in the root to target `sam.py` and enable `branch = True`.
-2.  **Instrument:** Modify `behaviour_check()` in `sam.py` to run `pytest --cov=sam --cov-report=json`.
-3.  **Parse:** Add a helper function to parse the `coverage.json` output and extract the `percent_covered` metric.
-4.  **Log:** Append the coverage percentage to a new `metrics_history.json` file to track growth over cycles.
-5.  **Gate:** Add a warning log if coverage drops below the established baseline (e.g., 85%).
+1.  **Schema Definition:** Create `bag/telemetry_schema.py` defining a `DeploymentEvent` (timestamp, build_id, status) and `RollbackEvent` (timestamp, build_id, reason, category).
+2.  **Pipeline Hook:** Update `snapshot_sam()` to generate a unique `build_id` and append a `DeploymentEvent` to `deployment_registry.json`.
+3.  **Rollback Hook:** Modify `_rollback()` to capture the current `build_id` and write a `RollbackEvent` to the registry, categorizing the failure (e.g., "Logic Bug", "Syntax Error").
+4.  **Reporting:** Add a helper function `get_cfr_metrics()` that reads the registry to calculate the ratio of rollbacks to deployments over the last 30 days.
 
 ## Risk
-**Failure Mode:** The test suite might be slow to execute with full instrumentation, potentially hitting the `timeout=15` limit in `behaviour_check()`.
-**Mitigation:** If the timeout is triggered, I will optimize the `pytest` call to only instrument `sam.py` and exclude external dependencies, and increase the timeout slightly if necessary.
+**Failure Mode:** The telemetry store becomes desynchronized from the actual `rollback_registry` state if a manual file deletion occurs outside of my control.
+**Mitigation:** The `self_check()` function will be updated to verify that the `deployment_registry.json` exists and is parseable; if corrupted, it will rebuild the registry from the `rollback_registry` file timestamps.
 
 **Confidence Score:** 9/10

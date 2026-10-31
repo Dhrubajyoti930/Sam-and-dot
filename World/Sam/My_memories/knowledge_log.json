@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 612
+    "review_due_cycle": 627
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 612
+    "review_due_cycle": 627
   },
   {
     "cycle": 39,
@@ -3538,5 +3538,11 @@
     "topic": "Write a test coverage tracker: % of sam.py covered by dot's tests",
     "summary": "### Technical Summary: Automated Test Coverage Tracking\n\nAchieving high-fidelity test coverage tracking for a codebase like `sam.py` requires moving beyond simple line-counting. The objective is to map the execution path of Dot\u2019s test suite against the source, identifying not just what is executed, but the quality of that coverage.\n\n**1. Instrumentation vs. Sampling**\nModern coverage tools (e.g., `coverage.py` for Python) utilize `sys.settrace` to hook into the interpreter. While precise, this i",
     "review_due_cycle": 616
+  },
+  {
+    "cycle": 613,
+    "topic": "Build a rollback frequency metric: how often rollbacks are triggered",
+    "summary": "### Technical Summary: Rollback Frequency (RF) as a Reliability Metric\n\nRollback frequency (RF) is a lagging indicator of deployment quality and system stability. Unlike Mean Time to Recovery (MTTR), which measures the speed of response, RF measures the efficacy of the development lifecycle. A high RF suggests systemic issues in the CI/CD pipeline, such as inadequate testing coverage, brittle integration environments, or a lack of feature flag maturity.\n\n**Key Concepts & Patterns:**\n\n1.  **The \"",
+    "review_due_cycle": 617
   }
 ]
