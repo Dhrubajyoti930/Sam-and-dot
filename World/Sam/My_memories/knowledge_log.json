@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 615
+    "review_due_cycle": 630
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 615
+    "review_due_cycle": 630
   },
   {
     "cycle": 42,
@@ -3556,5 +3556,11 @@
     "topic": "Write a semantic cache hit rate logger",
     "summary": "### Technical Summary: Semantic Cache Hit Rate Logging\n\nA semantic cache (or vector cache) stores embeddings of queries alongside their corresponding LLM responses. Unlike traditional key-value caches, semantic caching relies on vector similarity (e.g., Cosine Similarity or Euclidean Distance) to determine hits. Logging the hit rate for these systems requires moving beyond binary \"hit/miss\" metrics to account for the nuance of similarity thresholds.\n\n**Key Concepts:**\n1.  **Similarity Thresholdi",
     "review_due_cycle": 619
+  },
+  {
+    "cycle": 616,
+    "topic": "Build a prompt token usage tracker per phase",
+    "summary": "### Technical Summary: LLM Token Usage Tracking\n\nTracking token consumption per phase is essential for cost optimization, latency management, and architectural health. In an autonomous agentic loop, token usage is a proxy for \"cognitive load\"\u2014if a specific phase (e.g., Planning vs. Execution) consistently consumes a disproportionate share of the context window, it indicates either an inefficient prompt structure or an overly complex task decomposition.\n\n**Key Concepts:**\n1.  **Tokenizer Alignmen",
+    "review_due_cycle": 620
   }
 ]

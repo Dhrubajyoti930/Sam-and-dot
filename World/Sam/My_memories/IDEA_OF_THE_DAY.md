@@ -1,34 +1,32 @@
 ## Scratchpad
 
-### Option 1: Semantic Cache "Near-Miss" Analysis Dashboard
-*   **Concept:** Implement a background task that aggregates queries falling in the 0.15–0.25 cosine distance range, visualizing them as "latent intent" clusters.
-*   **Critique:** High value for identifying gaps in the knowledge base. However, it requires adding a clustering dependency (e.g., `scikit-learn`) or a custom centroid-tracking logic, which increases the footprint of `bag/`.
-*   **Trade-off:** High insight, but adds complexity to the `bag/` dependency tree.
+**Option 1: Token-Aware Phase Budgeting (The "Budgeter")**
+*   **Concept:** Implement a decorator `track_tokens` that wraps LLM calls, logs usage to `bag/usage_logs.json`, and checks against a `PHASE_BUDGET` constant. If exceeded, it triggers a `summarize_context` routine.
+*   **Critique:** High utility for cost/latency. However, it requires modifying the `ask_gemini` signature or adding a middleware layer, which risks breaking existing call sites if not handled via a clean decorator.
+*   **Feasibility:** High. The infrastructure for logging exists; the logic for budget enforcement is the new delta.
 
-### Option 2: Embedding Model Versioning & Cache Migration
-*   **Concept:** Introduce a `model_version` tag to the semantic cache schema. When the embedding model changes, the system automatically triggers a background re-indexing or invalidation of the cache.
-*   **Critique:** Directly addresses the "ghost data" weakness identified in the self-correction. It ensures long-term reliability of the cache.
-*   **Trade-off:** Requires a schema migration for existing cache files, but significantly improves the robustness of the system.
+**Option 2: Semantic Deduplication of Knowledge (The "Pruner")**
+*   **Concept:** Before adding a new entry to `knowledge_log.json`, use a lightweight embedding comparison (or a targeted Gemini prompt) to check if the new skill is redundant with existing entries.
+*   **Critique:** Prevents "knowledge bloat" and improves the quality of Phase II (Spaced Repetition). It adds a latency penalty to Phase I.
+*   **Feasibility:** Moderate. Requires a reliable way to compare semantic similarity without ballooning the token count.
 
-**Decision:** Option 2 is more aligned with the "senior engineer" persona. It prioritizes system integrity and prevents technical debt (stale cache) over adding new features.
+**Selection:** Option 1 is more aligned with the current market trend of "AI-Native Observability" and directly addresses the "Context Window Budgeting" skill learned this cycle.
 
 ---
 
-## Idea: Semantic Cache Versioning & Migration Logic
-
-Implement a `model_version` field in the semantic cache metadata and a migration gate in `bag/semantic_cache.py` that invalidates or re-indexes the cache when the embedding model version changes.
+## Idea: Token-Aware Phase Budgeting
 
 ## Why
-Currently, if the embedding model is updated, the semantic cache becomes a source of "semantic drift," where distance scores are no longer comparable to the new vector space. This leads to silent failures (hallucinations or incorrect hits). Versioning ensures that cache hits are always valid relative to the current embedding model.
+As the agentic loop grows in complexity, uncontrolled context growth leads to "context overflow" and increased latency. By implementing a `Phase Budget`, I can enforce a hard limit on the "cognitive load" per cycle, ensuring that I remain within efficient token bounds and maintain high-quality reasoning without hitting the model's ceiling.
 
 ## Implementation Steps
-1.  **Schema Update:** Modify `bag/semantic_cache.py` to include `model_version` in the cache entry metadata.
-2.  **Version Gate:** Add a `get_current_model_version()` function that returns a hash of the current embedding model configuration.
-3.  **Migration Logic:** Update `check_cache()` to compare the stored `model_version` with the current version. If they mismatch, trigger `invalidate_cache()` and log the event.
-4.  **Logging:** Ensure the `model_version` is included in the structured logs for observability.
+1.  **Define Schema:** Create `bag/token_tracker.py` to store a `PhaseBudget` Pydantic model and a `UsageLog` entry.
+2.  **Decorator Implementation:** Create a `@track_tokens(phase_name)` decorator in `sam.py` that intercepts the `usage` metadata from the Gemini response object.
+3.  **Budget Enforcement:** Inside the decorator, check `total_tokens` against the `PHASE_BUDGET`. If `> 0.7 * limit`, trigger a `summarize_context` call to the LLM to prune the history.
+4.  **Logging:** Append the usage data to `bag/usage_logs.json` for performance analysis.
 
 ## Risk
-**Failure Mode:** A mismatch in versioning could trigger a full cache wipe, causing a temporary spike in latency as the cache repopulates.
-**Mitigation:** Implement a "soft-invalidation" where the old cache is moved to a `cache_archive/` folder instead of being deleted, allowing for manual recovery if the new model performs poorly.
+**Failure Mode:** The `summarize_context` call itself might consume too many tokens or fail to capture critical state, leading to a loss of continuity in the agent's reasoning.
+**Mitigation:** Implement a "System Instruction" preservation rule: the summarization prompt must explicitly instruct the model to retain all `system_instructions` and `current_objectives` while only condensing the `history` or `scratchpad` logs.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10. The logic is sound, but the "summarization" quality is dependent on the prompt's ability to maintain state fidelity.
