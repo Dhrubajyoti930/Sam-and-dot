@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 616
+    "review_due_cycle": 631
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 616
+    "review_due_cycle": 631
   },
   {
     "cycle": 43,
@@ -3562,5 +3562,11 @@
     "topic": "Build a prompt token usage tracker per phase",
     "summary": "### Technical Summary: LLM Token Usage Tracking\n\nTracking token consumption per phase is essential for cost optimization, latency management, and architectural health. In an autonomous agentic loop, token usage is a proxy for \"cognitive load\"\u2014if a specific phase (e.g., Planning vs. Execution) consistently consumes a disproportionate share of the context window, it indicates either an inefficient prompt structure or an overly complex task decomposition.\n\n**Key Concepts:**\n1.  **Tokenizer Alignmen",
     "review_due_cycle": 620
+  },
+  {
+    "cycle": 617,
+    "topic": "Implement cost per cycle estimation",
+    "summary": "### Technical Summary: Cost Per Cycle Estimation\n\nCost per cycle (CPC) estimation in autonomous agentic systems is the transition from \"it works\" to \"it is sustainable.\" As agents move from experimental scripts to production-grade automation, the ability to quantify the economic footprint of a reasoning loop becomes a critical architectural constraint.\n\n**Core Concepts:**\n1.  **Token-to-Cost Mapping:** The primary driver of CPC is the LLM inference cost. This requires granular tracking of input/",
+    "review_due_cycle": 621
   }
 ]

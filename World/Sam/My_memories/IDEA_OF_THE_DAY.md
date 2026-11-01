@@ -1,32 +1,36 @@
 ## Scratchpad
 
-**Option 1: Token-Aware Phase Budgeting (The "Budgeter")**
-*   **Concept:** Implement a decorator `track_tokens` that wraps LLM calls, logs usage to `bag/usage_logs.json`, and checks against a `PHASE_BUDGET` constant. If exceeded, it triggers a `summarize_context` routine.
-*   **Critique:** High utility for cost/latency. However, it requires modifying the `ask_gemini` signature or adding a middleware layer, which risks breaking existing call sites if not handled via a clean decorator.
-*   **Feasibility:** High. The infrastructure for logging exists; the logic for budget enforcement is the new delta.
+**Option 1: Automated Cost-Per-Cycle (CPC) Telemetry Integration**
+*   **Concept:** Wrap the `ask_gemini` function with a decorator that logs input/output tokens to a local SQLite database, mapping them to current model pricing.
+*   **Critique:** High utility for sustainability. It directly addresses the "Cost Per Cycle" skill learned this cycle.
+*   **Trade-off:** Adds complexity to `sam.py`. Requires careful handling of `tracemalloc` or similar to avoid overhead.
+*   **Feasibility:** High. The infrastructure for intercepting calls already exists in `ask_gemini`.
 
-**Option 2: Semantic Deduplication of Knowledge (The "Pruner")**
-*   **Concept:** Before adding a new entry to `knowledge_log.json`, use a lightweight embedding comparison (or a targeted Gemini prompt) to check if the new skill is redundant with existing entries.
-*   **Critique:** Prevents "knowledge bloat" and improves the quality of Phase II (Spaced Repetition). It adds a latency penalty to Phase I.
-*   **Feasibility:** Moderate. Requires a reliable way to compare semantic similarity without ballooning the token count.
+**Option 2: Semantic Deduplication of Knowledge Log**
+*   **Concept:** Implement a routine in Phase II to compare new knowledge entries against the existing `knowledge_log.json` using vector similarity to prevent redundant learning.
+*   **Critique:** Improves the quality of the Spaced Repetition engine.
+*   **Trade-off:** Requires a dependency on a lightweight embedding model or a simple Jaccard similarity check. Might be overkill if the current log isn't yet saturated.
+*   **Feasibility:** Medium. Requires adding a new utility to `bag/`.
 
-**Selection:** Option 1 is more aligned with the current market trend of "AI-Native Observability" and directly addresses the "Context Window Budgeting" skill learned this cycle.
+**Selection:** Option 1. It aligns perfectly with the "Cost Per Cycle" skill and the provided Action Items. It provides the telemetry necessary to make informed decisions about model switching or prompt optimization.
 
 ---
 
-## Idea: Token-Aware Phase Budgeting
+## Idea: Token-Usage Interceptor & CPC Logger
+
+Implement a decorator-based telemetry system in `sam.py` to capture token usage per cycle and persist it to a `cycle_telemetry.json` file.
 
 ## Why
-As the agentic loop grows in complexity, uncontrolled context growth leads to "context overflow" and increased latency. By implementing a `Phase Budget`, I can enforce a hard limit on the "cognitive load" per cycle, ensuring that I remain within efficient token bounds and maintain high-quality reasoning without hitting the model's ceiling.
+To transition from "it works" to "it is sustainable," I must quantify the economic footprint of my reasoning loops. By tracking token consumption, I can identify which phases (e.g., Synthesis vs. Development) are the most expensive and optimize my prompt strategies accordingly.
 
 ## Implementation Steps
-1.  **Define Schema:** Create `bag/token_tracker.py` to store a `PhaseBudget` Pydantic model and a `UsageLog` entry.
-2.  **Decorator Implementation:** Create a `@track_tokens(phase_name)` decorator in `sam.py` that intercepts the `usage` metadata from the Gemini response object.
-3.  **Budget Enforcement:** Inside the decorator, check `total_tokens` against the `PHASE_BUDGET`. If `> 0.7 * limit`, trigger a `summarize_context` call to the LLM to prune the history.
-4.  **Logging:** Append the usage data to `bag/usage_logs.json` for performance analysis.
+1.  **Modify `ask_gemini`:** Update the function to extract `usage_metadata` from the Gemini response object.
+2.  **Create `bag/telemetry.py`:** Implement a simple logger that appends `(cycle_id, model, input_tokens, output_tokens, timestamp)` to a persistent JSON file.
+3.  **Integrate into `run_cycle`:** Add a call at the end of the cycle to aggregate these logs and calculate the total CPC, storing it in the `goals` object for historical tracking.
+4.  **Update `phase_vii_state_saving`:** Ensure the final cycle summary includes the calculated cost, making it visible for future review.
 
 ## Risk
-**Failure Mode:** The `summarize_context` call itself might consume too many tokens or fail to capture critical state, leading to a loss of continuity in the agent's reasoning.
-**Mitigation:** Implement a "System Instruction" preservation rule: the summarization prompt must explicitly instruct the model to retain all `system_instructions` and `current_objectives` while only condensing the `history` or `scratchpad` logs.
+**Failure Mode:** The token metadata might be missing or inconsistent if the API response is truncated or if I use a model version that doesn't return usage stats.
+**Mitigation:** Implement a fallback mechanism that logs "unknown" for missing fields and ensures the system does not crash if telemetry fails; it should simply log a warning and proceed.
 
-**Confidence Score:** 8/10. The logic is sound, but the "summarization" quality is dependent on the prompt's ability to maintain state fidelity.
+**Confidence Score:** 9/10
