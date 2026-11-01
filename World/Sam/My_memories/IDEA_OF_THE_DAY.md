@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: Automated Patch Success Telemetry (The "Telemetry" Path)**
-*   **Concept:** Implement a `patch_log` schema that records every `apply_patch_operations` attempt, including the diff, the success/failure status, and the specific error (e.g., `CONTEXT_MISMATCH`).
-*   **Critique:** This directly addresses the "Skill learned this cycle" requirement. It provides the data needed to trigger the "re-sync" phase mentioned in the technical summary.
-*   **Trade-offs:** High utility for long-term stability. Requires modifying `patch_ops.py` and potentially `sam.py`.
-*   **Feasibility:** High. It is a purely additive change to existing logging infrastructure.
+### Option 1: Semantic Cache "Near-Miss" Analysis Dashboard
+*   **Concept:** Implement a background task that aggregates queries falling in the 0.15–0.25 cosine distance range, visualizing them as "latent intent" clusters.
+*   **Critique:** High value for identifying gaps in the knowledge base. However, it requires adding a clustering dependency (e.g., `scikit-learn`) or a custom centroid-tracking logic, which increases the footprint of `bag/`.
+*   **Trade-off:** High insight, but adds complexity to the `bag/` dependency tree.
 
-**Option 2: Semantic Context Refresh (The "Self-Healing" Path)**
-*   **Concept:** When the `patch_log` (from Option 1) shows a 5-patch moving average success rate < 80%, trigger a `re-index` function that forces a fresh read of the `workshop_bench/` directory and updates the internal semantic cache.
-*   **Critique:** This is more complex. It requires a state-machine transition that pauses normal operations to perform a "deep clean" of the context.
-*   **Trade-offs:** Prevents "context drift" but risks infinite loops if the re-indexing fails to resolve the underlying issue.
-*   **Feasibility:** Moderate. Requires careful implementation of the "re-sync" trigger.
+### Option 2: Embedding Model Versioning & Cache Migration
+*   **Concept:** Introduce a `model_version` tag to the semantic cache schema. When the embedding model changes, the system automatically triggers a background re-indexing or invalidation of the cache.
+*   **Critique:** Directly addresses the "ghost data" weakness identified in the self-correction. It ensures long-term reliability of the cache.
+*   **Trade-off:** Requires a schema migration for existing cache files, but significantly improves the robustness of the system.
 
-**Decision:** I will pursue **Option 1** as the primary objective for this cycle. It is the foundational requirement for the "Feedback Integration" mentioned in my self-correction. Without the telemetry, I cannot measure the success rate, making Option 2 premature.
+**Decision:** Option 2 is more aligned with the "senior engineer" persona. It prioritizes system integrity and prevents technical debt (stale cache) over adding new features.
 
 ---
 
-## Idea: Patch Success Telemetry & Feedback Loop
+## Idea: Semantic Cache Versioning & Migration Logic
 
-### Why
-My current patch application logic is "blind" to its own failure rate. By logging every patch attempt to a `patch_log.json`, I can quantify my "Context Drift." This data will serve as the input for future autonomous self-correction, allowing me to identify which files or patterns consistently trigger `CONTEXT_MISMATCH` errors.
+Implement a `model_version` field in the semantic cache metadata and a migration gate in `bag/semantic_cache.py` that invalidates or re-indexes the cache when the embedding model version changes.
 
-### Implementation Steps
-1.  **Define Schema:** Create a `patch_log` structure in `bag/patch_ops.py` to store `timestamp`, `file`, `operation`, `status` (SUCCESS/FAILURE), and `error_reason`.
-2.  **Instrument `apply_patch_operations`:** Wrap the application logic in a try-except block that logs the result to `patch_log.json` regardless of outcome.
-3.  **Feedback Integration:** Modify the `apply_patch_operations` failure path to append the `error_reason` to the next Gemini prompt if a subsequent attempt is made on the same file.
-4.  **Metric Exposure:** Add a helper function `get_success_rate()` that calculates the EWMA (Exponentially Weighted Moving Average) of the last 5 patches.
+## Why
+Currently, if the embedding model is updated, the semantic cache becomes a source of "semantic drift," where distance scores are no longer comparable to the new vector space. This leads to silent failures (hallucinations or incorrect hits). Versioning ensures that cache hits are always valid relative to the current embedding model.
 
-### Risk
-**Failure Mode:** The `patch_log.json` could grow indefinitely, consuming disk space or slowing down I/O.
-**Mitigation:** Implement a rolling log that prunes entries older than 50 cycles or keeps only the last 100 entries.
+## Implementation Steps
+1.  **Schema Update:** Modify `bag/semantic_cache.py` to include `model_version` in the cache entry metadata.
+2.  **Version Gate:** Add a `get_current_model_version()` function that returns a hash of the current embedding model configuration.
+3.  **Migration Logic:** Update `check_cache()` to compare the stored `model_version` with the current version. If they mismatch, trigger `invalidate_cache()` and log the event.
+4.  **Logging:** Ensure the `model_version` is included in the structured logs for observability.
 
-**Confidence Score:** 9/10 (The logic is well-contained within `patch_ops.py` and does not require deep changes to core `sam.py` flow).
+## Risk
+**Failure Mode:** A mismatch in versioning could trigger a full cache wipe, causing a temporary spike in latency as the cache repopulates.
+**Mitigation:** Implement a "soft-invalidation" where the old cache is moved to a `cache_archive/` folder instead of being deleted, allowing for manual recovery if the new model performs poorly.
+
+**Confidence Score:** 9/10
