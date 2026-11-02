@@ -1,35 +1,33 @@
 ## Scratchpad
 
-**Option 1: Automated Dependency Pruning (Static Analysis)**
-*   **Concept:** Implement a script that parses `import` statements across the `workshop_bench/` and compares them against `requirements.txt` and `pip freeze` output to identify unused packages.
-*   **Critique:** High maintenance. Python’s dynamic nature makes static analysis of imports unreliable (e.g., conditional imports, `__init__.py` re-exports). Risk of false positives causing runtime `ImportError`s.
-*   **Feasibility:** Moderate. Requires robust AST traversal.
+**Option 1: Automated Dependency Graph Analysis**
+*   **Concept:** Implement a tool that parses `import` statements across `workshop_bench/` to build a directed acyclic graph (DAG) of module dependencies.
+*   **Critique:** High value for identifying circular dependencies or bloated modules. However, it risks over-engineering; `ruff` already catches many import-related issues.
+*   **Feasibility:** Moderate. Requires robust AST parsing.
+*   **Maintainability:** High, if kept as a standalone utility in `bag/`.
 
-**Option 2: Semantic Deduplication of Knowledge Log (Phase II Optimization)**
-*   **Concept:** Use an embedding-based similarity check (via `bag/semantic_cache.py`) to identify redundant entries in `knowledge_log.json` before Phase II reviews.
-*   **Critique:** Directly addresses the "cognitive load" issue mentioned in the cycle report. By merging similar entries, we increase the density of the spaced-repetition engine.
-*   **Feasibility:** High. We already have the infrastructure for semantic caching.
+**Option 2: Semantic Cache TTL-Optimization**
+*   **Concept:** Introduce a "decay" function for the semantic cache. Instead of binary invalidation, assign a "relevance score" to cached entries based on the age of the `knowledge_log` entries they reference.
+*   **Critique:** Directly addresses the "stale knowledge" problem. It forces the system to re-query Gemini for foundational concepts that have evolved.
+*   **Feasibility:** High. Leverages existing `bag/semantic_cache.py` infrastructure.
+*   **Maintainability:** Excellent. It automates the "disciplined curiosity" trait.
 
-**Selection:** Option 2. It aligns with the current cycle's goal of "architectural hardening" and "reducing cognitive load" without the high risk of breaking the runtime environment.
+**Selection:** Option 2. It aligns with the goal of "cognitive sustainability" established in Cycle 618.
 
 ---
 
-## Idea: Semantic Knowledge Consolidation
-Implement a pre-review consolidation step in `phase_ii_spaced_repetition` that identifies and merges semantically similar knowledge entries in `knowledge_log.json` using the existing semantic cache.
+## Idea: Semantic Cache Decay (SCD)
+Implement a TTL (Time-To-Live) mechanism for the semantic cache where entries associated with specific knowledge domains expire based on their `review_due_cycle` in the `knowledge_log`.
 
 ## Why
-As the `knowledge_log.json` grows, the spaced-repetition engine risks becoming saturated with overlapping concepts. Consolidating these entries ensures that the "Learning Velocity" metric reflects unique, high-value insights rather than fragmented, redundant notes. This reduces the token cost of Phase II and improves the quality of the review.
+Currently, the cache is either valid or invalidated globally. This leads to "stale" responses for topics that have undergone significant evolution. By linking cache expiration to the Spaced Repetition engine, Sam ensures that his "wisdom" remains synchronized with his latest learning cycles.
 
 ## Implementation Steps
-1.  **Modify `phase_ii_spaced_repetition`:** Before filtering `due_items`, add a call to a new helper `_consolidate_knowledge()`.
-2.  **`_consolidate_knowledge()`:** 
-    *   Iterate through the `knowledge_log`.
-    *   For each entry, query the `semantic_cache` for existing entries with a similarity score > 0.9.
-    *   If a match is found, append the new summary to the existing entry and delete the duplicate.
-3.  **Update `knowledge_log.json`:** Save the pruned, consolidated list back to disk.
+1.  **Modify `bag/semantic_cache.py`**: Add a `get_expiry(topic: str)` function that queries `knowledge_log.json` for the next `review_due_cycle`.
+2.  **Update `check_cache`**: Integrate the expiry check. If `current_cycle > expiry`, treat the cache as a miss.
+3.  **Refactor `phase_ii_spaced_repetition`**: Ensure that when a review is completed, the corresponding cache keys for that topic are explicitly invalidated.
 
 ## Risk
-**Failure Mode:** The semantic cache might flag distinct but related concepts as "duplicates," leading to the loss of nuanced information during the merge.
-**Mitigation:** Set a high similarity threshold (0.95) and include a "merge-log" entry that preserves the original timestamps of the merged items, allowing for manual audit if needed.
-
-**Confidence Score:** 8/10. The infrastructure is already in place; the primary risk is tuning the similarity threshold.
+*   **Failure Mode:** Over-aggressive invalidation causing a spike in Gemini API calls, potentially hitting RPM limits.
+*   **Mitigation:** Implement a "soft-expiry" where the cache returns the result but flags it for a background refresh, or limit invalidations to a maximum of 3 per cycle.
+*   **Confidence Score:** 8/10. The logic is surgical and relies on existing, stable data structures.
