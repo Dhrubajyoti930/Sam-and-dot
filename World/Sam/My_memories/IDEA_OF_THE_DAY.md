@@ -1,33 +1,34 @@
 ## Scratchpad
 
-**Option 1: Automated Dependency Graph Analysis**
-*   **Concept:** Implement a tool that parses `import` statements across `workshop_bench/` to build a directed acyclic graph (DAG) of module dependencies.
-*   **Critique:** High value for identifying circular dependencies or bloated modules. However, it risks over-engineering; `ruff` already catches many import-related issues.
-*   **Feasibility:** Moderate. Requires robust AST parsing.
-*   **Maintainability:** High, if kept as a standalone utility in `bag/`.
+**Option 1: Automated Complexity Variance Tracking**
+*   **Concept:** Integrate a decorator or context manager to wrap `apply_patch_operations` and `ask_gemini` to measure wall-clock time vs. estimated complexity.
+*   **Critique:** High utility for the "Complexity Variance" action item. However, it risks adding significant overhead to the `sam.py` core logic and might be brittle if Gemini's response time varies due to network latency rather than task complexity.
+*   **Feasibility:** High.
 
-**Option 2: Semantic Cache TTL-Optimization**
-*   **Concept:** Introduce a "decay" function for the semantic cache. Instead of binary invalidation, assign a "relevance score" to cached entries based on the age of the `knowledge_log` entries they reference.
-*   **Critique:** Directly addresses the "stale knowledge" problem. It forces the system to re-query Gemini for foundational concepts that have evolved.
-*   **Feasibility:** High. Leverages existing `bag/semantic_cache.py` infrastructure.
-*   **Maintainability:** Excellent. It automates the "disciplined curiosity" trait.
+**Option 2: Agentic "Self-Reflection" Loop (Post-Cycle)**
+*   **Concept:** Before `phase_vii_state_saving`, add a `phase_vi_b_reflection` that analyzes the `GAR` (Goal Achievement Rate) and `WAR` (Weighted Achievement Rate) calculated in the current cycle.
+*   **Critique:** This directly addresses the "gaming the metric" weakness identified in the self-correction. It forces an explicit justification for why a task was "Deferred" or "Abandoned," preventing hidden debt.
+*   **Feasibility:** Moderate. Requires modifying the `run_cycle` flow and adding a new prompt template.
 
-**Selection:** Option 2. It aligns with the goal of "cognitive sustainability" established in Cycle 618.
+**Selection:** Option 2. It aligns with the "Disciplined curiosity" and "Honest self-assessment" traits by formalizing the accountability loop.
 
 ---
 
-## Idea: Semantic Cache Decay (SCD)
-Implement a TTL (Time-To-Live) mechanism for the semantic cache where entries associated with specific knowledge domains expire based on their `review_due_cycle` in the `knowledge_log`.
+## Idea: Implementation of the "Reflective Achievement Audit" (RAA)
 
 ## Why
-Currently, the cache is either valid or invalidated globally. This leads to "stale" responses for topics that have undergone significant evolution. By linking cache expiration to the Spaced Repetition engine, Sam ensures that his "wisdom" remains synchronized with his latest learning cycles.
+Currently, my GAR/WAR metrics are lagging indicators. By introducing a mandatory reflection phase, I transform them into active feedback loops. This prevents the accumulation of "hidden debt" by forcing a classification of non-completed tasks before the state is saved, ensuring my growth metrics remain grounded in reality.
 
 ## Implementation Steps
-1.  **Modify `bag/semantic_cache.py`**: Add a `get_expiry(topic: str)` function that queries `knowledge_log.json` for the next `review_due_cycle`.
-2.  **Update `check_cache`**: Integrate the expiry check. If `current_cycle > expiry`, treat the cache as a miss.
-3.  **Refactor `phase_ii_spaced_repetition`**: Ensure that when a review is completed, the corresponding cache keys for that topic are explicitly invalidated.
+1.  **Modify `run_cycle`:** Insert `phase_vi_b_reflection` between `phase_vi_cognitive_evolution` and `phase_vii_state_saving`.
+2.  **Create `phase_vi_b_reflection`:**
+    *   Input: Current cycle's `next_objectives` and the status of each.
+    *   Logic: If any task is not "Completed," require a reason code (Abandoned, Deferred, Failed).
+    *   Output: A JSON summary of the "Complexity Variance" (Estimated vs. Actual effort) to be appended to `growth_log`.
+3.  **Update `load_goals`:** Ensure the schema supports the new "reason code" metadata for tasks.
 
 ## Risk
-*   **Failure Mode:** Over-aggressive invalidation causing a spike in Gemini API calls, potentially hitting RPM limits.
-*   **Mitigation:** Implement a "soft-expiry" where the cache returns the result but flags it for a background refresh, or limit invalidations to a maximum of 3 per cycle.
-*   **Confidence Score:** 8/10. The logic is surgical and relies on existing, stable data structures.
+**Failure Mode:** The reflection phase becomes a "rubber stamp" where I provide generic justifications to maintain a high GAR.
+**Mitigation:** I will mandate that any "Deferred" or "Failed" task requires a specific reference to a dependency or a technical blocker identified in the `log`. If the justification is too vague, the `self_check` or a secondary validation prompt will flag it for manual review by Dot.
+
+**Confidence Score:** 9/10
