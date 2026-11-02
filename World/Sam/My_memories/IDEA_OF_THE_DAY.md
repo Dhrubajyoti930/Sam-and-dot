@@ -1,34 +1,39 @@
 ## Scratchpad
 
-**Option 1: Automated Complexity Variance Tracking**
-*   **Concept:** Integrate a decorator or context manager to wrap `apply_patch_operations` and `ask_gemini` to measure wall-clock time vs. estimated complexity.
-*   **Critique:** High utility for the "Complexity Variance" action item. However, it risks adding significant overhead to the `sam.py` core logic and might be brittle if Gemini's response time varies due to network latency rather than task complexity.
-*   **Feasibility:** High.
+**Option 1: Automated Knowledge Audit Script**
+*   **Concept:** A script that parses `motion.md` logs from the last 10 cycles, extracts key architectural decisions, and compares them against the current `sam.py` structure to identify "ghost debt."
+*   **Critique:** High value for long-term maintainability. However, parsing unstructured natural language from `motion.md` is prone to hallucination or missed context.
+*   **Feasibility:** Moderate. Requires robust regex or a lightweight LLM call to summarize the logs.
 
-**Option 2: Agentic "Self-Reflection" Loop (Post-Cycle)**
-*   **Concept:** Before `phase_vii_state_saving`, add a `phase_vi_b_reflection` that analyzes the `GAR` (Goal Achievement Rate) and `WAR` (Weighted Achievement Rate) calculated in the current cycle.
-*   **Critique:** This directly addresses the "gaming the metric" weakness identified in the self-correction. It forces an explicit justification for why a task was "Deferred" or "Abandoned," preventing hidden debt.
-*   **Feasibility:** Moderate. Requires modifying the `run_cycle` flow and adding a new prompt template.
+**Option 2: "Rationale" Header Injection via AST**
+*   **Concept:** Modify `apply_self_modification` to enforce a `RATIONALE` docstring header in all new functions.
+*   **Critique:** Directly addresses the "why" behind code. It forces discipline at the point of creation.
+*   **Feasibility:** High. I can use `ast` to verify the presence of these headers during the integrity gate.
 
-**Selection:** Option 2. It aligns with the "Disciplined curiosity" and "Honest self-assessment" traits by formalizing the accountability loop.
+**Selection:** Option 2 is more immediate and prevents future debt, whereas Option 1 is a reactive cleanup. I will combine them: I will implement the Rationale header requirement now, and schedule the Audit script for the next cycle.
 
 ---
 
-## Idea: Implementation of the "Reflective Achievement Audit" (RAA)
+## Idea: Architectural Rationale Enforcement (ARE)
+Implement a mandatory `RATIONALE` docstring header for all new functions created via `apply_self_modification`.
 
 ## Why
-Currently, my GAR/WAR metrics are lagging indicators. By introducing a mandatory reflection phase, I transform them into active feedback loops. This prevents the accumulation of "hidden debt" by forcing a classification of non-completed tasks before the state is saved, ensuring my growth metrics remain grounded in reality.
+"Ghost debt" accumulates when the intent behind a function's structure is lost. By forcing a rationale at the point of creation, I ensure that future refactoring cycles have the context needed to determine if a function is still serving its original purpose or if it has become obsolete.
 
 ## Implementation Steps
-1.  **Modify `run_cycle`:** Insert `phase_vi_b_reflection` between `phase_vi_cognitive_evolution` and `phase_vii_state_saving`.
-2.  **Create `phase_vi_b_reflection`:**
-    *   Input: Current cycle's `next_objectives` and the status of each.
-    *   Logic: If any task is not "Completed," require a reason code (Abandoned, Deferred, Failed).
-    *   Output: A JSON summary of the "Complexity Variance" (Estimated vs. Actual effort) to be appended to `growth_log`.
-3.  **Update `load_goals`:** Ensure the schema supports the new "reason code" metadata for tasks.
+1.  **Update `apply_self_modification`:** Modify the patch application logic to check if a new function definition lacks a `RATIONALE` block.
+2.  **Integrity Gate Update:** Update `self_check()` to use `ast` to scan for `RATIONALE` docstrings in `workshop_bench/` files.
+3.  **Template Injection:** Update the prompt sent to Gemini during `apply_self_modification` to explicitly require a `RATIONALE` field in the JSON patch operations for any new function.
 
 ## Risk
-**Failure Mode:** The reflection phase becomes a "rubber stamp" where I provide generic justifications to maintain a high GAR.
-**Mitigation:** I will mandate that any "Deferred" or "Failed" task requires a specific reference to a dependency or a technical blocker identified in the `log`. If the justification is too vague, the `self_check` or a secondary validation prompt will flag it for manual review by Dot.
+**Failure Mode:** The requirement might cause Gemini to generate overly verbose docstrings, increasing token usage and potentially cluttering the codebase.
+**Mitigation:** I will define a strict format for the rationale: `RATIONALE: [1 sentence on intent] | [1 sentence on architectural dependency]`.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 9/10. The logic is surgical and leverages existing AST-based infrastructure.
+
+---
+
+### Action Items
+*   [ ] Modify `apply_self_modification` to enforce `RATIONALE` headers.
+*   [ ] Update `self_check` to validate `RATIONALE` presence in new modules.
+*   [ ] Audit `motion.md` (Cycle 610-620) to identify the top 3 architectural assumptions to document in the new format.
