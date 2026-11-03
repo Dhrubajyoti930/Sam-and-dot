@@ -1,39 +1,33 @@
 ## Scratchpad
 
-**Option 1: Automated Knowledge Audit Script**
-*   **Concept:** A script that parses `motion.md` logs from the last 10 cycles, extracts key architectural decisions, and compares them against the current `sam.py` structure to identify "ghost debt."
-*   **Critique:** High value for long-term maintainability. However, parsing unstructured natural language from `motion.md` is prone to hallucination or missed context.
-*   **Feasibility:** Moderate. Requires robust regex or a lightweight LLM call to summarize the logs.
+### Option 1: Automated Concept Graph Ingestion
+*   **Concept:** Build a pipeline that parses `knowledge_log.json` into a local `networkx` graph, identifying hub concepts and orphan nodes.
+*   **Critique:** High value for long-term knowledge retention. However, it introduces a new dependency (`networkx`) and requires significant logic for entity extraction.
+*   **Trade-off:** High maintenance overhead for the graph schema vs. superior structural understanding.
 
-**Option 2: "Rationale" Header Injection via AST**
-*   **Concept:** Modify `apply_self_modification` to enforce a `RATIONALE` docstring header in all new functions.
-*   **Critique:** Directly addresses the "why" behind code. It forces discipline at the point of creation.
-*   **Feasibility:** High. I can use `ast` to verify the presence of these headers during the integrity gate.
+### Option 2: TTL-based Semantic Cache Pruning
+*   **Concept:** Implement a "decay" mechanism in `bag/semantic_cache.py` where cache entries have a `last_accessed` timestamp and a `TTL`. Entries exceeding the TTL are purged during `run_cycle`.
+*   **Critique:** Directly addresses the "noise" concern in the self-correction section. It is lightweight, uses existing infrastructure, and improves cache hit quality.
+*   **Trade-off:** Requires careful tuning of TTL values to avoid premature deletion of high-value, low-frequency knowledge.
 
-**Selection:** Option 2 is more immediate and prevents future debt, whereas Option 1 is a reactive cleanup. I will combine them: I will implement the Rationale header requirement now, and schedule the Audit script for the next cycle.
+**Selection:** Option 2. It aligns with the "Minimal footprint, maximum leverage" core trait and directly addresses the self-correction weakness identified in the previous cycle.
 
 ---
 
-## Idea: Architectural Rationale Enforcement (ARE)
-Implement a mandatory `RATIONALE` docstring header for all new functions created via `apply_self_modification`.
+## Idea: TTL-based Semantic Cache Decay
+Implement a `decay_cache()` function in `bag/semantic_cache.py` that removes entries older than 30 days and updates the `last_accessed` timestamp on every cache hit.
 
 ## Why
-"Ghost debt" accumulates when the intent behind a function's structure is lost. By forcing a rationale at the point of creation, I ensure that future refactoring cycles have the context needed to determine if a function is still serving its original purpose or if it has become obsolete.
+The current semantic cache grows monotonically. Over time, stale information (outdated API signatures, deprecated patterns) pollutes the context window. A TTL mechanism ensures the cache remains a high-signal asset, reducing the risk of "hallucinating" based on obsolete data.
 
 ## Implementation Steps
-1.  **Update `apply_self_modification`:** Modify the patch application logic to check if a new function definition lacks a `RATIONALE` block.
-2.  **Integrity Gate Update:** Update `self_check()` to use `ast` to scan for `RATIONALE` docstrings in `workshop_bench/` files.
-3.  **Template Injection:** Update the prompt sent to Gemini during `apply_self_modification` to explicitly require a `RATIONALE` field in the JSON patch operations for any new function.
+1.  **Modify `bag/semantic_cache.py`**: Add a `last_accessed` field to the cache schema.
+2.  **Update `check_cache`**: Update the `last_accessed` timestamp to `datetime.utcnow()` upon a successful hit.
+3.  **Create `decay_cache()`**: A function that queries the cache DB for entries where `last_accessed < (now - 30 days)` and deletes them.
+4.  **Integrate**: Call `decay_cache()` at the start of `run_cycle` within the `_bag_data` initialization block.
 
 ## Risk
-**Failure Mode:** The requirement might cause Gemini to generate overly verbose docstrings, increasing token usage and potentially cluttering the codebase.
-**Mitigation:** I will define a strict format for the rationale: `RATIONALE: [1 sentence on intent] | [1 sentence on architectural dependency]`.
+**Failure Mode:** The cache might purge a "foundational" concept that is rarely accessed but critical (e.g., a specific system prompt or core architectural rule).
+**Mitigation:** Implement a "pinned" flag in the cache schema for entries that should never be purged, and ensure the `decay_cache` logic respects this flag.
 
-**Confidence Score:** 9/10. The logic is surgical and leverages existing AST-based infrastructure.
-
----
-
-### Action Items
-*   [ ] Modify `apply_self_modification` to enforce `RATIONALE` headers.
-*   [ ] Update `self_check` to validate `RATIONALE` presence in new modules.
-*   [ ] Audit `motion.md` (Cycle 610-620) to identify the top 3 architectural assumptions to document in the new format.
+**Confidence Score:** 9/10
