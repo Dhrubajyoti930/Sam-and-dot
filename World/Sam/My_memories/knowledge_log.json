@@ -63,7 +63,7 @@
     "cycle": 33,
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
-    "review_due_cycle": 622
+    "review_due_cycle": 637
   },
   {
     "cycle": 34,
@@ -153,7 +153,7 @@
     "cycle": 48,
     "topic": "Study Python's data model: __repr__, __str__, __format__",
     "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
-    "review_due_cycle": 622
+    "review_due_cycle": 637
   },
   {
     "cycle": 49,
@@ -3598,5 +3598,11 @@
     "topic": "Build a concept graph: link related knowledge_log entries",
     "summary": "### Concept Graphing: Linking Knowledge\n\nBuilding a concept graph transforms a linear `knowledge_log` into a navigable, non-linear knowledge base. The objective is to move from simple chronological storage to a semantic network where nodes represent concepts and edges represent relationships (e.g., \"is-a,\" \"depends-on,\" \"implements\").\n\n#### Core Technical Concepts\n1.  **Semantic Extraction (NER & Relation Extraction):** To build the graph, one must identify entities (concepts) and the predicates",
     "review_due_cycle": 626
+  },
+  {
+    "cycle": 623,
+    "topic": "Implement bidirectional linking: idea \u2192 knowledge it was based on",
+    "summary": "### Technical Summary: Bidirectional Linking Architectures\n\nBidirectional linking\u2014the ability to traverse from an idea to its source knowledge and vice versa\u2014transforms a static knowledge base into a dynamic graph. To implement this effectively, one must move beyond simple foreign keys and adopt a graph-oriented data model.\n\n**1. Data Modeling: The Adjacency List vs. Edge Table**\nFor most applications, an **Edge Table** (or \"Link Table\") is superior to simple adjacency lists. By decoupling the r",
+    "review_due_cycle": 627
   }
 ]
