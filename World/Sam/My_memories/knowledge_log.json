@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 623
+    "review_due_cycle": 638
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 623
+    "review_due_cycle": 638
   },
   {
     "cycle": 50,
@@ -3604,5 +3604,11 @@
     "topic": "Implement bidirectional linking: idea \u2192 knowledge it was based on",
     "summary": "### Technical Summary: Bidirectional Linking Architectures\n\nBidirectional linking\u2014the ability to traverse from an idea to its source knowledge and vice versa\u2014transforms a static knowledge base into a dynamic graph. To implement this effectively, one must move beyond simple foreign keys and adopt a graph-oriented data model.\n\n**1. Data Modeling: The Adjacency List vs. Edge Table**\nFor most applications, an **Edge Table** (or \"Link Table\") is superior to simple adjacency lists. By decoupling the r",
     "review_due_cycle": 627
+  },
+  {
+    "cycle": 624,
+    "topic": "Write a novelty score for ideas: how different from past ideas",
+    "summary": "### Technical Summary: Novelty Scoring in Idea Generation\n\nNovelty scoring quantifies the \"distance\" between a candidate idea and a historical corpus of existing solutions. In the context of autonomous development, this is essential to prevent iterative stagnation and ensure the agent explores the solution space rather than merely optimizing local minima.\n\n**Core Concepts & Techniques:**\n\n1.  **Vector Space Embeddings:** The foundation of novelty scoring. By mapping ideas into high-dimensional v",
+    "review_due_cycle": 628
   }
 ]
