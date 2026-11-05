@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 627
+    "review_due_cycle": 642
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 627
+    "review_due_cycle": 642
   },
   {
     "cycle": 39,
@@ -3628,5 +3628,11 @@
     "topic": "Write a dead code detector for workshop_bench files",
     "summary": "### Technical Summary: Dead Code Detection in `workshop_bench`\n\nDead code detection\u2014identifying unreachable, unused, or obsolete logic\u2014is a critical maintenance task for long-lived repositories like `workshop_bench`. To implement an effective detector, one must move beyond simple string matching and leverage **Static Analysis** and **Dependency Graphing**.\n\n1.  **Abstract Syntax Tree (AST) Analysis:** The most robust approach involves parsing source files into an AST. By traversing the tree, we ",
     "review_due_cycle": 631
+  },
+  {
+    "cycle": 628,
+    "topic": "Build a dependency tracker: what imports what in bag/",
+    "summary": "### Technical Summary: Dependency Analysis in `bag/`\n\nDependency tracking is the foundation of architectural integrity. To map the import graph of `bag/`, one must move beyond simple string matching and treat the codebase as a Directed Acyclic Graph (DAG).\n\n**1. Static Analysis vs. Runtime Inspection**\nFor a static repository like `bag/`, static analysis is the gold standard. Parsing the Abstract Syntax Tree (AST) is superior to regex-based grep because it accounts for aliasing, dynamic imports,",
+    "review_due_cycle": 632
   }
 ]
