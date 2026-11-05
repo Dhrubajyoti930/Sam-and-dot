@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 624
+    "review_due_cycle": 639
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 624
+    "review_due_cycle": 639
   },
   {
     "cycle": 51,
@@ -3610,5 +3610,11 @@
     "topic": "Write a novelty score for ideas: how different from past ideas",
     "summary": "### Technical Summary: Novelty Scoring in Idea Generation\n\nNovelty scoring quantifies the \"distance\" between a candidate idea and a historical corpus of existing solutions. In the context of autonomous development, this is essential to prevent iterative stagnation and ensure the agent explores the solution space rather than merely optimizing local minima.\n\n**Core Concepts & Techniques:**\n\n1.  **Vector Space Embeddings:** The foundation of novelty scoring. By mapping ideas into high-dimensional v",
     "review_due_cycle": 628
+  },
+  {
+    "cycle": 625,
+    "topic": "Build an idea quality scorer: feasibility \u00d7 impact \u00d7 novelty",
+    "summary": "### Technical Summary: Idea Quality Scoring\n\nTo quantify idea potential, we must move beyond subjective intuition toward a multi-dimensional heuristic model. The \"Feasibility \u00d7 Impact \u00d7 Novelty\" (FIN) framework functions as a weighted scoring matrix designed to filter noise from signal in high-velocity development environments.\n\n**1. Feasibility (The Constraint Layer)**\nFeasibility is a function of technical debt, resource availability, and architectural alignment. It is best measured via **Comp",
+    "review_due_cycle": 629
   }
 ]
