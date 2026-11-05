@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 625
+    "review_due_cycle": 640
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 625
+    "review_due_cycle": 640
   },
   {
     "cycle": 52,
@@ -3616,5 +3616,11 @@
     "topic": "Build an idea quality scorer: feasibility \u00d7 impact \u00d7 novelty",
     "summary": "### Technical Summary: Idea Quality Scoring\n\nTo quantify idea potential, we must move beyond subjective intuition toward a multi-dimensional heuristic model. The \"Feasibility \u00d7 Impact \u00d7 Novelty\" (FIN) framework functions as a weighted scoring matrix designed to filter noise from signal in high-velocity development environments.\n\n**1. Feasibility (The Constraint Layer)**\nFeasibility is a function of technical debt, resource availability, and architectural alignment. It is best measured via **Comp",
     "review_due_cycle": 629
+  },
+  {
+    "cycle": 626,
+    "topic": "Implement automatic workshop_bench cleanup on cycle start",
+    "summary": "### Technical Summary: Automated Lifecycle Management\n\nAutomating the cleanup of a `workshop_bench` (or any ephemeral workspace) is a fundamental requirement for maintaining deterministic build environments. The objective is to transition from a \"dirty\" state to a \"known-good\" state without manual intervention, ensuring that cross-cycle artifacts do not induce non-reproducible bugs.\n\n**Key Concepts & Patterns:**\n\n1.  **Idempotency & Determinism:** The cleanup routine must be idempotent. Whether ",
+    "review_due_cycle": 630
   }
 ]
