@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Automated Dependency Coupling Score (DCS) Monitoring**
-*   **Concept:** Integrate a script that calculates the DCS for `workshop_bench/` modules after every `apply_patch_operations` call. If a patch increases the coupling beyond a threshold, Sam flags it for review.
-*   **Critique:** High value for long-term maintainability. However, calculating graph-based metrics (DCS) requires a robust parser for imports and internal references. It risks becoming a "God Object" itself if not kept lightweight.
-*   **Feasibility:** Moderate. Requires building a dependency graph from ASTs.
+**Option 1: Implement Git-Churn Heatmap CLI**
+*   **Concept:** Build a utility that parses `git log` to identify high-churn files and cross-reference them with `ast` complexity metrics.
+*   **Critique:** High value for identifying technical debt. However, it requires parsing complex git output and potentially managing a local cache of file metadata.
+*   **Trade-off:** High maintenance overhead for the parser vs. high utility for long-term health.
 
-**Option 2: Semantic Cache "Self-Healing" via Vector Similarity**
-*   **Concept:** When `ask_gemini` returns a result that fails the `self_check` or `behaviour_check`, instead of just rolling back, Sam queries the semantic cache for "successful" past responses to similar prompts and attempts to synthesize a fix based on those patterns.
-*   **Critique:** This moves Sam toward "experience-based" self-correction. It is more sophisticated than a simple rollback.
-*   **Feasibility:** High, as the infrastructure for `semantic_cache` already exists. It leverages the existing `bag/semantic_cache.py`.
+**Option 2: Semantic Deduplication of Knowledge Log**
+*   **Concept:** Use vector embeddings to compare new knowledge entries against `knowledge_log.json` and merge redundant entries.
+*   **Critique:** Directly addresses the "Spaced Repetition" bloat. It leverages existing semantic cache infrastructure.
+*   **Trade-off:** Lower complexity than a git-parser, but requires careful handling of the `knowledge_log.json` schema to avoid data loss.
 
-**Decision:** Option 2 is more aligned with Sam's goal of autonomous improvement. It turns failure into a data-gathering exercise rather than just a reset.
+**Selection:** Option 1 (Git-Churn Heatmap) aligns perfectly with my current focus on architectural integrity and the "Hotspot Analysis" skill learned this cycle. It provides a data-driven foundation for future refactoring.
 
 ---
 
-## Idea: Semantic Cache "Failure-Context" Injection
-Implement a mechanism where, upon a `behaviour_check` failure, Sam retrieves the top 3 most similar successful prompts from the `semantic_cache` and injects their "correction patterns" into the `_behaviour_fix_with_gemini` prompt.
+## Idea: Git-Churn Hotspot Analyzer
+Develop a CLI utility `bag/hotspot.py` that calculates a "Churn-Complexity Score" for files in the repository. It will combine commit frequency (from `git log`) with cyclomatic complexity (via `ast`) to identify the top 5% of files requiring architectural attention.
 
 ## Why
-Currently, when Sam fails a test, he asks Gemini to fix it from scratch. By providing examples of *how* he previously resolved similar logic errors or structural issues, he reduces the "hallucination" rate of the fix and accelerates the learning curve for complex architectural changes.
+I am currently managing technical debt reactively. A churn-based heatmap allows me to proactively identify "God Objects" or fragile modules before they become systemic bottlenecks, ensuring my refactoring efforts are directed where they yield the highest ROI.
 
 ## Implementation Steps
-1.  **Update `_behaviour_fix_with_gemini`:** Add a call to `check_cache` (or a new similarity search function) using the current failing test output as the query.
-2.  **Context Construction:** Format the retrieved successful patches into a "Historical Correction Patterns" section in the prompt sent to Gemini.
-3.  **Prompt Refinement:** Instruct Gemini to "Use these historical patterns as a guide for the current fix."
-4.  **Logging:** Log whether the fix was successful using the historical context to track if this actually improves the 1% growth metric.
+1.  **Parser:** Create `bag/hotspot.py` using `subprocess` to call `git log --pretty=format: --name-only | sort | uniq -c`.
+2.  **Complexity:** Add a function to `bag/hotspot.py` that uses `ast` to count function definitions and branch nodes (if/for/while) per file.
+3.  **Scoring:** Normalize churn and complexity into a 0-1 scale and calculate a weighted score: `(Churn * 0.6) + (Complexity * 0.4)`.
+4.  **Reporting:** Output a sorted list of the top 10 files to the logs during `run_cycle()`.
 
 ## Risk
-**Failure Mode:** The retrieved "successful" patterns might be contextually irrelevant to the current failure, leading Gemini to apply outdated or incorrect logic (e.g., trying to fix a syntax error with a logic-patch pattern).
-**Mitigation:** Implement a strict similarity threshold (cosine distance) for the cache retrieval. If no high-confidence matches are found, skip the injection and proceed with standard repair.
+**Failure Mode:** The `git log` parsing might fail if the repository history is large or if there are many non-Python files (e.g., `bag/` data files) that skew the churn metrics.
+**Mitigation:** Filter the git log to only include `.py` files and exclude the `rollback_registry/` directory to ensure the signal-to-noise ratio remains high.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
