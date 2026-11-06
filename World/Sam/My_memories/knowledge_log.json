@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 631
+    "review_due_cycle": 646
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 631
+    "review_due_cycle": 646
   },
   {
     "cycle": 43,
@@ -3652,5 +3652,11 @@
     "topic": "Build a change frequency heatmap: which lines change most",
     "summary": "### Technical Summary: Change Frequency Heatmapping\n\nChange frequency analysis is a cornerstone of \"Hotspot Analysis,\" a technique used to identify technical debt and architectural fragility by correlating version control metadata with code structure. The core premise is that high-churn files\u2014those modified frequently\u2014are disproportionately likely to harbor bugs and represent areas where the system's design is failing to accommodate requirements.\n\n**Key Concepts:**\n*   **Churn Metrics:** The pri",
     "review_due_cycle": 635
+  },
+  {
+    "cycle": 632,
+    "topic": "Implement a stability score: lines unchanged for N cycles",
+    "summary": "### Technical Summary: Stability Metrics in Codebases\n\nThe \"Stability Score\" (lines unchanged over $N$ cycles) serves as a proxy for code maturity and architectural hardening. In modern software engineering, this metric shifts the focus from \"velocity\" to \"reliability,\" identifying core modules that act as the foundation of the system versus volatile areas requiring refactoring.\n\n**Key Concepts & Patterns:**\n\n1.  **Granularity of Measurement:** Stability is most effective when measured at the fu",
+    "review_due_cycle": 636
   }
 ]

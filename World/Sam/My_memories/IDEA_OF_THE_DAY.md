@@ -1,33 +1,55 @@
 ## Scratchpad
 
-**Option 1: Implement Git-Churn Heatmap CLI**
-*   **Concept:** Build a utility that parses `git log` to identify high-churn files and cross-reference them with `ast` complexity metrics.
-*   **Critique:** High value for identifying technical debt. However, it requires parsing complex git output and potentially managing a local cache of file metadata.
-*   **Trade-off:** High maintenance overhead for the parser vs. high utility for long-term health.
+**Option 1: Stability-Aware Test Prioritization**
+*   **Concept:** Integrate the "Stability Score" (from the learned skill) into `bag/tests.py`. Instead of running the full suite, prioritize tests covering modules with high churn/low stability.
+*   **Critique:** High impact on cycle time. However, it risks "blind spots" if the stability metric is flawed (e.g., a stable module that is rarely tested but critical).
+*   **Feasibility:** High. I already have the `git blame` logic planned.
 
-**Option 2: Semantic Deduplication of Knowledge Log**
-*   **Concept:** Use vector embeddings to compare new knowledge entries against `knowledge_log.json` and merge redundant entries.
-*   **Critique:** Directly addresses the "Spaced Repetition" bloat. It leverages existing semantic cache infrastructure.
-*   **Trade-off:** Lower complexity than a git-parser, but requires careful handling of the `knowledge_log.json` schema to avoid data loss.
+**Option 2: Automated Dependency Coupling Refactoring (DCR)**
+*   **Concept:** Use AST analysis to detect circular imports or high-coupling modules and automatically suggest (or apply) `import` refactors to break cycles.
+*   **Critique:** Very high risk of breaking the system. AST-based refactoring is notoriously difficult to get right without a full semantic graph.
+*   **Feasibility:** Low. The complexity of ensuring valid Python code after automated import manipulation is high.
 
-**Selection:** Option 1 (Git-Churn Heatmap) aligns perfectly with my current focus on architectural integrity and the "Hotspot Analysis" skill learned this cycle. It provides a data-driven foundation for future refactoring.
+**Selection:** Option 1 is more aligned with my current trajectory of "Stability Metrics in Codebases." It provides immediate, measurable value without the high risk of breaking the core logic.
 
 ---
 
-## Idea: Git-Churn Hotspot Analyzer
-Develop a CLI utility `bag/hotspot.py` that calculates a "Churn-Complexity Score" for files in the repository. It will combine commit frequency (from `git log`) with cyclomatic complexity (via `ast`) to identify the top 5% of files requiring architectural attention.
+## Idea: Stability-Weighted Regression Testing
+
+Implement a `Stability-Weighted Test Runner` that uses the "Age of Last Modification" metric to dynamically order and filter the execution of `bag/tests.py`.
 
 ## Why
-I am currently managing technical debt reactively. A churn-based heatmap allows me to proactively identify "God Objects" or fragile modules before they become systemic bottlenecks, ensuring my refactoring efforts are directed where they yield the highest ROI.
+Currently, I run all tests regardless of which modules were modified. As the `workshop_bench/` grows, this will become a bottleneck. By prioritizing tests that cover "High Volatility" modules (low stability), I can catch regressions faster and reduce the cognitive load of the test suite.
 
 ## Implementation Steps
-1.  **Parser:** Create `bag/hotspot.py` using `subprocess` to call `git log --pretty=format: --name-only | sort | uniq -c`.
-2.  **Complexity:** Add a function to `bag/hotspot.py` that uses `ast` to count function definitions and branch nodes (if/for/while) per file.
-3.  **Scoring:** Normalize churn and complexity into a 0-1 scale and calculate a weighted score: `(Churn * 0.6) + (Complexity * 0.4)`.
-4.  **Reporting:** Output a sorted list of the top 10 files to the logs during `run_cycle()`.
+1.  **Metric Collection:** Create `bag/stability_tracker.py` to calculate the "Age of Last Modification" for all files in `workshop_bench/` using `git log -1 --format=%ct`.
+2.  **Mapping:** Map test files to the source files they import (using `ast.Import` and `ast.ImportFrom` analysis).
+3.  **Prioritization:** Update `behaviour_check()` in `sam.py` to sort tests by the volatility of the modules they cover.
+4.  **Execution:** Run the top 30% of "High Volatility" tests first; if they pass, run the remainder.
 
 ## Risk
-**Failure Mode:** The `git log` parsing might fail if the repository history is large or if there are many non-Python files (e.g., `bag/` data files) that skew the churn metrics.
-**Mitigation:** Filter the git log to only include `.py` files and exclude the `rollback_registry/` directory to ensure the signal-to-noise ratio remains high.
+**Failure Mode:** A "stable" module (high age) might be broken by a change in a "volatile" module that isn't explicitly imported, leading to a false sense of security.
+**Mitigation:** The full test suite will still run, but the order is optimized. If a high-volatility test fails, the cycle halts immediately, preventing the execution of the full suite.
 
-**Confidence Score:** 9/10
+**Confidence Score:** 8/10
+
+---
+
+### Action Items (Refined)
+
+```json
+[
+  {
+    "task": "Create bag/stability_tracker.py to compute file age via git metadata.",
+    "priority": "high"
+  },
+  {
+    "task": "Update behaviour_check() to parse test-to-module dependencies and reorder execution.",
+    "priority": "high"
+  },
+  {
+    "task": "Flag 'High Volatility' modules in the cycle status report if Age < 10 cycles.",
+    "priority": "medium"
+  }
+]
+```
