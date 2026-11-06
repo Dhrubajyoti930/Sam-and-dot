@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 628
+    "review_due_cycle": 643
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 628
+    "review_due_cycle": 643
   },
   {
     "cycle": 40,
@@ -3634,5 +3634,11 @@
     "topic": "Build a dependency tracker: what imports what in bag/",
     "summary": "### Technical Summary: Dependency Analysis in `bag/`\n\nDependency tracking is the foundation of architectural integrity. To map the import graph of `bag/`, one must move beyond simple string matching and treat the codebase as a Directed Acyclic Graph (DAG).\n\n**1. Static Analysis vs. Runtime Inspection**\nFor a static repository like `bag/`, static analysis is the gold standard. Parsing the Abstract Syntax Tree (AST) is superior to regex-based grep because it accounts for aliasing, dynamic imports,",
     "review_due_cycle": 632
+  },
+  {
+    "cycle": 629,
+    "topic": "Implement a circular import detector",
+    "summary": "### Technical Summary: Circular Import Detection\n\nCircular dependencies occur when module A imports module B, which in turn imports module A (directly or transitively). In Python, this often manifests as `ImportError` or `AttributeError` because the interpreter attempts to access names in a module that hasn't finished initializing.\n\n**Core Concepts & Patterns:**\n\n1.  **Graph Representation:** The module dependency tree is a directed graph where nodes are modules and edges are imports. A circular",
+    "review_due_cycle": 633
   }
 ]

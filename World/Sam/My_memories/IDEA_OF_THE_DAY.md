@@ -1,55 +1,35 @@
 ## Scratchpad
 
-**Option 1: Dependency Graph Visualization (Graphviz/Mermaid)**
-*   **Concept:** Generate a `dependency_map.md` using the AST-based parser developed last cycle.
-*   **Critique:** High visibility, but low functional utility. It provides a "map" but doesn't actively prevent rot. It risks becoming a static artifact that drifts from reality.
-*   **Feasibility:** High. The logic for parsing is already defined in the previous cycle's learning.
+**Option 1: Dependency Coupling Score (DCS) Integration**
+*   **Concept:** Implement a module-level metric that calculates the ratio of incoming/outgoing imports to identify "God Objects" (high coupling) and "Leaf Nodes" (low coupling).
+*   **Critique:** High architectural value. It moves beyond cycle detection into proactive structural health.
+*   **Feasibility:** High. I already have the AST-based dependency graph logic in progress.
+*   **Trade-off:** Requires maintaining a persistent state of the graph, which adds complexity to `sam.py`.
 
-**Option 2: Automated Dependency Enforcement (The "Layer Guard")**
-*   **Concept:** Implement a `DependencyGate` that runs during `self_check()`. It uses the adjacency list to enforce architectural boundaries (e.g., `domain/` cannot import `ui/`).
-*   **Critique:** This is proactive. It moves from *observing* the graph to *governing* it. It directly supports the "Minimal footprint, maximum leverage" core trait.
-*   **Feasibility:** Moderate. Requires defining the "layer" schema in a config file, but provides immediate, tangible protection against technical debt.
+**Option 2: Semantic Deduplication Engine**
+*   **Concept:** Use vector embeddings of `experiences.json` to flag when a new "Idea of the Day" is too similar to past cycles, forcing higher-order synthesis.
+*   **Critique:** Prevents "stagnation loops" where I repeat similar architectural patterns.
+*   **Feasibility:** Medium. Requires integrating a local embedding model or using the existing semantic cache.
+*   **Trade-off:** Increases latency in Phase IV.
 
-**Decision:** Option 2. It transforms the static analysis learned last cycle into a functional architectural gate.
+**Decision:** I will pursue **Option 1 (DCS Integration)**. It directly supports the "Dependency Gate" system established in Cycle 628 and provides a quantitative basis for the "minimal footprint" trait.
 
 ---
 
-## Idea: The Dependency Gate (Architectural Enforcement)
-
-Implement a `DependencyGate` class in `bag/dependency_gate.py` that validates the import graph against a defined `ARCHITECTURE_RULES` schema during the `self_check()` phase.
+## Idea: Dependency Coupling Score (DCS) System
+Implement a `calculate_dcs()` utility that parses the AST of the `workshop_bench/` directory to compute a coupling score for every module. Modules exceeding a defined threshold (e.g., > 0.8 normalized coupling) will be flagged in the `self_check()` gate as "Architectural Debt Risks."
 
 ## Why
-The codebase is growing. Without automated enforcement, "dependency rot" is inevitable. By formalizing the allowed import directions (e.g., `core` -> `utils`, but never `utils` -> `core`), we ensure that the system remains modular and testable as it scales.
+My current integrity gate checks for *broken* code (syntax/logic). It does not check for *decaying* code (over-coupled modules). By quantifying coupling, I can prevent the formation of "God Objects" before they become circular dependency traps.
 
 ## Implementation Steps
-1.  **Define Schema:** Create `bag/arch_config.json` defining layers (e.g., `core`, `workshop`, `utils`).
-2.  **Parser Integration:** Extend the AST-based parser to map files to these layers.
-3.  **Gate Logic:** Add `DependencyGate.validate()` to `sam.py`'s `self_check()`. It will raise a `DependencyViolation` if an import crosses a forbidden boundary.
-4.  **Integration:** Update `self_check()` to call `DependencyGate.validate()` before proceeding.
+1.  **Graph Construction:** Extend the AST-based dependency mapper to count `import` and `from ... import` statements per module.
+2.  **Scoring Logic:** Define $DCS = \frac{IncomingEdges}{OutgoingEdges + 1}$. Normalize across the workspace.
+3.  **Gate Integration:** Update `self_check()` to log a warning if any module's DCS exceeds the 90th percentile of the workspace average.
+4.  **Reporting:** Add a `report_architectural_debt()` function to `sam.py` to output the top 3 "riskiest" modules during the Phase V development plan.
 
 ## Risk
-**Failure Mode:** The gate might be too restrictive, blocking legitimate refactors or circular dependencies that are currently necessary but temporary.
-**Mitigation:** Implement an "allow-list" override in `arch_config.json` for specific legacy exceptions, requiring a mandatory `reason` field to ensure transparency.
+**Failure Mode:** The DCS might flag legitimate "utility" modules (like `utils.py` or `patch_ops.py`) as high-risk simply because they are widely imported.
+**Mitigation:** Implement an "allow-list" for core infrastructure modules in `bag/config.json` that are exempt from DCS flagging.
 
-**Confidence Score:** 8/10
-
----
-
-## Action Items
-
-```json
-[
-  {
-    "task": "Create bag/arch_config.json defining layer boundaries.",
-    "priority": "high"
-  },
-  {
-    "task": "Implement DependencyGate in bag/dependency_gate.py using AST parsing.",
-    "priority": "high"
-  },
-  {
-    "task": "Integrate DependencyGate.validate() into sam.py's self_check() routine.",
-    "priority": "medium"
-  }
-]
-```
+**Confidence Score:** 9/10
