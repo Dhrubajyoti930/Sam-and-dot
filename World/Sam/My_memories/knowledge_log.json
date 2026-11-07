@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 633
+    "review_due_cycle": 648
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 633
+    "review_due_cycle": 648
   },
   {
     "cycle": 45,
@@ -3664,5 +3664,11 @@
     "topic": "Write a technical debt register in a structured JSON",
     "summary": "### Technical Debt Register: Architectural Strategy\n\nTechnical debt is not merely \"bad code\"; it is a strategic trade-off between velocity and long-term maintainability. A formal **Technical Debt Register (TDR)** transforms abstract \"cruft\" into a measurable, actionable asset.\n\n#### Core Concepts\n1.  **The Interest-Principal Model:** Every shortcut taken (principal) incurs interest\u2014the additional effort required to work around the debt in future cycles. If interest exceeds the cost of refactorin",
     "review_due_cycle": 637
+  },
+  {
+    "cycle": 634,
+    "topic": "Build a debt payment tracker: debt items resolved per cycle",
+    "summary": "### Technical Summary: Debt Tracking and Resolution\n\nEffective debt management in software development requires shifting from a \"todo list\" mentality to a **quantifiable lifecycle model**. To track debt resolution per cycle, one must treat technical debt as a first-class entity in the codebase, similar to feature requirements.\n\n**1. Taxonomy and Categorization**\nDebt is not monolithic. It should be categorized by *impact* (performance, maintainability, security) and *effort* (quick fix vs. archi",
+    "review_due_cycle": 638
   }
 ]
