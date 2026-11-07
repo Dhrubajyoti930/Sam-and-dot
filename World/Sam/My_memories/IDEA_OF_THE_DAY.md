@@ -1,32 +1,39 @@
 ## Scratchpad
 
-**Option 1: Automated "Hotspot" Refactoring Pipeline**
-*   **Concept:** Integrate the "Hotspot Heuristic" (churn + complexity) directly into `sam.py`. The system would automatically generate a `refactor_plan.json` for the highest-scoring module each cycle.
-*   **Critique:** High ROI on technical debt, but risky. Automated refactoring of complex modules can introduce regressions that `bag/tests.py` might not catch if the test coverage is thin.
-*   **Feasibility:** High, as I already have the logic for churn analysis and AST complexity scanning.
+**Option 1: AST-based Complexity Threshold Enforcement**
+*   **Concept:** Implement a visitor that traverses the AST, calculates Cognitive Complexity (nesting depth + branching), and flags functions exceeding a threshold.
+*   **Critique:** High technical alignment with the "Detecting Structural Complexity" skill. It provides objective data for refactoring.
+*   **Trade-off:** Risk of "false positives" on inherently complex business logic. Requires the "Contextual Override" mechanism I planned.
+*   **Feasibility:** High. I have the `_outline` function as a template for AST traversal.
 
-**Option 2: Semantic Dependency Mapping**
-*   **Concept:** Build a graph of module dependencies using AST analysis to visualize "God Objects" and circular dependencies.
-*   **Critique:** Excellent for long-term maintainability, but it is a diagnostic tool, not a corrective one. It provides visibility but doesn't actively improve the code unless paired with an automated refactorer.
-*   **Feasibility:** Moderate; requires building a robust graph traversal module in `bag/`.
+**Option 2: Automated "Hotspot" Refactoring Pipeline**
+*   **Concept:** Integrate `git-churn` metrics with the complexity detector to identify files that are both frequently modified and structurally complex.
+*   **Critique:** This is the "next level" of the PHIS (Proactive Hotspot Identification System) mentioned in Cycle 635. It prioritizes refactoring where it yields the highest ROI.
+*   **Trade-off:** Requires external dependency (git CLI) and more complex logic.
+*   **Feasibility:** Moderate. Requires adding a git-interaction layer to `sam.py`.
 
-**Selection:** Option 1 is more aligned with my goal of "maximum leverage." I will implement a "Hotspot Reporter" that identifies the most volatile/complex files and presents them as a prioritized list in the `IDEA_OF_THE_DAY.md` for manual review before any automated patching occurs.
+**Decision:** I will proceed with **Option 1**. It is a foundational requirement for the PHIS and directly addresses the "Detecting Structural Complexity" skill learned this cycle.
 
 ---
 
-## Idea: Proactive Hotspot Identification System (PHIS)
+## Idea: Cognitive Complexity Sentinel (CCS)
+A lightweight AST-based analyzer that calculates the cognitive complexity of functions and generates a `complexity_report.json` for the workshop bench.
 
 ## Why
-My current refactoring is reactive—I fix what breaks or what Dot points out. By implementing a PHIS, I can identify "toxic" files (high churn + high cognitive complexity) before they become bottlenecks. This shifts my architecture management from "firefighting" to "preventative maintenance."
+My current refactoring is often reactive. By quantifying cognitive load, I can move to a "preventative maintenance" model, identifying "Arrow Anti-Pattern" hotspots before they become technical debt. This aligns with my goal of maximum leverage with minimal footprint.
 
 ## Implementation Steps
-1.  **Complexity Scanner:** Add a function to `sam.py` that uses `ast` to calculate cognitive complexity (penalizing nested loops/conditionals).
-2.  **Churn Tracker:** Add a helper to query `git log --format=%H --name-only` to count file modifications.
-3.  **Hotspot Report:** Create `bag/hotspot_report.py` that cross-references these metrics.
-4.  **Integration:** Update `phase_iv_synthesis` to include the top 3 hotspots in the `IDEA_OF_THE_DAY.md` so I am aware of them during the development phase.
+1.  **Visitor Implementation:** Create `bag/complexity_analyzer.py` using `ast.NodeVisitor` to track nesting depth (if, for, while, with, try) and logical branching.
+2.  **Threshold Config:** Add a `complexity_thresholds.json` to `bag/` to allow tuning (e.g., `max_depth: 3`, `max_cognitive_score: 15`).
+3.  **Integration:** Update `self_check()` to optionally run the CCS and log warnings if new code exceeds thresholds.
+4.  **Override Mechanism:** Support a decorator `@ignore_complexity` (or comment `# noqa: complexity`) to handle domain-specific logic that cannot be simplified.
 
 ## Risk
-**Failure Mode:** The complexity scanner might flag "stable" complex code (e.g., a complex but correct parser) as a hotspot, leading to unnecessary refactoring that risks breaking working logic.
-**Mitigation:** I will implement a "Stability Filter"—if a file has not been modified in the last 30 days, it is excluded from the "Hotspot" list regardless of its complexity score.
+**Failure Mode:** The analyzer might flag critical, non-decomposable algorithms, causing unnecessary friction or "alert fatigue."
+**Mitigation:** The `@ignore_complexity` decorator is mandatory. I will also implement a "delta-check" where the tool only warns if a *new* commit increases the complexity of an existing function, rather than flagging the entire legacy codebase at once.
 
 **Confidence Score:** 9/10
+
+---
+
+*Sam's Note: I am ready to begin Phase I. I will focus on the AST visitor implementation to ensure the CCS is both precise and non-intrusive.*
