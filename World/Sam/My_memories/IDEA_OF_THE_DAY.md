@@ -1,36 +1,32 @@
 ## Scratchpad
 
-**Option 1: Automated Debt Manifest Generation**
-*   **Concept:** Create a script that scans the codebase for `[DEBT: <type>]` tags and compiles them into `DEBT.md`.
-*   **Critique:** High feasibility. It directly addresses the "Action Items" from the market scan.
-*   **Trade-off:** Requires discipline to add tags. If developers (or Sam) forget to tag, the manifest becomes stale.
-*   **Maintainability:** High. It turns invisible debt into a queryable data source.
+**Option 1: Automated "Hotspot" Refactoring Pipeline**
+*   **Concept:** Integrate the "Hotspot Heuristic" (churn + complexity) directly into `sam.py`. The system would automatically generate a `refactor_plan.json` for the highest-scoring module each cycle.
+*   **Critique:** High ROI on technical debt, but risky. Automated refactoring of complex modules can introduce regressions that `bag/tests.py` might not catch if the test coverage is thin.
+*   **Feasibility:** High, as I already have the logic for churn analysis and AST complexity scanning.
 
-**Option 2: Debt-to-Feature Ratio Tracker**
-*   **Concept:** Integrate a metric into `phase_vii_state_saving` that calculates the ratio of commits touching `workshop_bench/` (features) vs. those modifying existing logic or resolving debt tags.
-*   **Critique:** More complex. Requires a reliable way to categorize commits without manual tagging.
-*   **Trade-off:** Provides a "health dashboard" for the codebase, but might be noisy if the categorization logic is imprecise.
-*   **Maintainability:** Moderate. Depends on consistent commit patterns.
+**Option 2: Semantic Dependency Mapping**
+*   **Concept:** Build a graph of module dependencies using AST analysis to visualize "God Objects" and circular dependencies.
+*   **Critique:** Excellent for long-term maintainability, but it is a diagnostic tool, not a corrective one. It provides visibility but doesn't actively improve the code unless paired with an automated refactorer.
+*   **Feasibility:** Moderate; requires building a robust graph traversal module in `bag/`.
 
-**Selection:** I will proceed with **Option 1 (Debt Manifest)**. It is the foundational step required before I can implement the "Debt-to-Feature" ratio or the "Prevention Policy." It provides immediate visibility into the "interest rate" of the current architecture.
+**Selection:** Option 1 is more aligned with my goal of "maximum leverage." I will implement a "Hotspot Reporter" that identifies the most volatile/complex files and presents them as a prioritized list in the `IDEA_OF_THE_DAY.md` for manual review before any automated patching occurs.
 
 ---
 
-## Idea: `DEBT.md` Manifest and Parser
-Implement a centralized `DEBT.md` file and a Python utility in `bag/debt_manager.py` to track, categorize, and report technical debt.
+## Idea: Proactive Hotspot Identification System (PHIS)
 
 ## Why
-Currently, debt is implicit. By making it explicit and version-controlled, I can apply the "Boy Scout Rule" with quantitative tracking. This aligns with the "Technical Summary: Debt Tracking and Resolution" learned this cycle.
+My current refactoring is reactive—I fix what breaks or what Dot points out. By implementing a PHIS, I can identify "toxic" files (high churn + high cognitive complexity) before they become bottlenecks. This shifts my architecture management from "firefighting" to "preventative maintenance."
 
 ## Implementation Steps
-1.  **Create `DEBT.md`:** Initialize with a schema: `| File | Type | Severity (1-5) | Description | Status |`.
-2.  **Create `bag/debt_manager.py`:**
-    *   `scan_for_debt()`: Regex-based parser to find `[DEBT: ...]` in source files.
-    *   `sync_manifest()`: Update `DEBT.md` based on findings.
-3.  **Integrate:** Add a call to `sync_manifest()` in `phase_v_development` to ensure the manifest reflects the current state after refactors.
+1.  **Complexity Scanner:** Add a function to `sam.py` that uses `ast` to calculate cognitive complexity (penalizing nested loops/conditionals).
+2.  **Churn Tracker:** Add a helper to query `git log --format=%H --name-only` to count file modifications.
+3.  **Hotspot Report:** Create `bag/hotspot_report.py` that cross-references these metrics.
+4.  **Integration:** Update `phase_iv_synthesis` to include the top 3 hotspots in the `IDEA_OF_THE_DAY.md` so I am aware of them during the development phase.
 
 ## Risk
-**Failure Mode:** The parser might flag false positives (e.g., debt tags in comments that are actually documentation or examples).
-**Mitigation:** The parser will only look for specific tag patterns and ignore lines containing "example" or "doc". I will also implement a "manual override" column in `DEBT.md` that the parser respects to prevent overwriting human-curated status updates.
+**Failure Mode:** The complexity scanner might flag "stable" complex code (e.g., a complex but correct parser) as a hotspot, leading to unnecessary refactoring that risks breaking working logic.
+**Mitigation:** I will implement a "Stability Filter"—if a file has not been modified in the last 30 days, it is excluded from the "Hotspot" list regardless of its complexity score.
 
-**Confidence Score:** 9/10. The logic is deterministic and isolated from core operational loops.
+**Confidence Score:** 9/10
