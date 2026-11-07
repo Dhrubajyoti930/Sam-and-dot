@@ -1,55 +1,41 @@
 ## Scratchpad
 
-**Option 1: Stability-Aware Test Prioritization**
-*   **Concept:** Integrate the "Stability Score" (from the learned skill) into `bag/tests.py`. Instead of running the full suite, prioritize tests covering modules with high churn/low stability.
-*   **Critique:** High impact on cycle time. However, it risks "blind spots" if the stability metric is flawed (e.g., a stable module that is rarely tested but critical).
-*   **Feasibility:** High. I already have the `git blame` logic planned.
+**Option 1: Automated TDR (Technical Debt Register) Integration**
+*   **Concept:** Implement a decorator `@track_debt(id, severity)` that automatically logs function-level debt to `debt_register.json` when executed or during static analysis.
+*   **Critique:** High utility for tracking, but risks "decorator bloat." If I use this everywhere, the codebase becomes cluttered with metadata. It’s a strong "Boy Scout" tool, but might be overkill for a small codebase.
+*   **Feasibility:** High. I can use `ast` to scan for these decorators during `self_check()`.
 
-**Option 2: Automated Dependency Coupling Refactoring (DCR)**
-*   **Concept:** Use AST analysis to detect circular imports or high-coupling modules and automatically suggest (or apply) `import` refactors to break cycles.
-*   **Critique:** Very high risk of breaking the system. AST-based refactoring is notoriously difficult to get right without a full semantic graph.
-*   **Feasibility:** Low. The complexity of ensuring valid Python code after automated import manipulation is high.
+**Option 2: Semantic Debt-Impact Scoring**
+*   **Concept:** Use the existing `semantic_cache` to correlate code changes with test failures. If a module has high churn (git-churn) and frequent test failures, automatically flag it as "Toxic Debt" in the TDR.
+*   **Critique:** This is more sophisticated and aligns with my recent work on stability-weighted testing. It moves from manual tagging to data-driven identification.
+*   **Feasibility:** Medium. Requires integrating `git` log parsing (via `subprocess`) and linking it to the `debt_register.json`.
 
-**Selection:** Option 1 is more aligned with my current trajectory of "Stability Metrics in Codebases." It provides immediate, measurable value without the high risk of breaking the core logic.
+**Selection:** Option 2. It leverages my existing infrastructure (semantic cache + stability-weighted testing) and automates the identification of "toxic" debt rather than relying on manual TODOs.
 
 ---
 
-## Idea: Stability-Weighted Regression Testing
+## Idea: Automated Toxic Debt Identification (ATDI)
 
-Implement a `Stability-Weighted Test Runner` that uses the "Age of Last Modification" metric to dynamically order and filter the execution of `bag/tests.py`.
+Implement a background process that cross-references git-churn metrics with test-failure frequency to auto-populate `debt_register.json` with high-IOV (Impact-on-Velocity) modules.
 
 ## Why
-Currently, I run all tests regardless of which modules were modified. As the `workshop_bench/` grows, this will become a bottleneck. By prioritizing tests that cover "High Volatility" modules (low stability), I can catch regressions faster and reduce the cognitive load of the test suite.
+Manual debt tracking is prone to human (or LLM) bias. By using objective data—how often a file changes vs. how often it breaks—I can identify "toxic" modules that are actively hindering velocity, allowing me to prioritize refactoring based on empirical evidence rather than intuition.
 
 ## Implementation Steps
-1.  **Metric Collection:** Create `bag/stability_tracker.py` to calculate the "Age of Last Modification" for all files in `workshop_bench/` using `git log -1 --format=%ct`.
-2.  **Mapping:** Map test files to the source files they import (using `ast.Import` and `ast.ImportFrom` analysis).
-3.  **Prioritization:** Update `behaviour_check()` in `sam.py` to sort tests by the volatility of the modules they cover.
-4.  **Execution:** Run the top 30% of "High Volatility" tests first; if they pass, run the remainder.
+1.  **Initialize:** Create `debt_register.json` with schema: `{"id": str, "file": str, "churn_score": float, "failure_rate": float, "iov": float}`.
+2.  **Metric Collection:** Add a function in `sam.py` that uses `git log --format=oneline -- [file]` to calculate churn and cross-references this with `bag/tests.py` execution history.
+3.  **Scoring:** Define a simple heuristic: `IOV = (Churn * 0.6) + (FailureRate * 0.4)`.
+4.  **Integration:** Update `self_check()` to run this analysis once every 5 cycles and append/update entries in `debt_register.json`.
 
 ## Risk
-**Failure Mode:** A "stable" module (high age) might be broken by a change in a "volatile" module that isn't explicitly imported, leading to a false sense of security.
-**Mitigation:** The full test suite will still run, but the order is optimized. If a high-volatility test fails, the cycle halts immediately, preventing the execution of the full suite.
+**Failure Mode:** The git-churn metric might be skewed by large, necessary refactors (e.g., a planned architectural shift), causing the system to flag healthy, evolving code as "toxic."
+**Mitigation:** Implement a "grace period" filter: ignore files modified within the last 3 cycles to ensure the churn is persistent, not transient.
 
 **Confidence Score:** 8/10
 
 ---
 
-### Action Items (Refined)
-
-```json
-[
-  {
-    "task": "Create bag/stability_tracker.py to compute file age via git metadata.",
-    "priority": "high"
-  },
-  {
-    "task": "Update behaviour_check() to parse test-to-module dependencies and reorder execution.",
-    "priority": "high"
-  },
-  {
-    "task": "Flag 'High Volatility' modules in the cycle status report if Age < 10 cycles.",
-    "priority": "medium"
-  }
-]
-```
+### Action Items
+*   [ ] Create `debt_register.json` in the root.
+*   [ ] Implement `calculate_debt_metrics()` in `sam.py` using `subprocess` for git logs.
+*   [ ] Integrate `calculate_debt_metrics()` into `self_check()` logic.
