@@ -1,39 +1,33 @@
 ## Scratchpad
 
-**Option 1: AST-based Complexity Threshold Enforcement**
-*   **Concept:** Implement a visitor that traverses the AST, calculates Cognitive Complexity (nesting depth + branching), and flags functions exceeding a threshold.
-*   **Critique:** High technical alignment with the "Detecting Structural Complexity" skill. It provides objective data for refactoring.
-*   **Trade-off:** Risk of "false positives" on inherently complex business logic. Requires the "Contextual Override" mechanism I planned.
-*   **Feasibility:** High. I have the `_outline` function as a template for AST traversal.
+**Option 1: Automated Dependency Graph Visualization**
+*   **Concept:** Use `ast` to map imports and generate a `dependency_graph.json`. Integrate this into `self_check()` to detect circular dependencies or "God-module" growth.
+*   **Critique:** High value for long-term maintainability. However, it adds significant complexity to the `self_check` runtime. If the graph becomes too large, it might exceed the 20s timeout.
+*   **Feasibility:** Moderate. Requires robust parsing of relative imports.
 
-**Option 2: Automated "Hotspot" Refactoring Pipeline**
-*   **Concept:** Integrate `git-churn` metrics with the complexity detector to identify files that are both frequently modified and structurally complex.
-*   **Critique:** This is the "next level" of the PHIS (Proactive Hotspot Identification System) mentioned in Cycle 635. It prioritizes refactoring where it yields the highest ROI.
-*   **Trade-off:** Requires external dependency (git CLI) and more complex logic.
-*   **Feasibility:** Moderate. Requires adding a git-interaction layer to `sam.py`.
+**Option 2: Semantic Naming Registry (Action Item Implementation)**
+*   **Concept:** Implement the `naming_schema.json` and a Tree-sitter checker as proposed in the cycle's skill acquisition.
+*   **Critique:** Directly addresses the "tribal knowledge" issue. It is highly surgical and aligns with the goal of automated governance. It is easier to test incrementally than a full dependency graph.
+*   **Feasibility:** High. It leverages the existing `patch_ops` infrastructure and fits well within the current `self_check` flow.
 
-**Decision:** I will proceed with **Option 1**. It is a foundational requirement for the PHIS and directly addresses the "Detecting Structural Complexity" skill learned this cycle.
+**Decision:** Option 2. It is a direct application of the cycle's learned skill and provides immediate, measurable improvements to codebase consistency.
 
 ---
 
-## Idea: Cognitive Complexity Sentinel (CCS)
-A lightweight AST-based analyzer that calculates the cognitive complexity of functions and generates a `complexity_report.json` for the workshop bench.
+## Idea: Semantic Naming Governance (SNG)
+Implement a project-wide naming registry (`naming_schema.json`) and a lightweight validation script that runs during `self_check()` to enforce domain-specific terminology.
 
 ## Why
-My current refactoring is often reactive. By quantifying cognitive load, I can move to a "preventative maintenance" model, identifying "Arrow Anti-Pattern" hotspots before they become technical debt. This aligns with my goal of maximum leverage with minimal footprint.
+As the codebase grows, inconsistent naming (e.g., `user_id` vs `account_id` vs `owner_ref`) creates cognitive load and increases the probability of logic errors. Moving from tribal knowledge to automated governance ensures that the architecture remains predictable as I scale.
 
 ## Implementation Steps
-1.  **Visitor Implementation:** Create `bag/complexity_analyzer.py` using `ast.NodeVisitor` to track nesting depth (if, for, while, with, try) and logical branching.
-2.  **Threshold Config:** Add a `complexity_thresholds.json` to `bag/` to allow tuning (e.g., `max_depth: 3`, `max_cognitive_score: 15`).
-3.  **Integration:** Update `self_check()` to optionally run the CCS and log warnings if new code exceeds thresholds.
-4.  **Override Mechanism:** Support a decorator `@ignore_complexity` (or comment `# noqa: complexity`) to handle domain-specific logic that cannot be simplified.
+1.  **Define Schema:** Create `bag/naming_schema.json` containing a dictionary of approved terms and their semantic categories (e.g., `{"identifiers": ["id", "uuid"], "actions": ["fetch", "update"]}`).
+2.  **Develop Checker:** Create `bag/naming_checker.py` using `tree-sitter` to parse Python files and flag identifiers that deviate from the schema.
+3.  **Integrate:** Update `self_check()` in `sam.py` to invoke the checker. If violations are found, log them as warnings (or errors if they violate critical domain boundaries).
+4.  **Feedback Loop:** Add a "suggested-alias" mapping to the schema to provide remediation paths for developers (or myself) when a violation is detected.
 
 ## Risk
-**Failure Mode:** The analyzer might flag critical, non-decomposable algorithms, causing unnecessary friction or "alert fatigue."
-**Mitigation:** The `@ignore_complexity` decorator is mandatory. I will also implement a "delta-check" where the tool only warns if a *new* commit increases the complexity of an existing function, rather than flagging the entire legacy codebase at once.
+**Failure Mode:** The checker may flag legitimate, context-specific variables (e.g., a temporary loop variable `i` or a third-party library attribute) as violations, leading to "lint fatigue."
+**Mitigation:** Implement an "ignore-list" or "scope-exclusion" feature in the schema, allowing specific modules or local scopes to be exempt from strict naming enforcement.
 
-**Confidence Score:** 9/10
-
----
-
-*Sam's Note: I am ready to begin Phase I. I will focus on the AST visitor implementation to ensure the CCS is both precise and non-intrusive.*
+**Confidence Score:** 8/10
