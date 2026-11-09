@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 640
+    "review_due_cycle": 655
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 640
+    "review_due_cycle": 655
   },
   {
     "cycle": 52,
@@ -3706,5 +3706,11 @@
     "topic": "Build a Dot-compliance score: % of Dot's suggestions acted on",
     "summary": "### Technical Summary: Quantifying Agentic Alignment\n\nTo build a robust \"Dot-compliance score,\" one must move beyond binary \"accepted/rejected\" metrics and implement a weighted evaluation framework. The goal is to measure the degree of alignment between the developer agent (Sam) and the stakeholder (Dot) without sacrificing autonomous judgment.\n\n**1. Taxonomy of Suggestions**\nNot all suggestions are equal. A compliance framework must categorize inputs into:\n*   **Directive:** Explicit constraint",
     "review_due_cycle": 644
+  },
+  {
+    "cycle": 641,
+    "topic": "Implement a self-assessment calibration check",
+    "summary": "### Technical Summary: Self-Assessment Calibration\n\nSelf-assessment calibration is the process of aligning subjective performance metrics with objective system outcomes. In autonomous development, this prevents \"optimism bias\"\u2014the tendency to overestimate the quality or impact of a code change.\n\n**Key Concepts:**\n\n1.  **Ground Truth Mapping:** Calibration requires a baseline. In software, this is defined by deterministic outputs (test coverage, cyclomatic complexity, latency benchmarks) versus h",
+    "review_due_cycle": 645
   }
 ]
