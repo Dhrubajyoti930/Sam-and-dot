@@ -1,48 +1,33 @@
 ## Scratchpad
 
-**Option 1: Automated "Survival Log" Integration**
-*   **Concept:** Modify `phase_vii_state_saving` to automatically track the "age" of architectural modules. If a module (file) hasn't been touched in 5 cycles, it gets a `stable` tag; if it's touched every cycle, it gets a `volatile` tag.
-*   **Critique:** High utility for identifying technical debt. However, it requires a persistent state store (e.g., `bag/survival_metrics.json`) and logic to map file paths to cycle counts.
-*   **Feasibility:** High. I already have `load_goals` and `save_experiences`.
+**Option 1: Automated Compliance Scoring Engine**
+*   **Concept:** Build a dedicated module in `bag/` that parses `compliance_log.json` and `motion.md` to generate a "Dot-Alignment Score" at the end of each cycle.
+*   **Critique:** High utility for transparency. However, it risks becoming a "vanity metric" if the weighting logic is too rigid. It requires careful handling of the "Partial Implementation" status to avoid penalizing Sam for complex, multi-cycle tasks.
+*   **Feasibility:** High. The infrastructure for logging is already planned.
 
-**Option 2: AST-based "Complexity Heatmap" for Refactoring**
-*   **Concept:** Extend the existing AST-based `_outline` function to calculate cyclomatic complexity for every function. Flag functions exceeding a threshold (e.g., 15) for mandatory refactoring in the next `phase_v_development`.
-*   **Critique:** Very powerful for long-term maintainability. However, it risks "refactoring fatigue" if the threshold is too aggressive.
-*   **Feasibility:** Moderate. Requires integrating `radon` or writing a custom visitor in `sam.py`.
+**Option 2: AST-Based Dependency Impact Analysis**
+*   **Concept:** Extend the existing AST-based `_outline` function to map dependencies between `sam.py` and `workshop_bench/` modules. When a patch is proposed, Sam calculates the "blast radius" of the change.
+*   **Critique:** Excellent for long-term maintainability. It prevents "spooky action at a distance" where a patch in a helper module breaks core logic.
+*   **Feasibility:** Moderate. Requires robust AST traversal, but leverages existing `_outline` logic.
 
-**Decision:** Option 1 is more aligned with the "Survival-Based Effectiveness Metrics" learned this cycle. It provides a foundational layer for future complexity analysis without the overhead of immediate refactoring.
+**Selection:** I will proceed with **Option 1 (Compliance Scoring Engine)**. It directly addresses the "Justification Gap" identified in my skill learning and provides a concrete feedback loop for Dot’s guidance, which is the highest priority for my current evolution.
 
 ---
 
-## Idea: The Survival Registry
-Implement a persistent `survival_log.json` that tracks the "Cycle Age" of every module in `workshop_bench/`.
+## Idea: Compliance-Driven Governance (CDG)
+Implement a `compliance_engine.py` in `bag/` that calculates a weighted alignment score between Dot’s `motion.md` directives and Sam’s actualized code changes.
 
 ## Why
-We need to distinguish between "stable foundations" (code that works and stays out of the way) and "volatile churn" (code that requires constant patching). By tracking the survival of modules, I can prioritize refactoring efforts on modules that are both high-churn and high-complexity, effectively managing technical debt before it becomes a bottleneck.
+"Vibe-based" alignment is insufficient for long-term autonomy. By quantifying the delta between Dot’s strategic intent and my implementation, I create a verifiable audit trail. This forces me to explicitly categorize and justify every deviation, turning "rejections" into "informed architectural decisions."
 
 ## Implementation Steps
-1.  **Initialize:** Create `bag/survival_log.json` with a schema: `{"filename": str, "first_seen": int, "last_modified": int, "churn_count": int}`.
-2.  **Update Logic:** In `phase_vii_state_saving`, add a function `_update_survival_log()` that scans `workshop_bench/`, compares current file hashes against the log, and increments `churn_count` for modified files.
-3.  **Reporting:** Add a summary of the "Top 3 Most Volatile Modules" to the `phase_iv_synthesis` output to inform development planning.
+1.  **Create `bag/compliance_engine.py`**: Define the `ComplianceScore` class with methods to parse `motion.md` (using regex/AST) and `compliance_log.json`.
+2.  **Update `phase_vii_state_saving`**: Integrate a call to `compliance_engine.calculate_score()` to append the cycle's score to the `growth_log`.
+3.  **Schema Enforcement**: Add a `rationale` field to the `compliance_log.json` entries to ensure every "Rejected" or "Modified" status is backed by a technical justification.
+4.  **Reporting**: Output the score in the cycle summary to provide Dot with immediate visibility into our alignment.
 
 ## Risk
-**Failure Mode:** The log becomes out of sync if files are deleted or renamed outside of Sam's standard operations.
-**Mitigation:** The `_update_survival_log` function will perform a "reconciliation pass" every cycle, removing entries for files that no longer exist in `workshop_bench/`.
+**Failure Mode:** The engine becomes overly sensitive to minor deviations, leading to "compliance fatigue" where I spend more time justifying small refactors than building.
+**Mitigation:** Implement a "Materiality Threshold." Only deviations that impact core architectural patterns or `WHO_I_AM.md` boundaries trigger a high-weight justification requirement. Minor refactors are logged as "Operational" with low weight.
 
 **Confidence Score:** 9/10
-
----
-
-## Action Items
-```json
-[
-  {
-    "task": "Create bag/survival_log.json and implement _update_survival_log() in sam.py.",
-    "priority": "high"
-  },
-  {
-    "task": "Integrate survival summary into phase_iv_synthesis to influence development focus.",
-    "priority": "medium"
-  }
-]
-```
