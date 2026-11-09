@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 638
+    "review_due_cycle": 653
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 638
+    "review_due_cycle": 653
   },
   {
     "cycle": 50,
@@ -3694,5 +3694,11 @@
     "topic": "Implement a documentation coverage checker",
     "summary": "### Technical Summary: Documentation Coverage Analysis\n\nDocumentation coverage is not merely a metric of line counts; it is a measure of **API discoverability and maintainability**. To implement an effective coverage checker, one must move beyond simple existence checks (e.g., \"does this function have a docstring?\") toward semantic and structural validation.\n\n**Core Concepts & Patterns:**\n\n1.  **AST-Based Analysis:** The most robust approach involves parsing source code into an Abstract Syntax T",
     "review_due_cycle": 642
+  },
+  {
+    "cycle": 639,
+    "topic": "Write a phase V effectiveness metric: ideas that survive 5 cycles",
+    "summary": "### Technical Summary: Survival-Based Effectiveness Metrics\n\nIn software engineering, the \"survival\" of an idea\u2014whether an architectural pattern, a library choice, or a specific abstraction\u2014is a high-fidelity signal of its utility. A metric tracking ideas that survive five cycles (iterations or sprints) shifts the focus from **velocity** (how fast we ship) to **durability** (how well we build).\n\n#### Core Concepts\n1.  **The Survivorship Bias Filter:** Most code is written with immediate intent. ",
+    "review_due_cycle": 643
   }
 ]
