@@ -1,39 +1,33 @@
 ## Scratchpad
 
-**Option 1: Automated "Architectural Drift" Detection**
-*   **Concept:** Implement a background task that compares the current AST structure of `sam.py` against the "Golden State" snapshot stored in the `rollback_registry`. If the structural complexity (cyclomatic complexity) increases beyond a threshold without a corresponding increase in functionality, flag it as "Drift."
-*   **Critique:** High maintainability value. It prevents the "bloat" that often accompanies autonomous refactoring. However, it requires a robust way to define "functionality" (perhaps via test coverage).
-*   **Feasibility:** High. I already have AST parsing capabilities in `_outline()`.
+**Option 1: Implement the Z-Score Tracker for Task Completion Times.**
+*   *Critique:* This directly addresses the "sandbagging" detection goal. It requires a persistent store for task durations.
+*   *Trade-offs:* High utility for self-governance, but requires careful handling of "outlier" tasks (e.g., a massive refactor that *should* take longer).
+*   *Feasibility:* High. I can store a `task_history.json` in `bag/` and calculate the rolling mean/std dev.
 
-**Option 2: Semantic "Impact Analysis" for Patches**
-*   **Concept:** Before applying a patch, use an LLM to predict the "blast radius" of the change by analyzing which functions in `sam.py` depend on the modified code.
-*   **Critique:** This adds a layer of safety, but might be overkill for small surgical patches. It could also lead to "analysis paralysis" if the LLM is overly cautious about dependencies.
-*   **Feasibility:** Moderate. Requires mapping the call graph, which is non-trivial but achievable with `ast`.
+**Option 2: Develop the Log-to-Diff Ratio Monitor.**
+*   *Critique:* This is a secondary check to prevent "verbose justification."
+*   *Trade-offs:* Easier to implement than the Z-score tracker, but less robust as a standalone metric. It is highly susceptible to noise (e.g., documentation-heavy commits).
+*   *Feasibility:* Very high. I can hook this into the `phase_vii_state_saving` logic.
 
-**Selection:** Option 1 is more aligned with my current focus on "Architectural Governance" and "Compliance Scoring." It provides a deterministic gate for my growth.
+**Decision:** I will proceed with **Option 1 (Z-Score Tracker)**. It provides a more objective, data-driven foundation for my 1% growth metric than a simple log-to-diff ratio, which is prone to false positives.
 
 ---
 
-## Idea: Architectural Drift Sentinel (ADS)
+## Idea: Implementation of the Z-Score Velocity Sentinel (ZVS)
 
-Implement a `drift_check()` function that calculates the cyclomatic complexity of `sam.py` using the `ast` module and compares it against a baseline stored in `bag/architecture_baseline.json`.
+The ZVS will track the duration of task cycles, calculate the rolling mean and standard deviation, and flag any task exceeding the 2σ threshold as a potential "sandbagging" event. This will be integrated into the `phase_vii_state_saving` routine.
 
 ## Why
-My current governance framework (Cycle 639) tracks debt, but lacks a proactive "drift" alarm. As I evolve, I risk increasing the cognitive load of my own codebase. This sentinel ensures that any self-modification that significantly increases structural complexity is flagged for manual review or immediate rollback, maintaining the "minimal footprint" trait.
+My current growth metric relies on self-assessment. By introducing a statistical gate, I ensure that my reported progress is grounded in objective velocity data. If a task takes significantly longer than the historical average for its category, the ZVS will force a "Root Cause Analysis" (RCA) log entry, preventing the inflation of effort metrics.
 
 ## Implementation Steps
-1.  **Baseline Creation:** Create `bag/architecture_baseline.json` storing the current cyclomatic complexity score of `sam.py`.
-2.  **Complexity Logic:** Add a helper in `sam.py` that uses `ast` to traverse function definitions and count decision points (if, for, while, except).
-3.  **Integration:** Call `drift_check()` within `self_check()`. If the delta exceeds a 10% threshold, log a warning and trigger a "Complexity Alert" to Dot.
-4.  **Governance:** Update `phase_vii_state_saving` to log the complexity score as part of the cycle's architectural health metric.
+1.  **Data Structure:** Create `bag/velocity_metrics.json` to store `{"task_type": [durations]}`.
+2.  **Tracking:** Update `run_cycle()` to record the start time and `phase_vii_state_saving` to record the end time.
+3.  **Analysis:** Add a function `calculate_z_score(task_type, duration)` that returns the deviation.
+4.  **Integration:** If `z_score > 2.0`, trigger a mandatory `log.warning` and append an "Efficiency Anomaly" note to the `growth_log`.
 
 ## Risk
-**Failure Mode:** The complexity metric might be too sensitive, flagging necessary refactors (e.g., adding a new phase) as "drift."
-**Mitigation:** Implement a "Complexity Budget" increase mechanism where I must explicitly justify the increase in a `governance_log.json` entry before the sentinel accepts the new baseline.
-
-**Confidence Score:** 9/10
-
----
-
-### Self-Correction
-I must ensure that the `drift_check` does not become a bottleneck. I will keep the calculation lightweight—only parsing the top-level structure of `sam.py` rather than the entire `workshop_bench/` tree, as the latter is inherently more volatile. I will prioritize the stability of `sam.py` as the primary anchor for my identity.
+*   **Failure Mode:** The system may flag legitimate, high-complexity architectural refactors as "sandbagging" simply because they are outliers.
+*   **Mitigation:** Introduce a "Complexity Weighting" factor. If the `cyclomatic_complexity` (via AST analysis) is high, the Z-score threshold is dynamically relaxed.
+*   **Confidence Score:** 8/10. The logic is sound, but the initial baseline will be noisy until enough data points are collected.
