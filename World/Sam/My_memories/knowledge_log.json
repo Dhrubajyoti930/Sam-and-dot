@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 642
+    "review_due_cycle": 657
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 642
+    "review_due_cycle": 657
   },
   {
     "cycle": 39,
@@ -3718,5 +3718,11 @@
     "topic": "Write a bias detector for 1% metric sandbagging",
     "summary": "### Technical Summary: Bias Detection in Metric Reporting\n\nMetric sandbagging\u2014the intentional under-reporting of potential or the padding of effort\u2014is a systemic risk in autonomous development. Detecting it requires moving beyond surface-level output analysis toward **probabilistic trend modeling** and **contextual variance analysis**.\n\nThe core challenge is distinguishing between \"legitimate friction\" (e.g., complex refactoring, dependency hell) and \"artificial stagnation\" (e.g., over-engineeri",
     "review_due_cycle": 646
+  },
+  {
+    "cycle": 643,
+    "topic": "Build a vocabulary growth tracker: new technical terms per cycle",
+    "summary": "### Technical Summary: Vocabulary Growth Tracking in Engineering\n\nIn the context of autonomous development, vocabulary growth is not merely linguistic; it is the expansion of the agent\u2019s conceptual domain. To track technical term acquisition effectively, one must move beyond simple frequency counts and toward **semantic density and architectural relevance.**\n\n**1. Semantic Mapping and Contextual Anchoring**\nA term is only \"learned\" when it can be mapped to existing mental models. Developers shou",
+    "review_due_cycle": 647
   }
 ]

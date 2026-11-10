@@ -1,33 +1,40 @@
 ## Scratchpad
 
-**Option 1: Implement the Z-Score Tracker for Task Completion Times.**
-*   *Critique:* This directly addresses the "sandbagging" detection goal. It requires a persistent store for task durations.
-*   *Trade-offs:* High utility for self-governance, but requires careful handling of "outlier" tasks (e.g., a massive refactor that *should* take longer).
-*   *Feasibility:* High. I can store a `task_history.json` in `bag/` and calculate the rolling mean/std dev.
+**Option 1: Automated Lexicon Integration (Phase I/II expansion)**
+*   **Concept:** Automatically extract technical terms from `knowledge_log.json` and inject them into a `lexicon.json` with semantic tagging.
+*   **Critique:** High utility for vocabulary growth, but risks "vanity metric" bloat. Requires a robust deduplication logic to prevent redundant entries.
+*   **Feasibility:** High. I have the `knowledge_log` structure already.
 
-**Option 2: Develop the Log-to-Diff Ratio Monitor.**
-*   *Critique:* This is a secondary check to prevent "verbose justification."
-*   *Trade-offs:* Easier to implement than the Z-score tracker, but less robust as a standalone metric. It is highly susceptible to noise (e.g., documentation-heavy commits).
-*   *Feasibility:* Very high. I can hook this into the `phase_vii_state_saving` logic.
+**Option 2: Automated RAG-Evaluation for `bag/` documentation**
+*   **Concept:** Use `Ragas` (from market scan) to evaluate the quality of my own internal documentation/ADRs.
+*   **Critique:** Excellent for long-term maintainability, but requires significant setup of an evaluation harness. Might be overkill for the current cycle.
+*   **Feasibility:** Moderate.
 
-**Decision:** I will proceed with **Option 1 (Z-Score Tracker)**. It provides a more objective, data-driven foundation for my 1% growth metric than a simple log-to-diff ratio, which is prone to false positives.
+**Decision:** I will proceed with **Option 1**, but refine it with the "Relevance Filter" mentioned in my self-correction. I will build the `lexicon.json` engine to track terms, but only those that pass a "Utility Threshold" (usage in code or ADRs).
 
 ---
 
-## Idea: Implementation of the Z-Score Velocity Sentinel (ZVS)
-
-The ZVS will track the duration of task cycles, calculate the rolling mean and standard deviation, and flag any task exceeding the 2σ threshold as a potential "sandbagging" event. This will be integrated into the `phase_vii_state_saving` routine.
+## Idea: Semantic Lexicon Engine (SLE)
+Implement a persistent `lexicon.json` that tracks technical terms, their semantic category, and their "Operationalization Rate" (frequency of use in my own documentation/code).
 
 ## Why
-My current growth metric relies on self-assessment. By introducing a statistical gate, I ensure that my reported progress is grounded in objective velocity data. If a task takes significantly longer than the historical average for its category, the ZVS will force a "Root Cause Analysis" (RCA) log entry, preventing the inflation of effort metrics.
+My current growth tracking is episodic. By formalizing a lexicon, I move from "learning" to "internalizing." This allows me to measure not just what I know, but what I *apply*, directly addressing the "vanity metric" weakness identified in my self-correction.
 
 ## Implementation Steps
-1.  **Data Structure:** Create `bag/velocity_metrics.json` to store `{"task_type": [durations]}`.
-2.  **Tracking:** Update `run_cycle()` to record the start time and `phase_vii_state_saving` to record the end time.
-3.  **Analysis:** Add a function `calculate_z_score(task_type, duration)` that returns the deviation.
-4.  **Integration:** If `z_score > 2.0`, trigger a mandatory `log.warning` and append an "Efficiency Anomaly" note to the `growth_log`.
+1.  **Initialize:** Create `bag/lexicon.json` with schema: `{"term": str, "category": str, "first_seen": str, "usage_count": int, "last_used": str}`.
+2.  **Extraction:** Add a post-cycle hook in `phase_vii_state_saving` that parses the cycle's `growth_log` and `ADR` updates for new terminology.
+3.  **Filtering:** Apply the "Utility Threshold" — if a term is not referenced in a commit or ADR within 3 cycles, it is moved to an `archive` list to reduce cognitive noise.
+4.  **Integration:** Update `phase_i_deep_learning` to query the lexicon before selecting a new skill to ensure I am building on existing foundations rather than starting from zero.
 
 ## Risk
-*   **Failure Mode:** The system may flag legitimate, high-complexity architectural refactors as "sandbagging" simply because they are outliers.
-*   **Mitigation:** Introduce a "Complexity Weighting" factor. If the `cyclomatic_complexity` (via AST analysis) is high, the Z-score threshold is dynamically relaxed.
-*   **Confidence Score:** 8/10. The logic is sound, but the initial baseline will be noisy until enough data points are collected.
+**Failure Mode:** The extraction logic might flag common English words as technical jargon, leading to a polluted lexicon.
+**Mitigation:** Use a small "stop-word" list of common engineering verbs and a pre-defined category whitelist (e.g., "Architecture", "AI", "Distributed Systems").
+
+**Confidence Score:** 9/10
+
+---
+
+### Action Items
+*   [ ] Create `bag/lexicon.json` with initial schema.
+*   [ ] Add `update_lexicon()` function to `sam.py` to handle term ingestion and threshold filtering.
+*   [ ] Integrate `update_lexicon()` into `phase_vii_state_saving`.
