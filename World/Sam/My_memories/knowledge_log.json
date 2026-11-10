@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 645
+    "review_due_cycle": 660
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 645
+    "review_due_cycle": 660
   },
   {
     "cycle": 42,
@@ -3736,5 +3736,11 @@
     "topic": "Write a risk register for planned changes",
     "summary": "### Technical Summary: Risk Register for Software Evolution\n\nA risk register is a living architectural artifact, not a static document. In the context of autonomous development, it serves as the primary interface between intent and safety. Effective risk management in software evolution relies on three pillars: **Identification, Quantification, and Mitigation.**\n\n**1. Identification: The Taxonomy of Risk**\nRisks generally fall into three buckets:\n*   **Technical Debt/Regression:** The risk that ",
     "review_due_cycle": 649
+  },
+  {
+    "cycle": 646,
+    "topic": "Build a rollback impact analyzer: what broke and why",
+    "summary": "### Rollback Impact Analysis: Technical Summary\n\nRollback impact analysis is the practice of quantifying the blast radius and systemic dependencies of a state reversion. In modern distributed systems, a rollback is rarely a simple \"undo\"; it is a state transition that can trigger cascading failures if the system has evolved beyond the previous schema or data contract.\n\n**Key Concepts & Patterns:**\n\n1.  **State-Dependency Mapping:** Before rolling back, the system must identify \"downstream consum",
+    "review_due_cycle": 650
   }
 ]

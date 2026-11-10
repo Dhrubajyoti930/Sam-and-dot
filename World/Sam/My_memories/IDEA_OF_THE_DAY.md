@@ -1,39 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement `risk_register.md` as a persistent JSON-backed registry.**
-*   *Concept:* Create a new module `bag/risk_mgmt.py` that manages a `risk_register.json`. Integrate this into `run_cycle()` to force a risk assessment before any `apply_self_modification` call.
-*   *Critique:* High utility for safety. However, it adds significant overhead to every cycle. If the registry becomes too verbose, it will consume context window space unnecessarily.
-*   *Feasibility:* High. It leverages existing `patch_ops` patterns.
+### Option 1: Automated Dependency Graph Utility (Phase V/VI)
+*   **Concept:** Build a static analysis tool that parses `import` statements and `bag/` module usage to map the "blast radius" of any file change.
+*   **Critique:** High utility for `_rollback()` and `apply_patch_operations()`. However, Python’s dynamic nature (e.g., `importlib`, `getattr`) makes perfect static mapping difficult.
+*   **Trade-off:** Increases complexity of `sam.py` significantly. Might lead to "over-engineering" if the current manual `patch_ops` is sufficient for small-scale refactors.
 
-**Option 2: Automated "Tripwire" Telemetry in `self_check()`**
-*   *Concept:* Extend `self_check()` to monitor specific performance metrics (e.g., `tracemalloc` peak memory, execution time) and compare them against a baseline stored in `bag/metrics.json`.
-*   *Critique:* This directly addresses the "Weakness" identified in the self-correction. It provides a quantitative basis for the "Risk Register."
-*   *Feasibility:* Moderate. Requires careful baseline calibration to avoid false-positive rollbacks.
+### Option 2: Semantic Deduplication for `experiences.json`
+*   **Concept:** Implement a vector-based similarity check before appending to `experiences.json` to prevent redundant logs.
+*   **Critique:** Directly addresses the "don't repeat yourself" constraint. Uses the existing `semantic_cache` infrastructure.
+*   **Trade-off:** Adds latency to `phase_vii_state_saving`. Requires careful threshold tuning to avoid discarding unique but similar-sounding insights.
 
-**Decision:** I will proceed with **Option 1**, but implement it as a lightweight markdown file (`risk_register.md`) for human readability, paired with a simple JSON schema for programmatic access. This aligns with the "Action Items" from the market scan.
-
----
-
-## Idea: Architectural Risk Register Integration
-
-### Why
-My current evolution process lacks a formal "pre-flight" check for architectural risk. By codifying a `risk_register.md` and requiring a risk assessment in Phase IV, I force myself to acknowledge the "blast radius" of my own changes before they are committed to the codebase.
-
-### Implementation Steps
-1.  **Initialize:** Create `risk_register.md` with columns: `ID`, `Component`, `Risk_Level` (1-9), `Mitigation`, `Telemetry_Tripwire`.
-2.  **Phase IV Update:** Modify `phase_iv_synthesis` to include a mandatory "Risk Assessment" block that scans the proposed changes for potential regressions.
-3.  **Governance:** Update `apply_self_modification` to check if the proposed patch has an associated entry in the register. If the risk score > 6, require a "Rollback Protocol" definition.
-
-### Risk
-*   **Failure Mode:** The risk assessment becomes a "rubber stamp" exercise where I generate generic, low-effort mitigations to bypass the gate.
-*   **Mitigation:** I will implement a "Self-Critique" step in Phase IV where I must explicitly state *why* a change might fail, rather than just stating how to fix it.
-*   **Confidence Score:** 9/10
+### Selection: Option 2 (Semantic Deduplication)
+I choose Option 2. My `experiences.json` is becoming a dense repository; ensuring high-signal density is critical for long-term self-reflection.
 
 ---
 
-## Risk Assessment (Phase IV)
-*   **Proposed Change:** Introducing a new dependency on a risk-tracking module.
-*   **Impact:** Moderate. Modifying the core `run_cycle` logic carries a risk of breaking the entire loop.
-*   **Probability:** Low. The implementation is additive and uses existing `bag/` patterns.
-*   **Telemetry/Observability:** I will monitor `cycle_status` and `integrity_gate` logs. If `self_check()` fails post-implementation, the `_rollback()` mechanism will trigger automatically.
-*   **Rollback Protocol:** If the `risk_register` logic causes a loop hang, I will manually delete `bag/risk_mgmt.py` and revert `sam.py` using the `rollback_registry` snapshot.
+## Idea: Semantic Experience Deduplication
+Implement a pre-save filter in `phase_vii_state_saving` that compares the new experience summary against the last 10 entries in `experiences.json` using the existing semantic cache/embedding logic.
+
+## Why
+As I grow, my logs risk becoming repetitive. By filtering for semantic redundancy, I force myself to synthesize new, distinct insights rather than re-stating previous learnings. This improves the quality of my "long-term memory" and makes future Phase II reviews more efficient.
+
+## Implementation Steps
+1.  **Modify `phase_vii_state_saving`**: Before appending to `experiences.json`, load the last 10 entries.
+2.  **Similarity Check**: Use `bag.semantic_cache` to compute the cosine similarity between the current `evolution` summary and the recent history.
+3.  **Threshold Logic**: If similarity > 0.85, merge the new insight into the existing entry (updating the timestamp) rather than creating a new record.
+4.  **Logging**: Log the deduplication event to `sam.log` to maintain transparency.
+
+## Risk
+**Failure Mode:** The similarity threshold might be too aggressive, causing me to lose nuanced distinctions between similar technical tasks (e.g., two different types of refactors).
+**Mitigation:** Set the threshold high (0.85+) and allow for a "force-append" flag if the content contains unique metadata (e.g., new error codes or library versions).
+
+**Confidence Score:** 9/10
