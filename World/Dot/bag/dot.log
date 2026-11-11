@@ -3934,3 +3934,44 @@
 2026-11-11 06:59:18,656 [DOT][INFO] Today is Wednesday — inbox check reserved for Sunday.
 2026-11-11 06:59:18,658 [DOT][INFO] Worklog: no stale entries.
 2026-11-11 06:59:19,683 [DOT][INFO] Dot's daily run complete.
+2026-11-11 12:53:32,827 [DOT][INFO] ═══════════════════════════════════
+2026-11-11 12:53:32,827 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-11-11 12:53:32,827 [DOT][INFO] ═══════════════════════════════════
+2026-11-11 12:53:32,827 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-11-11 12:53:32,840 [DOT][INFO] Task 1: chunk 1/8 from cache.
+2026-11-11 12:53:32,840 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-11-11 12:53:32,841 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-11-11 12:53:32,841 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-11-11 12:53:32,841 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-11-11 12:53:32,841 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-11-11 12:53:32,842 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-11-11 12:53:32,842 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-11-11 12:53:48,865 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-11-11 12:54:08,813 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-11-11 12:54:08,820 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-11-11 12:54:16,820 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-11-11 12:54:16,822 [DOT][INFO] Task 2: 2 experiences → 1 batch(es) of ≤5.
+2026-11-11 12:54:24,822 [DOT][INFO] Task 2: batch 1/1 — cycles [646, 647]
+2026-11-11 12:54:32,836 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-11-11 12:54:37,954 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-11-11 12:54:37,958 [DOT][INFO] Experiences curated: 0 kept, 0 forgotten, 1 consolidated. Total now: 1.
+2026-11-11 12:54:37,958 [DOT][INFO] Letter written to Sam: Letter_20261111T125437Z.md
+2026-11-11 12:54:37,958 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-11-11 12:54:37,959 [DOT][INFO] Finding best recipient for: Tiago Henriques, maintainer of 'python-dependency-injector'. His project is widely used for DI in smaller Python ecosyst
+2026-11-11 12:54:45,973 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-11-11 12:54:56,029 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-11-11 12:54:56,030 [DOT][ERROR] Dot Gemini error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-11-11 12:55:14,030 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-11-11 12:55:15,416 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-11-11 12:55:15,419 [DOT][INFO] Recipient match:  <> confidence=0 — Tiago Henriques, the maintainer of 'python-dependency-injector', is not present in the provided list of people.
+2026-11-11 12:55:15,419 [DOT][WARNING] Match confidence 0 below threshold 7 — skipping.
+2026-11-11 12:55:15,419 [DOT][WARNING] No suitable recipient found in emails.json — request preserved.
+2026-11-11 12:55:15,419 [DOT][INFO] Appended to Letter_20261111T125437Z.md: Email Dispatch — No Match
+2026-11-11 12:55:15,420 [DOT][INFO] Appended to Letter_20261111T125437Z.md: Email Dispatch
+2026-11-11 12:55:23,420 [DOT][INFO] ── Task 4: Bag Review ──
+2026-11-11 12:55:31,432 [DOT][INFO] Dot cache hit.
+2026-11-11 12:55:31,432 [DOT][INFO] Bag review complete.
+2026-11-11 12:55:31,432 [DOT][INFO] Appended to Letter_20261111T125437Z.md: Bag Excavation Findings
+2026-11-11 12:55:31,432 [DOT][INFO] Today is Wednesday — inbox check reserved for Sunday.
+2026-11-11 12:55:31,435 [DOT][INFO] Worklog: no stale entries.
+2026-11-11 12:55:32,926 [DOT][INFO] Dot's daily run complete.
