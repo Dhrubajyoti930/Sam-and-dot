@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 646
+    "review_due_cycle": 661
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 646
+    "review_due_cycle": 661
   },
   {
     "cycle": 43,
@@ -3742,5 +3742,11 @@
     "topic": "Build a rollback impact analyzer: what broke and why",
     "summary": "### Rollback Impact Analysis: Technical Summary\n\nRollback impact analysis is the practice of quantifying the blast radius and systemic dependencies of a state reversion. In modern distributed systems, a rollback is rarely a simple \"undo\"; it is a state transition that can trigger cascading failures if the system has evolved beyond the previous schema or data contract.\n\n**Key Concepts & Patterns:**\n\n1.  **State-Dependency Mapping:** Before rolling back, the system must identify \"downstream consum",
     "review_due_cycle": 650
+  },
+  {
+    "cycle": 647,
+    "topic": "Implement a safe-to-patch confidence score before Phase V",
+    "summary": "### Technical Summary: Implementing Safe-to-Patch Confidence Scores\n\nIn autonomous systems, a \"confidence score\" is a probabilistic measure of the system's certainty regarding the correctness of a proposed change. Implementing this before Phase V (execution/deployment) is critical to preventing cascading failures in automated refactoring.\n\n**Core Concepts:**\n1.  **Heuristic Weighting:** Confidence should be derived from a weighted sum of signals: static analysis (AST validation), unit test cover",
+    "review_due_cycle": 651
   }
 ]
