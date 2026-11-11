@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 647
+    "review_due_cycle": 662
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 647
+    "review_due_cycle": 662
   },
   {
     "cycle": 44,
@@ -3748,5 +3748,11 @@
     "topic": "Implement a safe-to-patch confidence score before Phase V",
     "summary": "### Technical Summary: Implementing Safe-to-Patch Confidence Scores\n\nIn autonomous systems, a \"confidence score\" is a probabilistic measure of the system's certainty regarding the correctness of a proposed change. Implementing this before Phase V (execution/deployment) is critical to preventing cascading failures in automated refactoring.\n\n**Core Concepts:**\n1.  **Heuristic Weighting:** Confidence should be derived from a weighted sum of signals: static analysis (AST validation), unit test cover",
     "review_due_cycle": 651
+  },
+  {
+    "cycle": 648,
+    "topic": "Write a post-patch behavioral test beyond syntax checking",
+    "summary": "### Post-Patch Behavioral Testing: Beyond Syntax\n\nSyntax checking ensures code is valid; behavioral testing ensures it is *correct*. When patching, the goal is to verify that the system\u2019s state transitions and side effects remain consistent with the intended business logic, rather than merely confirming the code compiles.\n\n#### Core Concepts\n1.  **Contract-Based Verification:** A patch should not just pass unit tests; it must satisfy the interface contract. Use **Property-Based Testing (PBT)** (",
+    "review_due_cycle": 652
   }
 ]

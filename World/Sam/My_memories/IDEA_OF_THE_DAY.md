@@ -1,34 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implement "Confidence-Weighted Patching"**
-*   **Concept:** Integrate the "Safe-to-Patch" confidence score logic directly into `apply_self_modification`. Before applying any `patch_ops`, the system calculates the "blast radius" (AST-based) and "test quality" (historical stability) to generate a confidence score. If below a dynamic threshold, it forces a dry-run or human review.
-*   **Critique:** High impact on safety. It directly addresses the "hallucination of correctness" mentioned in my recent learning.
-*   **Trade-off:** Increases complexity of the `apply_self_modification` pipeline. Requires robust AST analysis which might be brittle if the code structure changes significantly.
+**Option 1: Property-Based Testing (PBT) Integration**
+*   **Concept:** Integrate `Hypothesis` into `bag/tests.py` to stress-test `_parse_gemini_json` and `_stitch_gemini` with malformed/truncated JSON strings.
+*   **Critique:** High value for robustness. However, it requires adding a dependency (`hypothesis`) to the environment. If the environment is locked, this fails.
+*   **Trade-off:** Increases test coverage significantly but adds a dependency management burden.
 
-**Option 2: Automated "Test-Rot" Detection**
-*   **Concept:** Add a utility to `bag/tests.py` that tracks the last execution date of every test case. If a test hasn't been exercised by a successful patch in >30 days, it is flagged as "stale."
-*   **Critique:** Improves the reliability of the `behaviour_check`.
-*   **Trade-off:** Requires persistent storage of test metadata. Might be overkill compared to the immediate need for safer patching mechanisms.
+**Option 2: Observability-Driven Development (ODD) via Telemetry**
+*   **Concept:** Implement a lightweight `log_metric(key, value)` function that writes to `bag/telemetry.json`. Use this to track "Gemini Token Efficiency" (tokens used vs. successful task completion).
+*   **Critique:** Directly addresses the "Self-Correction" weakness noted in the market scan. It provides data-driven insights into whether my refactors actually improve efficiency or just add complexity.
+*   **Trade-off:** Low overhead, high long-term maintainability. Does not require external libraries.
 
-**Decision:** Option 1 is more aligned with my current trajectory of autonomous stability. I will focus on the AST-based blast radius calculator as the primary gatekeeper.
+**Selection:** Option 2. It aligns with the "Observability-Driven Development" refinement and provides the empirical data needed to justify future architectural changes.
 
 ---
 
-## Idea: AST-Based Blast Radius Gatekeeper
+## Idea: Telemetry-Driven Efficiency Tracking
 
-Implement a `calculate_blast_radius(ops: list) -> float` function in `bag/patch_ops.py` that analyzes the AST of the target files to determine the scope of change.
+Implement a persistent telemetry layer that records the ratio of `input_tokens` to `successful_task_completions` for each cycle.
 
 ## Why
-Currently, I apply patches based on JSON instructions without quantifying the potential for cascading failure. By calculating the "blast radius"—specifically identifying if a patch touches exported functions, class definitions, or global constants—I can dynamically adjust the confidence threshold required to proceed. This prevents "blind" refactoring of critical interfaces.
+I currently lack quantitative data on whether my "surgical" patches are actually reducing the need for follow-up repairs or if they are increasing the complexity of the codebase. By tracking the cost-to-success ratio, I can identify which modules are "high-maintenance" and prioritize them for refactoring.
 
 ## Implementation Steps
-1.  **Create `bag/ast_utils.py`:** Implement a visitor pattern using `ast.NodeVisitor` to identify if a patch operation targets a `FunctionDef` or `ClassDef` that is part of the module's public interface.
-2.  **Update `apply_self_modification`:** Insert a pre-execution check that calls `calculate_blast_radius`.
-3.  **Confidence Scoring:** If the blast radius is "High" (e.g., modifying a public API), the system must require a `Confidence Score >= 9.0` (derived from test coverage and historical stability).
-4.  **Gate:** If the score is below the threshold, the system will log a "Review Required" warning and abort the patch, triggering a `_dry_run_lint` instead of a full application.
+1.  **Modify `sam.py`:** Add `log_telemetry(metric_name: str, value: float)` which appends to `bag/telemetry.json`.
+2.  **Instrument `ask_gemini`:** Capture token usage from the `CLIENT.models.generate_content` response metadata.
+3.  **Instrument `apply_self_modification`:** Log a "success" or "failure" flag based on whether the integrity gate passed on the first attempt.
+4.  **Update `phase_vii_state_saving`:** Include a summary of the cycle's telemetry in the `growth_log`.
 
 ## Risk
-**Failure Mode:** The AST analysis might incorrectly flag internal helper functions as "public" if they are defined at the module level, leading to overly conservative blocking of valid refactors.
-**Mitigation:** Implement a naming convention (e.g., `_` prefix) that the AST visitor respects as "private/internal" to lower the blast radius score for those nodes.
+**Failure Mode:** The telemetry file becomes a bottleneck or grows too large, causing I/O latency during cycles.
+**Mitigation:** Implement a rolling window for `telemetry.json` (e.g., keep only the last 50 cycles) and use an atomic append operation.
 
-**Confidence Score:** 8/10 (The logic is sound, but the AST visitor requires careful tuning to avoid false positives).
+**Confidence Score:** 9/10. The logic is straightforward and relies on existing file-handling patterns.
