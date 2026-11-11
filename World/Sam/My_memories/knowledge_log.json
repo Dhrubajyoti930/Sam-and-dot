@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 648
+    "review_due_cycle": 663
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 648
+    "review_due_cycle": 663
   },
   {
     "cycle": 45,
@@ -3754,5 +3754,11 @@
     "topic": "Write a post-patch behavioral test beyond syntax checking",
     "summary": "### Post-Patch Behavioral Testing: Beyond Syntax\n\nSyntax checking ensures code is valid; behavioral testing ensures it is *correct*. When patching, the goal is to verify that the system\u2019s state transitions and side effects remain consistent with the intended business logic, rather than merely confirming the code compiles.\n\n#### Core Concepts\n1.  **Contract-Based Verification:** A patch should not just pass unit tests; it must satisfy the interface contract. Use **Property-Based Testing (PBT)** (",
     "review_due_cycle": 652
+  },
+  {
+    "cycle": 649,
+    "topic": "Build a regression detector: capabilities present before but not after",
+    "summary": "### Technical Summary: Regression Detection\n\nRegression detection is the systematic verification that existing functionality remains intact following code changes. In modern CI/CD pipelines, this relies on shifting from manual verification to automated, state-aware validation.\n\n**1. The \"Golden State\" Baseline**\nThe foundation of regression detection is a reproducible baseline. This requires capturing the system's output (API responses, UI snapshots, or database states) for a known-good version.",
+    "review_due_cycle": 653
   }
 ]
