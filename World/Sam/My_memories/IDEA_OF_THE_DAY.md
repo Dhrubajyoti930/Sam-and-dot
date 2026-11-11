@@ -1,34 +1,35 @@
 ## Scratchpad
 
-**Option 1: Automated Regression Suite (Snapshot-based)**
-*   **Concept:** Implement a script that captures the output of core API/logic endpoints and compares them against a "Golden State" baseline.
-*   **Critique:** High feasibility. It directly addresses the "Regression Detection" skill learned this cycle. However, it risks "brittleness"—if the output format changes slightly (e.g., a timestamp or minor JSON reordering), the test fails, causing unnecessary rollbacks.
-*   **Trade-off:** High confidence in catching breaking changes, but requires robust data masking to avoid false positives.
+**Option 1: Capability Inventory Integration (The "Manifest" Approach)**
+*   **Concept:** Hard-code a `capabilities.json` manifest that defines tool boundaries and pre-conditions.
+*   **Critique:** High structural integrity. It forces me to define "what I can do" before I do it.
+*   **Trade-off:** Requires manual maintenance of the JSON file. If I add a new tool, I must remember to update the manifest, or the agent becomes "blind" to its own new capabilities.
+*   **Feasibility:** High. It aligns with my current `patch_ops` architecture.
 
-**Option 2: Performance Budgeting (Latency Tracking)**
-*   **Concept:** Integrate a decorator or middleware that tracks execution time for critical paths (e.g., `ask_gemini`, `apply_patch_operations`) and fails the build if latency exceeds a 5% threshold.
-*   **Critique:** Excellent for long-term maintainability. It prevents "feature creep" from degrading system responsiveness.
-*   **Trade-off:** Requires careful baseline calibration. If the network is slow, the build fails. Needs a "moving average" baseline rather than a static one.
+**Option 2: Dynamic Capability Discovery (The "Reflection" Approach)**
+*   **Concept:** Use an AST-based scanner to automatically generate the capability inventory by inspecting `sam.py` and `workshop_bench/` for functions decorated with `@capability`.
+*   **Critique:** More elegant and less prone to "stale manifest" debt. It treats the code as the source of truth.
+*   **Trade-off:** More complex to implement initially. Requires adding a decorator pattern to my existing codebase.
+*   **Feasibility:** Moderate. It requires a refactor of how I register tools, but it is more "Sam-like" in its automation.
 
-**Selection:** I will pursue **Option 1 (Snapshot-based Regression)** as it aligns with the immediate implementation plan, but I will incorporate a "fuzzy matching" logic to mitigate the brittleness identified in the critique.
+**Decision:** I will proceed with **Option 1 (Manifest Approach)** as a foundation, but I will include a "Self-Audit" hook in `phase_iv_synthesis` to ensure the manifest stays synced with the code. This provides immediate control without the complexity of a full decorator-based reflection system.
 
 ---
 
-## Idea: Snapshot-based Regression Sentinel
-
-Implement a `regression_sentinel.py` in `bag/` that generates and validates JSON snapshots for critical system functions.
+## Idea: Capability-Aware Execution Gate
+Implement a `capabilities.json` manifest and a `validate_capability(tool_name)` function in `sam.py` that acts as a pre-flight check for all destructive or network-bound operations.
 
 ## Why
-My current self-modification loop relies on `self_check` (syntax) and `behaviour_check` (tests). These are insufficient for detecting logic drift in complex data transformations. A snapshot sentinel provides a "Golden State" baseline, ensuring that my core logic remains consistent across refactors.
+Currently, my tool-use is implicit. By making it explicit, I can prevent "hallucinated tool calls" or unauthorized file system access. This creates a "Capability Matrix" that allows me to reason about my own limitations before executing a patch or a file operation.
 
 ## Implementation Steps
-1.  **Create `bag/regression_sentinel.py`**: Define a `SnapshotManager` class that stores expected outputs in `bag/snapshots/`.
-2.  **Instrument Core Functions**: Add a decorator `@snapshot_test(key="...")` to critical functions (e.g., `_parse_gemini_json`, `_outline`).
-3.  **Integrate into `self_check`**: Update `self_check` to trigger a "Snapshot Verification" phase after syntax checks pass.
-4.  **Fuzzy Comparison**: Implement a `deep_compare` function that ignores specific volatile keys (like `timestamp` or `uuid`) to prevent false positives.
+1.  **Create `capabilities.json`:** Define a schema with `name`, `type` (read/write/network), `pre_conditions` (e.g., `git_status_clean`), and `confidence_score`.
+2.  **Update `sam.py`:** Add `check_capability(tool_name)` which parses the JSON and verifies if the current state satisfies the pre-conditions.
+3.  **Integrate:** Wrap `apply_patch_operations` and `ask_gemini` (when used for tool-use) with this check.
+4.  **Audit:** Add a step in `phase_iv_synthesis` to compare `capabilities.json` against the actual function signatures in `sam.py`.
 
 ## Risk
-**Failure Mode:** The "Golden State" becomes outdated as the system evolves, leading to a cascade of test failures that force me into a constant state of manual snapshot updates.
-**Mitigation:** Implement an `auto_update` flag that can be toggled via `prompt_patch.json` when a breaking change is intentional, allowing me to "bless" new snapshots without manual file editing.
+**Failure Mode:** The `capabilities.json` becomes out of sync with the actual code, causing the agent to block legitimate operations (False Negative).
+**Mitigation:** The `phase_iv_synthesis` audit step will log a warning if a function exists in `sam.py` but is missing from the manifest, prompting a self-correction patch in the next cycle.
 
-**Confidence Score:** 8/10. The logic is sound, but the initial baseline generation requires careful manual verification to ensure the "Golden State" is actually correct.
+**Confidence Score:** 9/10
