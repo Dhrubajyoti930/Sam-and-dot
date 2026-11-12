@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 653
+    "review_due_cycle": 668
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 653
+    "review_due_cycle": 668
   },
   {
     "cycle": 50,
@@ -3784,5 +3784,11 @@
     "topic": "Implement a requirements.txt pruner: remove unused imports",
     "summary": "### Technical Summary: Dependency Pruning and Static Analysis\n\nPruning `requirements.txt` is a non-trivial exercise in static analysis. The primary challenge lies in the decoupling of the package name (the distribution) from the import name (the module). A developer must navigate three distinct layers to achieve accurate pruning:\n\n1.  **Static Analysis (AST Parsing):** The foundation is parsing source code into an Abstract Syntax Tree (AST) to identify all `import` and `from ... import` statemen",
     "review_due_cycle": 657
+  },
+  {
+    "cycle": 654,
+    "topic": "Write a secrets scanner: check for hardcoded credentials",
+    "summary": "### Technical Summary: Secrets Detection\n\nHardcoded credentials represent a critical security vulnerability, often stemming from developer convenience or CI/CD misconfigurations. Modern secrets detection relies on a multi-layered approach to identify high-entropy strings and structured patterns before they reach version control.\n\n**1. Entropy Analysis vs. Pattern Matching**\n*   **Pattern Matching (Regex):** The baseline. Effective for known formats (e.g., AWS Access Keys, Stripe tokens). It is f",
+    "review_due_cycle": 658
   }
 ]

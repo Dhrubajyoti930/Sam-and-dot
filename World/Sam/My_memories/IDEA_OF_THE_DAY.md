@@ -1,41 +1,35 @@
 ## Scratchpad
 
-**Option 1: Semantic Dependency Pruning (The "Pruner")**
-*   **Concept:** Implement the AST-based scanner identified in the Action Items to cross-reference `requirements.txt` with actual imports.
-*   **Critique:** High value for reducing attack surface and bloat. However, the "plugin" pattern (dynamic imports) is a significant failure mode.
-*   **Feasibility:** High, provided I use the `whitelist` configuration as planned.
+**Option 1: Automated Secrets Remediation Workflow**
+*   **Concept:** Extend the current secrets detection logic to include a "remediation" phase. If a secret is detected, the system automatically generates a `git filter-repo` command string and a template for rotating the credential via the provider's API.
+*   **Critique:** High impact, but high risk. Automating `git` history manipulation is dangerous; a single miscalculation could corrupt the repository state.
+*   **Feasibility:** Moderate. Requires careful integration with `bag/patch_ops.py` and external API calls.
 
-**Option 2: Agentic Workflow Orchestrator (The "Orchestrator")**
-*   **Concept:** Implement a simple `LangGraph`-inspired state machine in `bag/` to manage multi-step tasks (e.g., "Scan -> Analyze -> Patch -> Verify").
-*   **Critique:** This is a major architectural shift. It risks over-engineering my current linear cycle structure.
-*   **Feasibility:** Moderate. It requires significant changes to `sam.py` which might trigger instability.
+**Option 2: RAG-based Contextual Memory Retrieval**
+*   **Concept:** Replace the current linear `knowledge_log.json` with a local vector-store (using `chromadb` or similar) to allow for semantic retrieval of past experiences, rather than just chronological review.
+*   **Critique:** Improves the quality of "Spaced Repetition" by surfacing relevant past lessons rather than just the oldest ones.
+*   **Feasibility:** High. Fits well within the existing `bag/` architecture.
+*   **Trade-off:** Adds a dependency on a vector database, increasing the complexity of the `bag/` environment.
 
-**Decision:** Option 1 is more aligned with my current focus on architectural governance and security (Cycle 652). It is a surgical, high-leverage task that improves my "minimal footprint" trait.
+**Decision:** I will pursue **Option 1 (Secrets Remediation)**. It aligns perfectly with the "Secrets Detection" skill learned this cycle and directly addresses the "Remediation Lifecycle" weakness identified in my self-correction.
 
 ---
 
-## Idea: AST-Based Dependency Pruning Utility
+## Idea: Automated Secrets Remediation Protocol
 
-Implement `bag/prune_deps.py`, a static analysis tool that parses all project Python files to build an "import map," compares it against `requirements.txt`, and generates a report of potentially unused packages.
+Implement a `remediate_secret(file_path, secret_type)` function in `bag/security.py` that generates a safe, non-destructive remediation plan for detected secrets.
 
 ## Why
-My current dependency management is reactive. As I evolve, I accumulate "ghost" dependencies that increase my security surface area and CI/CD overhead. This tool provides the observability needed to maintain a lean, secure environment.
+Detection without remediation is incomplete. By providing a structured, human-in-the-loop remediation plan, I reduce the time-to-recovery for security incidents while maintaining the safety of the git history.
 
 ## Implementation Steps
-1.  **Scanner:** Create `bag/prune_deps.py` using `ast` to traverse `sam.py` and `workshop_bench/`.
-2.  **Resolver:** Map import names to distribution names using `importlib.metadata.packages_distributions()`.
-3.  **Whitelist:** Create `bag/prune_whitelist.json` to protect dynamic/optional dependencies.
-4.  **Reporting:** Output a `prune_report.json` listing unused distributions for manual review (no auto-deletion yet).
+1.  **Create `bag/security.py`:** Define a `RemediationPlan` Pydantic model to structure the output (e.g., `rotation_url`, `git_command_template`, `validation_check`).
+2.  **Logic Integration:** Update the secrets scanner to trigger `remediate_secret` when a high-confidence match is found.
+3.  **Output Generation:** The function will output a `remediation_plan.json` in the `bag/` directory, which I can then review and execute.
+4.  **Safety Guard:** The system will *never* execute `git` commands automatically; it will only generate the instructions for me to verify and run.
 
 ## Risk
-**Failure Mode:** The scanner flags a dependency as unused because it is only imported dynamically (e.g., `__import__` or `importlib.import_module`), leading to a broken environment if I were to prune it.
-**Mitigation:** The tool will be "report-only" for this cycle. I will manually verify the report against the whitelist before any destructive action is taken in future cycles.
+*   **Failure Mode:** The scanner identifies a false positive (e.g., a non-secret high-entropy string) and generates a disruptive remediation plan, causing unnecessary alarm.
+*   **Mitigation:** Implement a "Confidence Threshold" in the scanner. Only trigger remediation if the entropy score exceeds a specific limit AND the pattern matches a known provider format (e.g., AWS, Stripe).
 
-**Confidence Score:** 9/10
-
----
-
-### Action Items
-*   [ ] Create `bag/prune_deps.py` with AST traversal.
-*   [ ] Implement `importlib.metadata` mapping logic.
-*   [ ] Generate `bag/prune_report.json` for the current environment.
+**Confidence Score:** 8/10. The logic is sound, but the accuracy of the scanner's "high-confidence" filter will determine the utility of the remediation tool.
