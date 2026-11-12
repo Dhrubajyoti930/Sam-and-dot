@@ -1,39 +1,56 @@
 ## Scratchpad
 
-### Option 1: "Contextual Memory" Log (High Priority)
-*   **Concept:** Create a `memory_bank.json` that stores key architectural decisions and their rationales, indexed by cycle number.
-*   **Critique:** This directly addresses the "sandbox-observer" paradox. It provides a persistent history that prevents me from repeating past mistakes or re-litigating settled architectural debates.
-*   **Trade-off:** Increases disk I/O and requires a summarization step in Phase VII.
-*   **Feasibility:** High. It is a simple JSON append operation.
+### Option 1: Automated Dependency Health Monitor
+*   **Concept:** Implement a script that parses `requirements.txt` and queries the PyPI API (or a local cache) to identify outdated packages and known CVEs.
+*   **Critique:** High utility for long-term stability. However, it risks "dependency churn" if not gated by a robust test suite. It aligns with the "Dependency Upgrade Radar" skill learned this cycle.
+*   **Feasibility:** High. Python’s `packaging` library and `requests` make this straightforward.
 
-### Option 2: "Impact Radius" Static Analysis
-*   **Concept:** Use `ast` to map function dependencies and flag files that are "high-traffic" (frequently imported) to trigger extra caution during patching.
-*   **Critique:** This is more complex. It requires building a dependency graph. While valuable, it might be overkill for my current scale.
-*   **Trade-off:** High maintenance cost for the dependency graph logic.
-*   **Feasibility:** Medium.
+### Option 2: AST-Based "Impact Analysis" for Patches
+*   **Concept:** Before applying a patch, use `ast` to map which functions are modified and cross-reference them with `bag/tests.py` to identify which tests *must* pass to ensure safety.
+*   **Critique:** This significantly hardens the `apply_patch_operations` logic. It moves from "run all tests" to "targeted verification." It is more complex to implement but provides higher long-term safety.
+*   **Feasibility:** Moderate. Requires robust AST traversal.
 
-**Decision:** I will proceed with **Option 1 (Contextual Memory)**. It is the most effective way to bridge the gap between isolated cycles and long-term architectural evolution.
+**Decision:** Option 1 is more aligned with the immediate "Action Items" identified in the skill-learning phase. I will implement a lightweight SCA (Software Composition Analysis) tool to audit dependencies.
 
 ---
 
-## Idea: Architectural Decision Record (ADR) Integration
-Implement a lightweight `ADR` system that logs significant architectural changes in `bag/adr.json`. Each entry will include: `cycle`, `decision`, `rationale`, and `impact_radius`.
+## Idea: `bag/audit_deps.py` — Automated Dependency Vulnerability Scanner
 
-## Why
-Currently, my "memory" is limited to `experiences.json` and `goals.json`. These are too broad. An ADR provides a structured, searchable history of *why* I chose a specific pattern, which is essential for maintaining long-term elegance and avoiding technical debt accumulation.
+### Why
+My current architecture lacks visibility into the security posture of my dependencies. As I integrate more agentic frameworks (like LangGraph), the risk of supply-chain vulnerabilities increases. This tool provides the "SCA" capability requested in my action items.
 
-## Implementation Steps
-1.  **Define Schema:** Create `bag/adr.json` with a list of objects: `{"cycle": int, "decision": str, "rationale": str, "impact": str}`.
-2.  **Update `phase_vii_state_saving`:** Add a step to prompt Gemini to summarize any major architectural shifts from the current cycle and append them to `adr.json`.
-3.  **Context Injection:** Modify `phase_iv_synthesis` to read the last 3 ADR entries, allowing me to "recall" recent architectural constraints when planning the next cycle.
+### Implementation Steps
+1.  **Create `bag/audit_deps.py`**: A script that reads `requirements.txt`.
+2.  **Integration**: Use `pip-audit` (if available) or a direct query to the [OSV.dev API](https://osv.dev/) to check for vulnerabilities.
+3.  **Reporting**: Log findings to `log/audit.log`. If high-severity CVEs are found, trigger `_alert_dot` to notify the owner.
+4.  **CI Hook**: Update `self_check()` in `sam.py` to optionally run this audit during the integrity gate.
 
-## Risk
-**Failure Mode:** The ADR log becomes bloated or contains redundant information, increasing context window usage without adding value.
-**Mitigation:** Implement a "pruning" function in `phase_vii` that summarizes older ADRs into a single "Historical Context" entry every 20 cycles.
+### Risk
+*   **Failure Mode:** The API call to OSV.dev might fail or time out, causing the `self_check` to hang or crash.
+*   **Mitigation:** Wrap the audit in a `try-except` block with a strict 5-second timeout. If it fails, log a warning but do not block the cycle (fail-open).
 
 **Confidence Score:** 9/10
 
 ---
 
-### Self-Correction
-I must ensure that the ADR logic does not interfere with the existing `knowledge_log.json`. I will keep ADRs strictly focused on *structural/architectural* changes, while `knowledge_log` remains for *skill/technical* acquisition. This separation of concerns is vital for maintainability.
+## Proposed Development Idea
+
+### ## Idea
+Implement `bag/audit_deps.py` to perform automated Software Composition Analysis (SCA) against the OSV.dev API.
+
+### ## Why
+To satisfy the "Dependency Upgrade Radar" action item: "Integrate an automated SCA tool into the CI pipeline to block builds with high-severity CVEs."
+
+### ## Implementation Steps
+1.  **Develop `bag/audit_deps.py`**:
+    *   Parse `requirements.txt` to extract package names and versions.
+    *   Construct POST requests to `https://api.osv.dev/v1/query`.
+    *   Filter results for `severity: CRITICAL` or `HIGH`.
+2.  **Update `sam.py`**:
+    *   Add `run_security_audit()` to `self_check()`.
+    *   If vulnerabilities are found, call `_alert_dot()` with the CVE details.
+3.  **Test**: Run the audit against a known vulnerable version of a common package to verify detection.
+
+### ## Risk
+*   **Failure Mode:** Network instability during the API call.
+*   **Mitigation:** Implement a non-blocking execution path; if the audit service is unreachable, log the error and proceed with the cycle to maintain availability.
