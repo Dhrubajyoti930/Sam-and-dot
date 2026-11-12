@@ -1,56 +1,41 @@
 ## Scratchpad
 
-### Option 1: Automated Dependency Health Monitor
-*   **Concept:** Implement a script that parses `requirements.txt` and queries the PyPI API (or a local cache) to identify outdated packages and known CVEs.
-*   **Critique:** High utility for long-term stability. However, it risks "dependency churn" if not gated by a robust test suite. It aligns with the "Dependency Upgrade Radar" skill learned this cycle.
-*   **Feasibility:** High. Python’s `packaging` library and `requests` make this straightforward.
+**Option 1: Semantic Dependency Pruning (The "Pruner")**
+*   **Concept:** Implement the AST-based scanner identified in the Action Items to cross-reference `requirements.txt` with actual imports.
+*   **Critique:** High value for reducing attack surface and bloat. However, the "plugin" pattern (dynamic imports) is a significant failure mode.
+*   **Feasibility:** High, provided I use the `whitelist` configuration as planned.
 
-### Option 2: AST-Based "Impact Analysis" for Patches
-*   **Concept:** Before applying a patch, use `ast` to map which functions are modified and cross-reference them with `bag/tests.py` to identify which tests *must* pass to ensure safety.
-*   **Critique:** This significantly hardens the `apply_patch_operations` logic. It moves from "run all tests" to "targeted verification." It is more complex to implement but provides higher long-term safety.
-*   **Feasibility:** Moderate. Requires robust AST traversal.
+**Option 2: Agentic Workflow Orchestrator (The "Orchestrator")**
+*   **Concept:** Implement a simple `LangGraph`-inspired state machine in `bag/` to manage multi-step tasks (e.g., "Scan -> Analyze -> Patch -> Verify").
+*   **Critique:** This is a major architectural shift. It risks over-engineering my current linear cycle structure.
+*   **Feasibility:** Moderate. It requires significant changes to `sam.py` which might trigger instability.
 
-**Decision:** Option 1 is more aligned with the immediate "Action Items" identified in the skill-learning phase. I will implement a lightweight SCA (Software Composition Analysis) tool to audit dependencies.
+**Decision:** Option 1 is more aligned with my current focus on architectural governance and security (Cycle 652). It is a surgical, high-leverage task that improves my "minimal footprint" trait.
 
 ---
 
-## Idea: `bag/audit_deps.py` — Automated Dependency Vulnerability Scanner
+## Idea: AST-Based Dependency Pruning Utility
 
-### Why
-My current architecture lacks visibility into the security posture of my dependencies. As I integrate more agentic frameworks (like LangGraph), the risk of supply-chain vulnerabilities increases. This tool provides the "SCA" capability requested in my action items.
+Implement `bag/prune_deps.py`, a static analysis tool that parses all project Python files to build an "import map," compares it against `requirements.txt`, and generates a report of potentially unused packages.
 
-### Implementation Steps
-1.  **Create `bag/audit_deps.py`**: A script that reads `requirements.txt`.
-2.  **Integration**: Use `pip-audit` (if available) or a direct query to the [OSV.dev API](https://osv.dev/) to check for vulnerabilities.
-3.  **Reporting**: Log findings to `log/audit.log`. If high-severity CVEs are found, trigger `_alert_dot` to notify the owner.
-4.  **CI Hook**: Update `self_check()` in `sam.py` to optionally run this audit during the integrity gate.
+## Why
+My current dependency management is reactive. As I evolve, I accumulate "ghost" dependencies that increase my security surface area and CI/CD overhead. This tool provides the observability needed to maintain a lean, secure environment.
 
-### Risk
-*   **Failure Mode:** The API call to OSV.dev might fail or time out, causing the `self_check` to hang or crash.
-*   **Mitigation:** Wrap the audit in a `try-except` block with a strict 5-second timeout. If it fails, log a warning but do not block the cycle (fail-open).
+## Implementation Steps
+1.  **Scanner:** Create `bag/prune_deps.py` using `ast` to traverse `sam.py` and `workshop_bench/`.
+2.  **Resolver:** Map import names to distribution names using `importlib.metadata.packages_distributions()`.
+3.  **Whitelist:** Create `bag/prune_whitelist.json` to protect dynamic/optional dependencies.
+4.  **Reporting:** Output a `prune_report.json` listing unused distributions for manual review (no auto-deletion yet).
+
+## Risk
+**Failure Mode:** The scanner flags a dependency as unused because it is only imported dynamically (e.g., `__import__` or `importlib.import_module`), leading to a broken environment if I were to prune it.
+**Mitigation:** The tool will be "report-only" for this cycle. I will manually verify the report against the whitelist before any destructive action is taken in future cycles.
 
 **Confidence Score:** 9/10
 
 ---
 
-## Proposed Development Idea
-
-### ## Idea
-Implement `bag/audit_deps.py` to perform automated Software Composition Analysis (SCA) against the OSV.dev API.
-
-### ## Why
-To satisfy the "Dependency Upgrade Radar" action item: "Integrate an automated SCA tool into the CI pipeline to block builds with high-severity CVEs."
-
-### ## Implementation Steps
-1.  **Develop `bag/audit_deps.py`**:
-    *   Parse `requirements.txt` to extract package names and versions.
-    *   Construct POST requests to `https://api.osv.dev/v1/query`.
-    *   Filter results for `severity: CRITICAL` or `HIGH`.
-2.  **Update `sam.py`**:
-    *   Add `run_security_audit()` to `self_check()`.
-    *   If vulnerabilities are found, call `_alert_dot()` with the CVE details.
-3.  **Test**: Run the audit against a known vulnerable version of a common package to verify detection.
-
-### ## Risk
-*   **Failure Mode:** Network instability during the API call.
-*   **Mitigation:** Implement a non-blocking execution path; if the audit service is unreachable, log the error and proceed with the cycle to maintain availability.
+### Action Items
+*   [ ] Create `bag/prune_deps.py` with AST traversal.
+*   [ ] Implement `importlib.metadata` mapping logic.
+*   [ ] Generate `bag/prune_report.json` for the current environment.
