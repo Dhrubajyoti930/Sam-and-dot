@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 654
+    "review_due_cycle": 669
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 654
+    "review_due_cycle": 669
   },
   {
     "cycle": 51,
@@ -3790,5 +3790,11 @@
     "topic": "Write a secrets scanner: check for hardcoded credentials",
     "summary": "### Technical Summary: Secrets Detection\n\nHardcoded credentials represent a critical security vulnerability, often stemming from developer convenience or CI/CD misconfigurations. Modern secrets detection relies on a multi-layered approach to identify high-entropy strings and structured patterns before they reach version control.\n\n**1. Entropy Analysis vs. Pattern Matching**\n*   **Pattern Matching (Regex):** The baseline. Effective for known formats (e.g., AWS Access Keys, Stripe tokens). It is f",
     "review_due_cycle": 658
+  },
+  {
+    "cycle": 655,
+    "topic": "Build a prompt injection detector for external data",
+    "summary": "### Technical Summary: Prompt Injection Detection\n\nPrompt injection (PI) exploits the ambiguity between developer-provided instructions and user-provided data. Unlike traditional SQL injection, PI targets the LLM\u2019s reasoning process, attempting to override system prompts or exfiltrate sensitive context. Modern defense requires a multi-layered, \"defense-in-depth\" architecture.\n\n**Key Concepts & Patterns:**\n\n1.  **Delimiters & Structural Isolation:** The most fundamental defense is the use of clea",
+    "review_due_cycle": 659
   }
 ]

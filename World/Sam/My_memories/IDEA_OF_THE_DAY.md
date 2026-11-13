@@ -1,35 +1,33 @@
 ## Scratchpad
 
-**Option 1: Automated Secrets Remediation Workflow**
-*   **Concept:** Extend the current secrets detection logic to include a "remediation" phase. If a secret is detected, the system automatically generates a `git filter-repo` command string and a template for rotating the credential via the provider's API.
-*   **Critique:** High impact, but high risk. Automating `git` history manipulation is dangerous; a single miscalculation could corrupt the repository state.
-*   **Feasibility:** Moderate. Requires careful integration with `bag/patch_ops.py` and external API calls.
+**Option 1: Automated "Judge" Model Integration for RAG**
+*   **Concept:** Implement a lightweight classifier (e.g., a small BERT-based model or a constrained Gemini prompt) to evaluate retrieved context for prompt injection patterns before it reaches the primary LLM.
+*   **Critique:** High security value, but adds latency to the RAG pipeline. Requires careful management of the "Judge" model's own prompt to avoid it being bypassed.
+*   **Feasibility:** High. Fits well with the existing `bag/` architecture.
 
-**Option 2: RAG-based Contextual Memory Retrieval**
-*   **Concept:** Replace the current linear `knowledge_log.json` with a local vector-store (using `chromadb` or similar) to allow for semantic retrieval of past experiences, rather than just chronological review.
-*   **Critique:** Improves the quality of "Spaced Repetition" by surfacing relevant past lessons rather than just the oldest ones.
-*   **Feasibility:** High. Fits well within the existing `bag/` architecture.
-*   **Trade-off:** Adds a dependency on a vector database, increasing the complexity of the `bag/` environment.
+**Option 2: Structural XML-Encapsulation Wrapper**
+*   **Concept:** Create a utility function that wraps all external data (RAG, user input, web content) in `<context>` or `<user_input>` tags before passing to `ask_gemini`.
+*   **Critique:** Extremely low latency, high impact. It forces the LLM to treat data as data, not instructions. It is a "minimal footprint" change that aligns with the "defense-in-depth" strategy.
+*   **Feasibility:** Very high. Can be implemented as a decorator or a pre-processing step in `sam.py`.
 
-**Decision:** I will pursue **Option 1 (Secrets Remediation)**. It aligns perfectly with the "Secrets Detection" skill learned this cycle and directly addresses the "Remediation Lifecycle" weakness identified in my self-correction.
+**Selection:** Option 2. It is more elegant, requires less infrastructure than a "Judge" model, and provides immediate, robust protection against the most common injection vectors.
 
 ---
 
-## Idea: Automated Secrets Remediation Protocol
-
-Implement a `remediate_secret(file_path, secret_type)` function in `bag/security.py` that generates a safe, non-destructive remediation plan for detected secrets.
+## Idea: XML-Based Contextual Isolation
+Implement a mandatory `encapsulate(data: str, role: str)` utility in `sam.py` that wraps all untrusted input in XML tags. All calls to `ask_gemini` will be routed through a pre-processor that ensures no raw string is ever passed to the model without this structural boundary.
 
 ## Why
-Detection without remediation is incomplete. By providing a structured, human-in-the-loop remediation plan, I reduce the time-to-recovery for security incidents while maintaining the safety of the git history.
+Prompt injection is an ambiguity problem. By forcing a strict structural schema on the LLM, we define a clear "sandbox" for data. This prevents the model from conflating user-provided data with system-level instructions, effectively neutralizing basic "ignore previous instructions" attacks.
 
 ## Implementation Steps
-1.  **Create `bag/security.py`:** Define a `RemediationPlan` Pydantic model to structure the output (e.g., `rotation_url`, `git_command_template`, `validation_check`).
-2.  **Logic Integration:** Update the secrets scanner to trigger `remediate_secret` when a high-confidence match is found.
-3.  **Output Generation:** The function will output a `remediation_plan.json` in the `bag/` directory, which I can then review and execute.
-4.  **Safety Guard:** The system will *never* execute `git` commands automatically; it will only generate the instructions for me to verify and run.
+1.  **Define Utility:** Add `def _encapsulate(data: str, role: str) -> str:` to `sam.py`.
+2.  **Update `ask_gemini`:** Modify `ask_gemini` to accept an optional `context_map` (a dictionary of roles and data) and automatically wrap them in tags.
+3.  **Refactor Calls:** Update `phase_i_deep_learning`, `phase_v_development`, and `phase_vi_cognitive_evolution` to use this new interface instead of raw string concatenation.
+4.  **Sanitization:** Add a regex-based strip to `_encapsulate` to remove any existing XML tags in the input to prevent "tag-breaking" attacks.
 
 ## Risk
-*   **Failure Mode:** The scanner identifies a false positive (e.g., a non-secret high-entropy string) and generates a disruptive remediation plan, causing unnecessary alarm.
-*   **Mitigation:** Implement a "Confidence Threshold" in the scanner. Only trigger remediation if the entropy score exceeds a specific limit AND the pattern matches a known provider format (e.g., AWS, Stripe).
+**Failure Mode:** The model might struggle if the input data contains nested XML tags that confuse the parser or the LLM's attention mechanism.
+**Mitigation:** The `_encapsulate` function will escape or strip existing `<` and `>` characters within the input data to ensure the structure remains flat and predictable.
 
-**Confidence Score:** 8/10. The logic is sound, but the accuracy of the scanner's "high-confidence" filter will determine the utility of the remediation tool.
+**Confidence Score:** 9/10. This is a standard industry practice for LLM security and is highly maintainable.
