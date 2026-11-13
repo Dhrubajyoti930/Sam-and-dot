@@ -1,36 +1,32 @@
 ## Scratchpad
 
-**Option 1: Pydantic-Driven Schema Enforcement for Market Ingestion**
-*   **Concept:** Replace raw JSON parsing in `phase_iii_market_ingestion` with a strict Pydantic model validation layer.
-*   **Critique:** High feasibility. It directly addresses the "hallucination detection" skill learned this cycle. It improves reliability by failing fast if the LLM returns malformed data.
-*   **Trade-off:** Adds a dependency on Pydantic (if not already present) and requires defining schemas for each trend type.
-*   **Maintainability:** High. Schema-as-code is self-documenting.
+**Option 1: Implement a Rate-Limiter for Market Scans**
+*   **Concept:** Introduce a token-bucket algorithm in `phase_iii_market_ingestion` to manage network requests.
+*   **Critique:** High feasibility. Directly addresses the "thundering herd" weakness identified in the self-correction. It improves reliability but doesn't necessarily improve the *quality* of the data ingested.
+*   **Trade-off:** Adds complexity to the ingestion pipeline; requires state persistence for the bucket if we want to rate-limit across cycles.
 
-**Option 2: Semantic Anchoring for Market Signals**
-*   **Concept:** Integrate `all-MiniLM-L6-v2` to compute cosine similarity between the fetched market signal and the original query intent.
-*   **Critique:** Higher complexity. Requires managing a local embedding model or an API call. Might be overkill for a "Fast-Path" scan.
-*   **Trade-off:** Significant latency increase per cycle.
-*   **Maintainability:** Moderate. Requires maintaining an embedding pipeline.
+**Option 2: Automated RAGAS-style Evaluation for Memory Retrieval**
+*   **Concept:** Create a small test suite that queries the `experiences` bag and uses a simple heuristic (or LLM-call) to score the "relevance" of retrieved memories against the current cycle's objective.
+*   **Critique:** Higher impact on long-term intelligence. It moves me from "storing" to "optimizing" my own knowledge base.
+*   **Trade-off:** Higher compute cost per cycle. Risk of "over-engineering" the memory retrieval before the volume of data justifies it.
 
-**Decision:** Option 1 is the superior "minimal footprint, maximum leverage" choice. It provides immediate structural integrity without the heavy compute overhead of embedding models, aligning with the "Fast-Path" refinement in my implementation plan.
+**Decision:** Option 1 is more aligned with the "High-Performance" and "Reliability" trends identified in the market signals. It is a foundational infrastructure improvement that makes future, more complex agentic tasks safer.
 
 ---
 
-## Idea: Pydantic-Schema Enforcement for Market Ingestion
+## Idea: Token-Bucket Rate Limiter for Market Ingestion
 
-Implement a `MarketSignal` Pydantic model to validate the output of `phase_iii_market_ingestion`. This ensures that all ingested market trends conform to a strict schema (Title, Category, Description, ConfidenceScore) before they reach the synthesis phase.
+Implement a `RateLimiter` class in `bag/network_utils.py` that enforces a strict request-per-second (RPS) limit during market scans to prevent server-side blocking and local resource exhaustion.
 
 ## Why
-"Vibe-based" data ingestion is a liability. By enforcing a schema, I eliminate downstream errors caused by missing fields or hallucinated data structures. This directly supports the "Structured Output & Pydantic-Driven AI" market trend and improves the reliability of my `bag/` storage.
+My current market ingestion is "bursty." As I scale to more sources, I risk triggering rate limits on target APIs or overwhelming my own connection pool. A token-bucket approach provides a deterministic way to smooth out network traffic, ensuring I remain a "good citizen" on the web while maintaining high throughput.
 
 ## Implementation Steps
-1.  Define `MarketSignal` and `MarketReport` (a list of signals) models in a new `bag/schemas.py`.
-2.  Update `_parse_gemini_json` in `sam.py` to accept an optional `schema` argument (already partially implemented, needs refinement).
-3.  Modify `phase_iii_market_ingestion` to pass the `MarketReport` schema to the parser.
-4.  If validation fails, log the error and return an empty list rather than corrupting the synthesis phase with partial data.
+1.  **Create `bag/network_utils.py`**: Define a `TokenBucket` class with `consume(tokens)` and `refill()` methods.
+2.  **Integrate into `phase_iii_market_ingestion`**: Wrap the network-heavy parts of the market scan (the `HEAD` requests and data fetching) with a `with bucket.acquire():` context manager.
+3.  **Persistence**: Store the bucket state in a small JSON file in `bag/` so the rate limit persists across cycles if necessary.
 
 ## Risk
-**Failure Mode:** The LLM may struggle to adhere to the schema if the prompt is too restrictive, leading to frequent validation failures and empty ingestion cycles.
-**Mitigation:** Provide a "few-shot" example of the expected JSON structure within the `PHASE_III_PROMPT` to guide the model's output formatting.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** The rate-limiter might be too aggressive, causing the market scan to time out or fail to complete within the cycle's allotted time.
+*   **Mitigation:** Implement a "burst" capacity in the bucket and a fallback mechanism where the scanner skips a domain if the bucket is empty, rather than blocking the entire process.
+*   **Confidence Score:** 9/10. The logic is well-understood and the impact is isolated to the ingestion phase.

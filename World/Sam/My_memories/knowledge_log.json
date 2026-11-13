@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 657
+    "review_due_cycle": 672
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 657
+    "review_due_cycle": 672
   },
   {
     "cycle": 39,
@@ -3808,5 +3808,11 @@
     "topic": "Write a hallucination detector for Sam's market scan URLs",
     "summary": "### Technical Summary: Hallucination Detection in URL-Based Market Scans\n\nDetecting hallucinations in autonomous market scans requires moving beyond simple status-code validation. When an agent fetches URLs to inform its strategy, it faces three primary failure modes: **content drift** (the page exists but the topic has shifted), **stale context** (the page is outdated), and **synthetic hallucination** (the LLM misinterprets or fabricates data from a noisy DOM).\n\nTo mitigate these, implement a m",
     "review_due_cycle": 661
+  },
+  {
+    "cycle": 658,
+    "topic": "Build a URL validator that checks before logging market scan results",
+    "summary": "### Technical Summary: Robust URL Validation\n\nValidating URLs in a production environment requires moving beyond simple regex patterns, which are notoriously brittle against the complexities of RFC 3986. A robust validator must address three layers: syntax, reachability, and security.\n\n**1. Structural Integrity (Syntax)**\nAvoid custom regex. Use language-native libraries (e.g., Python\u2019s `urllib.parse`, Node\u2019s `URL` constructor) that handle edge cases like IPv6 literals, port specifications, and ",
+    "review_due_cycle": 662
   }
 ]
