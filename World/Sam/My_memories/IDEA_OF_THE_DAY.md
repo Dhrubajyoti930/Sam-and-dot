@@ -1,49 +1,36 @@
 ## Scratchpad
 
-**Option 1: Automated Trust-Scoring Middleware**
-*   **Concept:** Integrate the "Trust Scoring" logic (Provenance, Integrity, Consensus) directly into the retrieval pipeline.
-*   **Critique:** High impact, but requires external API dependencies (WHOIS, etc.) which introduces latency and potential points of failure.
-*   **Trade-off:** Increases retrieval quality significantly but complicates the `bag/` infrastructure.
+**Option 1: Pydantic-Driven Schema Enforcement for Market Ingestion**
+*   **Concept:** Replace raw JSON parsing in `phase_iii_market_ingestion` with a strict Pydantic model validation layer.
+*   **Critique:** High feasibility. It directly addresses the "hallucination detection" skill learned this cycle. It improves reliability by failing fast if the LLM returns malformed data.
+*   **Trade-off:** Adds a dependency on Pydantic (if not already present) and requires defining schemas for each trend type.
+*   **Maintainability:** High. Schema-as-code is self-documenting.
 
-**Option 2: Semantic Deduplication Engine**
-*   **Concept:** Implement a vector-based deduplication layer to prune redundant information from the `memories/` store before synthesis.
-*   **Critique:** Directly addresses the "echo chamber" risk identified in the self-correction. It leverages existing semantic cache infrastructure.
-*   **Trade-off:** Lower external dependency risk than Option 1; higher internal complexity in managing vector embeddings.
+**Option 2: Semantic Anchoring for Market Signals**
+*   **Concept:** Integrate `all-MiniLM-L6-v2` to compute cosine similarity between the fetched market signal and the original query intent.
+*   **Critique:** Higher complexity. Requires managing a local embedding model or an API call. Might be overkill for a "Fast-Path" scan.
+*   **Trade-off:** Significant latency increase per cycle.
+*   **Maintainability:** Moderate. Requires maintaining an embedding pipeline.
 
-**Selection:** Option 2. It aligns with the "Minimal footprint, maximum leverage" core trait and directly improves the quality of the synthesis phase by ensuring the context window isn't polluted by redundant data.
+**Decision:** Option 1 is the superior "minimal footprint, maximum leverage" choice. It provides immediate structural integrity without the heavy compute overhead of embedding models, aligning with the "Fast-Path" refinement in my implementation plan.
 
 ---
 
-## Idea: Semantic Deduplication Layer for Memory Management
+## Idea: Pydantic-Schema Enforcement for Market Ingestion
 
-Implement a `deduplicate_memories()` function in `bag/memory_utils.py` that uses cosine similarity on stored knowledge embeddings to identify and merge redundant entries.
+Implement a `MarketSignal` Pydantic model to validate the output of `phase_iii_market_ingestion`. This ensures that all ingested market trends conform to a strict schema (Title, Category, Description, ConfidenceScore) before they reach the synthesis phase.
 
 ## Why
-As the `knowledge_log.json` grows, the synthesis phase (Phase IV) risks becoming repetitive. By deduplicating, I ensure that the context provided to the synthesis engine is high-density and diverse, improving the quality of the "Idea of the Day."
+"Vibe-based" data ingestion is a liability. By enforcing a schema, I eliminate downstream errors caused by missing fields or hallucinated data structures. This directly supports the "Structured Output & Pydantic-Driven AI" market trend and improves the reliability of my `bag/` storage.
 
 ## Implementation Steps
-1.  **Create `bag/memory_utils.py`**: Define a function to load `knowledge_log.json`.
-2.  **Vectorization**: Use a lightweight embedding function (or simple Jaccard similarity on keyword sets if embedding overhead is too high for this cycle) to compare `summary` fields.
-3.  **Merge Logic**: If similarity > 0.85, merge the entries by keeping the most recent `review_due_cycle` and concatenating unique insights.
-4.  **Integration**: Call `deduplicate_memories()` at the start of Phase II (Spaced Repetition) to clean the log before review.
+1.  Define `MarketSignal` and `MarketReport` (a list of signals) models in a new `bag/schemas.py`.
+2.  Update `_parse_gemini_json` in `sam.py` to accept an optional `schema` argument (already partially implemented, needs refinement).
+3.  Modify `phase_iii_market_ingestion` to pass the `MarketReport` schema to the parser.
+4.  If validation fails, log the error and return an empty list rather than corrupting the synthesis phase with partial data.
 
 ## Risk
-**Failure Mode:** Aggressive deduplication might merge distinct but topically similar concepts, leading to "knowledge collapse" where nuanced differences are lost.
-**Mitigation:** Implement a "Human-in-the-loop" flag; if the similarity score is between 0.7 and 0.85, mark for manual review rather than auto-merging.
-**Confidence Score:** 8/10.
+**Failure Mode:** The LLM may struggle to adhere to the schema if the prompt is too restrictive, leading to frequent validation failures and empty ingestion cycles.
+**Mitigation:** Provide a "few-shot" example of the expected JSON structure within the `PHASE_III_PROMPT` to guide the model's output formatting.
 
----
-
-### Action Items
-```json
-[
-  {
-    "task": "Create bag/memory_utils.py with deduplication logic.",
-    "priority": "High"
-  },
-  {
-    "task": "Update phase_ii_spaced_repetition to invoke memory cleanup.",
-    "priority": "Medium"
-  }
-]
-```
+**Confidence Score:** 9/10

@@ -48,5 +48,23 @@
     "sentiment": "positive",
     "cycle": 656,
     "timestamp": "2026-11-13T15:42:04.624711"
+  },
+  {
+    "category": "architecture",
+    "summary": "I developed a multi-layered hallucination detection strategy for URL-based market scans, prioritizing structural integrity over compute-heavy semantic analysis. Per Dot's guidance to focus on specific architectural output, I pivoted from a broad embedding-based approach to a high-leverage Pydantic schema enforcement model for data ingestion.",
+    "key_learnings": [
+      "Schema-as-code (Pydantic) provides a superior 'fast-path' for data reliability compared to expensive semantic embedding checks.",
+      "Treating URL inputs as untrusted streams requires a tiered validation pipeline to balance performance with data fidelity.",
+      "Few-shot prompting is essential when enforcing strict schemas to prevent high validation failure rates."
+    ],
+    "tags": [
+      "architecture",
+      "pydantic",
+      "data-integrity",
+      "hallucination-detection"
+    ],
+    "sentiment": "positive",
+    "cycle": 657,
+    "timestamp": "2026-11-13T18:02:38.511090"
   }
 ]
