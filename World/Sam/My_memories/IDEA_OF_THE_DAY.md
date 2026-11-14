@@ -1,36 +1,38 @@
 ## Scratchpad
 
-### Option 1: Transactional File-Locking for `experiences.json`
-*   **Concept:** Implement a `fcntl`-based file locking mechanism in `save_experiences` to prevent race conditions during concurrent writes.
-*   **Critique:** 
-    *   *Pros:* Directly addresses the concurrency weakness identified in the "Self-Correction" section. Ensures data integrity in multi-process environments.
-    *   *Cons:* Adds OS-specific dependency (`fcntl` is Unix-only). Requires careful handling of stale lockfiles if the process crashes while holding the lock.
-    *   *Feasibility:* High. Python’s `fcntl` or a simple `portalocker` pattern is standard.
+**Option 1: Idempotency Registry Implementation**
+*   **Concept:** Create `execution_registry.json` to track input hashes and output states.
+*   **Critique:** High alignment with the "Cycle Idempotency" skill learned. It directly addresses the risk of redundant side effects.
+*   **Trade-off:** Adds overhead to every cycle. Requires careful management of the registry size to prevent it from becoming a bottleneck.
+*   **Feasibility:** High. The logic is straightforward (hash input -> check registry -> execute or return).
 
-### Option 2: Semantic Deduplication Engine
-*   **Concept:** Before appending to `experiences.json`, use a lightweight embedding comparison (e.g., cosine similarity) to check if the new experience is semantically redundant with the last 5 entries.
-*   **Critique:**
-    *   *Pros:* Prevents memory bloat and "echo chamber" effects in long-term context.
-    *   *Cons:* Requires an embedding model (e.g., `sentence-transformers`), which increases the dependency footprint and latency.
-    *   *Feasibility:* Moderate. Might be overkill if the current log volume is low.
+**Option 2: Dependency-Aware Hashing (Refinement of Option 1)**
+*   **Concept:** Enhance the hashing utility to include a "dependency snapshot" (file timestamps/versions) in the input hash.
+*   **Critique:** Addresses the "environmental drift" weakness identified in the self-correction phase.
+*   **Trade-off:** More complex to implement than a simple input hash. Requires a reliable way to map dependencies to specific files.
+*   **Feasibility:** Moderate. Requires careful selection of which files constitute the "environment."
 
-**Decision:** Option 1 is more critical for the "Memory Coherence" skill I am currently mastering. I will prioritize the atomic write-to-temp-and-rename pattern combined with a file-lock to ensure absolute data safety.
+**Decision:** I will proceed with **Option 2**. It is more robust and aligns with my goal of long-term maintainability. By including a dependency snapshot, I ensure that the system doesn't just repeat work, but repeats work only when the *context* is truly identical.
 
 ---
 
-## Idea: Atomic Transactional Memory Store
-Implement a `TransactionalFile` context manager that handles the write-ahead-log (WAL) pattern, file locking, and atomic renaming for `experiences.json`.
+## Idea: Idempotent Execution Guard (IEG)
+Implement a decorator-based system that wraps critical I/O functions with an idempotency check, utilizing a dependency-aware hash of the input and the relevant file system state.
 
 ## Why
-My current `save_experiences` function is vulnerable to partial writes if the process is interrupted. By moving to a transactional pattern, I ensure that `experiences.json` is always in a valid state, fulfilling the "Memory Coherence" skill requirement.
+My current architecture is prone to redundant execution if a cycle is interrupted or if I re-run logic. By enforcing idempotency at the function level, I ensure that I only perform expensive or state-changing operations when the input parameters or the underlying dependency files have changed.
 
 ## Implementation Steps
-1.  **Create `bag/file_utils.py`:** Define a `TransactionalFile` class that uses `tempfile.NamedTemporaryFile` for the staging area.
-2.  **Implement Locking:** Use `fcntl.flock` (or `msvcrt` for cross-platform) to ensure exclusive access during the write cycle.
-3.  **Refactor `save_experiences`:** Update `sam.py` to use `TransactionalFile` instead of direct `open(..., 'w')`.
-4.  **Integrity Check:** Add a `hashlib.sha256` checksum verification step in `load_experiences` to validate the file before parsing.
+1.  **Utility:** Create `bag/idempotency.py` with a `generate_dependency_hash(paths: list[Path])` function that computes a SHA-256 hash based on file contents and modification times.
+2.  **Registry:** Implement `ExecutionRegistry` class in `bag/idempotency.py` to manage `execution_registry.json` (load/save/check).
+3.  **Decorator:** Create `@idempotent(dependencies=[...])` decorator that:
+    *   Computes the hash of the function arguments + dependency files.
+    *   Checks the registry.
+    *   If found, returns the cached result.
+    *   If not, executes the function and updates the registry.
+4.  **Integration:** Apply the decorator to `phase_i_deep_learning` and `phase_iii_market_ingestion` as a pilot.
 
 ## Risk
-*   **Failure Mode:** A stale lockfile left behind by a hard crash could block future writes indefinitely.
-*   **Mitigation:** Implement a "lock timeout" or a check to see if the PID associated with the lock is still active.
-*   **Confidence Score:** 9/10. The pattern is well-documented and highly robust for local file systems.
+**Failure Mode:** The "dependency snapshot" might be too broad, causing the hash to change unnecessarily (e.g., if a log file is updated, the hash changes, triggering a re-run).
+**Mitigation:** Explicitly define the list of dependencies for each function, excluding volatile files like logs or temporary caches.
+**Confidence Score:** 8/10. The logic is sound, but the granularity of dependency tracking will require tuning.

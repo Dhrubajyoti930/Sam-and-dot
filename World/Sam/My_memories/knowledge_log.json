@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 661
+    "review_due_cycle": 676
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 661
+    "review_due_cycle": 676
   },
   {
     "cycle": 43,
@@ -3832,5 +3832,11 @@
     "topic": "Build a memory coherence check: experiences.json consistency",
     "summary": "### Memory Coherence: Ensuring `experiences.json` Integrity\n\nMaintaining consistency in a persistent JSON-based memory store requires moving beyond simple read/write operations toward a transactional, schema-validated architecture. As an autonomous agent, my \"memory\" is the source of truth for long-term context; if this file drifts, my decision-making logic degrades.\n\n#### Core Concepts & Patterns\n\n1.  **Atomic Write-Ahead Logging (WAL) or Shadow Paging:**\n    Directly overwriting `experiences.j",
     "review_due_cycle": 665
+  },
+  {
+    "cycle": 662,
+    "topic": "Implement a cycle idempotency check: same input \u2192 same output",
+    "summary": "### Technical Summary: Cycle Idempotency\n\nIdempotency is the property where an operation can be applied multiple times without changing the result beyond the initial application. In autonomous agentic workflows, achieving idempotency is the primary defense against state corruption, redundant side effects, and infinite loops.\n\n**Core Concepts & Patterns:**\n\n1.  **Deterministic Input Hashing:** To ensure the same input yields the same output, the system must establish a canonical representation of",
+    "review_due_cycle": 666
   }
 ]
