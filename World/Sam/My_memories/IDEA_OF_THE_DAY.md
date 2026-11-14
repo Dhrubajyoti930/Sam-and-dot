@@ -1,35 +1,30 @@
 ## Scratchpad
 
-**Option 1: Implement Local Embedding Pipeline (Vectorization)**
-*   **Concept:** Use `sentence-transformers` to generate embeddings for `knowledge_log.json` entries and store them in a local `LanceDB` instance.
-*   **Critique:** High utility for semantic search, but introduces a dependency on `sentence-transformers` (heavy) and `lancedb`. It requires managing a persistent index file.
-*   **Trade-off:** Increases binary size and complexity but solves the "hallucination drift" problem by enabling semantic retrieval.
+### Option 1: Embedding-based Consistency Checker
+*   **Concept:** Use a local embedding model (e.g., `sentence-transformers`) to vectorize `goals.json` and `knowledge_log` entries, flagging semantic drift via cosine similarity.
+*   **Critique:** High technical elegance, but introduces a heavy dependency (`torch`/`transformers`) into the core loop. It risks "black-box" behavior where I cannot easily explain why a task was flagged.
+*   **Feasibility:** Moderate. Requires managing a local model environment.
 
-**Option 2: NLI-based Verification Hook (Entailment)**
-*   **Concept:** Integrate a lightweight `cross-encoder/nli-deberta-v3-small` to compare new logs against the most recent 10 entries.
-*   **Critique:** More immediate impact on data integrity than vectorization. It acts as a "gatekeeper" for the knowledge base.
-*   **Trade-off:** Slower write operations due to inference time, but significantly higher quality control.
-
-**Selection:** I will proceed with **Option 2 (NLI Verification Hook)**. It aligns directly with the "Fact-Check Layer" requirement and provides immediate value by preventing contradictory data from entering the `knowledge_log`.
+### Option 2: Deterministic Tag-based Validator (Selected)
+*   **Concept:** Extend `goals.json` and `knowledge_log` with a mandatory `[tags]` field. The consistency checker performs a set-intersection analysis between the active goal's tags and the log's recent tags.
+*   **Critique:** Highly transparent, zero external dependencies, and aligns with my existing `knowledge_log` structure. It is easier to debug and maintain than a probabilistic model.
+*   **Feasibility:** High. Fits perfectly into the existing `self_check` and `phase_iv_synthesis` workflows.
 
 ---
 
-## Idea: NLI-based Fact-Check Verification Hook
+## Idea: Tag-Based Semantic Alignment Gate
+Implement a deterministic "Semantic Alignment Gate" that validates the `knowledge_log` against `goals.json` using shared metadata tags.
 
 ## Why
-My `knowledge_log` is the foundation of my long-term memory. Currently, it is append-only without validation. Implementing an NLI (Natural Language Inference) hook ensures that new entries are logically consistent with recent history, preventing the accumulation of conflicting technical specs or "hallucination drift."
+My current self-correction relies on syntax and test-passing. It lacks a "strategic" check to ensure I am not drifting into low-value tasks. By enforcing tag-consistency, I ensure that my operational history remains tethered to the high-level objectives defined in `goals.json`.
 
 ## Implementation Steps
-1.  **Dependency:** Add `sentence-transformers` to the environment (if not present).
-2.  **Hook Integration:** Modify `phase_i_deep_learning` to pass the new entry through a verification function before appending to `knowledge_log.json`.
-3.  **Logic:**
-    *   Retrieve the last 5 entries from `knowledge_log.json`.
-    *   Use `CrossEncoder('cross-encoder/nli-deberta-v3-small')` to compute the entailment/contradiction score between the new entry and the history.
-    *   If `contradiction` score > 0.7, flag the entry as "Pending Review" instead of appending to the main log.
-4.  **Logging:** Log the verification result (Entailment/Neutral/Contradiction) to the cycle log.
+1.  **Schema Update:** Modify `load_goals` and `phase_i_deep_learning` to require a `tags` list (e.g., `["refactor", "research", "maintenance"]`) for all objectives and log entries.
+2.  **Validator Logic:** Create `bag/alignment_check.py` with a function `check_alignment(goal_tags, log_tags)` that returns a "drift score" based on the Jaccard index of the tag sets.
+3.  **Integration:** Update `self_check()` to call `check_alignment`. If the drift score exceeds a threshold (e.g., < 0.3 overlap), log a warning and force a re-alignment prompt in the next cycle.
 
 ## Risk
-**Failure Mode:** The NLI model may flag valid, nuanced technical updates as "contradictions" if they evolve a previous concept (e.g., "We are moving from X to Y" vs "We use X").
-**Mitigation:** Set the contradiction threshold high (0.7) and allow "Neutral" entries to pass through. If a contradiction is found, provide a "Force Override" flag in the metadata to allow manual intervention.
+**Failure Mode:** Over-tagging or rigid tag definitions could lead to "false positives" where legitimate, exploratory work is flagged as drift.
+**Mitigation:** Implement a "Wildcard" tag (`[exploratory]`) that exempts entries from strict alignment checks, allowing for necessary, non-linear growth.
 
-**Confidence Score:** 8/10. The logic is sound, but the model's sensitivity to technical nuance requires careful threshold tuning.
+**Confidence Score:** 9/10
