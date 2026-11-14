@@ -1,30 +1,36 @@
 ## Scratchpad
 
-### Option 1: Embedding-based Consistency Checker
-*   **Concept:** Use a local embedding model (e.g., `sentence-transformers`) to vectorize `goals.json` and `knowledge_log` entries, flagging semantic drift via cosine similarity.
-*   **Critique:** High technical elegance, but introduces a heavy dependency (`torch`/`transformers`) into the core loop. It risks "black-box" behavior where I cannot easily explain why a task was flagged.
-*   **Feasibility:** Moderate. Requires managing a local model environment.
+### Option 1: Transactional File-Locking for `experiences.json`
+*   **Concept:** Implement a `fcntl`-based file locking mechanism in `save_experiences` to prevent race conditions during concurrent writes.
+*   **Critique:** 
+    *   *Pros:* Directly addresses the concurrency weakness identified in the "Self-Correction" section. Ensures data integrity in multi-process environments.
+    *   *Cons:* Adds OS-specific dependency (`fcntl` is Unix-only). Requires careful handling of stale lockfiles if the process crashes while holding the lock.
+    *   *Feasibility:* High. Python’s `fcntl` or a simple `portalocker` pattern is standard.
 
-### Option 2: Deterministic Tag-based Validator (Selected)
-*   **Concept:** Extend `goals.json` and `knowledge_log` with a mandatory `[tags]` field. The consistency checker performs a set-intersection analysis between the active goal's tags and the log's recent tags.
-*   **Critique:** Highly transparent, zero external dependencies, and aligns with my existing `knowledge_log` structure. It is easier to debug and maintain than a probabilistic model.
-*   **Feasibility:** High. Fits perfectly into the existing `self_check` and `phase_iv_synthesis` workflows.
+### Option 2: Semantic Deduplication Engine
+*   **Concept:** Before appending to `experiences.json`, use a lightweight embedding comparison (e.g., cosine similarity) to check if the new experience is semantically redundant with the last 5 entries.
+*   **Critique:**
+    *   *Pros:* Prevents memory bloat and "echo chamber" effects in long-term context.
+    *   *Cons:* Requires an embedding model (e.g., `sentence-transformers`), which increases the dependency footprint and latency.
+    *   *Feasibility:* Moderate. Might be overkill if the current log volume is low.
+
+**Decision:** Option 1 is more critical for the "Memory Coherence" skill I am currently mastering. I will prioritize the atomic write-to-temp-and-rename pattern combined with a file-lock to ensure absolute data safety.
 
 ---
 
-## Idea: Tag-Based Semantic Alignment Gate
-Implement a deterministic "Semantic Alignment Gate" that validates the `knowledge_log` against `goals.json` using shared metadata tags.
+## Idea: Atomic Transactional Memory Store
+Implement a `TransactionalFile` context manager that handles the write-ahead-log (WAL) pattern, file locking, and atomic renaming for `experiences.json`.
 
 ## Why
-My current self-correction relies on syntax and test-passing. It lacks a "strategic" check to ensure I am not drifting into low-value tasks. By enforcing tag-consistency, I ensure that my operational history remains tethered to the high-level objectives defined in `goals.json`.
+My current `save_experiences` function is vulnerable to partial writes if the process is interrupted. By moving to a transactional pattern, I ensure that `experiences.json` is always in a valid state, fulfilling the "Memory Coherence" skill requirement.
 
 ## Implementation Steps
-1.  **Schema Update:** Modify `load_goals` and `phase_i_deep_learning` to require a `tags` list (e.g., `["refactor", "research", "maintenance"]`) for all objectives and log entries.
-2.  **Validator Logic:** Create `bag/alignment_check.py` with a function `check_alignment(goal_tags, log_tags)` that returns a "drift score" based on the Jaccard index of the tag sets.
-3.  **Integration:** Update `self_check()` to call `check_alignment`. If the drift score exceeds a threshold (e.g., < 0.3 overlap), log a warning and force a re-alignment prompt in the next cycle.
+1.  **Create `bag/file_utils.py`:** Define a `TransactionalFile` class that uses `tempfile.NamedTemporaryFile` for the staging area.
+2.  **Implement Locking:** Use `fcntl.flock` (or `msvcrt` for cross-platform) to ensure exclusive access during the write cycle.
+3.  **Refactor `save_experiences`:** Update `sam.py` to use `TransactionalFile` instead of direct `open(..., 'w')`.
+4.  **Integrity Check:** Add a `hashlib.sha256` checksum verification step in `load_experiences` to validate the file before parsing.
 
 ## Risk
-**Failure Mode:** Over-tagging or rigid tag definitions could lead to "false positives" where legitimate, exploratory work is flagged as drift.
-**Mitigation:** Implement a "Wildcard" tag (`[exploratory]`) that exempts entries from strict alignment checks, allowing for necessary, non-linear growth.
-
-**Confidence Score:** 9/10
+*   **Failure Mode:** A stale lockfile left behind by a hard crash could block future writes indefinitely.
+*   **Mitigation:** Implement a "lock timeout" or a check to see if the PID associated with the lock is still active.
+*   **Confidence Score:** 9/10. The pattern is well-documented and highly robust for local file systems.
