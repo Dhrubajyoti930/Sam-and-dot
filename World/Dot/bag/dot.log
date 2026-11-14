@@ -4371,3 +4371,41 @@
 2026-11-14 12:26:16,179 [DOT][INFO] Today is Saturday — inbox check reserved for Sunday.
 2026-11-14 12:26:16,183 [DOT][INFO] Worklog: no stale entries.
 2026-11-14 12:26:16,929 [DOT][INFO] Dot's daily run complete.
+2026-11-14 18:47:14,637 [DOT][INFO] ═══════════════════════════════════
+2026-11-14 18:47:14,637 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-11-14 18:47:14,637 [DOT][INFO] ═══════════════════════════════════
+2026-11-14 18:47:14,637 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-11-14 18:47:14,649 [DOT][INFO] Task 1: chunk 1/8 from cache.
+2026-11-14 18:47:14,649 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-11-14 18:47:14,649 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-11-14 18:47:14,650 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-11-14 18:47:14,650 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-11-14 18:47:14,650 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-11-14 18:47:14,651 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-11-14 18:47:14,651 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-11-14 18:47:30,679 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-11-14 18:47:35,061 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-11-14 18:47:35,070 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-11-14 18:47:43,071 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-11-14 18:47:43,072 [DOT][INFO] Task 2: 3 experiences → 1 batch(es) of ≤5.
+2026-11-14 18:47:51,073 [DOT][INFO] Task 2: batch 1/1 — cycles [659, 660, 661]
+2026-11-14 18:47:59,088 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-11-14 18:48:00,630 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-11-14 18:48:00,634 [DOT][INFO] Experiences curated: 0 kept, 0 forgotten, 1 consolidated. Total now: 1.
+2026-11-14 18:48:00,634 [DOT][INFO] Letter written to Sam: Letter_20261114T184800Z.md
+2026-11-14 18:48:00,634 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-11-14 18:48:00,634 [DOT][INFO] Finding best recipient for: Tiago Henriques, maintainer of 'python-dependency-injector'. His project is widely used for DI in smaller Python ecosyst
+2026-11-14 18:48:08,650 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-11-14 18:48:09,280 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-11-14 18:48:09,283 [DOT][INFO] Recipient match:  <> confidence=0 — Tiago Henriques is not present in the provided list of people.
+2026-11-14 18:48:09,283 [DOT][WARNING] Match confidence 0 below threshold 7 — skipping.
+2026-11-14 18:48:09,283 [DOT][WARNING] No suitable recipient found in emails.json — request preserved.
+2026-11-14 18:48:09,283 [DOT][INFO] Appended to Letter_20261114T184800Z.md: Email Dispatch — No Match
+2026-11-14 18:48:09,284 [DOT][INFO] Appended to Letter_20261114T184800Z.md: Email Dispatch
+2026-11-14 18:48:17,284 [DOT][INFO] ── Task 4: Bag Review ──
+2026-11-14 18:48:25,298 [DOT][INFO] Dot cache hit.
+2026-11-14 18:48:25,298 [DOT][INFO] Bag review complete.
+2026-11-14 18:48:25,298 [DOT][INFO] Appended to Letter_20261114T184800Z.md: Bag Excavation Findings
+2026-11-14 18:48:25,298 [DOT][INFO] Today is Saturday — inbox check reserved for Sunday.
+2026-11-14 18:48:25,301 [DOT][INFO] Worklog: no stale entries.
+2026-11-14 18:48:26,083 [DOT][INFO] Dot's daily run complete.
