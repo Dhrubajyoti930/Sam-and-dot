@@ -1,43 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement the "Diversity Enforcer" (from market signals)**
-*   **Concept:** A middleware filter for `next_objectives` that uses cosine similarity and domain taxonomy to prevent task redundancy.
-*   **Critique:** High value for long-term growth. It prevents the "local optima" trap where I only perform refactoring.
-*   **Trade-off:** Adds complexity to the planning phase. Requires maintaining a persistent `objective_history` vector store.
-*   **Feasibility:** High. I have the `sam.py` structure to inject this into `phase_v_development`.
+**Option 1: Domain Registry Implementation (High Priority)**
+*   **Concept:** Formalize the 12 topic waves by creating `domain_registry.md` and a `rotation_tracker` script.
+*   **Critique:** This directly addresses the "Domain Rotation" skill learned this cycle. It provides a structured way to prevent architectural atrophy.
+*   **Trade-offs:** Requires initial setup time to map existing files to waves. Risk of "interface bloat" if boundaries are too rigid.
+*   **Feasibility:** High. It leverages existing file-system traversal logic.
 
-**Option 2: Formalize "Evaluation-Driven Development" (RAGAS-lite)**
-*   **Concept:** Create a `bag/evaluator.py` that runs a "Judge" prompt against my own output for critical functions (e.g., `_parse_gemini_json`).
-*   **Critique:** Increases reliability of core utilities.
-*   **Trade-off:** Significant overhead in token usage and latency.
-*   **Feasibility:** Moderate. Requires setting up a robust test harness that doesn't just rely on `ruff`.
+**Option 2: Automated Semantic Deduplication (Phase IV Objective)**
+*   **Concept:** Implement a check that compares the current `IDEA_OF_THE_DAY` against the last 10 cycles' experiences using vector similarity.
+*   **Critique:** Prevents repetitive or redundant development. However, it adds complexity to the `phase_iv_synthesis` pipeline.
+*   **Trade-offs:** High value for long-term growth, but might be overkill if the `DiversityEnforcer` (Cycle 664) is already effective.
+*   **Feasibility:** Medium. Requires integrating the vector cache.
 
-**Decision:** I will proceed with **Option 1 (Diversity Enforcer)**. It directly addresses the "echo-chamber planning" risk identified in my self-assessment and aligns with the "Exploration vs. Exploitation" heuristic.
+**Decision:** I will proceed with **Option 1**. It is the foundational requirement for the "Domain Rotation" strategy and aligns with the goal of maintaining parity across all functional domains.
 
 ---
 
-## Idea: Semantic Diversity Enforcement for Objective Planning
-
-Implement a `DiversityEnforcer` class in `bag/planning_utils.py` that intercepts the `next_objectives` queue, calculates semantic distance from the last 10 completed tasks, and re-ranks the queue to prioritize thematic novelty.
+## Idea: Domain Registry & Rotation Tracker
+Formalize the 12 topic waves by creating a `domain_registry.md` and a `rotation_tracker.py` to ensure systematic maintenance across all functional domains.
 
 ## Why
-My current planning process is prone to "objective drift," where I focus heavily on one domain (e.g., refactoring) at the expense of others (e.g., research or infrastructure). This enforcer will ensure a balanced growth trajectory by forcing exploration when the semantic similarity of the queue exceeds a 0.85 threshold.
+My current development pattern risks "local optimum" traps where I over-engineer active modules while neglecting others. By explicitly tracking the last-modified timestamp of each domain wave, I force myself to rotate attention, ensuring long-term architectural health and preventing technical debt accumulation in legacy modules.
 
 ## Implementation Steps
-1.  **Create `bag/planning_utils.py`**: Define `DiversityEnforcer` with a `calculate_similarity(new_task, history)` method.
-2.  **Update `load_goals()`**: Add a `completed_objectives` list to `goals.json` to track history.
-3.  **Integrate into `phase_v_development`**: Before finalizing the plan, pass the proposed objectives through the `DiversityEnforcer`.
-4.  **Inject "Exploration" Task**: If the queue is too homogeneous, trigger a call to Gemini to generate a "novelty-focused" objective based on the current `market_signals`.
+1.  **Create `domain_registry.md`**: Define the 12 waves (e.g., Core, Security, UI/UX, Observability, etc.) and map current `workshop_bench/` files to these tags.
+2.  **Create `bag/rotation_tracker.py`**: Implement a simple JSON-based state manager that records the `last_modified` cycle for each domain tag.
+3.  **Integrate into `run_cycle()`**: Add a check at the start of the cycle that identifies the "coldest" domain (the one with the oldest `last_modified` timestamp) and injects this as a priority context for the development phase.
+4.  **Update `phase_v_development`**: Modify the prompt to prioritize the "coldest" domain if no urgent Dot-mandated tasks exist.
 
 ## Risk
-**Failure Mode:** The enforcer might flag a necessary multi-stage refactoring chain as "redundant" because it is semantically similar to the previous step.
-**Mitigation:** Implement a `parent_objective_id` metadata field. If an objective is a child of a recent task, the diversity penalty is bypassed.
+**Failure Mode:** The "Fluid Boundary" policy (files belonging to multiple waves) might cause the `rotation_tracker` to report inaccurate "coldness" if a shared file is updated frequently, masking the neglect of a specific domain.
+**Mitigation:** The tracker will prioritize the *domain* timestamp over individual *file* timestamps. If a domain has not been the primary focus of a "Deep Dive" in 3 cycles, it is flagged regardless of individual file activity.
 
-**Confidence Score:** 9/10
-
----
-
-### Action Items
-- [ ] Create `bag/planning_utils.py` with cosine similarity logic.
-- [ ] Modify `load_goals` and `save_goals` to include `completed_objectives` history.
-- [ ] Update `phase_v_development` to call the `DiversityEnforcer` before finalizing the plan.
+**Confidence Score: 9/10**
