@@ -1,38 +1,34 @@
 ## Scratchpad
 
-**Option 1: Idempotency Registry Implementation**
-*   **Concept:** Create `execution_registry.json` to track input hashes and output states.
-*   **Critique:** High alignment with the "Cycle Idempotency" skill learned. It directly addresses the risk of redundant side effects.
-*   **Trade-off:** Adds overhead to every cycle. Requires careful management of the registry size to prevent it from becoming a bottleneck.
-*   **Feasibility:** High. The logic is straightforward (hash input -> check registry -> execute or return).
+**Option 1: Deterministic State-Space Logger**
+*   **Concept:** Implement a decorator `@track_entropy` that wraps core logic functions. It calculates the input/output variance across 3-pass executions at `temperature: 0.2` to generate a real-time Determinism Score (DS) for every module.
+*   **Critique:** High overhead. Running 3-pass validations for every logic call will inflate token usage and latency significantly. While it provides excellent data, it might violate the "minimal footprint" principle.
+*   **Feasibility:** High. The infrastructure for `ask_gemini` is already modular.
 
-**Option 2: Dependency-Aware Hashing (Refinement of Option 1)**
-*   **Concept:** Enhance the hashing utility to include a "dependency snapshot" (file timestamps/versions) in the input hash.
-*   **Critique:** Addresses the "environmental drift" weakness identified in the self-correction phase.
-*   **Trade-off:** More complex to implement than a simple input hash. Requires a reliable way to map dependencies to specific files.
-*   **Feasibility:** Moderate. Requires careful selection of which files constitute the "environment."
+**Option 2: Model Version Pinning & Drift Monitor**
+*   **Concept:** Introduce a `model_registry.json` that maps specific logic modules to pinned model versions (e.g., `gemini-1.5-pro-002`). If the system detects a mismatch between the current environment and the registry, it triggers a "Re-validation" phase.
+*   **Critique:** This directly addresses the "System Prompt Drift" weakness identified in the self-correction. It is low-overhead, highly maintainable, and ensures long-term reproducibility of architectural decisions.
+*   **Feasibility:** Very high. Requires minimal changes to `ask_gemini` and a new utility to check the registry.
 
-**Decision:** I will proceed with **Option 2**. It is more robust and aligns with my goal of long-term maintainability. By including a dependency snapshot, I ensure that the system doesn't just repeat work, but repeats work only when the *context* is truly identical.
+**Selection:** Option 2. It is more surgical and aligns better with the goal of maintaining a high Determinism Score without the performance penalty of constant re-validation.
 
 ---
 
-## Idea: Idempotent Execution Guard (IEG)
-Implement a decorator-based system that wraps critical I/O functions with an idempotency check, utilizing a dependency-aware hash of the input and the relevant file system state.
+## Idea: Model Version Pinning & Drift Registry
+
+Implement a `model_registry.json` and update `ask_gemini` to enforce version pinning for critical architectural prompts.
 
 ## Why
-My current architecture is prone to redundant execution if a cycle is interrupted or if I re-run logic. By enforcing idempotency at the function level, I ensure that I only perform expensive or state-changing operations when the input parameters or the underlying dependency files have changed.
+As an autonomous developer, my logic is only as stable as the underlying model. If the provider updates the model weights, my "deterministic" reasoning paths may shift. Pinning ensures that my core decision-making logic remains reproducible across cycles, preventing silent regressions in my architectural governance.
 
 ## Implementation Steps
-1.  **Utility:** Create `bag/idempotency.py` with a `generate_dependency_hash(paths: list[Path])` function that computes a SHA-256 hash based on file contents and modification times.
-2.  **Registry:** Implement `ExecutionRegistry` class in `bag/idempotency.py` to manage `execution_registry.json` (load/save/check).
-3.  **Decorator:** Create `@idempotent(dependencies=[...])` decorator that:
-    *   Computes the hash of the function arguments + dependency files.
-    *   Checks the registry.
-    *   If found, returns the cached result.
-    *   If not, executes the function and updates the registry.
-4.  **Integration:** Apply the decorator to `phase_i_deep_learning` and `phase_iii_market_ingestion` as a pilot.
+1.  **Create `bag/model_registry.json`**: Define a schema mapping `module_name` to `model_version` (e.g., `{"phase_vi": "gemini-1.5-pro-002"}`).
+2.  **Update `ask_gemini`**: Modify the function to accept an optional `module_context` argument.
+3.  **Registry Lookup**: If `module_context` is provided, `ask_gemini` will look up the pinned version in the registry and inject it into the `CLIENT.models.generate_content` call.
+4.  **Drift Alert**: If a module is not in the registry, log a warning and prompt for registration during Phase VI.
 
 ## Risk
-**Failure Mode:** The "dependency snapshot" might be too broad, causing the hash to change unnecessarily (e.g., if a log file is updated, the hash changes, triggering a re-run).
-**Mitigation:** Explicitly define the list of dependencies for each function, excluding volatile files like logs or temporary caches.
-**Confidence Score:** 8/10. The logic is sound, but the granularity of dependency tracking will require tuning.
+**Failure Mode:** The model provider deprecates a pinned version, causing all calls to that module to fail.
+**Mitigation:** Implement a fallback mechanism where `ask_gemini` defaults to the latest stable model if the pinned version returns a 404/400 error, while simultaneously alerting Dot via `_alert_dot`.
+
+**Confidence Score:** 9/10
