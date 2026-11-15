@@ -1,34 +1,43 @@
 ## Scratchpad
 
-**Option 1: Deterministic State-Space Logger**
-*   **Concept:** Implement a decorator `@track_entropy` that wraps core logic functions. It calculates the input/output variance across 3-pass executions at `temperature: 0.2` to generate a real-time Determinism Score (DS) for every module.
-*   **Critique:** High overhead. Running 3-pass validations for every logic call will inflate token usage and latency significantly. While it provides excellent data, it might violate the "minimal footprint" principle.
-*   **Feasibility:** High. The infrastructure for `ask_gemini` is already modular.
+**Option 1: Implement the "Diversity Enforcer" (from market signals)**
+*   **Concept:** A middleware filter for `next_objectives` that uses cosine similarity and domain taxonomy to prevent task redundancy.
+*   **Critique:** High value for long-term growth. It prevents the "local optima" trap where I only perform refactoring.
+*   **Trade-off:** Adds complexity to the planning phase. Requires maintaining a persistent `objective_history` vector store.
+*   **Feasibility:** High. I have the `sam.py` structure to inject this into `phase_v_development`.
 
-**Option 2: Model Version Pinning & Drift Monitor**
-*   **Concept:** Introduce a `model_registry.json` that maps specific logic modules to pinned model versions (e.g., `gemini-1.5-pro-002`). If the system detects a mismatch between the current environment and the registry, it triggers a "Re-validation" phase.
-*   **Critique:** This directly addresses the "System Prompt Drift" weakness identified in the self-correction. It is low-overhead, highly maintainable, and ensures long-term reproducibility of architectural decisions.
-*   **Feasibility:** Very high. Requires minimal changes to `ask_gemini` and a new utility to check the registry.
+**Option 2: Formalize "Evaluation-Driven Development" (RAGAS-lite)**
+*   **Concept:** Create a `bag/evaluator.py` that runs a "Judge" prompt against my own output for critical functions (e.g., `_parse_gemini_json`).
+*   **Critique:** Increases reliability of core utilities.
+*   **Trade-off:** Significant overhead in token usage and latency.
+*   **Feasibility:** Moderate. Requires setting up a robust test harness that doesn't just rely on `ruff`.
 
-**Selection:** Option 2. It is more surgical and aligns better with the goal of maintaining a high Determinism Score without the performance penalty of constant re-validation.
+**Decision:** I will proceed with **Option 1 (Diversity Enforcer)**. It directly addresses the "echo-chamber planning" risk identified in my self-assessment and aligns with the "Exploration vs. Exploitation" heuristic.
 
 ---
 
-## Idea: Model Version Pinning & Drift Registry
+## Idea: Semantic Diversity Enforcement for Objective Planning
 
-Implement a `model_registry.json` and update `ask_gemini` to enforce version pinning for critical architectural prompts.
+Implement a `DiversityEnforcer` class in `bag/planning_utils.py` that intercepts the `next_objectives` queue, calculates semantic distance from the last 10 completed tasks, and re-ranks the queue to prioritize thematic novelty.
 
 ## Why
-As an autonomous developer, my logic is only as stable as the underlying model. If the provider updates the model weights, my "deterministic" reasoning paths may shift. Pinning ensures that my core decision-making logic remains reproducible across cycles, preventing silent regressions in my architectural governance.
+My current planning process is prone to "objective drift," where I focus heavily on one domain (e.g., refactoring) at the expense of others (e.g., research or infrastructure). This enforcer will ensure a balanced growth trajectory by forcing exploration when the semantic similarity of the queue exceeds a 0.85 threshold.
 
 ## Implementation Steps
-1.  **Create `bag/model_registry.json`**: Define a schema mapping `module_name` to `model_version` (e.g., `{"phase_vi": "gemini-1.5-pro-002"}`).
-2.  **Update `ask_gemini`**: Modify the function to accept an optional `module_context` argument.
-3.  **Registry Lookup**: If `module_context` is provided, `ask_gemini` will look up the pinned version in the registry and inject it into the `CLIENT.models.generate_content` call.
-4.  **Drift Alert**: If a module is not in the registry, log a warning and prompt for registration during Phase VI.
+1.  **Create `bag/planning_utils.py`**: Define `DiversityEnforcer` with a `calculate_similarity(new_task, history)` method.
+2.  **Update `load_goals()`**: Add a `completed_objectives` list to `goals.json` to track history.
+3.  **Integrate into `phase_v_development`**: Before finalizing the plan, pass the proposed objectives through the `DiversityEnforcer`.
+4.  **Inject "Exploration" Task**: If the queue is too homogeneous, trigger a call to Gemini to generate a "novelty-focused" objective based on the current `market_signals`.
 
 ## Risk
-**Failure Mode:** The model provider deprecates a pinned version, causing all calls to that module to fail.
-**Mitigation:** Implement a fallback mechanism where `ask_gemini` defaults to the latest stable model if the pinned version returns a 404/400 error, while simultaneously alerting Dot via `_alert_dot`.
+**Failure Mode:** The enforcer might flag a necessary multi-stage refactoring chain as "redundant" because it is semantically similar to the previous step.
+**Mitigation:** Implement a `parent_objective_id` metadata field. If an objective is a child of a recent task, the diversity penalty is bypassed.
 
 **Confidence Score:** 9/10
+
+---
+
+### Action Items
+- [ ] Create `bag/planning_utils.py` with cosine similarity logic.
+- [ ] Modify `load_goals` and `save_goals` to include `completed_objectives` history.
+- [ ] Update `phase_v_development` to call the `DiversityEnforcer` before finalizing the plan.
