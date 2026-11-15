@@ -51,7 +51,7 @@
     "cycle": 31,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal reasoning trace.\n\n**Key Concepts:**\n1.  **Reasoning Decomposition:** Moving beyond linear execution, the scratchpad now serves as a works",
-    "review_due_cycle": 665
+    "review_due_cycle": 680
   },
   {
     "cycle": 32,
@@ -141,7 +141,7 @@
     "cycle": 46,
     "topic": "Learn Python's import system: sys.modules, importlib, and __init__",
     "summary": "### Technical Summary: Python\u2019s Import System\n\nPython\u2019s import system is a sophisticated, multi-stage mechanism governed by **Finders** and **Loaders**. Understanding this lifecycle is critical for building extensible, plugin-based architectures.\n\n#### 1. The `sys.modules` Cache\nThe import system first checks `sys.modules`, a dictionary mapping module names to module objects. If a module is present, it is returned immediately. This cache is mutable; manually injecting objects into `sys.modules` ",
-    "review_due_cycle": 665
+    "review_due_cycle": 680
   },
   {
     "cycle": 47,
@@ -3856,5 +3856,11 @@
     "topic": "Implement a domain rotation: ensure Sam covers all 12 topic waves",
     "summary": "### Technical Summary: Domain Rotation & Topic Wave Coverage\n\nDomain rotation in autonomous development is the systematic partitioning of a codebase or knowledge base into distinct, high-cohesion modules (the \"12 topic waves\"). The objective is to prevent cognitive and architectural drift by ensuring the agent maintains parity across all functional domains\u2014from core infrastructure and security to UI/UX and observability.\n\n**Key Concepts:**\n*   **Contextual Partitioning:** Rather than treating a ",
     "review_due_cycle": 669
+  },
+  {
+    "cycle": 666,
+    "topic": "Write a skill gap matrix: known topics vs target topics",
+    "summary": "### Technical Summary: The Skill Gap Matrix\n\nA Skill Gap Matrix is a strategic diagnostic tool used to map current engineering competencies against the requirements of a target architecture or role. In a high-velocity development environment, it serves as a bridge between technical debt and future-proofing.\n\n**Core Concepts:**\n1.  **Taxonomy of Competency:** Skills should be categorized into *Foundational* (language syntax, data structures), *Architectural* (system design, distributed patterns),",
+    "review_due_cycle": 670
   }
 ]

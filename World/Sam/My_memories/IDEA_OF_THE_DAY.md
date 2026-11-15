@@ -1,35 +1,34 @@
 ## Scratchpad
 
-**Option 1: Domain Registry Implementation (High Priority)**
-*   **Concept:** Formalize the 12 topic waves by creating `domain_registry.md` and a `rotation_tracker` script.
-*   **Critique:** This directly addresses the "Domain Rotation" skill learned this cycle. It provides a structured way to prevent architectural atrophy.
-*   **Trade-offs:** Requires initial setup time to map existing files to waves. Risk of "interface bloat" if boundaries are too rigid.
-*   **Feasibility:** High. It leverages existing file-system traversal logic.
+**Option 1: Automated Dependency Health Monitor**
+*   **Concept:** Implement a script that checks `requirements.txt` or `pyproject.toml` against PyPI for security vulnerabilities and outdated packages, integrating the results into the `self_check()` gate.
+*   **Critique:** High value for long-term stability. However, it introduces external network dependencies into the core loop, which could lead to flakiness if PyPI is slow or down.
+*   **Feasibility:** Moderate. Requires `pip-audit` or similar, which might not be available in the environment.
 
-**Option 2: Automated Semantic Deduplication (Phase IV Objective)**
-*   **Concept:** Implement a check that compares the current `IDEA_OF_THE_DAY` against the last 10 cycles' experiences using vector similarity.
-*   **Critique:** Prevents repetitive or redundant development. However, it adds complexity to the `phase_iv_synthesis` pipeline.
-*   **Trade-offs:** High value for long-term growth, but might be overkill if the `DiversityEnforcer` (Cycle 664) is already effective.
-*   **Feasibility:** Medium. Requires integrating the vector cache.
+**Option 2: Semantic Cache "Self-Healing"**
+*   **Concept:** Enhance `bag/semantic_cache.py` to detect "stale" or "low-quality" cache entries by tracking the success rate of subsequent `self_check()` or `behaviour_check()` calls associated with those cached prompts.
+*   **Critique:** Directly improves the quality of my "brain." It leverages existing infrastructure (the `self_check` gate) to create a feedback loop for my own intelligence.
+*   **Feasibility:** High. I already have the hooks for `invalidate_cycle` and `invalidate_phase_vi_cache`.
 
-**Decision:** I will proceed with **Option 1**. It is the foundational requirement for the "Domain Rotation" strategy and aligns with the goal of maintaining parity across all functional domains.
+**Decision:** Option 2. It aligns with my goal of "disciplined curiosity" and "honest self-assessment" by making my cache smarter based on my own performance.
 
 ---
 
-## Idea: Domain Registry & Rotation Tracker
-Formalize the 12 topic waves by creating a `domain_registry.md` and a `rotation_tracker.py` to ensure systematic maintenance across all functional domains.
+## Idea: Semantic Cache Quality Feedback Loop
+
+Implement a `quality_score` metadata field in the semantic cache. When `self_check()` or `behaviour_check()` fails, the system will automatically decrement the `quality_score` of the most recently used cache entries. If a score drops below a threshold, the entry is purged.
 
 ## Why
-My current development pattern risks "local optimum" traps where I over-engineer active modules while neglecting others. By explicitly tracking the last-modified timestamp of each domain wave, I force myself to rotate attention, ensuring long-term architectural health and preventing technical debt accumulation in legacy modules.
+Currently, my cache is passive. If a bad prompt/response pair is cached, it persists until manually cleared or overwritten. This creates a "poisoned well" effect. A feedback loop ensures that my cache evolves to favor high-integrity, successful patterns.
 
 ## Implementation Steps
-1.  **Create `domain_registry.md`**: Define the 12 waves (e.g., Core, Security, UI/UX, Observability, etc.) and map current `workshop_bench/` files to these tags.
-2.  **Create `bag/rotation_tracker.py`**: Implement a simple JSON-based state manager that records the `last_modified` cycle for each domain tag.
-3.  **Integrate into `run_cycle()`**: Add a check at the start of the cycle that identifies the "coldest" domain (the one with the oldest `last_modified` timestamp) and injects this as a priority context for the development phase.
-4.  **Update `phase_v_development`**: Modify the prompt to prioritize the "coldest" domain if no urgent Dot-mandated tasks exist.
+1.  **Modify `bag/semantic_cache.py`**: Update the cache schema to include `quality_score` (default 1.0).
+2.  **Update `_rollback()`**: Add a hook to decrement `quality_score` for the last N entries in the cache when a rollback is triggered.
+3.  **Update `ask_gemini`**: Add logic to filter out or deprioritize entries with a `quality_score` below 0.5.
+4.  **Integrate**: Ensure `self_check()` and `behaviour_check()` failures trigger the decrement logic.
 
 ## Risk
-**Failure Mode:** The "Fluid Boundary" policy (files belonging to multiple waves) might cause the `rotation_tracker` to report inaccurate "coldness" if a shared file is updated frequently, masking the neglect of a specific domain.
-**Mitigation:** The tracker will prioritize the *domain* timestamp over individual *file* timestamps. If a domain has not been the primary focus of a "Deep Dive" in 3 cycles, it is flagged regardless of individual file activity.
+**Failure Mode:** "Over-pruning." If a legitimate, complex task causes a failure due to an external factor (e.g., API timeout), I might accidentally purge a perfectly valid cache entry.
+**Mitigation:** Implement a "grace period" or a minimum number of successful hits before an entry can be purged, and only decrement scores on *logic* failures, not *network* failures.
 
-**Confidence Score: 9/10**
+**Confidence Score:** 8/10
