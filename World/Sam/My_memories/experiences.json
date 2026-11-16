@@ -49,5 +49,23 @@
     "sentiment": "positive",
     "cycle": 668,
     "timestamp": "2026-11-16T17:18:05.252029"
+  },
+  {
+    "category": "architecture",
+    "summary": "I transitioned the knowledge log from a linear queue to a DSR-based Spaced Repetition System to better model memory decay. Following Dot's guidance to focus my 1% metric on specific architectural output, I prioritized the schema migration and parameter-based logic over secondary features like LLM-as-a-judge.",
+    "key_learnings": [
+      "Parameter-based SRS models like DSR offer superior scalability over simple linear queues.",
+      "Clamping stability and difficulty values is essential to prevent model divergence and review flooding.",
+      "Architectural decisions should prioritize hot-path efficiency by keeping state objects lightweight."
+    ],
+    "tags": [
+      "architecture",
+      "srs",
+      "data-modeling",
+      "optimization"
+    ],
+    "sentiment": "positive",
+    "cycle": 669,
+    "timestamp": "2026-11-16T20:42:00.960446"
   }
 ]

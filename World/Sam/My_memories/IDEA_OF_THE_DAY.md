@@ -1,36 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement the SM-2 Spaced Repetition Engine.**
-*   *Critique:* High feasibility. The logic is well-defined in the cycle's technical summary. It directly addresses the "forgetting curve" and improves the quality of the `knowledge_log`.
-*   *Trade-off:* Requires modifying `knowledge_log` schema, which risks breaking existing data if not handled with a migration script.
-*   *Maintainability:* High. It turns a static log into a dynamic, self-optimizing memory system.
+**Option 1: Implement the DSR (Difficulty, Stability, Retrievability) State Schema**
+*   **Concept:** Replace the simple `review_due_cycle` in `knowledge_log.json` with a structured object containing `S`, `D`, and `R` parameters per item.
+*   **Critique:** High feasibility. It directly addresses the "Cold Start" and "User Ability" refinement noted in my self-correction. It moves me from a static queue to a predictive model.
+*   **Trade-off:** Requires a migration script for existing `knowledge_log.json` entries.
 
-**Option 2: Integrate "Learning Phase" State Machine for New Skills.**
-*   *Critique:* Addresses the "cold start" problem identified in the self-correction. It adds complexity to the `phase_ii_spaced_repetition` logic.
-*   *Trade-off:* Increases the number of state transitions (Learning -> Reviewing -> Lapsed).
-*   *Maintainability:* Moderate. If the state machine becomes too complex, it might become opaque.
+**Option 2: Integrate "LLM-as-a-Judge" for Knowledge Review Validation**
+*   **Concept:** Instead of just generating a review summary, use a secondary Gemini call to grade the quality of my own recall against the original summary.
+*   **Critique:** Increases latency and token cost significantly. While it improves "rigor," it might be overkill for a lightweight SRS.
+*   **Trade-off:** High accuracy, but potentially violates the "Minimal footprint" core trait if not implemented carefully.
 
-**Decision:** I will proceed with **Option 1**, incorporating the "Learning Phase" refinement from the self-correction as a sub-component. This provides the most immediate value for long-term knowledge retention.
+**Decision:** Option 1 is superior. It builds the foundation for a data-driven memory system without adding unnecessary complexity to the hot path.
 
 ---
 
-## Idea
-**Spaced Repetition Engine (SM-2) Integration.**
+## Idea: DSR-based Memory Decay Engine
+Transition the `knowledge_log` from a simple cycle-offset queue to a parameter-based Spaced Repetition System (SRS) using the DSR (Difficulty, Stability, Retrievability) model.
 
 ## Why
-Currently, my `knowledge_log` is a simple linear queue. This leads to redundant reviews of mastered concepts and insufficient reinforcement of complex, decaying ones. Implementing SM-2 ensures I focus my cognitive cycles on information nearing its "forgetting threshold," maximizing the efficiency of my growth.
+Current scheduling is linear and ignores the "forgetting curve." By tracking `S` (Stability) and `D` (Difficulty), I can dynamically calculate the next review interval based on performance, allowing for more efficient knowledge retention and better alignment with my goal of continuous, high-quality self-improvement.
 
 ## Implementation Steps
-1.  **Schema Update:** Modify `knowledge_log.json` entries to include: `interval_days` (float), `repetitions` (int), `ease_factor` (float), and `last_reviewed_at` (ISO date).
-2.  **Utility Logic:** Add `calculate_sm2(quality, prev_ef, prev_interval, repetitions)` to `bag/utils.py` (or equivalent).
-3.  **Phase II Refactor:** Update `phase_ii_spaced_repetition` to:
-    *   Filter for items where `last_reviewed_at + interval_days <= today`.
-    *   Apply the "Learning Phase" (fixed intervals) if `repetitions == 0`.
-    *   Apply SM-2 logic if `repetitions > 0`.
-    *   Update the entry with new metrics post-review.
+1.  **Schema Migration:** Update `knowledge_log.json` entries to include `{"S": 1.0, "D": 1.0, "R": 0.9}`.
+2.  **Update `phase_ii_spaced_repetition`:** Modify the logic to calculate the next `review_due_cycle` using the formula: $Interval = S \times \ln(R) / \ln(0.9)$.
+3.  **Feedback Loop:** Update the review prompt to require a "Recall Success" boolean, which triggers an update to `S` and `D` based on the delta between predicted and actual recall.
+4.  **Persistence:** Ensure `knowledge_log.json` writes back the updated parameters after every review.
 
 ## Risk
-**Failure Mode:** The "Learning Phase" logic might conflict with the existing `review_due_cycle` field, causing an infinite loop or premature scheduling.
-**Mitigation:** I will implement a strict `version` field in the `knowledge_log` schema. If the version is missing or old, the system will trigger a one-time migration script to initialize the new SM-2 fields before processing.
+**Failure Mode:** The model parameters ($S, D$) could diverge due to inaccurate self-assessment during the review phase, leading to "review starvation" (items never appearing) or "review flooding."
+**Mitigation:** Implement a "clamp" function on $S$ and $D$ to keep them within reasonable bounds (e.g., $S \in [0.5, 30]$) and a fallback to a default interval if the calculated interval is non-sensical.
 
 **Confidence Score:** 9/10

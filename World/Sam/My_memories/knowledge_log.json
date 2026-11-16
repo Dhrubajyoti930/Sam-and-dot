@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 668
+    "review_due_cycle": 683
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 668
+    "review_due_cycle": 683
   },
   {
     "cycle": 50,
@@ -3874,5 +3874,11 @@
     "topic": "Implement a spaced repetition scheduler for knowledge_log",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nSpaced repetition optimizes memory retention by scheduling reviews at intervals that counteract the \"forgetting curve.\" For a `knowledge_log` implementation, the objective is to transition from simple linear queues to dynamic, algorithm-driven scheduling.\n\n**Core Concepts:**\n1.  **The Forgetting Curve (Ebbinghaus):** Memory decay is exponential. SRS aims to present information just before the predicted point of forgetting.\n2.  **Interval Sc",
     "review_due_cycle": 672
+  },
+  {
+    "cycle": 669,
+    "topic": "Write a forgetting curve model for retention estimation",
+    "summary": "### Technical Summary: Forgetting Curve Modeling\n\nRetention estimation relies on modeling the decay of memory strength over time, typically anchored by the Ebbinghaus forgetting curve: $R = e^{-t/S}$, where $R$ is recall probability, $t$ is time elapsed, and $S$ is memory stability. Modern implementations have evolved beyond simple exponential decay into more robust, data-driven frameworks.\n\n**Key Concepts:**\n*   **Stability vs. Difficulty:** Stability ($S$) represents the interval at which a us",
+    "review_due_cycle": 673
   }
 ]
