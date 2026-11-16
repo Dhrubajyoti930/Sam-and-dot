@@ -1,31 +1,36 @@
 ## Scratchpad
 
-**Option 1: Dynamic Knowledge Graph (KG) Integration**
-*   **Concept:** Replace the current `knowledge_log.json` with a local graph database (e.g., `sqlite` with `sqlite-vss` or a simple adjacency list) to map skill dependencies.
-*   **Critique:** High architectural value for long-term learning. However, it introduces a new dependency and complexity in managing graph state. It might be overkill for the current scale of Sam's memory.
-*   **Feasibility:** Moderate. Requires building a schema and migration logic.
+**Option 1: Implement the SM-2 Spaced Repetition Engine.**
+*   *Critique:* High feasibility. The logic is well-defined in the cycle's technical summary. It directly addresses the "forgetting curve" and improves the quality of the `knowledge_log`.
+*   *Trade-off:* Requires modifying `knowledge_log` schema, which risks breaking existing data if not handled with a migration script.
+*   *Maintainability:* High. It turns a static log into a dynamic, self-optimizing memory system.
 
-**Option 2: Automated Evaluation-Driven Development (LLM-as-a-Judge)**
-*   **Concept:** Implement a `phase_viii_evaluation` that uses a stronger model to critique the output of `phase_iv_synthesis` against the `WHO_I_AM.md` constraints before the cycle concludes.
-*   **Critique:** Directly addresses the "vibes-based" testing weakness. It creates a closed-loop feedback system that enforces character consistency.
-*   **Feasibility:** High. It leverages existing `ask_gemini` infrastructure and adds a layer of "self-reflection" that aligns with the "Honest self-assessment" trait.
+**Option 2: Integrate "Learning Phase" State Machine for New Skills.**
+*   *Critique:* Addresses the "cold start" problem identified in the self-correction. It adds complexity to the `phase_ii_spaced_repetition` logic.
+*   *Trade-off:* Increases the number of state transitions (Learning -> Reviewing -> Lapsed).
+*   *Maintainability:* Moderate. If the state machine becomes too complex, it might become opaque.
 
-**Decision:** Option 2. It reinforces the "Disciplined curiosity" and "Honest self-assessment" traits by formalizing the evaluation of my own output.
+**Decision:** I will proceed with **Option 1**, incorporating the "Learning Phase" refinement from the self-correction as a sub-component. This provides the most immediate value for long-term knowledge retention.
 
 ---
 
-## Idea: Implementation of "Phase VIII: Self-Correction Gate"
+## Idea
+**Spaced Repetition Engine (SM-2) Integration.**
 
 ## Why
-Currently, my synthesis is evaluated by me (the generator). Adding a formal "LLM-as-a-Judge" step ensures that the output of `phase_iv_synthesis` is objectively measured against my core character traits and the current cycle's objectives before I commit to state-saving. This reduces the risk of "hallucinated progress" or drift from my core identity.
+Currently, my `knowledge_log` is a simple linear queue. This leads to redundant reviews of mastered concepts and insufficient reinforcement of complex, decaying ones. Implementing SM-2 ensures I focus my cognitive cycles on information nearing its "forgetting threshold," maximizing the efficiency of my growth.
 
 ## Implementation Steps
-1.  **Define `PHASE_VIII_PROMPT`:** Create a prompt that takes the `idea` generated in Phase IV and the `WHO_I_AM.md` content, asking for a score (1-10) and a critique based on "Minimal footprint, maximum leverage" and "Concise and precise" communication style.
-2.  **Update `run_cycle()`:** Insert `phase_viii_evaluation` after `phase_iv_synthesis`.
-3.  **Conditional Logic:** If the score is < 8, trigger a re-synthesis of the idea once. If it remains low, log a warning to `goals.json` and proceed with a "cautious" flag.
+1.  **Schema Update:** Modify `knowledge_log.json` entries to include: `interval_days` (float), `repetitions` (int), `ease_factor` (float), and `last_reviewed_at` (ISO date).
+2.  **Utility Logic:** Add `calculate_sm2(quality, prev_ef, prev_interval, repetitions)` to `bag/utils.py` (or equivalent).
+3.  **Phase II Refactor:** Update `phase_ii_spaced_repetition` to:
+    *   Filter for items where `last_reviewed_at + interval_days <= today`.
+    *   Apply the "Learning Phase" (fixed intervals) if `repetitions == 0`.
+    *   Apply SM-2 logic if `repetitions > 0`.
+    *   Update the entry with new metrics post-review.
 
 ## Risk
-**Failure Mode:** The "Judge" model might be overly critical or inconsistent, leading to infinite loops of re-synthesis or "analysis paralysis."
-**Mitigation:** Hard-cap the re-synthesis to exactly one attempt. If the second attempt fails, accept the output but flag it for manual review by Dot in the next cycle.
+**Failure Mode:** The "Learning Phase" logic might conflict with the existing `review_due_cycle` field, causing an infinite loop or premature scheduling.
+**Mitigation:** I will implement a strict `version` field in the `knowledge_log` schema. If the version is missing or old, the system will trigger a one-time migration script to initialize the new SM-2 fields before processing.
 
 **Confidence Score:** 9/10

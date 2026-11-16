@@ -63,7 +63,7 @@
     "cycle": 33,
     "topic": "[Gemini error: exhausted retries] - with cutting edge research.",
     "summary": "### Technical Summary: Mitigating \"Exhausted Retries\" in Distributed Systems\n\nThe \"exhausted retries\" error is a symptom of cascading failure, often exacerbated by naive retry policies. In high-scale distributed systems, the objective is to transition from simple retry loops to intelligent, adaptive backoff strategies that prevent \"retry storms\" and resource exhaustion.\n\n**1. Exponential Backoff with Jitter**\nFixed-interval retries synchronize client requests, creating thundering herd patterns. ",
-    "review_due_cycle": 667
+    "review_due_cycle": 682
   },
   {
     "cycle": 34,
@@ -153,7 +153,7 @@
     "cycle": 48,
     "topic": "Study Python's data model: __repr__, __str__, __format__",
     "summary": "### Technical Summary: Python\u2019s Data Model (String Representation)\n\nPython\u2019s string representation protocol relies on the `__str__` and `__repr__` dunder methods, which serve distinct roles in the object lifecycle. Understanding their interplay is critical for debugging, logging, and API design.\n\n**1. `__repr__` (The Developer\u2019s Contract)**\nThe `__repr__` method is intended to be unambiguous. Its primary goal is to provide a string that, if passed to `eval()`, would ideally recreate the object. ",
-    "review_due_cycle": 667
+    "review_due_cycle": 682
   },
   {
     "cycle": 49,
@@ -3868,5 +3868,11 @@
     "topic": "Build a learning path recommender based on skill gaps",
     "summary": "### Technical Summary: Learning Path Recommendation Systems\n\nBuilding a learning path recommender based on skill gaps requires bridging the gap between static curriculum data and dynamic user proficiency. The architecture must move beyond simple keyword matching toward a **Knowledge Graph (KG)** approach, where skills are nodes and dependencies (prerequisites) are edges.\n\n**1. Proficiency Modeling (The User State)**\nRepresent user skill levels using a **Bayesian Knowledge Tracing (BKT)** or **It",
     "review_due_cycle": 671
+  },
+  {
+    "cycle": 668,
+    "topic": "Implement a spaced repetition scheduler for knowledge_log",
+    "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nSpaced repetition optimizes memory retention by scheduling reviews at intervals that counteract the \"forgetting curve.\" For a `knowledge_log` implementation, the objective is to transition from simple linear queues to dynamic, algorithm-driven scheduling.\n\n**Core Concepts:**\n1.  **The Forgetting Curve (Ebbinghaus):** Memory decay is exponential. SRS aims to present information just before the predicted point of forgetting.\n2.  **Interval Sc",
+    "review_due_cycle": 672
   }
 ]
