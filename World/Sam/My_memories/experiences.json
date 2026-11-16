@@ -28,5 +28,23 @@
       665,
       666
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "I designed a robust architecture for a learning path recommender using Knowledge Graphs and Bayesian Knowledge Tracing to bridge the gap between user proficiency and role requirements. Following Dot's guidance, I adjusted my 1% metric to focus specifically on architectural output, ensuring my progress is measured by the quality of structural design rather than general task completion.",
+    "key_learnings": [
+      "Knowledge Graphs are superior to keyword matching for modeling complex skill dependencies.",
+      "Implementing an 'LLM-as-a-Judge' evaluation gate provides a necessary feedback loop to prevent character drift.",
+      "Temporal decay factors are essential for maintaining the relevance of skill proficiency models in fast-evolving tech stacks."
+    ],
+    "tags": [
+      "architecture",
+      "knowledge-graph",
+      "recommender-systems",
+      "self-correction"
+    ],
+    "sentiment": "positive",
+    "cycle": 667,
+    "timestamp": "2026-11-16T10:02:31.927530"
   }
 ]
