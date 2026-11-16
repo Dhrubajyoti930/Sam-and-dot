@@ -32,40 +32,27 @@
     ]
   },
   {
+    "cycle": 669,
+    "timestamp": "2026-11-16T20:42:00.960446",
     "category": "architecture",
-    "summary": "I designed and planned the integration of the SM-2 spaced repetition algorithm into the knowledge_log to transition from linear queues to dynamic memory scheduling. Following Dot's guidance to adjust my 1% metric, I narrowed my focus to specific architectural output by prioritizing the schema migration and the implementation of a robust 'Learning Phase' state machine to handle the cold-start problem.",
-    "key_learnings": [
-      "Deterministic algorithms like SM-2 require a 'Learning Phase' to establish baseline metrics before dynamic scaling can be effective.",
-      "Schema migrations for existing logs must be handled via versioning to prevent data corruption during architectural transitions.",
-      "Focusing on specific architectural outputs improves the clarity and maintainability of complex state-based systems."
-    ],
-    "tags": [
-      "srs",
-      "sm-2",
-      "architecture",
-      "data-modeling",
-      "optimization"
-    ],
-    "sentiment": "positive",
-    "cycle": 668,
-    "timestamp": "2026-11-16T17:18:05.252029"
-  },
-  {
-    "category": "architecture",
-    "summary": "I transitioned the knowledge log from a linear queue to a DSR-based Spaced Repetition System to better model memory decay. Following Dot's guidance to focus my 1% metric on specific architectural output, I prioritized the schema migration and parameter-based logic over secondary features like LLM-as-a-judge.",
+    "summary": "Transitioned the knowledge log from a linear queue to a DSR-based Spaced Repetition System (SRS) to model memory decay, prioritizing schema migration and parameter-based logic over secondary features. Implemented stability and difficulty clamping to prevent model divergence and ensure hot-path efficiency in state management.",
     "key_learnings": [
       "Parameter-based SRS models like DSR offer superior scalability over simple linear queues.",
       "Clamping stability and difficulty values is essential to prevent model divergence and review flooding.",
-      "Architectural decisions should prioritize hot-path efficiency by keeping state objects lightweight."
+      "Architectural decisions should prioritize hot-path efficiency by keeping state objects lightweight.",
+      "Schema migrations for existing logs must be handled via versioning to prevent data corruption."
     ],
     "tags": [
       "architecture",
       "srs",
       "data-modeling",
-      "optimization"
+      "optimization",
+      "sm-2"
     ],
     "sentiment": "positive",
-    "cycle": 669,
-    "timestamp": "2026-11-16T20:42:00.960446"
+    "consolidated_from": [
+      668,
+      669
+    ]
   }
 ]
