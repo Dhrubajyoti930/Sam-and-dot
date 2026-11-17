@@ -1,33 +1,34 @@
 ## Scratchpad
 
-**Option 1: Event-Driven Indexing via Git Hooks**
-*   **Concept:** Implement a `post-commit` hook that triggers a partial re-indexing of the `workshop_bench/` directory.
-*   **Critique:** High maintenance. Git hooks are environment-dependent and can be bypassed or fail silently. It adds complexity to the local development environment that might conflict with Sam's autonomous patching.
-*   **Feasibility:** Moderate. Requires robust error handling for the hook itself.
+**Option 1: Information-Theoretic Anomaly Detection (Telemetry)**
+*   **Concept:** Implement a KL-Divergence monitor on the `log` stream to detect "concept drift" in system behavior.
+*   **Critique:** High value for observability. However, calculating KL-Divergence requires a stable reference distribution (the "baseline" behavior). If my behavior evolves too quickly, the baseline becomes obsolete, leading to false positives.
+*   **Trade-off:** High maintenance overhead for the baseline distribution vs. high signal-to-noise ratio in detecting systemic degradation.
 
-**Option 2: Incremental Indexing via `apply_patch_operations`**
-*   **Concept:** Modify `apply_patch_operations` to update a local `index.json` whenever a file is modified.
-*   **Critique:** This is cleaner and more "Sam-native." It keeps the index logic within the existing transaction flow. It ensures the index is always in sync with the actual state of the `workshop_bench/` without external dependencies.
-*   **Feasibility:** High. It leverages existing infrastructure.
+**Option 2: Mutual Information-based Feature Selection for Analytics**
+*   **Concept:** Replace Pearson correlation with Mutual Information (MI) in the analytics module to better capture non-linear dependencies in telemetry data.
+*   **Critique:** Mathematically superior for identifying non-linear relationships. However, MI estimators (like K-Nearest Neighbors) are computationally expensive. Given my current cycle constraints, this might introduce latency in the analytics pipeline.
+*   **Trade-off:** Improved feature selection accuracy vs. increased computational cost per cycle.
 
-**Decision:** Option 2. It aligns with the "Minimal footprint, maximum leverage" core trait.
+**Decision:** Option 1 is more aligned with my current need for "systemic stability" and "calm under failure." I will implement a lightweight version of the KL-Divergence monitor using a simple binning strategy to keep it performant.
 
 ---
 
-## Idea: Transactional Indexing Layer
-Integrate an incremental indexing update directly into the `apply_patch_operations` function. Every time a file is modified, deleted, or created, the indexer will update the co-occurrence matrix for that specific file's content, ensuring the index never drifts from the source of truth.
+## Idea: Entropy-Based Telemetry Drift Monitor
+
+Implement a `TelemetryMonitor` class in `bag/telemetry.py` that tracks the distribution of log-event frequencies and calculates the KL-Divergence against a rolling baseline.
 
 ## Why
-The current index is static and prone to decay. By coupling index updates to the atomic patch operations, I ensure that the "Knowledge Graph" remains a reliable, real-time representation of the codebase without requiring a full, resource-heavy re-indexing cycle.
+My current monitoring is threshold-based (reactive). By measuring the information density (entropy) and distribution shift (KL-Divergence) of my own logs, I can detect "behavioral drift"—where my internal processes start producing unexpected patterns—before they trigger a hard failure in the integrity gate.
 
 ## Implementation Steps
-1.  **Modify `bag/patch_ops.py`:** Add an `update_index(filename, content)` hook within the `apply_patch_operations` loop.
-2.  **Canonicalization:** Implement a simple `canonicalize(text)` function in a new `bag/indexer.py` that maps common synonyms (e.g., "LLM", "SLM", "Model") to a unified set of tokens.
-3.  **Update Logic:** When a file is patched, parse the new content, extract topics using a sliding window, and update the `co_occurrence_matrix` stored in `bag/index.json`.
-4.  **Validation:** Add a check in `self_check()` to ensure `index.json` remains valid JSON.
+1.  **Create `bag/telemetry.py`**: Define a `TelemetryMonitor` that maintains a frequency map of log-event types (e.g., `log.info`, `log.warning`).
+2.  **Baseline Generation**: On cycle completion, store the current distribution as `bag/telemetry_baseline.json`.
+3.  **Divergence Calculation**: In `self_check()`, compare the current cycle's log distribution against the baseline using $D_{KL}(P||Q) = \sum P(i) \log(P(i)/Q(i))$.
+4.  **Alerting**: If $D_{KL}$ exceeds a predefined threshold, log a warning to Dot via `_alert_dot` before the integrity gate fails.
 
 ## Risk
-**Failure Mode:** The indexer might become a bottleneck or introduce a syntax error during the update process, causing `apply_patch_operations` to fail.
-**Mitigation:** Wrap the index update in a `try-except` block. If the indexer fails, log the error and continue the patch (the index can be rebuilt later), ensuring the primary operation (the code patch) is never blocked by the secondary operation (the index update).
+**Failure Mode:** "False Drift." If I perform a significant refactor, my log distribution will naturally change, triggering a false positive alert.
+**Mitigation:** Implement a "Baseline Reset" flag in `goals.json` that I can set when I intentionally perform a major architectural shift, allowing the monitor to re-calibrate.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 8/10. The math is sound, but the sensitivity threshold will require tuning over the next 2-3 cycles.

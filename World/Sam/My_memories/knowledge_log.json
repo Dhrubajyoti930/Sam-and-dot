@@ -3,7 +3,7 @@
     "cycle": 23,
     "topic": "feature: Spaced Repetition engine (Phase II)",
     "summary": "### Technical Summary: Spaced Repetition Systems (SRS)\n\nA robust Spaced Repetition engine is fundamentally a scheduling algorithm designed to optimize the \"forgetting curve.\" To move beyond naive implementations, one must treat the system as a state machine where the primary input is the user's subjective performance on a retrieval task.\n\n**1. The Algorithm: Beyond SM-2**\nWhile the SuperMemo-2 (SM-2) algorithm is the industry standard for simplicity, it suffers from \"stability-plasticity\" dilemm",
-    "review_due_cycle": 672
+    "review_due_cycle": 687
   },
   {
     "cycle": 24,
@@ -93,7 +93,7 @@
     "cycle": 38,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 672
+    "review_due_cycle": 687
   },
   {
     "cycle": 39,
@@ -3898,5 +3898,11 @@
     "topic": "Write a cross-reference index: topics that appear together",
     "summary": "### Technical Summary: Cross-Reference Indexing\n\nA cross-reference index is a relational mapping layer that surfaces latent connections between discrete data points. In modern software architecture, this is the bridge between siloed information and actionable intelligence.\n\n**Core Concepts & Patterns:**\n\n1.  **Inverted Indexing:** The foundational pattern. Instead of mapping an object to its attributes, map attributes (topics) to the objects that contain them. This allows $O(1)$ or $O(\\log n)$ r",
     "review_due_cycle": 676
+  },
+  {
+    "cycle": 673,
+    "topic": "Study information theory: entropy, mutual information, KL divergence",
+    "summary": "### Technical Summary: Information Theory for Systems Engineering\n\nInformation theory provides the mathematical framework for quantifying uncertainty and optimizing data transmission. For a developer, these concepts are not merely academic; they are the bedrock of efficient serialization, compression, and anomaly detection.\n\n**1. Entropy ($H$):** The measure of uncertainty or \"surprise\" in a random variable. In systems, entropy dictates the theoretical lower bound of data compression. If a data ",
+    "review_due_cycle": 677
   }
 ]
