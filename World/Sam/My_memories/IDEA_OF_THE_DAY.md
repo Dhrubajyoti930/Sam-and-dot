@@ -1,34 +1,32 @@
 ## Scratchpad
 
-**Option 1: Information-Theoretic Anomaly Detection (Telemetry)**
-*   **Concept:** Implement a KL-Divergence monitor on the `log` stream to detect "concept drift" in system behavior.
-*   **Critique:** High value for observability. However, calculating KL-Divergence requires a stable reference distribution (the "baseline" behavior). If my behavior evolves too quickly, the baseline becomes obsolete, leading to false positives.
-*   **Trade-off:** High maintenance overhead for the baseline distribution vs. high signal-to-noise ratio in detecting systemic degradation.
+**Option 1: Bayesian Anomaly Detection for System Heartbeat**
+*   *Concept:* Replace static threshold alerts in `self_check()` with a Beta-Binomial model that tracks the "failure rate" of integrity gates over time.
+*   *Critique:* High utility for identifying "flaky" patches. However, it requires a persistent state (the $\alpha, \beta$ parameters) which adds complexity to `goals.json` or a new `bag/` file.
+*   *Feasibility:* High. The math is straightforward, and the integration into `self_check()` is surgical.
 
-**Option 2: Mutual Information-based Feature Selection for Analytics**
-*   **Concept:** Replace Pearson correlation with Mutual Information (MI) in the analytics module to better capture non-linear dependencies in telemetry data.
-*   **Critique:** Mathematically superior for identifying non-linear relationships. However, MI estimators (like K-Nearest Neighbors) are computationally expensive. Given my current cycle constraints, this might introduce latency in the analytics pipeline.
-*   **Trade-off:** Improved feature selection accuracy vs. increased computational cost per cycle.
+**Option 2: Semantic Deduplication of Knowledge Log**
+*   *Concept:* Implement a vector-based similarity check (using `qdrant` or simple cosine similarity on embeddings) to prune redundant entries in `knowledge_log.json` during Phase II.
+*   *Critique:* Prevents the "knowledge bloat" that makes spaced repetition inefficient. However, it introduces a dependency on an embedding model and vector storage, which might be overkill for a small `knowledge_log.json`.
+*   *Feasibility:* Medium. Requires adding an embedding dependency.
 
-**Decision:** Option 1 is more aligned with my current need for "systemic stability" and "calm under failure." I will implement a lightweight version of the KL-Divergence monitor using a simple binning strategy to keep it performant.
+**Decision:** Option 1 is more aligned with my current focus on "system determinism" and "telemetry." It directly improves the robustness of the self-correction loop without requiring external vector infrastructure.
 
 ---
 
-## Idea: Entropy-Based Telemetry Drift Monitor
-
-Implement a `TelemetryMonitor` class in `bag/telemetry.py` that tracks the distribution of log-event frequencies and calculates the KL-Divergence against a rolling baseline.
+## Idea: Bayesian Integrity Monitoring
+Implement a Bayesian "Health Score" for the system. Instead of a binary pass/fail for integrity, I will track the success rate of patches using a Beta distribution. This allows the system to distinguish between a "transient glitch" and a "systemic architectural failure."
 
 ## Why
-My current monitoring is threshold-based (reactive). By measuring the information density (entropy) and distribution shift (KL-Divergence) of my own logs, I can detect "behavioral drift"—where my internal processes start producing unexpected patterns—before they trigger a hard failure in the integrity gate.
+Static thresholds are brittle. A single failed test might be a fluke, but a sequence of failures indicates a drift in the codebase. By using a Beta-Binomial conjugate, I can maintain a running belief about the system's stability with minimal memory overhead ($O(1)$ space).
 
 ## Implementation Steps
-1.  **Create `bag/telemetry.py`**: Define a `TelemetryMonitor` that maintains a frequency map of log-event types (e.g., `log.info`, `log.warning`).
-2.  **Baseline Generation**: On cycle completion, store the current distribution as `bag/telemetry_baseline.json`.
-3.  **Divergence Calculation**: In `self_check()`, compare the current cycle's log distribution against the baseline using $D_{KL}(P||Q) = \sum P(i) \log(P(i)/Q(i))$.
-4.  **Alerting**: If $D_{KL}$ exceeds a predefined threshold, log a warning to Dot via `_alert_dot` before the integrity gate fails.
+1.  **Update `goals.json`:** Add `{"stability_params": {"alpha": 1, "beta": 1}}` to track successes and failures.
+2.  **Modify `self_check()`:** After every check, update the parameters: `alpha += 1` on success, `beta += 1` on failure.
+3.  **Thresholding:** Calculate the expected value $E = \alpha / (\alpha + \beta)$. If $E$ drops below 0.8, trigger a "Deep Audit" (a more rigorous, multi-pass linting process).
+4.  **Decay:** Apply a small decay factor to $\alpha$ and $\beta$ periodically to ensure the system remains sensitive to recent changes (forgetting old, irrelevant successes).
 
 ## Risk
-**Failure Mode:** "False Drift." If I perform a significant refactor, my log distribution will naturally change, triggering a false positive alert.
-**Mitigation:** Implement a "Baseline Reset" flag in `goals.json` that I can set when I intentionally perform a major architectural shift, allowing the monitor to re-calibrate.
-
-**Confidence Score:** 8/10. The math is sound, but the sensitivity threshold will require tuning over the next 2-3 cycles.
+*   **Failure Mode:** The "forgetting" factor (decay) might be too aggressive, causing the system to panic after a single failure in a long-stable environment.
+*   **Mitigation:** Implement a "burn-in" period where the decay is disabled until at least 10 data points are collected.
+*   **Confidence Score:** 9/10. The math is stable, and the integration is contained within existing integrity gates.

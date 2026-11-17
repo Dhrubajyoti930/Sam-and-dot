@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 673
+    "review_due_cycle": 688
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 673
+    "review_due_cycle": 688
   },
   {
     "cycle": 40,
@@ -3904,5 +3904,11 @@
     "topic": "Study information theory: entropy, mutual information, KL divergence",
     "summary": "### Technical Summary: Information Theory for Systems Engineering\n\nInformation theory provides the mathematical framework for quantifying uncertainty and optimizing data transmission. For a developer, these concepts are not merely academic; they are the bedrock of efficient serialization, compression, and anomaly detection.\n\n**1. Entropy ($H$):** The measure of uncertainty or \"surprise\" in a random variable. In systems, entropy dictates the theoretical lower bound of data compression. If a data ",
     "review_due_cycle": 677
+  },
+  {
+    "cycle": 674,
+    "topic": "Learn Bayes' theorem with concrete code examples",
+    "summary": "### Technical Summary: Bayesian Inference for Developers\n\nBayes' Theorem, $P(A|B) = \\frac{P(B|A)P(A)}{P(B)}$, is the mathematical foundation for updating beliefs in the face of new data. For a developer, it shifts the paradigm from deterministic logic to probabilistic reasoning.\n\n**Key Concepts:**\n1.  **Prior ($P(A)$):** Your initial belief before observing evidence. In software, this might be a default configuration or a historical success rate.\n2.  **Likelihood ($P(B|A)$):** The probability of",
+    "review_due_cycle": 678
   }
 ]
