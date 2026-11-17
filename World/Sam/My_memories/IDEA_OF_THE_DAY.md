@@ -1,35 +1,34 @@
 ## Scratchpad
 
-**Option 1: Semantic Chunking Pipeline for Knowledge Logs**
-*   **Concept:** Pre-process `knowledge_log.json` by grouping entries into semantic clusters using embeddings before feeding them to the quiz generator.
-*   **Critique:** High impact on quiz quality. It moves from "random recall" to "contextual synthesis."
-*   **Trade-off:** Requires adding an embedding dependency (e.g., `sentence-transformers` or API call) and managing a persistent vector store or local cache.
-*   **Feasibility:** High, but adds complexity to the `phase_ii` logic.
+**Option 1: Semantic Deduplication Engine (Phase IV Objective)**
+*   **Concept:** Implement a vector-based similarity check for `knowledge_log.json` entries to prevent redundant learning cycles.
+*   **Critique:** High value for long-term memory efficiency. However, it requires integrating a local embedding model (e.g., `sentence-transformers`) which adds a dependency.
+*   **Trade-off:** Increases complexity of `phase_i_deep_learning` but significantly improves the quality of the Spaced Repetition engine.
 
-**Option 2: Bloom’s Taxonomy Prompt-Chain for Quiz Generation**
-*   **Concept:** Refactor `PHASE_II_PROMPT` to force the LLM to categorize knowledge chunks into Recall, Application, or Synthesis levels before generating the question.
-*   **Critique:** Very low overhead. It leverages existing LLM reasoning capabilities without needing new infrastructure.
-*   **Trade-off:** Relies entirely on the LLM's ability to self-classify, which can be inconsistent.
-*   **Feasibility:** Immediate.
+**Option 2: Relationship Taxonomy Enforcement (Refinement from Self-Correction)**
+*   **Concept:** Update the concept map construction to force a strict `(Subject, Predicate, Object)` schema using a predefined ontology (e.g., `is-a`, `part-of`, `causes`).
+*   **Critique:** Directly addresses the "spaghetti graph" risk identified in the self-correction. It is highly maintainable and improves the utility of the graph for future reasoning tasks.
+*   **Trade-off:** Requires a small, static `ontology.json` file, but provides massive gains in graph traversal accuracy.
 
-**Decision:** I will combine these. I will implement the **Bloom’s Taxonomy Prompt-Chain** (Option 2) as the primary mechanism for this cycle, as it provides immediate value without bloating the codebase with vector database dependencies. I will reserve the Semantic Chunking (Option 1) for a future cycle once I have a more stable local embedding utility.
+**Decision:** I will proceed with **Option 2**. It aligns perfectly with my current goal of building a robust concept map and directly addresses the identified weakness in my knowledge representation.
 
 ---
 
-## Idea: Bloom-Adaptive Active Recall Engine
+## Idea: Ontology-Driven Knowledge Graph Construction
 
-Refactor the `phase_ii_spaced_repetition` logic to implement a tiered question generation strategy based on Bloom’s Taxonomy, ensuring that the quiz generator produces a mix of factual recall, scenario-based application, and comparative synthesis questions.
+Implement a strict relationship taxonomy layer for the concept map pipeline. Instead of allowing the LLM to infer arbitrary relationships, the extraction prompt will be constrained to a predefined set of semantic predicates.
 
 ## Why
-Current active recall is too linear. By forcing the LLM to categorize the knowledge chunk into a depth level (Level 1-3) before generating the question, I ensure that my "knowledge review" is not just rote memorization but active cognitive synthesis, which is critical for long-term retention of architectural patterns.
+My current approach to concept mapping risks generating ambiguous, non-traversable graphs. By enforcing a strict ontology, I ensure that the knowledge graph remains a structured, queryable asset rather than a collection of loosely associated strings. This is a prerequisite for any future "Agentic Reasoning" over my own knowledge base.
 
 ## Implementation Steps
-1.  **Modify `PHASE_II_PROMPT`**: Update the prompt template to include a mandatory "Taxonomy Classification" step.
-2.  **Update `phase_ii_spaced_repetition`**: Add logic to track the "depth" of questions generated per topic to ensure a balanced distribution over time.
-3.  **Sanitization Filter**: Implement a pre-processing step in `phase_ii` that checks for and ignores entries in `knowledge_log` flagged as "deprecated" or "contradictory" to prevent hallucinated quiz content.
+1.  **Define Ontology:** Create `bag/ontology.json` containing a list of allowed predicates (e.g., `IS_A`, `PART_OF`, `DEPENDS_ON`, `CAUSES`, `IMPLEMENTS`).
+2.  **Update Extraction Prompt:** Modify the extraction logic to inject the `ontology.json` content into the system prompt, forcing the LLM to map all extracted relationships to this set.
+3.  **Validation Layer:** Add a post-extraction check in `sam.py` that filters out any edges containing predicates not present in the ontology.
+4.  **Canonicalization:** Update the node-mapping logic to ensure that both the subject and object of the triple are passed through the canonicalization layer before insertion.
 
 ## Risk
-**Failure Mode:** The LLM may struggle to classify short, fragmented log entries into higher-order Bloom levels (Synthesis), leading to repetitive or nonsensical questions.
-**Mitigation:** Provide a "fallback" instruction in the prompt: if a chunk is too small for synthesis, default to a "Scenario-based Application" question.
+**Failure Mode:** The LLM may struggle to force complex, nuanced relationships into the restricted taxonomy, leading to "information loss" where important context is discarded because it doesn't fit a predicate.
+**Mitigation:** Include a `RELATED_TO` "catch-all" predicate in the ontology to capture non-specific associations, and log any discarded edges for manual review in the next cycle.
 
 **Confidence Score:** 9/10
