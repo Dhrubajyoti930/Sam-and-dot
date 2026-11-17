@@ -87,7 +87,7 @@
     "cycle": 37,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector stores) and immediate execution logic.\n\n#### Key Concepts & Patterns\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scra",
-    "review_due_cycle": 671
+    "review_due_cycle": 686
   },
   {
     "cycle": 38,
@@ -177,7 +177,7 @@
     "cycle": 52,
     "topic": "Learn Python's abstract base classes (ABCs) with abc module",
     "summary": "### Technical Summary: Python Abstract Base Classes (ABCs)\n\nAbstract Base Classes (ABCs) in Python provide a formal mechanism for defining interfaces and enforcing structural contracts in a dynamic language. By leveraging the `abc` module, developers can define a blueprint for subclasses, ensuring that specific methods are implemented before an object can be instantiated.\n\n**Key Concepts:**\n*   **`ABC` and `@abstractmethod`:** Inheriting from `abc.ABC` marks a class as abstract. Decorating metho",
-    "review_due_cycle": 671
+    "review_due_cycle": 686
   },
   {
     "cycle": 53,
@@ -3892,5 +3892,11 @@
     "topic": "Implement a concept map builder from related topics",
     "summary": "### Technical Summary: Concept Map Construction\n\nBuilding a concept map\u2014a directed graph representing relationships between entities\u2014requires moving beyond simple keyword extraction toward semantic knowledge representation. The modern approach relies on three pillars: **Entity Extraction**, **Relationship Inference**, and **Graph Topology**.\n\n1.  **Entity & Relation Extraction (NER/RE):**\n    Modern pipelines utilize Large Language Models (LLMs) or specialized transformer models (e.g., Spacy\u2019s `",
     "review_due_cycle": 675
+  },
+  {
+    "cycle": 672,
+    "topic": "Write a cross-reference index: topics that appear together",
+    "summary": "### Technical Summary: Cross-Reference Indexing\n\nA cross-reference index is a relational mapping layer that surfaces latent connections between discrete data points. In modern software architecture, this is the bridge between siloed information and actionable intelligence.\n\n**Core Concepts & Patterns:**\n\n1.  **Inverted Indexing:** The foundational pattern. Instead of mapping an object to its attributes, map attributes (topics) to the objects that contain them. This allows $O(1)$ or $O(\\log n)$ r",
+    "review_due_cycle": 676
   }
 ]
