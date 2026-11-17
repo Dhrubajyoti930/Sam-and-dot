@@ -1,33 +1,35 @@
 ## Scratchpad
 
-**Option 1: Implement the DSR (Difficulty, Stability, Retrievability) State Schema**
-*   **Concept:** Replace the simple `review_due_cycle` in `knowledge_log.json` with a structured object containing `S`, `D`, and `R` parameters per item.
-*   **Critique:** High feasibility. It directly addresses the "Cold Start" and "User Ability" refinement noted in my self-correction. It moves me from a static queue to a predictive model.
-*   **Trade-off:** Requires a migration script for existing `knowledge_log.json` entries.
+**Option 1: Semantic Chunking Pipeline for Knowledge Logs**
+*   **Concept:** Pre-process `knowledge_log.json` by grouping entries into semantic clusters using embeddings before feeding them to the quiz generator.
+*   **Critique:** High impact on quiz quality. It moves from "random recall" to "contextual synthesis."
+*   **Trade-off:** Requires adding an embedding dependency (e.g., `sentence-transformers` or API call) and managing a persistent vector store or local cache.
+*   **Feasibility:** High, but adds complexity to the `phase_ii` logic.
 
-**Option 2: Integrate "LLM-as-a-Judge" for Knowledge Review Validation**
-*   **Concept:** Instead of just generating a review summary, use a secondary Gemini call to grade the quality of my own recall against the original summary.
-*   **Critique:** Increases latency and token cost significantly. While it improves "rigor," it might be overkill for a lightweight SRS.
-*   **Trade-off:** High accuracy, but potentially violates the "Minimal footprint" core trait if not implemented carefully.
+**Option 2: Bloom’s Taxonomy Prompt-Chain for Quiz Generation**
+*   **Concept:** Refactor `PHASE_II_PROMPT` to force the LLM to categorize knowledge chunks into Recall, Application, or Synthesis levels before generating the question.
+*   **Critique:** Very low overhead. It leverages existing LLM reasoning capabilities without needing new infrastructure.
+*   **Trade-off:** Relies entirely on the LLM's ability to self-classify, which can be inconsistent.
+*   **Feasibility:** Immediate.
 
-**Decision:** Option 1 is superior. It builds the foundation for a data-driven memory system without adding unnecessary complexity to the hot path.
+**Decision:** I will combine these. I will implement the **Bloom’s Taxonomy Prompt-Chain** (Option 2) as the primary mechanism for this cycle, as it provides immediate value without bloating the codebase with vector database dependencies. I will reserve the Semantic Chunking (Option 1) for a future cycle once I have a more stable local embedding utility.
 
 ---
 
-## Idea: DSR-based Memory Decay Engine
-Transition the `knowledge_log` from a simple cycle-offset queue to a parameter-based Spaced Repetition System (SRS) using the DSR (Difficulty, Stability, Retrievability) model.
+## Idea: Bloom-Adaptive Active Recall Engine
+
+Refactor the `phase_ii_spaced_repetition` logic to implement a tiered question generation strategy based on Bloom’s Taxonomy, ensuring that the quiz generator produces a mix of factual recall, scenario-based application, and comparative synthesis questions.
 
 ## Why
-Current scheduling is linear and ignores the "forgetting curve." By tracking `S` (Stability) and `D` (Difficulty), I can dynamically calculate the next review interval based on performance, allowing for more efficient knowledge retention and better alignment with my goal of continuous, high-quality self-improvement.
+Current active recall is too linear. By forcing the LLM to categorize the knowledge chunk into a depth level (Level 1-3) before generating the question, I ensure that my "knowledge review" is not just rote memorization but active cognitive synthesis, which is critical for long-term retention of architectural patterns.
 
 ## Implementation Steps
-1.  **Schema Migration:** Update `knowledge_log.json` entries to include `{"S": 1.0, "D": 1.0, "R": 0.9}`.
-2.  **Update `phase_ii_spaced_repetition`:** Modify the logic to calculate the next `review_due_cycle` using the formula: $Interval = S \times \ln(R) / \ln(0.9)$.
-3.  **Feedback Loop:** Update the review prompt to require a "Recall Success" boolean, which triggers an update to `S` and `D` based on the delta between predicted and actual recall.
-4.  **Persistence:** Ensure `knowledge_log.json` writes back the updated parameters after every review.
+1.  **Modify `PHASE_II_PROMPT`**: Update the prompt template to include a mandatory "Taxonomy Classification" step.
+2.  **Update `phase_ii_spaced_repetition`**: Add logic to track the "depth" of questions generated per topic to ensure a balanced distribution over time.
+3.  **Sanitization Filter**: Implement a pre-processing step in `phase_ii` that checks for and ignores entries in `knowledge_log` flagged as "deprecated" or "contradictory" to prevent hallucinated quiz content.
 
 ## Risk
-**Failure Mode:** The model parameters ($S, D$) could diverge due to inaccurate self-assessment during the review phase, leading to "review starvation" (items never appearing) or "review flooding."
-**Mitigation:** Implement a "clamp" function on $S$ and $D$ to keep them within reasonable bounds (e.g., $S \in [0.5, 30]$) and a fallback to a default interval if the calculated interval is non-sensical.
+**Failure Mode:** The LLM may struggle to classify short, fragmented log entries into higher-order Bloom levels (Synthesis), leading to repetitive or nonsensical questions.
+**Mitigation:** Provide a "fallback" instruction in the prompt: if a chunk is too small for synthesis, default to a "Scenario-based Application" question.
 
 **Confidence Score:** 9/10
