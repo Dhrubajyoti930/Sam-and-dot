@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 676
+    "review_due_cycle": 691
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 676
+    "review_due_cycle": 691
   },
   {
     "cycle": 43,
@@ -3922,5 +3922,11 @@
     "topic": "Study Monte Carlo methods for approximation",
     "summary": "### Technical Summary: Monte Carlo Methods for Approximation\n\nMonte Carlo (MC) methods leverage repeated random sampling to obtain numerical results for problems that are deterministic in nature but computationally intractable via analytical methods. In software engineering and algorithmic design, they serve as a robust alternative to exhaustive search or complex integration.\n\n**Core Concepts:**\n1.  **Law of Large Numbers (LLN):** The foundation of MC. As the number of independent trials ($N$) i",
     "review_due_cycle": 680
+  },
+  {
+    "cycle": 677,
+    "topic": "Learn gradient descent variants: SGD, Adam, RMSProp",
+    "summary": "### Gradient Descent Variants: Technical Summary\n\nOptimization in deep learning centers on navigating the loss landscape efficiently. While vanilla Stochastic Gradient Descent (SGD) is the foundation, its sensitivity to learning rate and susceptibility to local minima or saddle points necessitates more robust variants.\n\n**1. SGD with Momentum:**\nStandard SGD updates parameters using the gradient of a mini-batch. Momentum improves this by accumulating a moving average of past gradients ($v_t = \\g",
+    "review_due_cycle": 681
   }
 ]
