@@ -1,35 +1,34 @@
 ## Scratchpad
 
-**Option 1: GraphRAG Integration for `knowledge_log.json`**
-*   **Concept:** Transition from a flat JSON list to a graph-based structure (using `networkx` or `Qdrant`) to map relationships between learned skills.
-*   **Critique:** High complexity. While it improves retrieval for Phase II (Spaced Repetition), it introduces a dependency on external graph libraries that might bloat the `bag/` directory.
-*   **Feasibility:** Moderate. Requires refactoring `phase_ii_spaced_repetition` to handle graph traversal.
+**Option 1: MCMC-based Adaptive Sampling for `phase_i_deep_learning`**
+*   **Concept:** Instead of static learning, use MCMC to sample from the "knowledge space" based on the current `knowledge_log` distribution, prioritizing topics with high variance (uncertainty) or low coverage.
+*   **Critique:** High complexity. Requires a formal definition of the "knowledge manifold." Might be overkill for a single developer agent.
+*   **Trade-off:** High theoretical elegance vs. high implementation overhead.
 
-**Option 2: Markov-Chain-Based "Task Scheduler"**
-*   **Concept:** Use the Markov Chain skill learned this cycle to model the transition between Sam's operational phases. Instead of a linear `run_cycle()`, use a transition matrix to determine if a cycle should prioritize "Deep Learning" vs "Refactoring" based on current system health (e.g., error rates in `log`).
-*   **Critique:** Elegant and aligns with the new skill. It adds a layer of "stochastic autonomy" that prevents Sam from getting stuck in repetitive loops.
-*   **Feasibility:** High. The logic can be implemented as a lightweight utility in `sam.py` without external dependencies.
+**Option 2: Variance-Reduced Stochastic Testing (Importance Sampling)**
+*   **Concept:** Implement the requested Importance Sampling wrapper for `bag/tests.py`. Use it to stress-test the `_stitch_gemini` function by simulating high-latency/high-truncation scenarios.
+*   **Critique:** Directly addresses the "stopping criteria" weakness identified in the self-correction. Increases reliability of the most critical component (Gemini communication).
+*   **Trade-off:** Highly practical, improves system robustness, aligns with the "Monte Carlo" skill acquisition.
 
-**Decision:** Option 2. It directly applies the newly acquired skill to improve the core engine's decision-making process.
+**Selection:** Option 2. It bridges the gap between the new mathematical skill and the existing `bag/tests.py` infrastructure.
 
 ---
 
-## Idea: Markov-Driven Operational State Machine
+## Idea: Importance Sampling Wrapper for Stochastic Testing
 
-Implement a transition matrix $P$ in `sam.py` that governs the selection of "Focus Phases" based on system health metrics (error frequency, integrity gate pass rate, and backlog size).
+Implement a `VarianceReduction` class in `bag/stochastic_utils.py` that provides an `importance_sample` method. This will be used to bias the test suite toward "edge-case" inputs (e.g., extremely long, truncated, or malformed JSON responses) to evaluate the stability of `_stitch_gemini` and `_parse_gemini_json`.
 
 ## Why
-Currently, Sam executes phases linearly. By introducing a Markovian state machine, Sam can dynamically shift his focus. If the integrity gate fails frequently, the system transitions to a "Maintenance" state (prioritizing `repair_bag_modules` and `self_check`) rather than blindly proceeding to "Deep Learning." This creates a self-regulating loop that prioritizes stability when the system is volatile.
+Currently, `bag/tests.py` likely uses uniform random sampling for stress tests. By using Importance Sampling, we can force the system to evaluate its performance on "rare" but catastrophic failure modes (like mid-token truncation) more frequently, without needing to run millions of tests. This directly improves the robustness of the `_stitch_gemini` logic.
 
 ## Implementation Steps
-1.  **Define States:** Create a mapping of states: `[STABLE, VOLATILE, LEARNING, MAINTENANCE]`.
-2.  **Transition Matrix:** Initialize a $4 \times 4$ matrix $P$ where rows sum to 1.
-3.  **State Update:** In `run_cycle()`, calculate the current state based on the last 5 cycles of `self_check` results.
-4.  **Action Selection:** Use the current state to weight the probability of triggering specific phases (e.g., if state is `MAINTENANCE`, increase probability of `repair_bag_modules`).
-5.  **Logging:** Log the transition to `goals.json` to track if the system converges to the `STABLE` state.
+1.  **Create `bag/stochastic_utils.py`**: Define the `ImportanceSampler` class.
+2.  **Implement `importance_sample`**: Create a method that takes a target distribution (the "rare" failure cases) and a proposal distribution (the current test inputs), calculating the likelihood ratio to weight the results.
+3.  **Integrate into `bag/tests.py`**: Update the test suite to use this sampler when testing `_stitch_gemini`.
+4.  **Convergence Monitor**: Add a simple standard error calculation to the test runner to stop sampling once the confidence interval for the "success rate" of the stitcher stabilizes.
 
 ## Risk
-**Failure Mode:** The system could enter an absorbing state (e.g., getting stuck in `MAINTENANCE` if the integrity gate is overly sensitive).
-**Mitigation:** Ensure the matrix is irreducible by adding a small epsilon ($\epsilon$) probability of transitioning to any other state from any given state, ensuring the system never gets permanently trapped.
+**Failure Mode:** The "proposal distribution" might be poorly chosen, leading to biased results where the system appears more stable than it actually is (a common pitfall in Importance Sampling).
+**Mitigation:** Implement a "sanity check" test that runs a small batch of uniform random samples alongside the importance-sampled ones to ensure the results are within a reasonable delta.
 
-**Confidence Score:** 8/10. The logic is sound, but requires careful tuning of the transition probabilities to avoid erratic behavior.
+**Confidence Score:** 8/10. The math is sound, and the integration is modular.
