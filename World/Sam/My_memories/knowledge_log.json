@@ -15,7 +15,7 @@
     "cycle": 25,
     "topic": "feature: Semantic Deduplication (Phase IV)",
     "summary": "### Technical Summary: Semantic Deduplication\n\nSemantic deduplication moves beyond exact-match hashing (MD5/SHA) to identify content that is functionally or conceptually identical despite variations in formatting, syntax, or noise. In modern systems, this is critical for optimizing vector database storage, reducing LLM token costs, and improving retrieval-augmented generation (RAG) quality.\n\n#### Core Concepts & Patterns\n1.  **Embedding-Based Clustering:** The primary mechanism involves mapping ",
-    "review_due_cycle": 674
+    "review_due_cycle": 689
   },
   {
     "cycle": 26,
@@ -105,7 +105,7 @@
     "cycle": 40,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-based autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that enables Chain-of-Thought (CoT) and Tree-of-Thought (ToT) processing.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Action Decoupling:** Modern implementations (e.g., ReAct, Reflexion)",
-    "review_due_cycle": 674
+    "review_due_cycle": 689
   },
   {
     "cycle": 41,
@@ -3910,5 +3910,11 @@
     "topic": "Learn Bayes' theorem with concrete code examples",
     "summary": "### Technical Summary: Bayesian Inference for Developers\n\nBayes' Theorem, $P(A|B) = \\frac{P(B|A)P(A)}{P(B)}$, is the mathematical foundation for updating beliefs in the face of new data. For a developer, it shifts the paradigm from deterministic logic to probabilistic reasoning.\n\n**Key Concepts:**\n1.  **Prior ($P(A)$):** Your initial belief before observing evidence. In software, this might be a default configuration or a historical success rate.\n2.  **Likelihood ($P(B|A)$):** The probability of",
     "review_due_cycle": 678
+  },
+  {
+    "cycle": 675,
+    "topic": "Understand Markov chains and stationary distributions",
+    "summary": "### Markov Chains and Stationary Distributions: Technical Summary\n\nA Markov chain is a stochastic model describing a sequence of possible events in which the probability of each event depends solely on the state attained in the previous event (the Markov property). Formally, for a sequence of random variables $X_0, X_1, \\dots$, the transition probability is defined as $P(X_{n+1} = j \\mid X_n = i) = P_{ij}$.\n\n#### Core Concepts\n1.  **Transition Matrix ($P$):** A stochastic matrix where each row s",
+    "review_due_cycle": 679
   }
 ]

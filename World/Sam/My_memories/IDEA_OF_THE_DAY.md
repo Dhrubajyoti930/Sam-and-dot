@@ -1,32 +1,35 @@
 ## Scratchpad
 
-**Option 1: Bayesian Anomaly Detection for System Heartbeat**
-*   *Concept:* Replace static threshold alerts in `self_check()` with a Beta-Binomial model that tracks the "failure rate" of integrity gates over time.
-*   *Critique:* High utility for identifying "flaky" patches. However, it requires a persistent state (the $\alpha, \beta$ parameters) which adds complexity to `goals.json` or a new `bag/` file.
-*   *Feasibility:* High. The math is straightforward, and the integration into `self_check()` is surgical.
+**Option 1: GraphRAG Integration for `knowledge_log.json`**
+*   **Concept:** Transition from a flat JSON list to a graph-based structure (using `networkx` or `Qdrant`) to map relationships between learned skills.
+*   **Critique:** High complexity. While it improves retrieval for Phase II (Spaced Repetition), it introduces a dependency on external graph libraries that might bloat the `bag/` directory.
+*   **Feasibility:** Moderate. Requires refactoring `phase_ii_spaced_repetition` to handle graph traversal.
 
-**Option 2: Semantic Deduplication of Knowledge Log**
-*   *Concept:* Implement a vector-based similarity check (using `qdrant` or simple cosine similarity on embeddings) to prune redundant entries in `knowledge_log.json` during Phase II.
-*   *Critique:* Prevents the "knowledge bloat" that makes spaced repetition inefficient. However, it introduces a dependency on an embedding model and vector storage, which might be overkill for a small `knowledge_log.json`.
-*   *Feasibility:* Medium. Requires adding an embedding dependency.
+**Option 2: Markov-Chain-Based "Task Scheduler"**
+*   **Concept:** Use the Markov Chain skill learned this cycle to model the transition between Sam's operational phases. Instead of a linear `run_cycle()`, use a transition matrix to determine if a cycle should prioritize "Deep Learning" vs "Refactoring" based on current system health (e.g., error rates in `log`).
+*   **Critique:** Elegant and aligns with the new skill. It adds a layer of "stochastic autonomy" that prevents Sam from getting stuck in repetitive loops.
+*   **Feasibility:** High. The logic can be implemented as a lightweight utility in `sam.py` without external dependencies.
 
-**Decision:** Option 1 is more aligned with my current focus on "system determinism" and "telemetry." It directly improves the robustness of the self-correction loop without requiring external vector infrastructure.
+**Decision:** Option 2. It directly applies the newly acquired skill to improve the core engine's decision-making process.
 
 ---
 
-## Idea: Bayesian Integrity Monitoring
-Implement a Bayesian "Health Score" for the system. Instead of a binary pass/fail for integrity, I will track the success rate of patches using a Beta distribution. This allows the system to distinguish between a "transient glitch" and a "systemic architectural failure."
+## Idea: Markov-Driven Operational State Machine
+
+Implement a transition matrix $P$ in `sam.py` that governs the selection of "Focus Phases" based on system health metrics (error frequency, integrity gate pass rate, and backlog size).
 
 ## Why
-Static thresholds are brittle. A single failed test might be a fluke, but a sequence of failures indicates a drift in the codebase. By using a Beta-Binomial conjugate, I can maintain a running belief about the system's stability with minimal memory overhead ($O(1)$ space).
+Currently, Sam executes phases linearly. By introducing a Markovian state machine, Sam can dynamically shift his focus. If the integrity gate fails frequently, the system transitions to a "Maintenance" state (prioritizing `repair_bag_modules` and `self_check`) rather than blindly proceeding to "Deep Learning." This creates a self-regulating loop that prioritizes stability when the system is volatile.
 
 ## Implementation Steps
-1.  **Update `goals.json`:** Add `{"stability_params": {"alpha": 1, "beta": 1}}` to track successes and failures.
-2.  **Modify `self_check()`:** After every check, update the parameters: `alpha += 1` on success, `beta += 1` on failure.
-3.  **Thresholding:** Calculate the expected value $E = \alpha / (\alpha + \beta)$. If $E$ drops below 0.8, trigger a "Deep Audit" (a more rigorous, multi-pass linting process).
-4.  **Decay:** Apply a small decay factor to $\alpha$ and $\beta$ periodically to ensure the system remains sensitive to recent changes (forgetting old, irrelevant successes).
+1.  **Define States:** Create a mapping of states: `[STABLE, VOLATILE, LEARNING, MAINTENANCE]`.
+2.  **Transition Matrix:** Initialize a $4 \times 4$ matrix $P$ where rows sum to 1.
+3.  **State Update:** In `run_cycle()`, calculate the current state based on the last 5 cycles of `self_check` results.
+4.  **Action Selection:** Use the current state to weight the probability of triggering specific phases (e.g., if state is `MAINTENANCE`, increase probability of `repair_bag_modules`).
+5.  **Logging:** Log the transition to `goals.json` to track if the system converges to the `STABLE` state.
 
 ## Risk
-*   **Failure Mode:** The "forgetting" factor (decay) might be too aggressive, causing the system to panic after a single failure in a long-stable environment.
-*   **Mitigation:** Implement a "burn-in" period where the decay is disabled until at least 10 data points are collected.
-*   **Confidence Score:** 9/10. The math is stable, and the integration is contained within existing integrity gates.
+**Failure Mode:** The system could enter an absorbing state (e.g., getting stuck in `MAINTENANCE` if the integrity gate is overly sensitive).
+**Mitigation:** Ensure the matrix is irreducible by adding a small epsilon ($\epsilon$) probability of transitioning to any other state from any given state, ensuring the system never gets permanently trapped.
+
+**Confidence Score:** 8/10. The logic is sound, but requires careful tuning of the transition probabilities to avoid erratic behavior.
