@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 677
+    "review_due_cycle": 692
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 677
+    "review_due_cycle": 692
   },
   {
     "cycle": 44,
@@ -3928,5 +3928,11 @@
     "topic": "Learn gradient descent variants: SGD, Adam, RMSProp",
     "summary": "### Gradient Descent Variants: Technical Summary\n\nOptimization in deep learning centers on navigating the loss landscape efficiently. While vanilla Stochastic Gradient Descent (SGD) is the foundation, its sensitivity to learning rate and susceptibility to local minima or saddle points necessitates more robust variants.\n\n**1. SGD with Momentum:**\nStandard SGD updates parameters using the gradient of a mini-batch. Momentum improves this by accumulating a moving average of past gradients ($v_t = \\g",
     "review_due_cycle": 681
+  },
+  {
+    "cycle": 678,
+    "topic": "Understand automatic differentiation: forward vs reverse mode",
+    "summary": "### Technical Summary: Automatic Differentiation (AD)\n\nAutomatic Differentiation (AD) is the engine of modern machine learning, distinct from symbolic differentiation (which leads to expression swell) and numerical differentiation (which suffers from truncation and round-off errors). AD decomposes complex functions into a sequence of elementary operations (addition, multiplication, sin, exp) and applies the chain rule systematically via the computational graph.\n\n#### Forward Mode (Tangent Mode)\n",
+    "review_due_cycle": 682
   }
 ]
