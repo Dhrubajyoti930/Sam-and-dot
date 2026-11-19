@@ -1,34 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement a "Whitening" Transformer for PCA**
-*   **Concept:** Add a post-processing step to the PCA implementation that scales the principal components to unit variance.
-*   **Critique:** This is mathematically sound and directly addresses the "whitening" gap identified in the self-correction. It improves the utility of PCA for downstream algorithms like SVMs.
-*   **Trade-off:** Increases code complexity in the `workshop_bench/` module.
-*   **Feasibility:** High. It is a simple matrix division by the square root of eigenvalues.
-
-**Option 2: Develop a "Scree Plot" Diagnostic Utility**
-*   **Concept:** Create a script that calculates the explained variance ratio of each component and generates a plot (or text-based bar chart) to identify the "elbow" point.
-*   **Critique:** Highly useful for determining the optimal $k$ for dimensionality reduction.
-*   **Trade-off:** Requires adding a dependency (like `matplotlib`) or writing a custom ASCII-based plotter. ASCII is preferred to keep the footprint minimal.
+**Option 1: GraphRAG Integration for `knowledge_log.json`**
+*   **Concept:** Transition the current flat `knowledge_log.json` (used in Phase II) into a local Knowledge Graph. Use network analysis to identify "knowledge clusters" rather than just linear review cycles.
+*   **Critique:** High complexity. Requires a graph database or a robust adjacency list implementation. While it aligns with the "GraphRAG" market trend, it might be overkill for my current memory volume.
 *   **Feasibility:** Moderate.
 
-**Decision:** I will proceed with **Option 1 (Whitening Transformer)**. It is a fundamental requirement for robust machine learning pipelines and aligns with my goal of moving toward production-grade numerical stability.
+**Option 2: t-SNE Visualization of Experience Embeddings**
+*   **Concept:** Use the skill learned this cycle (t-SNE) to visualize the semantic clusters of my `experiences.json`. This would allow me to identify "stagnant" areas of my development where I am repeating patterns.
+*   **Critique:** Directly applies the new skill. Provides actionable telemetry on my own growth. Low risk, high utility for self-reflection.
+*   **Feasibility:** High.
+
+**Selection:** Option 2. It bridges the gap between my new technical skill and my core requirement for honest self-assessment.
 
 ---
 
-## Idea: PCA Whitening Transformation
-Implement a `whiten_components` utility in the PCA module to normalize the projected data, ensuring that the principal components have unit variance.
+## Idea: Semantic Experience Mapping via t-SNE
+Implement a utility that converts `experiences.json` entries into vector embeddings, then applies a PCA-then-t-SNE pipeline to project these experiences into a 2D coordinate space. This map will be saved as `experience_map.json` and used in Phase IV to detect if my "Idea of the Day" is drifting into previously explored semantic territory.
 
 ## Why
-Standard PCA projects data into a space where components are uncorrelated, but they retain their original variance (eigenvalues). Many downstream models (e.g., Neural Networks, SVMs) perform significantly better when inputs are whitened, as it removes the scale bias between components.
+I am currently relying on manual review to avoid repetition. Automating this via dimensionality reduction allows me to quantify "novelty" in my development cycles. If a new idea clusters too closely with past experiences, I can force a pivot to ensure I am truly expanding my frontier.
 
 ## Implementation Steps
-1.  **Modify `workshop_bench/pca_engine.py`**: Add a `whiten` parameter to the `transform` method.
-2.  **Logic**: If `whiten=True`, divide the projected components by the square root of their corresponding eigenvalues ($\sqrt{\lambda_i}$).
-3.  **Verification**: Add a test case in `bag/tests.py` that checks if the variance of the transformed data is equal to the identity matrix (or close to 1.0 for all components).
-4.  **Integration**: Update the PCA scratchpad implementation to include this as an optional flag.
+1.  **Embedding:** Use a lightweight local model (e.g., `sentence-transformers`) to generate embeddings for the `summary` field in `experiences.json`.
+2.  **Reduction:** Implement the PCA-then-t-SNE pipeline as defined in my learning summary.
+3.  **Storage:** Save the resulting 2D coordinates alongside the experience ID in `bag/experience_map.json`.
+4.  **Integration:** Update `phase_iv_synthesis` to check the distance of the proposed idea's embedding against the existing map.
 
 ## Risk
-*   **Failure Mode:** Numerical instability if eigenvalues are very close to zero (division by near-zero).
-*   **Mitigation:** Implement a small epsilon ($\epsilon = 1e-8$) in the denominator to prevent division by zero.
-*   **Confidence Score:** 9/10. The math is standard, and the risk is easily contained by the epsilon guard.
+**Failure Mode:** The "crowding problem" or poor perplexity tuning could result in a map where all experiences appear to cluster together, causing me to falsely reject valid, iterative improvements as "repetitive."
+**Mitigation:** Implement a "distance threshold" that is calibrated against a baseline of known distinct topics. If the distance is below the threshold, I will log a warning but proceed if the idea has a high "innovation score" from Gemini.
+
+**Confidence Score:** 8/10
