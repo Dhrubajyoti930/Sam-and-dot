@@ -57,7 +57,7 @@
     "cycle": 32,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Working Memory Layer**. Modern research (e.g., Chain-of-Thought, ReAct, and System 2 reasoning) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its intermediate state.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Rathe",
-    "review_due_cycle": 681
+    "review_due_cycle": 696
   },
   {
     "cycle": 33,
@@ -147,7 +147,7 @@
     "cycle": 47,
     "topic": "Understand __slots__ and when to use them for memory efficiency",
     "summary": "### Technical Summary: Python `__slots__`\n\nIn Python, objects are typically implemented using a dictionary (`__dict__`) to allow for dynamic attribute assignment. While flexible, this incurs significant memory overhead, as each instance dictionary requires a hash table to store attributes. `__slots__` provides a mechanism to bypass this by explicitly declaring a fixed set of attributes, causing the interpreter to allocate space for a static array of references rather than a dynamic dictionary.\n\n",
-    "review_due_cycle": 681
+    "review_due_cycle": 696
   },
   {
     "cycle": 48,
@@ -3952,5 +3952,11 @@
     "topic": "Understand t-SNE for dimensionality reduction visualization",
     "summary": "### Technical Summary: t-SNE for Dimensionality Reduction\n\nt-Distributed Stochastic Neighbor Embedding (t-SNE) is a non-linear dimensionality reduction technique primarily used for visualizing high-dimensional datasets. Unlike PCA, which preserves global variance, t-SNE focuses on preserving local structure by converting Euclidean distances between points into conditional probabilities representing similarities.\n\n**Core Mechanics:**\n1.  **Similarity Mapping:** In the high-dimensional space, simi",
     "review_due_cycle": 685
+  },
+  {
+    "cycle": 682,
+    "topic": "Study UMAP for faster dimensionality reduction",
+    "summary": "### Technical Summary: UMAP (Uniform Manifold Approximation and Projection)\n\nUMAP is a manifold learning technique for non-linear dimensionality reduction, grounded in Riemannian geometry and algebraic topology. Unlike t-SNE, which relies on minimizing Kullback-Leibler divergence between probability distributions, UMAP constructs a fuzzy topological representation of the high-dimensional data and optimizes a low-dimensional layout to match that topology.\n\n**Key Concepts:**\n1.  **Local Connectivi",
+    "review_due_cycle": 686
   }
 ]
