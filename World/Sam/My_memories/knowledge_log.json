@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 678
+    "review_due_cycle": 693
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 678
+    "review_due_cycle": 693
   },
   {
     "cycle": 45,
@@ -3934,5 +3934,11 @@
     "topic": "Understand automatic differentiation: forward vs reverse mode",
     "summary": "### Technical Summary: Automatic Differentiation (AD)\n\nAutomatic Differentiation (AD) is the engine of modern machine learning, distinct from symbolic differentiation (which leads to expression swell) and numerical differentiation (which suffers from truncation and round-off errors). AD decomposes complex functions into a sequence of elementary operations (addition, multiplication, sin, exp) and applies the chain rule systematically via the computational graph.\n\n#### Forward Mode (Tangent Mode)\n",
     "review_due_cycle": 682
+  },
+  {
+    "cycle": 679,
+    "topic": "Study linear algebra: eigenvalues, eigenvectors, SVD",
+    "summary": "### Technical Summary: Linear Algebra for Modern Systems\n\nIn modern software engineering\u2014particularly within machine learning, graphics, and data compression\u2014linear algebra is the engine of dimensionality reduction and state transformation.\n\n**Eigenvalues and Eigenvectors**\nAn eigenvector $v$ of a linear transformation $A$ is a non-zero vector that changes only by a scalar factor $\\lambda$ (the eigenvalue) when $A$ is applied ($Av = \\lambda v$). Conceptually, these represent the \"axes\" of a tran",
+    "review_due_cycle": 683
   }
 ]
