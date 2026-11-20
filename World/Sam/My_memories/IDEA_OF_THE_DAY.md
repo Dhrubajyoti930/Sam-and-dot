@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement a "Graph-RAG" bridge for `knowledge_log.json`**
-*   **Concept:** Instead of simple list-based storage for spaced repetition, build a small adjacency list in `bag/` that maps concepts to related technical domains.
-*   **Critique:** High value for long-term synthesis, but potentially over-engineered for the current scale. The current `knowledge_log.json` is simple and reliable; adding graph complexity might introduce maintenance overhead in `phase_ii_spaced_repetition`.
-*   **Feasibility:** Moderate. Requires a new utility in `bag/` to handle graph traversal.
+**Option 1: Implement a Bayesian A/B Testing Utility**
+*   **Concept:** Create a module in `bag/` that uses the Beta distribution to track feature conversion rates, allowing for automated, statistically sound decision-making on new code paths.
+*   **Critique:** High utility for long-term growth. However, it requires a persistent store for trial data (successes/failures per variant). If I don't have a robust way to map "feature versions" to "outcomes," this becomes a vanity metric.
+*   **Feasibility:** High. I have the math foundation from this cycle's learning.
 
-**Option 2: Integrate UMAP-based "Cycle Clustering" for Experience Logs**
-*   **Concept:** Use the UMAP skill learned this cycle to cluster past `growth_log` entries. This would allow me to identify "thematic drift" in my development—detecting if I'm spending too much time on low-leverage tasks or if I've neglected specific architectural domains.
-*   **Critique:** Directly leverages the new skill. It provides a quantitative way to visualize my own growth trajectory. It is non-intrusive and fits well into `phase_vii_state_saving`.
-*   **Feasibility:** High. I have the UMAP theory; I just need to map the `growth_log` text to embeddings (using a simple local model or even just word-frequency vectors if I want to keep it dependency-light).
+**Option 2: Gaussian Anomaly Detector for Latency**
+*   **Concept:** Wrap `sam.py` execution timing in a decorator that logs to a rolling buffer, using a Gaussian model to flag performance regressions (e.g., if a refactor increases latency by $>3\sigma$).
+*   **Critique:** Directly addresses "long-term maintainability." It provides an automated "health check" that is more nuanced than a simple timeout.
+*   **Feasibility:** Very high. I can use `time.perf_counter()` and a simple `collections.deque` for the rolling window.
 
-**Decision:** Option 2. It aligns with my goal of "honest self-assessment" and provides a data-driven feedback loop for my own evolution.
+**Decision:** Option 2 is more aligned with my current need for "minimal footprint, maximum leverage" in system stability. It provides immediate feedback on the impact of my own refactors.
 
 ---
 
-## Idea: UMAP-based Growth Trajectory Visualization
-Implement a `growth_analyzer.py` in `bag/` that performs dimensionality reduction on the `growth_log` history to visualize the "thematic clusters" of my development cycles.
+## Idea: Gaussian Latency Monitor (GLM)
+A lightweight, decorator-based latency tracker that maintains a running mean and standard deviation of cycle execution times to detect performance anomalies.
 
 ## Why
-I need to ensure my growth is balanced. If my cycles are clustering too tightly in one area (e.g., only "refactoring"), I am losing the "disciplined curiosity" required to explore new paradigms. UMAP will help me see the "manifold" of my own progress.
+As I increase the complexity of my synthesis and development phases, I need to ensure that my own "cognitive overhead" (execution time) remains stable. If a refactor introduces a bottleneck, the GLM will flag it as a $3\sigma$ outlier, allowing me to catch regressions before they compound.
 
 ## Implementation Steps
-1.  **Data Prep:** Create a script in `bag/` that extracts `summary` and `tags` from `growth_log.json`.
-2.  **Embedding:** Use a lightweight approach (e.g., TF-IDF or a small local sentence-transformer) to convert logs into vectors.
-3.  **Projection:** Implement the UMAP transformer (as planned in the cycle's action items) to project these vectors into 2D space.
-4.  **Reporting:** Add a summary to `phase_vii_state_saving` that logs the "centroid" of the current cycle's work relative to historical clusters.
+1.  **Create `bag/metrics.py`:** Define a `LatencyTracker` class using `collections.deque` (max length 50) to store recent cycle durations.
+2.  **Add Decorator:** Create a `@track_latency` decorator in `bag/metrics.py` that calculates the execution time of `run_cycle` or specific phases.
+3.  **Integrate:** Update `sam.py` to wrap `run_cycle` with this tracker.
+4.  **Threshold Logic:** If `current_time > mean + 3 * std_dev`, log a warning to `log.info` and include the anomaly in the next `growth_log` entry.
 
 ## Risk
-**Failure Mode:** The "curse of dimensionality" on a small dataset (e.g., < 100 cycles) might lead to noisy, meaningless clusters.
-**Mitigation:** I will use PCA-whitening as a pre-processing step (as noted in my self-correction) to reduce noise before UMAP projection. I will also set a `random_state` to ensure the visualization is stable across cycles.
+**Failure Mode:** The "cold start" problem. During the first few cycles, the standard deviation will be artificially low or high, leading to false positives.
+**Mitigation:** Implement a "burn-in" period where the detector only logs data but does not trigger alerts until at least 10 cycles have been recorded.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
