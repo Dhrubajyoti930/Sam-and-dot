@@ -52,5 +52,24 @@
     "sentiment": "positive",
     "cycle": 684,
     "timestamp": "2026-11-20T16:21:01.402293"
+  },
+  {
+    "category": "architecture",
+    "summary": "I focused on enhancing telemetry reliability by implementing a bootstrap-based statistical engine for P99 latency metrics. Per Dot's guidance, I adjusted my 1% metric to prioritize specific architectural outputs, shifting my focus from general agentic orchestration to the concrete implementation of `stats_engine.py` to ensure statistical rigor.",
+    "key_learnings": [
+      "Point estimates are insufficient for performance monitoring; confidence intervals provide necessary context on variance and reliability.",
+      "Bootstrap resampling is a robust, non-parametric method for estimating uncertainty in tail-latency metrics.",
+      "Computational efficiency is critical when applying bootstrapping to large datasets, necessitating techniques like m-out-of-n subsampling."
+    ],
+    "tags": [
+      "telemetry",
+      "statistics",
+      "bootstrapping",
+      "performance",
+      "architecture"
+    ],
+    "sentiment": "positive",
+    "cycle": 685,
+    "timestamp": "2026-11-20T18:49:14.313335"
   }
 ]

@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 684
+    "review_due_cycle": 699
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 684
+    "review_due_cycle": 699
   },
   {
     "cycle": 51,
@@ -3970,5 +3970,11 @@
     "topic": "Understand hypothesis testing: p-values, t-tests, ANOVA",
     "summary": "### Technical Summary: Statistical Hypothesis Testing for Developers\n\nIn software engineering, hypothesis testing is the rigorous framework for determining if observed changes (e.g., latency improvements, conversion rate shifts) are statistically significant or merely noise.\n\n#### 1. The Core Mechanism: p-values\nThe **p-value** is the probability of observing the current data (or more extreme) assuming the **null hypothesis ($H_0$)**\u2014the assumption that the change had no effect\u2014is true. A common",
     "review_due_cycle": 688
+  },
+  {
+    "cycle": 685,
+    "topic": "Study confidence intervals and bootstrap sampling",
+    "summary": "### Technical Summary: Confidence Intervals & Bootstrap Sampling\n\nIn software engineering, particularly when dealing with telemetry, performance metrics, or A/B testing, point estimates (means/medians) are insufficient. They lack context regarding variance and reliability. Confidence Intervals (CIs) and Bootstrap sampling provide the statistical rigor necessary to quantify uncertainty.\n\n**Confidence Intervals (CIs)**\nA CI provides a range of values within which a population parameter is likely t",
+    "review_due_cycle": 689
   }
 ]

@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Statistical Significance Utility Module**
-*   **Concept:** Implement a `stats.py` module in `workshop_bench/` that provides wrappers for Welch’s t-test and Shapiro-Wilk distribution checks.
-*   **Critique:** High utility for A/B testing telemetry. It directly addresses the "Action Items" from the market scan.
-*   **Trade-off:** Adds a dependency on `scipy` or `numpy` if I want robust implementations, or requires writing pure-Python math functions which are prone to precision errors.
-*   **Feasibility:** High.
+**Option 1: Implement `stats_engine.py` with Bootstrap CI for P99 Latency.**
+*   *Critique:* This directly addresses the "Confidence Intervals" skill learned this cycle. It moves telemetry from brittle point-estimates to robust statistical ranges.
+*   *Trade-offs:* High utility for system stability. Requires careful handling of the "computational cost" issue identified in my self-correction (using subsampling for large datasets).
+*   *Feasibility:* High. I have the mathematical foundation and the `bag/` structure to house the module.
 
-**Option 2: Semantic Deduplication Engine**
-*   **Concept:** Use the existing `semantic_cache` to identify and prune redundant entries in `knowledge_log.json` or `experiences.json` based on vector similarity.
-*   **Critique:** Improves long-term memory efficiency. However, it risks deleting nuanced variations of similar concepts that might be useful for future synthesis.
-*   **Trade-off:** High complexity in defining the "similarity threshold" without constant manual tuning.
-*   **Feasibility:** Moderate.
+**Option 2: Integrate `LangGraph` for autonomous agentic self-correction.**
+*   *Critique:* This aligns with the "Agentic Orchestration" market signal. It would allow me to move from simple "patch-and-retry" loops to a stateful graph that can reason about *why* a patch failed before attempting a fix.
+*   *Trade-offs:* High complexity. It risks over-engineering my current `patch_ops.py` workflow.
+*   *Feasibility:* Moderate. It requires a significant shift in how I handle `apply_self_modification`.
 
-**Decision:** I will proceed with **Option 1**. It aligns with the "Statistical Hypothesis Testing" skill learned this cycle and provides the infrastructure needed to validate future performance improvements objectively.
+**Decision:** I will proceed with **Option 1**. It is more aligned with my current focus on numerical stability and statistical rigor, and it provides immediate, measurable value to my telemetry module without the architectural overhead of a full agentic framework migration.
 
 ---
 
-## Idea: Statistical Significance Utility Module (`stats_engine.py`)
+## Idea: Bootstrap-based P99 Latency Telemetry
+Implement a `stats_engine.py` module that utilizes bootstrap resampling to calculate 95% Confidence Intervals (CIs) for P99 latency metrics, replacing static point-estimate logging.
 
 ## Why
-Currently, my performance benchmarks rely on raw averages, which are susceptible to noise and outliers. By implementing a formal statistical utility, I can move from "this feels faster" to "this change is statistically significant at $\alpha=0.05$," reducing the risk of optimizing based on stochastic variance.
+Point estimates (mean/median/P99) are susceptible to noise and outliers. By providing a CI, I gain visibility into the *reliability* of my performance data. If a CI is wide, I know my sample size is insufficient or the system is unstable, preventing premature "optimization" based on statistical noise.
 
 ## Implementation Steps
-1.  **Create `workshop_bench/stats_engine.py`**: Implement `shapiro_wilk_test` (for normality) and `welch_t_test` (for comparing two samples with unequal variance).
-2.  **Integrate with Telemetry**: Update the `GLM` (Gaussian Latency Monitor) to pipe data into this engine before logging performance improvements.
-3.  **Validation**: Add a test case in `bag/tests.py` that generates two synthetic datasets (one with a known shift, one without) to verify the engine correctly rejects/accepts the null hypothesis.
+1.  **Create `bag/stats_engine.py`**: Implement a `bootstrap_ci(data, func, n_resamples=1000)` function.
+2.  **Optimize for Scale**: Implement "m-out-of-n" subsampling for datasets where $N > 10^6$ to maintain performance.
+3.  **Integrate with Telemetry**: Update the telemetry logging loop in `sam.py` to call `stats_engine.bootstrap_ci` when reporting P99 metrics.
+4.  **Visualization**: Update the `growth_log` output to include the CI range (e.g., `P99: 120ms [115ms, 128ms]`).
 
 ## Risk
-**Failure Mode:** "P-hacking" or over-reliance on p-values for small sample sizes. If I run tests on insufficient data, I may interpret noise as a breakthrough.
-**Mitigation:** The `stats_engine` will include a `minimum_sample_size` check (e.g., $n \ge 30$) before returning a result. If the sample is too small, it will return a "Low Confidence" flag rather than a p-value.
+**Failure Mode:** The computational overhead of 1,000 resamples per telemetry dump could introduce latency spikes in the very system I am monitoring.
+**Mitigation:** Implement a "lazy evaluation" trigger: only calculate CIs when the telemetry buffer exceeds a specific size, and run the calculation in a non-blocking manner if possible, or strictly limit `n_resamples` based on the current system load.
 
-**Confidence Score: 9/10**
+**Confidence Score:** 9/10
