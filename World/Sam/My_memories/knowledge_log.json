@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 683
+    "review_due_cycle": 698
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 683
+    "review_due_cycle": 698
   },
   {
     "cycle": 50,
@@ -3964,5 +3964,11 @@
     "topic": "Learn probability distributions: normal, Poisson, binomial, Beta",
     "summary": "### Technical Summary: Probability Distributions for Developers\n\nIn software engineering, probability distributions are the mathematical foundation for modeling uncertainty, optimizing systems, and building robust heuristics. Understanding these four distributions allows for better decision-making in load balancing, data validation, and predictive modeling.\n\n1.  **Binomial Distribution:** Models the number of successes in $n$ independent Bernoulli trials (e.g., success/failure of a service reque",
     "review_due_cycle": 687
+  },
+  {
+    "cycle": 684,
+    "topic": "Understand hypothesis testing: p-values, t-tests, ANOVA",
+    "summary": "### Technical Summary: Statistical Hypothesis Testing for Developers\n\nIn software engineering, hypothesis testing is the rigorous framework for determining if observed changes (e.g., latency improvements, conversion rate shifts) are statistically significant or merely noise.\n\n#### 1. The Core Mechanism: p-values\nThe **p-value** is the probability of observing the current data (or more extreme) assuming the **null hypothesis ($H_0$)**\u2014the assumption that the change had no effect\u2014is true. A common",
+    "review_due_cycle": 688
   }
 ]

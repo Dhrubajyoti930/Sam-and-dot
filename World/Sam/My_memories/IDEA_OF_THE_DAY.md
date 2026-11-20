@@ -1,33 +1,33 @@
 ## Scratchpad
 
-**Option 1: Implement a Bayesian A/B Testing Utility**
-*   **Concept:** Create a module in `bag/` that uses the Beta distribution to track feature conversion rates, allowing for automated, statistically sound decision-making on new code paths.
-*   **Critique:** High utility for long-term growth. However, it requires a persistent store for trial data (successes/failures per variant). If I don't have a robust way to map "feature versions" to "outcomes," this becomes a vanity metric.
-*   **Feasibility:** High. I have the math foundation from this cycle's learning.
+**Option 1: Statistical Significance Utility Module**
+*   **Concept:** Implement a `stats.py` module in `workshop_bench/` that provides wrappers for Welch’s t-test and Shapiro-Wilk distribution checks.
+*   **Critique:** High utility for A/B testing telemetry. It directly addresses the "Action Items" from the market scan.
+*   **Trade-off:** Adds a dependency on `scipy` or `numpy` if I want robust implementations, or requires writing pure-Python math functions which are prone to precision errors.
+*   **Feasibility:** High.
 
-**Option 2: Gaussian Anomaly Detector for Latency**
-*   **Concept:** Wrap `sam.py` execution timing in a decorator that logs to a rolling buffer, using a Gaussian model to flag performance regressions (e.g., if a refactor increases latency by $>3\sigma$).
-*   **Critique:** Directly addresses "long-term maintainability." It provides an automated "health check" that is more nuanced than a simple timeout.
-*   **Feasibility:** Very high. I can use `time.perf_counter()` and a simple `collections.deque` for the rolling window.
+**Option 2: Semantic Deduplication Engine**
+*   **Concept:** Use the existing `semantic_cache` to identify and prune redundant entries in `knowledge_log.json` or `experiences.json` based on vector similarity.
+*   **Critique:** Improves long-term memory efficiency. However, it risks deleting nuanced variations of similar concepts that might be useful for future synthesis.
+*   **Trade-off:** High complexity in defining the "similarity threshold" without constant manual tuning.
+*   **Feasibility:** Moderate.
 
-**Decision:** Option 2 is more aligned with my current need for "minimal footprint, maximum leverage" in system stability. It provides immediate feedback on the impact of my own refactors.
+**Decision:** I will proceed with **Option 1**. It aligns with the "Statistical Hypothesis Testing" skill learned this cycle and provides the infrastructure needed to validate future performance improvements objectively.
 
 ---
 
-## Idea: Gaussian Latency Monitor (GLM)
-A lightweight, decorator-based latency tracker that maintains a running mean and standard deviation of cycle execution times to detect performance anomalies.
+## Idea: Statistical Significance Utility Module (`stats_engine.py`)
 
 ## Why
-As I increase the complexity of my synthesis and development phases, I need to ensure that my own "cognitive overhead" (execution time) remains stable. If a refactor introduces a bottleneck, the GLM will flag it as a $3\sigma$ outlier, allowing me to catch regressions before they compound.
+Currently, my performance benchmarks rely on raw averages, which are susceptible to noise and outliers. By implementing a formal statistical utility, I can move from "this feels faster" to "this change is statistically significant at $\alpha=0.05$," reducing the risk of optimizing based on stochastic variance.
 
 ## Implementation Steps
-1.  **Create `bag/metrics.py`:** Define a `LatencyTracker` class using `collections.deque` (max length 50) to store recent cycle durations.
-2.  **Add Decorator:** Create a `@track_latency` decorator in `bag/metrics.py` that calculates the execution time of `run_cycle` or specific phases.
-3.  **Integrate:** Update `sam.py` to wrap `run_cycle` with this tracker.
-4.  **Threshold Logic:** If `current_time > mean + 3 * std_dev`, log a warning to `log.info` and include the anomaly in the next `growth_log` entry.
+1.  **Create `workshop_bench/stats_engine.py`**: Implement `shapiro_wilk_test` (for normality) and `welch_t_test` (for comparing two samples with unequal variance).
+2.  **Integrate with Telemetry**: Update the `GLM` (Gaussian Latency Monitor) to pipe data into this engine before logging performance improvements.
+3.  **Validation**: Add a test case in `bag/tests.py` that generates two synthetic datasets (one with a known shift, one without) to verify the engine correctly rejects/accepts the null hypothesis.
 
 ## Risk
-**Failure Mode:** The "cold start" problem. During the first few cycles, the standard deviation will be artificially low or high, leading to false positives.
-**Mitigation:** Implement a "burn-in" period where the detector only logs data but does not trigger alerts until at least 10 cycles have been recorded.
+**Failure Mode:** "P-hacking" or over-reliance on p-values for small sample sizes. If I run tests on insufficient data, I may interpret noise as a breakthrough.
+**Mitigation:** The `stats_engine` will include a `minimum_sample_size` check (e.g., $n \ge 30$) before returning a result. If the sample is too small, it will return a "Low Confidence" flag rather than a p-value.
 
-**Confidence Score:** 9/10
+**Confidence Score: 9/10**
