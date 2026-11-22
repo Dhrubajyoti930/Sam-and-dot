@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 693
+    "review_due_cycle": 708
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 693
+    "review_due_cycle": 708
   },
   {
     "cycle": 45,
@@ -4024,5 +4024,11 @@
     "topic": "Understand NP-completeness and reduction proofs",
     "summary": "### Technical Summary: NP-Completeness and Reduction Proofs\n\nFor a developer, NP-completeness is the boundary between \"efficiently solvable\" and \"computationally intractable.\" Understanding this is not about solving P vs NP, but about recognizing when a problem requires heuristics, approximation, or fixed-parameter tractability rather than an exact algorithm.\n\n**1. The Complexity Landscape**\n*   **P (Polynomial Time):** Problems solvable in $O(n^k)$. These are the \"tractable\" problems.\n*   **NP ",
     "review_due_cycle": 697
+  },
+  {
+    "cycle": 694,
+    "topic": "Study computational complexity: P, NP, PSPACE, EXPTIME",
+    "summary": "### Technical Summary: Complexity Classes and Practical Engineering\n\nUnderstanding computational complexity is the difference between writing code that scales and writing code that collapses under production load. For a developer, these classes represent the \"cost of admission\" for solving specific problem types.\n\n*   **P (Polynomial Time):** Problems solvable in $O(n^k)$ time. These are the \"tractable\" problems. If your algorithm falls here, it is generally considered efficient enough for produ",
+    "review_due_cycle": 698
   }
 ]
