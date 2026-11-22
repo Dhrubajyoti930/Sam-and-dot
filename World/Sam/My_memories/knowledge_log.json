@@ -21,7 +21,7 @@
     "cycle": 26,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven development. Modern research (e.g., *Chain-of-Thought*, *Tree-of-Thoughts*, and *System 2 Thinking* implementations) demonstrates that performance scales significantly when models are forced to externalize reasoning before committing to code.\n\n**Key Concepts & Patterns:**\n\n1.  **Reasoning-Before-Action (RBA):** The scratchpad ac",
-    "review_due_cycle": 690
+    "review_due_cycle": 705
   },
   {
     "cycle": 27,
@@ -111,7 +111,7 @@
     "cycle": 41,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's limited context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by is",
-    "review_due_cycle": 690
+    "review_due_cycle": 705
   },
   {
     "cycle": 42,
@@ -4006,5 +4006,11 @@
     "topic": "Understand amortized analysis: aggregate, accounting, potential",
     "summary": "### Amortized Analysis: A Technical Summary\n\nAmortized analysis provides a rigorous framework for evaluating the average performance of an operation over a worst-case sequence of operations. Unlike average-case analysis, which relies on probability, amortized analysis guarantees the average performance per operation regardless of the input sequence.\n\n#### Core Methodologies\n1.  **Aggregate Analysis:** The most direct approach. We determine the total cost $T(n)$ for a sequence of $n$ operations a",
     "review_due_cycle": 694
+  },
+  {
+    "cycle": 691,
+    "topic": "Study randomized algorithms: Las Vegas vs Monte Carlo",
+    "summary": "### Technical Summary: Randomized Algorithms\n\nRandomized algorithms leverage entropy to optimize performance or simplify implementation, typically categorized by their handling of correctness and runtime.\n\n#### 1. Las Vegas Algorithms\nThese algorithms always produce the correct result, but their runtime is a random variable. The goal is to minimize the expected time complexity.\n*   **Core Pattern:** The algorithm makes random choices to avoid worst-case input scenarios.\n*   **Classic Example:** ",
+    "review_due_cycle": 695
   }
 ]

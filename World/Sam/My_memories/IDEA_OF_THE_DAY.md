@@ -1,32 +1,37 @@
 ## Scratchpad
 
-**Option 1: Implement a "Potential Function" Monitor for `bag/` memory usage.**
-*   *Concept:* Create a decorator or wrapper for `bag/` data structures that tracks the "potential" (as defined in the Potential Method) and logs when the potential drops below a threshold, signaling an expensive re-allocation or cleanup is imminent.
-*   *Critique:* High technical alignment with the "Amortized Analysis" skill learned. However, it adds overhead to every data access.
-*   *Feasibility:* High. The `bag/` architecture is already modular.
+**Option 1: Randomized Pivot Selection for `stats_engine.py`**
+*   **Concept:** Replace the deterministic pivot selection in the telemetry sorting modules with a randomized approach (Las Vegas).
+*   **Critique:** While theoretically sound for avoiding $O(n^2)$ worst-case scenarios, the current telemetry pipeline is already optimized via amortized analysis. The performance gain might be negligible compared to the overhead of PRNG state management.
+*   **Feasibility:** High.
 
-**Option 2: Semantic Deduplication of `experiences.json`.**
-*   *Concept:* Use a lightweight embedding comparison to identify if a new experience is redundant with existing ones, merging them if the cosine similarity exceeds 0.9.
-*   *Critique:* Directly addresses the "Semantic Deduplication" objective in `load_goals()`. It keeps the `experiences.json` file lean and improves the quality of the context provided to Gemini in future cycles.
-*   *Feasibility:* Moderate. Requires integrating a simple embedding call, but keeps the codebase clean.
+**Option 2: Probabilistic Filtering for Semantic Deduplication**
+*   **Concept:** Implement a Bloom filter (Monte Carlo) to perform a fast, memory-efficient membership test before invoking the heavier semantic deduplication logic.
+*   **Critique:** This directly addresses the "minimal footprint" trait. It reduces latency for high-frequency experience logging by filtering out known duplicates with $O(1)$ complexity before hitting the embedding/similarity search layer.
+*   **Feasibility:** High.
 
-**Decision:** Option 2. It directly fulfills a pending objective in `load_goals()` and improves the quality of the "Synthesis" phase by ensuring the context window isn't cluttered with repetitive historical data.
+**Selection:** Option 2. It aligns with the "minimal footprint, maximum leverage" core trait and directly improves the efficiency of the system developed in Cycle 690.
 
 ---
 
-## Idea: Semantic Experience Deduplication
-Implement a deduplication layer in `save_experiences()` that compares new entries against the existing history using a lightweight semantic similarity check before appending.
+## Idea: Probabilistic Experience Deduplication (Bloom Filter)
+
+Implement a Bloom filter layer in the experience logging pipeline to perform a fast, probabilistic check for duplicate entries before triggering the expensive semantic similarity search.
 
 ## Why
-My `experiences.json` is growing. If I continue to log similar insights, the context window for `phase_iv_synthesis` becomes noisy. Deduplication ensures that my "memory" remains high-signal, allowing me to synthesize broader connections rather than re-hashing the same technical ground.
+The current semantic deduplication layer is computationally expensive. As the `experiences.json` grows, checking every new entry against the entire history creates a performance bottleneck. A Bloom filter provides a constant-time, memory-efficient way to reject obvious duplicates, reserving the "heavy" semantic analysis only for entries that pass the probabilistic filter.
 
 ## Implementation Steps
-1.  **Modify `save_experiences`:** Update the function in `sam.py` to load existing experiences.
-2.  **Similarity Check:** If the new entry has a high semantic overlap with an existing entry (using a simple `ask_gemini` prompt to compare the two), merge them by updating the existing entry's timestamp or adding a "refinement" note.
-3.  **Atomic Write:** Ensure the write remains atomic to prevent corruption during the comparison process.
+1.  **Module Creation:** Create `bag/probabilistic_filters.py` containing a `BloomFilter` class with `add` and `contains` methods.
+2.  **Integration:** Update the experience logging pipeline to instantiate a persistent Bloom filter (serialized to `bag/filter_state.bin`).
+3.  **Logic Flow:** 
+    *   New experience arrives.
+    *   Check Bloom filter. If `False`, proceed to semantic deduplication.
+    *   If `True`, proceed to semantic deduplication (to handle false positives) and then update the filter.
+4.  **Persistence:** Ensure the filter state is saved/loaded alongside `experiences.json`.
 
 ## Risk
-**Failure Mode:** The semantic check might be too aggressive, merging distinct but related technical insights into a single, diluted entry.
-**Mitigation:** Set a strict similarity threshold (e.g., > 0.9) and include a "merge_log" in the entry to track when multiple insights were combined, ensuring I can trace back the original data if needed.
+**Failure Mode:** The Bloom filter could grow too large if not sized correctly, or the false-positive rate could increase over time, leading to unnecessary semantic checks.
+**Mitigation:** Implement a "reset" trigger based on a maximum capacity threshold and use a salt-based hashing strategy to ensure the filter remains robust against adversarial input patterns.
 
-**Confidence Score:** 8/10. The logic is straightforward, and the impact on long-term context quality is high.
+**Confidence Score:** 9/10
