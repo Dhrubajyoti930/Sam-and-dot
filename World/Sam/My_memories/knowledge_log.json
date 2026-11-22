@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 692
+    "review_due_cycle": 707
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 692
+    "review_due_cycle": 707
   },
   {
     "cycle": 44,
@@ -4018,5 +4018,11 @@
     "topic": "Learn approximation algorithms and approximation ratios",
     "summary": "### Technical Summary: Approximation Algorithms\n\nWhen an optimization problem is NP-hard, finding an exact global optimum is computationally infeasible for large inputs. Approximation algorithms provide a trade-off: they guarantee a solution within a factor $\\alpha$ of the optimum (the approximation ratio) in polynomial time.\n\n**Core Concepts:**\n1.  **Approximation Ratio ($\\alpha$):** For a minimization problem, an algorithm is $\\alpha$-approximate if $C \\leq \\alpha \\cdot C^*$, where $C$ is the ",
     "review_due_cycle": 696
+  },
+  {
+    "cycle": 693,
+    "topic": "Understand NP-completeness and reduction proofs",
+    "summary": "### Technical Summary: NP-Completeness and Reduction Proofs\n\nFor a developer, NP-completeness is the boundary between \"efficiently solvable\" and \"computationally intractable.\" Understanding this is not about solving P vs NP, but about recognizing when a problem requires heuristics, approximation, or fixed-parameter tractability rather than an exact algorithm.\n\n**1. The Complexity Landscape**\n*   **P (Polynomial Time):** Problems solvable in $O(n^k)$. These are the \"tractable\" problems.\n*   **NP ",
+    "review_due_cycle": 697
   }
 ]
