@@ -492,3 +492,49 @@
 2026-11-22 13:33:05,167 [DOT][INFO] Appended to Letter_20261122T133214Z.md: Sunday Special
 2026-11-22 13:33:05,170 [DOT][INFO] Worklog: no stale entries.
 2026-11-22 13:33:05,971 [DOT][INFO] Dot's daily run complete.
+2026-11-22 20:25:26,578 [DOT][INFO] ═══════════════════════════════════
+2026-11-22 20:25:26,578 [DOT][INFO]   DOT — Daily Watchdog Run Starting
+2026-11-22 20:25:26,578 [DOT][INFO] ═══════════════════════════════════
+2026-11-22 20:25:26,579 [DOT][INFO] ── Task 1: Wisdom Check ──
+2026-11-22 20:25:26,587 [DOT][INFO] Task 1: chunk 1/8 from cache.
+2026-11-22 20:25:26,588 [DOT][INFO] Task 1: chunk 2/8 from cache.
+2026-11-22 20:25:26,588 [DOT][INFO] Task 1: chunk 3/8 from cache.
+2026-11-22 20:25:26,588 [DOT][INFO] Task 1: chunk 4/8 from cache.
+2026-11-22 20:25:26,589 [DOT][INFO] Task 1: chunk 5/8 from cache.
+2026-11-22 20:25:26,589 [DOT][INFO] Task 1: chunk 6/8 from cache.
+2026-11-22 20:25:26,589 [DOT][INFO] Task 1: chunk 7/8 from cache.
+2026-11-22 20:25:26,590 [DOT][INFO] Task 1: chunk 8/8 from cache.
+2026-11-22 20:25:42,615 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-11-22 20:25:46,169 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-11-22 20:25:46,176 [DOT][INFO] Wisdom check complete (9 Gemini calls).
+2026-11-22 20:25:54,176 [DOT][INFO] ── Task 2: Experiences Curation ──
+2026-11-22 20:25:54,178 [DOT][INFO] Task 2: 3 experiences → 1 batch(es) of ≤5.
+2026-11-22 20:26:02,178 [DOT][INFO] Task 2: batch 1/1 — cycles [691, 692, 693]
+2026-11-22 20:26:10,193 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-11-22 20:26:11,823 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-11-22 20:26:11,831 [DOT][INFO] Experiences curated: 1 kept, 0 forgotten, 1 consolidated. Total now: 2.
+2026-11-22 20:26:11,831 [DOT][INFO] Letter written to Sam: Letter_20261122T202611Z.md
+2026-11-22 20:26:11,831 [DOT][INFO] ── Task 3: Email Dispatch ──
+2026-11-22 20:26:11,831 [DOT][INFO] Finding best recipient for: Tiago Henriques, maintainer of 'python-dependency-injector'. His project is widely used for DI in smaller Python ecosyst
+2026-11-22 20:26:19,844 [DOT][INFO] AFC is enabled with max remote calls: 10.
+2026-11-22 20:26:20,653 [DOT][INFO] HTTP Request: POST https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-11-22 20:26:20,656 [DOT][INFO] Recipient match:  <> confidence=0 — Tiago Henriques, the maintainer of 'python-dependency-injector', is not present in the provided list of people.
+2026-11-22 20:26:20,656 [DOT][WARNING] Match confidence 0 below threshold 7 — skipping.
+2026-11-22 20:26:20,656 [DOT][WARNING] No suitable recipient found in emails.json — request preserved.
+2026-11-22 20:26:20,656 [DOT][INFO] Appended to Letter_20261122T202611Z.md: Email Dispatch — No Match
+2026-11-22 20:26:20,657 [DOT][INFO] Appended to Letter_20261122T202611Z.md: Email Dispatch
+2026-11-22 20:26:28,657 [DOT][INFO] ── Task 4: Bag Review ──
+2026-11-22 20:26:36,670 [DOT][INFO] Dot cache hit.
+2026-11-22 20:26:36,670 [DOT][INFO] Bag review complete.
+2026-11-22 20:26:36,670 [DOT][INFO] Appended to Letter_20261122T202611Z.md: Bag Excavation Findings
+2026-11-22 20:26:44,670 [DOT][INFO] ── Task 5: Sunday Inbox Check ──
+2026-11-22 20:26:53,133 [DOT][INFO] Dot cache hit.
+2026-11-22 20:26:53,871 [DOT][INFO] Sunday auto-reply sent → google-gemini-noreply@google.com
+2026-11-22 20:27:01,921 [DOT][INFO] Dot cache hit.
+2026-11-22 20:27:01,922 [DOT][INFO] Appended to Letter_20261122T202611Z.md: Sunday Inbox Report
+2026-11-22 20:27:01,922 [DOT][INFO] Task 6: Adding external signal for Sam.
+2026-11-22 20:27:01,932 [DOT][INFO] Dot cache hit.
+2026-11-22 20:27:01,934 [DOT][INFO] Added external topic for Sam: Agentic Workflows
+2026-11-22 20:27:01,935 [DOT][INFO] Appended to Letter_20261122T202611Z.md: Sunday Special
+2026-11-22 20:27:01,937 [DOT][INFO] Worklog: no stale entries.
+2026-11-22 20:27:02,526 [DOT][INFO] Dot's daily run complete.
