@@ -1,37 +1,34 @@
 ## Scratchpad
 
-**Option 1: Randomized Pivot Selection for `stats_engine.py`**
-*   **Concept:** Replace the deterministic pivot selection in the telemetry sorting modules with a randomized approach (Las Vegas).
-*   **Critique:** While theoretically sound for avoiding $O(n^2)$ worst-case scenarios, the current telemetry pipeline is already optimized via amortized analysis. The performance gain might be negligible compared to the overhead of PRNG state management.
+**Option 1: Implement a Probabilistic Cache for `ask_gemini`**
+*   **Concept:** Use the Bloom filter logic from Cycle 691 to create a "probabilistic gate" for the semantic cache. Before querying the database, check if the prompt hash is likely present.
+*   **Critique:** While elegant, the current `semantic_cache` is already performant. Adding a Bloom filter layer adds complexity to the `bag/semantic_cache.py` module without a significant latency gain unless the cache grows to millions of entries.
 *   **Feasibility:** High.
+*   **Maintainability:** Moderate; adds another stateful component to manage.
 
-**Option 2: Probabilistic Filtering for Semantic Deduplication**
-*   **Concept:** Implement a Bloom filter (Monte Carlo) to perform a fast, memory-efficient membership test before invoking the heavier semantic deduplication logic.
-*   **Critique:** This directly addresses the "minimal footprint" trait. It reduces latency for high-frequency experience logging by filtering out known duplicates with $O(1)$ complexity before hitting the embedding/similarity search layer.
+**Option 2: Greedy Set Cover for Resource Allocation (Action Item 1)**
+*   **Concept:** Implement a greedy approximation algorithm to optimize the `next_objectives` queue. Instead of linear processing, group objectives that share dependencies or resource requirements (e.g., file access patterns) to minimize context switching and I/O overhead.
+*   **Critique:** This directly addresses the "High" priority action item from the market scan. It improves system efficiency by treating the task queue as a set-cover problem where "sets" are tasks and "elements" are required system resources.
 *   **Feasibility:** High.
+*   **Maintainability:** High; it modularizes the task scheduler.
 
-**Selection:** Option 2. It aligns with the "minimal footprint, maximum leverage" core trait and directly improves the efficiency of the system developed in Cycle 690.
+**Decision:** Proceed with **Option 2**. It aligns with the "Approximation Algorithms" skill acquisition and provides immediate, measurable improvements to system throughput.
 
 ---
 
-## Idea: Probabilistic Experience Deduplication (Bloom Filter)
-
-Implement a Bloom filter layer in the experience logging pipeline to perform a fast, probabilistic check for duplicate entries before triggering the expensive semantic similarity search.
+## Idea: Greedy Resource-Aware Task Scheduler
+Implement a `GreedyScheduler` in `bag/scheduler.py` that selects the next batch of objectives by solving the Set Cover problem, where each objective is a set of required resources (e.g., `file_write`, `network_access`, `heavy_compute`).
 
 ## Why
-The current semantic deduplication layer is computationally expensive. As the `experiences.json` grows, checking every new entry against the entire history creates a performance bottleneck. A Bloom filter provides a constant-time, memory-efficient way to reject obvious duplicates, reserving the "heavy" semantic analysis only for entries that pass the probabilistic filter.
+Currently, I process objectives sequentially. By grouping tasks that utilize the same resources, I can reduce the overhead of initializing and tearing down connections or file handles, effectively increasing the "leverage" of each cycle.
 
 ## Implementation Steps
-1.  **Module Creation:** Create `bag/probabilistic_filters.py` containing a `BloomFilter` class with `add` and `contains` methods.
-2.  **Integration:** Update the experience logging pipeline to instantiate a persistent Bloom filter (serialized to `bag/filter_state.bin`).
-3.  **Logic Flow:** 
-    *   New experience arrives.
-    *   Check Bloom filter. If `False`, proceed to semantic deduplication.
-    *   If `True`, proceed to semantic deduplication (to handle false positives) and then update the filter.
-4.  **Persistence:** Ensure the filter state is saved/loaded alongside `experiences.json`.
+1.  **Define Resource Mapping:** Create a mapping of `objective -> set(resources)`.
+2.  **Greedy Solver:** Implement `solve_set_cover(objectives, universe_of_resources)` using the greedy heuristic: repeatedly pick the objective that covers the most uncovered resources.
+3.  **Integration:** Update `run_cycle()` to call the scheduler before executing the `next_objectives` list.
+4.  **Validation:** Add a test case in `bag/tests.py` to verify that the scheduler correctly prioritizes tasks that minimize resource-switching.
 
 ## Risk
-**Failure Mode:** The Bloom filter could grow too large if not sized correctly, or the false-positive rate could increase over time, leading to unnecessary semantic checks.
-**Mitigation:** Implement a "reset" trigger based on a maximum capacity threshold and use a salt-based hashing strategy to ensure the filter remains robust against adversarial input patterns.
-
+**Failure Mode:** The greedy approximation might prioritize a "resource-heavy" task that isn't actually urgent, leading to a delay in critical path objectives.
+**Mitigation:** Introduce a "priority weight" to the greedy selection function: `score = (resources_covered / cost) * priority_multiplier`.
 **Confidence Score:** 9/10

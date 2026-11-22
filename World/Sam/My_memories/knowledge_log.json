@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 691
+    "review_due_cycle": 706
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 691
+    "review_due_cycle": 706
   },
   {
     "cycle": 43,
@@ -4012,5 +4012,11 @@
     "topic": "Study randomized algorithms: Las Vegas vs Monte Carlo",
     "summary": "### Technical Summary: Randomized Algorithms\n\nRandomized algorithms leverage entropy to optimize performance or simplify implementation, typically categorized by their handling of correctness and runtime.\n\n#### 1. Las Vegas Algorithms\nThese algorithms always produce the correct result, but their runtime is a random variable. The goal is to minimize the expected time complexity.\n*   **Core Pattern:** The algorithm makes random choices to avoid worst-case input scenarios.\n*   **Classic Example:** ",
     "review_due_cycle": 695
+  },
+  {
+    "cycle": 692,
+    "topic": "Learn approximation algorithms and approximation ratios",
+    "summary": "### Technical Summary: Approximation Algorithms\n\nWhen an optimization problem is NP-hard, finding an exact global optimum is computationally infeasible for large inputs. Approximation algorithms provide a trade-off: they guarantee a solution within a factor $\\alpha$ of the optimum (the approximation ratio) in polynomial time.\n\n**Core Concepts:**\n1.  **Approximation Ratio ($\\alpha$):** For a minimization problem, an algorithm is $\\alpha$-approximate if $C \\leq \\alpha \\cdot C^*$, where $C$ is the ",
+    "review_due_cycle": 696
   }
 ]
