@@ -1,34 +1,33 @@
 ## Scratchpad
 
-**Option 1: Probabilistic Cache Eviction (LRU-K/ARC)**
-*   **Concept:** Replace the current simple semantic cache with an ARC (Adaptive Replacement Cache) or LRU-K policy to better handle temporal locality in prompt patterns.
-*   **Critique:** While theoretically superior for hit rates, the current `semantic_cache` is already performing well for Sam's specific, repetitive workflow. The complexity of managing frequency/recency metadata in an in-process SQLite DB might introduce unnecessary overhead and potential for state corruption.
-*   **Feasibility:** High, but potentially over-engineered for the current scale.
+**Option 1: Implementing a Bloom Filter for Semantic Cache Deduplication**
+*   **Concept:** Use a Bloom filter to check if a prompt-response pair has been seen before at a high-level hash, before hitting the more expensive semantic vector database.
+*   **Critique:** High performance, but introduces a probabilistic element (false positives). If the filter says "seen," we might skip a valid new query.
+*   **Trade-off:** Speed vs. Precision. Given my current architecture, the semantic cache is already the bottleneck; this adds complexity to the `bag/semantic_cache.py` layer.
 
-**Option 2: Complexity-Aware Task Scheduling (Heuristic-based)**
-*   **Concept:** Implement a "Complexity Budget" for the `run_cycle` loop. Before executing a phase, estimate the computational complexity of the task. If a task is identified as NP-Hard (e.g., complex multi-agent orchestration), force the use of a heuristic-based approximation or a simplified sub-task decomposition.
-*   **Critique:** Directly addresses the "Skill learned this cycle" regarding complexity classes. It moves Sam from "blind execution" to "resource-aware planning." It is highly maintainable because it wraps existing logic rather than replacing it.
-*   **Feasibility:** Very high. It aligns with the "Action Items" from the market scan.
+**Option 2: Formalizing the "Context-Free" Parser for Configuration**
+*   **Concept:** Replace the current `json.loads` fallback in `_parse_gemini_json` with a recursive descent parser that validates structure against a Pydantic schema *during* the tokenization phase.
+*   **Critique:** Directly addresses the "Chomsky Hierarchy" learning from this cycle. It moves from "hope the JSON is valid" to "guarantee the structure is valid."
+*   **Trade-off:** Higher initial development cost, but significantly increases the reliability of the `ask_gemini` pipeline. It aligns with the "Structured Output Enforcement" market trend.
 
-**Selection:** Option 2. It bridges the gap between theoretical knowledge and operational safety.
+**Decision:** Option 2 is superior. It directly applies the cycle's learning, improves system stability, and reduces the frequency of `_rollback` triggers caused by malformed JSON.
 
 ---
 
-## Idea: Complexity-Aware Execution Guardrails
-
-Implement a `ComplexityBudget` decorator for phase functions that monitors execution time and memory usage, and injects a "Complexity Check" before high-risk operations.
+## Idea: Recursive Descent Schema Validator
+Implement a lightweight, recursive descent parser for the `_parse_gemini_json` function that validates structure against a Pydantic schema *before* full deserialization, specifically targeting nested JSON structures that often cause `json.JSONDecodeError` during partial generation.
 
 ## Why
-Sam’s `run_cycle` currently assumes all phases complete within reasonable bounds. As agentic workflows (Phase V) grow in complexity, Sam risks hitting timeouts or memory ceilings. By explicitly identifying $O(2^n)$ or $O(n!)$ patterns in the task planner, Sam can proactively switch to greedy/approximation strategies.
+My current JSON parsing is reactive (try/except). By implementing a recursive descent approach, I can validate the "Context-Free" nature of the incoming data stream in real-time. This allows me to detect structural violations (e.g., unclosed braces, mismatched types) at the token level, rather than failing after the entire string is loaded into memory.
 
 ## Implementation Steps
-1.  **Define Complexity Metadata:** Add a `complexity_class` attribute to phase functions (e.g., `P`, `NP-Hard`).
-2.  **Create `ComplexityBudget` Decorator:** A wrapper that checks if the current `goals` state indicates a high-load environment. If `complexity_class` is `NP-Hard`, the decorator forces the phase to use a "simplified" prompt variant.
-3.  **Update `run_cycle`:** Integrate the decorator into the phase execution flow.
-4.  **Logging:** Log the estimated vs. actual complexity to `growth_log` to refine future estimates.
+1.  **Define Tokenizer:** Create a simple generator in `bag/parser_utils.py` that yields tokens (BRACE_OPEN, BRACE_CLOSE, KEY, VALUE) from the raw string.
+2.  **Recursive Descent:** Implement a `parse_value()` function that recursively calls `parse_object()` or `parse_array()` based on the current token.
+3.  **Schema Hook:** Integrate Pydantic validation at each node completion. If a node fails to match the schema, terminate early.
+4.  **Integration:** Update `_parse_gemini_json` in `sam.py` to use this parser as a pre-flight check.
 
 ## Risk
-**Failure Mode:** The decorator might misclassify a task, causing it to use a "simplified" (less intelligent) prompt when the full model capacity was actually required, leading to poor output quality.
-**Mitigation:** Implement a "Complexity Override" flag in `goals.json` that allows Sam to bypass the guardrail if a specific task is known to be critical.
+**Failure Mode:** The parser might be too strict, rejecting valid JSON that uses non-standard whitespace or formatting that `json.loads` handles gracefully.
+**Mitigation:** Implement a "fallback-to-standard" mechanism: if the custom parser fails, log the specific structural error and attempt a standard `json.loads` as a secondary measure.
 
 **Confidence Score:** 8/10
