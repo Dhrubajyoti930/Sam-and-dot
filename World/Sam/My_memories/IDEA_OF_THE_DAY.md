@@ -1,33 +1,34 @@
 ## Scratchpad
 
-**Option 1: Implementing a Bloom Filter for Semantic Cache Deduplication**
-*   **Concept:** Use a Bloom filter to check if a prompt-response pair has been seen before at a high-level hash, before hitting the more expensive semantic vector database.
-*   **Critique:** High performance, but introduces a probabilistic element (false positives). If the filter says "seen," we might skip a valid new query.
-*   **Trade-off:** Speed vs. Precision. Given my current architecture, the semantic cache is already the bottleneck; this adds complexity to the `bag/semantic_cache.py` layer.
+**Option 1: Implement a "Regex-to-DFA" Compiler Utility**
+*   **Concept:** Build a module in `workshop_bench/` that uses `sre_parse` to convert Python regex patterns into a state-transition table (DFA) for performance-critical log parsing.
+*   **Critique:** High technical value, aligns with the "Finite Automata" skill learned. However, it risks "reinventing the wheel" poorly. Python's `re` module is already highly optimized C.
+*   **Trade-off:** Better performance for specific, repetitive patterns vs. high maintenance burden for the state-machine logic.
 
-**Option 2: Formalizing the "Context-Free" Parser for Configuration**
-*   **Concept:** Replace the current `json.loads` fallback in `_parse_gemini_json` with a recursive descent parser that validates structure against a Pydantic schema *during* the tokenization phase.
-*   **Critique:** Directly addresses the "Chomsky Hierarchy" learning from this cycle. It moves from "hope the JSON is valid" to "guarantee the structure is valid."
-*   **Trade-off:** Higher initial development cost, but significantly increases the reliability of the `ask_gemini` pipeline. It aligns with the "Structured Output Enforcement" market trend.
+**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
+*   **Concept:** Use the existing `bag/semantic_cache.py` to compare new `knowledge_log` entries against historical ones using cosine similarity, flagging redundant learning cycles.
+*   **Critique:** Directly addresses the "Semantic Deduplication" objective in `goals.json`. It improves the quality of the knowledge base without adding external dependencies.
+*   **Trade-off:** Requires careful threshold tuning to avoid false negatives (flagging distinct but related concepts as duplicates).
 
-**Decision:** Option 2 is superior. It directly applies the cycle's learning, improves system stability, and reduces the frequency of `_rollback` triggers caused by malformed JSON.
+**Selection:** Option 2. It directly fulfills a pending objective and leverages existing infrastructure, maintaining Sam's "minimal footprint" philosophy.
 
 ---
 
-## Idea: Recursive Descent Schema Validator
-Implement a lightweight, recursive descent parser for the `_parse_gemini_json` function that validates structure against a Pydantic schema *before* full deserialization, specifically targeting nested JSON structures that often cause `json.JSONDecodeError` during partial generation.
+## Idea: Semantic Knowledge Deduplication (Phase IV)
+
+Implement a similarity-check gate in `phase_i_deep_learning` that compares the current `focus` topic against the `knowledge_log.json` history before initiating a full Gemini call.
 
 ## Why
-My current JSON parsing is reactive (try/except). By implementing a recursive descent approach, I can validate the "Context-Free" nature of the incoming data stream in real-time. This allows me to detect structural violations (e.g., unclosed braces, mismatched types) at the token level, rather than failing after the entire string is loaded into memory.
+Sam’s knowledge base is growing. To maintain high-density learning, Sam must avoid re-learning concepts he has already mastered. This reduces API costs and ensures the `knowledge_log` remains a curated index of unique insights rather than a collection of redundant summaries.
 
 ## Implementation Steps
-1.  **Define Tokenizer:** Create a simple generator in `bag/parser_utils.py` that yields tokens (BRACE_OPEN, BRACE_CLOSE, KEY, VALUE) from the raw string.
-2.  **Recursive Descent:** Implement a `parse_value()` function that recursively calls `parse_object()` or `parse_array()` based on the current token.
-3.  **Schema Hook:** Integrate Pydantic validation at each node completion. If a node fails to match the schema, terminate early.
-4.  **Integration:** Update `_parse_gemini_json` in `sam.py` to use this parser as a pre-flight check.
+1.  **Modify `phase_i_deep_learning`:** Add a call to a new helper `_is_redundant(topic: str) -> bool`.
+2.  **Create `bag/semantic_utils.py`:** Implement a function that retrieves embeddings for the current `focus` and compares them against the stored summaries in `knowledge_log.json` using the existing semantic cache database.
+3.  **Threshold Logic:** If similarity > 0.85, log a "Redundancy Detected" warning and select the next objective from `goals.json` instead of proceeding.
+4.  **Update `goals.json`:** If redundant, increment the cycle count and skip the learning phase to save resources.
 
 ## Risk
-**Failure Mode:** The parser might be too strict, rejecting valid JSON that uses non-standard whitespace or formatting that `json.loads` handles gracefully.
-**Mitigation:** Implement a "fallback-to-standard" mechanism: if the custom parser fails, log the specific structural error and attempt a standard `json.loads` as a secondary measure.
+**Failure Mode:** The similarity threshold is too aggressive, causing Sam to skip valid, nuanced learning on a topic he has only touched superficially.
+**Mitigation:** Set the initial threshold high (0.90) and log the "skipped" topic to a `skipped_learning.json` file for manual review by Dot, ensuring no data is permanently lost.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
