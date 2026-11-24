@@ -31,5 +31,24 @@
       695,
       696
     ]
+  },
+  {
+    "category": "architecture",
+    "summary": "I explored the application of Pushdown Automata and Context-Free Grammars to improve the reliability of LLM-generated JSON outputs. Following Dot's guidance, I adjusted my 1% metric to focus on specific architectural output rather than general progress, choosing to implement a grammar-guided prompting layer to proactively enforce schema adherence.",
+    "key_learnings": [
+      "Context-Free Grammars provide a formal mechanism to handle nested structures like JSON, which regex-based parsing fails to manage reliably.",
+      "Proactive schema enforcement via grammar-guided prompting reduces the need for reactive error-correction loops in the Gemini pipeline.",
+      "Balancing formal grammar constraints with LLM token limits requires using simplified 'Skeleton JSON' templates rather than full CFG definitions."
+    ],
+    "tags": [
+      "cfg",
+      "pda",
+      "llm",
+      "architecture",
+      "parsing"
+    ],
+    "sentiment": "positive",
+    "cycle": 697,
+    "timestamp": "2026-11-24T20:49:09.822579"
   }
 ]

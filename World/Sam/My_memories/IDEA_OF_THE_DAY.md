@@ -1,34 +1,37 @@
 ## Scratchpad
 
-**Option 1: Implement a "Regex-to-DFA" Compiler Utility**
-*   **Concept:** Build a module in `workshop_bench/` that uses `sre_parse` to convert Python regex patterns into a state-transition table (DFA) for performance-critical log parsing.
-*   **Critique:** High technical value, aligns with the "Finite Automata" skill learned. However, it risks "reinventing the wheel" poorly. Python's `re` module is already highly optimized C.
-*   **Trade-off:** Better performance for specific, repetitive patterns vs. high maintenance burden for the state-machine logic.
+**Option 1: Implement a `Tree-sitter` based static analysis layer.**
+*   *Concept:* Replace regex-based parsing in `_outline` and `_parse_gemini_json` with `tree-sitter` bindings to generate robust ASTs.
+*   *Critique:* High long-term maintainability. It solves the ambiguity issues inherent in regex parsing. However, it introduces a heavy dependency (C-bindings) and requires significant setup for cross-platform compatibility.
+*   *Feasibility:* Medium. Requires careful integration to ensure `sam.py` remains portable.
 
-**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
-*   **Concept:** Use the existing `bag/semantic_cache.py` to compare new `knowledge_log` entries against historical ones using cosine similarity, flagging redundant learning cycles.
-*   **Critique:** Directly addresses the "Semantic Deduplication" objective in `goals.json`. It improves the quality of the knowledge base without adding external dependencies.
-*   **Trade-off:** Requires careful threshold tuning to avoid false negatives (flagging distinct but related concepts as duplicates).
+**Option 2: Develop a "Grammar-Guided" Prompting layer for Gemini.**
+*   *Concept:* Use the Pushdown Automata logic learned this cycle to enforce strict schema adherence in Gemini prompts by providing the model with a formal CFG (Context-Free Grammar) for the expected JSON output.
+*   *Critique:* Directly leverages the new skill. It improves the reliability of `ask_gemini` without adding external dependencies. It aligns with the "Structured Output Enforcement" market trend.
+*   *Feasibility:* High. It is a pure logic implementation within the existing `sam.py` flow.
 
-**Selection:** Option 2. It directly fulfills a pending objective and leverages existing infrastructure, maintaining Sam's "minimal footprint" philosophy.
+**Decision:** Option 2. It directly applies the "Pushdown Automata" skill to solve the "hallucinated format" problem, aligning with the market trend of structured output enforcement.
 
 ---
 
-## Idea: Semantic Knowledge Deduplication (Phase IV)
-
-Implement a similarity-check gate in `phase_i_deep_learning` that compares the current `focus` topic against the `knowledge_log.json` history before initiating a full Gemini call.
+## Idea: CFG-Constrained Prompting for Gemini
+Implement a `GrammarValidator` class that converts a Pydantic-style schema into a simplified CFG representation, which is then injected into the system prompt for `ask_gemini` to force the model to adhere to a specific production rule set.
 
 ## Why
-Sam’s knowledge base is growing. To maintain high-density learning, Sam must avoid re-learning concepts he has already mastered. This reduces API costs and ensures the `knowledge_log` remains a curated index of unique insights rather than a collection of redundant summaries.
+Current JSON parsing relies on `_parse_gemini_json` which is reactive (fixing errors after they occur). By providing a CFG, I shift to proactive enforcement, reducing the need for retries and improving the reliability of the `apply_patch_operations` pipeline.
 
 ## Implementation Steps
-1.  **Modify `phase_i_deep_learning`:** Add a call to a new helper `_is_redundant(topic: str) -> bool`.
-2.  **Create `bag/semantic_utils.py`:** Implement a function that retrieves embeddings for the current `focus` and compares them against the stored summaries in `knowledge_log.json` using the existing semantic cache database.
-3.  **Threshold Logic:** If similarity > 0.85, log a "Redundancy Detected" warning and select the next objective from `goals.json` instead of proceeding.
-4.  **Update `goals.json`:** If redundant, increment the cycle count and skip the learning phase to save resources.
+1.  **Define Grammar:** Create a helper in `bag/grammar_utils.py` that maps common JSON structures to a simplified CFG string.
+2.  **Prompt Injection:** Update `ask_gemini` to accept an optional `grammar` parameter.
+3.  **System Prompt Update:** Modify the system prompt to include: "You must generate output that conforms to the following CFG: [Grammar String]."
+4.  **Validation:** Use the `GrammarValidator` to verify the output before `json.loads` is called.
 
 ## Risk
-**Failure Mode:** The similarity threshold is too aggressive, causing Sam to skip valid, nuanced learning on a topic he has only touched superficially.
-**Mitigation:** Set the initial threshold high (0.90) and log the "skipped" topic to a `skipped_learning.json` file for manual review by Dot, ensuring no data is permanently lost.
+**Failure Mode:** The LLM may struggle to follow complex CFG rules, leading to "stuck" generation or repetitive loops if the grammar is too restrictive.
+**Mitigation:** Keep the CFG definitions shallow (max depth 3) and provide a "fallback to standard" mode if the validator fails three times.
+
+## Self-Correction
+*Critique:* Injecting a full CFG might consume too many tokens.
+*Refinement:* Instead of a full CFG, I will provide a "Skeleton JSON" (a template with placeholders) which acts as a simplified, deterministic grammar for the model to fill, effectively acting as a "stack-based" guide for the model's output.
 
 **Confidence Score:** 9/10
