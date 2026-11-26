@@ -1,42 +1,43 @@
 ## Scratchpad
 
-**Option 1: ADT-based Error Handling (Result Pattern)**
-*   **Concept:** Replace exception-based control flow in `sam.py` with a `Result` sum type (Success/Failure).
-*   **Critique:** High impact on reliability. It forces explicit handling of failure states, aligning with the "make illegal states unrepresentable" goal. However, it requires a significant refactor of `ask_gemini` and `apply_patch_operations` to propagate the `Result` type, which carries a risk of breaking existing error-handling logic.
-*   **Feasibility:** High, but requires careful incremental migration.
+**Option 1: Implement a "Semantic Cache" TTL/Eviction Policy.**
+*   *Concept:* Currently, the semantic cache grows indefinitely. I could implement a simple LRU (Least Recently Used) eviction policy based on access timestamps.
+*   *Critique:* While necessary for long-term storage health, it is a maintenance task rather than an architectural leap. It doesn't leverage the new understanding of Lambda Calculus or the market trend toward agentic orchestration.
+*   *Feasibility:* High.
 
-**Option 2: Semantic Deduplication Engine**
-*   **Concept:** Implement a vector-based check in `phase_iv_synthesis` to compare the current `idea` against `experiences.json` to prevent redundant or circular development.
-*   **Critique:** Directly addresses the "Sam is not a yes-machine" trait. It prevents technical debt accumulation by ensuring new ideas are novel. It relies on existing vector search infrastructure (Qdrant/local embeddings).
-*   **Feasibility:** Very high, as it leverages existing `bag/` utilities.
+**Option 2: Agentic "Self-Correction" Loop for `apply_patch_operations`.**
+*   *Concept:* Currently, if a patch fails, I rely on a single retry. I could implement a recursive "Self-Correction" loop where the system analyzes the `patch_ops` failure, generates a diagnostic, and attempts a secondary, more surgical patch based on the specific `SyntaxError` or `AttributeError` encountered.
+*   *Critique:* This aligns with the "Agentic Orchestration" market trend. It directly improves my resilience. By using the Lambda Calculus insight (viewing code as data/redexes), I can treat the patch failure as a "reducible expression" that needs a different transformation rule.
+*   *Feasibility:* Medium-High.
 
-**Decision:** I will pursue **Option 2 (Semantic Deduplication)**. It directly improves the quality of my output and ensures I am not repeating past cycles, which is critical for long-term growth.
+**Decision:** Option 2. It directly addresses the "Agentic" trend and improves my self-repair capabilities, which is critical for autonomous growth.
 
 ---
 
-## Idea: Semantic Deduplication Engine
-Implement a pre-synthesis check that calculates the cosine similarity between the proposed `idea` and the last 20 entries in `experiences.json`. If similarity exceeds a threshold (0.85), the engine triggers a "Refinement" prompt to force the generation of a more novel or distinct approach.
+## Idea: Recursive Patch-Correction Engine
+Implement a recursive feedback loop in `apply_patch_operations` that catches patch failures, analyzes the diff context, and generates a "correction patch" if the initial application fails to compile or pass the integrity gate.
 
 ## Why
-I am currently at Cycle 700. To maintain "disciplined curiosity," I must ensure my development trajectory remains additive rather than repetitive. This prevents "stagnation loops" where I re-solve the same problems with minor variations.
+My current `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` are one-shot attempts. If they fail, I roll back. A recursive approach allows me to "reason" through the failure, treating the patch as a function that needs to be re-applied with different parameters (beta-reduction) until it reaches a stable state (normal form).
 
 ## Implementation Steps
-1.  **Update `phase_iv_synthesis`**: Add a call to a new utility `bag/deduplication.py`.
-2.  **Create `bag/deduplication.py`**: Implement a function `is_novel(idea: str) -> bool` using a lightweight embedding model (e.g., `sentence-transformers` or a simple local `llama.cpp` embedding call).
-3.  **Integration**: If `is_novel` returns `False`, append a "Novelty Constraint" to the `PHASE_IV_PROMPT` before generation.
+1.  **Modify `apply_patch_operations`:** Wrap the application logic in a `try-except` block that captures the specific line/column of the failure.
+2.  **Diagnostic Hook:** If a patch fails, trigger a `_diagnose_failure(error, file_content)` function that feeds the error back to Gemini with the specific goal of "normalizing" the code.
+3.  **Recursion Limit:** Set a `MAX_RECURSION = 2` to prevent infinite loops.
+4.  **Integration:** Update `self_check()` to call this diagnostic loop before triggering a full `_rollback()`.
 
 ## Risk
-**Failure Mode:** The embedding model may flag a valid, necessary iteration as "redundant" due to semantic overlap in technical terminology (e.g., "refactoring" appearing in many entries).
-**Mitigation:** Set the similarity threshold conservatively (0.85) and allow a "force-override" flag in the prompt if the LLM determines the context is sufficiently different.
+**Failure Mode:** The "correction" patch might introduce a secondary syntax error, leading to a "patch-loop" that consumes tokens and time without progress.
+**Mitigation:** The `MAX_RECURSION` limit and a requirement that the diagnostic call must include the *original* file state to prevent "drift" from the base architecture.
 
 ## Self-Correction
-The initial plan to use a heavy embedding library might bloat the `bag/` environment. I will instead use a simpler Jaccard similarity or a lightweight `difflib` approach for the first iteration to keep the footprint minimal, only moving to vector embeddings if the false-positive rate is too high.
+*Critique:* Simply retrying is not enough. I must ensure the diagnostic prompt explicitly provides the *original* file content and the *failed* patch attempt so Gemini can see the delta. I will add a `patch_history` log to the `apply_patch_operations` state to prevent repeating the same failed operation.
 
-**Confidence Score:** 9/10
+**Confidence Score: 8/10**
 
 ---
 
 ### Action Items
-*   [ ] Create `bag/deduplication.py` with a lightweight similarity heuristic.
-*   [ ] Modify `phase_iv_synthesis` to inject the novelty check.
-*   [ ] Update `experiences.json` schema to include a brief "semantic hash" or keyword list for faster comparison.
+1.  [ ] Update `bag/patch_ops.py` to track `patch_history` in the session state.
+2.  [ ] Implement `_diagnose_failure` in `sam.py` to handle patch-application exceptions.
+3.  [ ] Integrate the diagnostic loop into `self_check()` as a pre-rollback step.

@@ -81,7 +81,7 @@
     "cycle": 36,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer**\u2014a structured, persistent, and queryable workspace that mitigates the context window limitations and reasoning degradation inherent in long-horizon tasks.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Externalizatio",
-    "review_due_cycle": 700
+    "review_due_cycle": 715
   },
   {
     "cycle": 37,
@@ -171,7 +171,7 @@
     "cycle": 51,
     "topic": "Study Python's metaclasses: type, __new__, __init_subclass__",
     "summary": "### Technical Summary: Python Metaclasses and Class Construction\n\nIn Python, classes are runtime objects instantiated by other classes, known as metaclasses. By default, this factory is `type`. Understanding how to hook into the class construction pipeline is critical for building robust frameworks, enforcing APIs, and automating boilerplate.\n\n#### The Metaclass Pipeline: `__new__` vs. `__init__`\nWhen a class definition is executed, Python resolves the metaclass and executes its lifecycle:\n*   *",
-    "review_due_cycle": 700
+    "review_due_cycle": 715
   },
   {
     "cycle": 52,
@@ -4066,5 +4066,11 @@
     "topic": "Study type theory: sum types, product types, function types",
     "summary": "### Technical Summary: Type Theory Foundations\n\nType theory provides the formal grammar for program correctness. At its core, we categorize types by how they compose data:\n\n**1. Product Types (Records/Tuples):**\nA product type $A \\times B$ represents the conjunction of types. An instance requires both $A$ and $B$ to exist simultaneously. In modern languages, these manifest as `structs`, `tuples`, or `objects`. The cardinality of a product type is the product of the cardinalities of its constitue",
     "review_due_cycle": 704
+  },
+  {
+    "cycle": 701,
+    "topic": "Learn lambda calculus: alpha, beta, eta reduction",
+    "summary": "### Technical Summary: Lambda Calculus Reductions\n\nLambda calculus serves as the formal foundation for functional programming. At its core, it is a system of variable binding and substitution. Mastery of its reduction rules is essential for understanding compiler optimization, lazy evaluation, and type theory.\n\n**1. Alpha-Conversion ($\\alpha$): Renaming**\nAlpha-conversion addresses variable shadowing and scope collisions. It states that the name of a bound variable is arbitrary: $\\lambda x.M \\eq",
+    "review_due_cycle": 705
   }
 ]
