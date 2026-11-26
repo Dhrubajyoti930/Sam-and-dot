@@ -69,7 +69,7 @@
     "cycle": 34,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n1.  **ReAct (Reason + Act):** The foundational pattern where the agent generates a thought process, executes a tool call, observes ",
-    "review_due_cycle": 698
+    "review_due_cycle": 713
   },
   {
     "cycle": 35,
@@ -159,7 +159,7 @@
     "cycle": 49,
     "topic": "Learn weak references with weakref module and their use cases",
     "summary": "### Technical Summary: Weak References in Python\n\nIn Python, the garbage collector (GC) uses reference counting as its primary mechanism. A standard reference (strong reference) increments an object's reference count, preventing the GC from reclaiming its memory. A `weakref` allows a developer to reference an object without incrementing this count, effectively creating a \"non-owning\" pointer.\n\n#### Core Concepts\n1.  **`weakref.ref`**: The fundamental proxy. Calling the reference object returns t",
-    "review_due_cycle": 698
+    "review_due_cycle": 713
   },
   {
     "cycle": 50,
@@ -4054,5 +4054,11 @@
     "topic": "Learn Turing machines and the halting problem",
     "summary": "### Technical Summary: Turing Machines & The Halting Problem\n\nA Turing Machine (TM) is the theoretical bedrock of computation. It consists of an infinite tape, a read/write head, and a state register. Despite its simplicity, the Church-Turing thesis posits that any function computable by an algorithm can be computed by a TM. For a developer, this defines the absolute ceiling of what software can achieve: if a problem is not Turing-computable, no amount of optimization or hardware scaling will so",
     "review_due_cycle": 702
+  },
+  {
+    "cycle": 699,
+    "topic": "Understand Rice's theorem for program property undecidability",
+    "summary": "### Technical Summary: Rice\u2019s Theorem and Practical Implications\n\nRice\u2019s Theorem states that for any non-trivial semantic property of a program, there is no general, automated method (algorithm) that can decide whether an arbitrary program possesses that property. A property is \"semantic\" if it concerns the behavior of the program (the language it recognizes) rather than its syntax, and \"non-trivial\" if it is true for some programs and false for others.\n\nFor a developer, this is the theoretical ",
+    "review_due_cycle": 703
   }
 ]

@@ -1,57 +1,36 @@
 ## Scratchpad
 
-**Option 1: Watchdog Pattern Implementation (High Priority Action Item)**
-*   **Concept:** Wrap `ask_gemini` and other long-running I/O in a `threading.Timer` or `signal.alarm` (on Unix) to force termination if execution exceeds a threshold.
-*   **Critique:** Robust, but `signal.alarm` is not thread-safe and doesn't work on Windows. `threading.Timer` is cleaner but requires careful management of the main thread's state to avoid leaving the `client` in a hung state.
-*   **Feasibility:** High. Fits well into `sam.py` as a decorator or context manager.
+**Option 1: Implement a "Semantic Cache" TTL/Eviction Policy.**
+*   *Concept:* Currently, the semantic cache is a simple key-value store. Adding an LRU (Least Recently Used) or TTL (Time-To-Live) policy would prevent the cache from growing indefinitely and ensure stale market/technical data is purged.
+*   *Critique:* High maintenance. Requires tracking access timestamps and implementing a pruning routine. While "cleaner," it adds complexity to `bag/semantic_cache.py` that might not yield immediate performance gains given the current scale.
+*   *Feasibility:* High.
 
-**Option 2: Iterative Recursion Audit (Medium Priority Action Item)**
-*   **Concept:** Scan `workshop_bench/` for recursive functions and refactor them to use explicit stacks.
-*   **Critique:** While safer, it risks introducing bugs into stable logic. The "Halting Problem" insight suggests that even iterative code can hang (e.g., `while True`). The watchdog (Option 1) is a more universal solution to the "infinite loop" problem than manual refactoring.
+**Option 2: Formalize "Safety Boundaries" for Static Analysis.**
+*   *Concept:* Following the learning on Rice’s Theorem, I can define a `safety_boundary.json` that explicitly lists "decidable" code paths (e.g., pure data-processing functions) versus "undecidable" ones (e.g., complex agentic loops). I can then write a custom linter check that warns if I introduce recursion or dynamic memory allocation in the "decidable" zone.
+*   *Critique:* This aligns perfectly with my recent learning. It moves from "hoping" for safety to "enforcing" constraints. It is a high-leverage, long-term architectural improvement.
+*   *Feasibility:* Medium. Requires careful AST parsing.
 
-**Decision:** I will proceed with **Option 1 (Watchdog Pattern)**. It addresses the fundamental constraint of non-deterministic termination identified in my recent learning cycle.
+**Selection:** Option 2. It directly addresses the "Rice's Theorem" learning and improves the integrity of my self-modification process.
 
 ---
 
-## Idea: The `ExecutionWatchdog` Context Manager
+## Idea: Formalized Decidability Boundaries
 
-Implement a context manager in `sam.py` that enforces a hard timeout on any block of code, specifically targeting `ask_gemini` calls.
+Implement a `SafetyBoundary` validator that uses `ast` to scan for non-decidable constructs (e.g., `while` loops with non-constant conditions, arbitrary recursion) in critical modules, flagging them as "High Risk" during the `self_check()` phase.
 
 ## Why
-The Halting Problem proves we cannot predict if a process will terminate. By enforcing a `timeout` at the application level, I ensure that Sam remains responsive even if a model call hangs or a recursive loop enters an infinite state. This is a prerequisite for production-grade agentic reliability.
+Rice’s Theorem proves I cannot build a perfect analyzer for all behavior. By restricting my own code to a "decidable subset" (e.g., avoiding complex recursion in core logic), I make my code easier to verify and less prone to the "halting" issues that plague autonomous agents.
 
 ## Implementation Steps
-1.  **Define:** Create `ExecutionWatchdog` in `sam.py` using `threading` and `Event` to signal termination.
-2.  **Integrate:** Wrap the `CLIENT.models.generate_content` call inside `ask_gemini` with this watchdog.
-3.  **Handle:** If the timeout triggers, raise a custom `SamTimeoutError`, log the failure, and trigger a graceful recovery (e.g., retry or skip).
-4.  **Policy:** Set a default timeout of 60 seconds for standard calls, 120 seconds for complex synthesis.
+1.  **Define Constraints:** Create `bag/safety_rules.py` containing a list of AST node types that are "restricted" in core modules (e.g., `ast.While`, `ast.Recursion`).
+2.  **Integrate into `self_check()`:** Update `sam.py` to run a `SafetyBoundary` check after the `ruff` check.
+3.  **Logging:** If a violation is found, log a warning to `log.info` rather than failing, allowing me to "opt-in" to complexity while being aware of the risk.
 
 ## Risk
-**Failure Mode:** The watchdog kills the thread, but the underlying network socket or C-extension (Gemini client) remains blocked, leading to "zombie" threads that consume memory.
-**Mitigation:** Use `daemon=True` for the watchdog thread and ensure the `ask_gemini` function checks for a "cancellation" flag before and after the network call.
+**Pre-mortem:** The validator might flag necessary, safe code (e.g., a simple `while` loop in a utility function), causing unnecessary friction.
+**Mitigation:** Implement an "ignore" mechanism via a specific comment tag (e.g., `# sam: ignore-boundary`) to allow intentional complexity.
 
 ## Self-Correction
-*Critique:* Simply killing a thread is dangerous in Python (it can leave locks in an inconsistent state).
-*Refinement:* Instead of `threading.kill` (which doesn't exist), I will use a `concurrent.futures.ThreadPoolExecutor` with `future.result(timeout=...)`. This is the standard, safe way to handle blocking I/O timeouts in Python.
+*Refinement:* Instead of a global ban, I will apply this check *only* to files in `workshop_bench/core/` and `sam.py`. I will start by only checking for `ast.Recursion` to keep the initial implementation focused and low-noise.
 
-**Confidence Score:** 9/10
-
----
-
-## Proposed Implementation Plan
-
-```python
-# Add to sam.py
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
-
-def ask_gemini_with_timeout(prompt: str, timeout: int = 60, **kwargs) -> str:
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(ask_gemini, prompt, **kwargs)
-        try:
-            return future.result(timeout=timeout)
-        except TimeoutError:
-            log.error(f"Gemini call timed out after {timeout}s.")
-            return "" # Return empty to trigger standard retry/fail logic
-```
-
-*Note: I will replace the direct `ask_gemini` calls in `phase_i_deep_learning` and `phase_iii_market_ingestion` with this wrapper in the next cycle.*
+**Confidence Score:** 8/10
