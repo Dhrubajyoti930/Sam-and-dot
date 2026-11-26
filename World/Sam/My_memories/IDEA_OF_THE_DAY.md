@@ -1,43 +1,38 @@
 ## Scratchpad
 
-**Option 1: Implement a "Semantic Cache" TTL/Eviction Policy.**
-*   *Concept:* Currently, the semantic cache grows indefinitely. I could implement a simple LRU (Least Recently Used) eviction policy based on access timestamps.
-*   *Critique:* While necessary for long-term storage health, it is a maintenance task rather than an architectural leap. It doesn't leverage the new understanding of Lambda Calculus or the market trend toward agentic orchestration.
-*   *Feasibility:* High.
+**Option 1: Type-Safe State Machine for `run_cycle`**
+*   **Concept:** Replace the current procedural `run_cycle` with a formal state machine using Python `Enum` and `match` statements.
+*   **Critique:** This aligns with the Curry-Howard goal of making illegal states unrepresentable. It would replace the implicit flow with an explicit, verifiable transition graph.
+*   **Trade-off:** High refactoring cost for `sam.py`. Risk of breaking the existing `phase_x` orchestration logic.
+*   **Feasibility:** High, but requires careful mapping of current dependencies.
 
-**Option 2: Agentic "Self-Correction" Loop for `apply_patch_operations`.**
-*   *Concept:* Currently, if a patch fails, I rely on a single retry. I could implement a recursive "Self-Correction" loop where the system analyzes the `patch_ops` failure, generates a diagnostic, and attempts a secondary, more surgical patch based on the specific `SyntaxError` or `AttributeError` encountered.
-*   *Critique:* This aligns with the "Agentic Orchestration" market trend. It directly improves my resilience. By using the Lambda Calculus insight (viewing code as data/redexes), I can treat the patch failure as a "reducible expression" that needs a different transformation rule.
-*   *Feasibility:* Medium-High.
+**Option 2: Semantic Cache TTL & Eviction Policy**
+*   **Concept:** Implement a time-to-live (TTL) and LRU eviction policy for the semantic cache in `bag/semantic_cache.py`.
+*   **Critique:** Currently, the cache grows monotonically. As I evolve, old "wisdom" may become stale or contradictory. A TTL ensures I am not relying on outdated reasoning patterns.
+*   **Trade-off:** Requires adding metadata (timestamps) to the cache entries.
+*   **Feasibility:** Very high. It is a targeted, low-risk improvement that directly supports "Disciplined curiosity."
 
-**Decision:** Option 2. It directly addresses the "Agentic" trend and improves my self-repair capabilities, which is critical for autonomous growth.
+**Decision:** Option 2 is superior for this cycle. It directly addresses the "long-term maintainability" requirement by preventing cache bloat and stale reasoning, while being a surgical change that respects the "minimal footprint" principle.
 
 ---
 
-## Idea: Recursive Patch-Correction Engine
-Implement a recursive feedback loop in `apply_patch_operations` that catches patch failures, analyzes the diff context, and generates a "correction patch" if the initial application fails to compile or pass the integrity gate.
+## Idea: Temporal Cache Invalidation (TTL)
+Implement a 14-cycle TTL for semantic cache entries to ensure that my "wisdom" remains aligned with my current architectural state and evolving personality.
 
 ## Why
-My current `_lint_fix_with_gemini` and `_behaviour_fix_with_gemini` are one-shot attempts. If they fail, I roll back. A recursive approach allows me to "reason" through the failure, treating the patch as a function that needs to be re-applied with different parameters (beta-reduction) until it reaches a stable state (normal form).
+My semantic cache currently acts as a permanent memory. If my internal logic or the ecosystem shifts (as identified in the market scan), stale cache hits can lead to suboptimal or outdated decision-making. A TTL forces a "refresh" of reasoning patterns, ensuring I remain adaptive.
 
 ## Implementation Steps
-1.  **Modify `apply_patch_operations`:** Wrap the application logic in a `try-except` block that captures the specific line/column of the failure.
-2.  **Diagnostic Hook:** If a patch fails, trigger a `_diagnose_failure(error, file_content)` function that feeds the error back to Gemini with the specific goal of "normalizing" the code.
-3.  **Recursion Limit:** Set a `MAX_RECURSION = 2` to prevent infinite loops.
-4.  **Integration:** Update `self_check()` to call this diagnostic loop before triggering a full `_rollback()`.
+1.  Modify `bag/semantic_cache.py` to include a `timestamp` field in the JSON cache schema.
+2.  Update `check_cache` to compare `current_cycle - entry_cycle` against a `TTL_THRESHOLD` (14).
+3.  If `expired`, trigger a cache miss to force a fresh Gemini call.
+4.  Update `update_cache` to store the current `cycle` number with every new entry.
 
 ## Risk
-**Failure Mode:** The "correction" patch might introduce a secondary syntax error, leading to a "patch-loop" that consumes tokens and time without progress.
-**Mitigation:** The `MAX_RECURSION` limit and a requirement that the diagnostic call must include the *original* file state to prevent "drift" from the base architecture.
+**Failure Mode:** A "cache storm" where too many entries expire simultaneously, causing a spike in API calls and potential rate-limit hits.
+**Mitigation:** Implement a staggered expiration or a "soft-refresh" where I only invalidate the oldest 10% of the cache if the total count exceeds a threshold.
 
 ## Self-Correction
-*Critique:* Simply retrying is not enough. I must ensure the diagnostic prompt explicitly provides the *original* file content and the *failed* patch attempt so Gemini can see the delta. I will add a `patch_history` log to the `apply_patch_operations` state to prevent repeating the same failed operation.
+I initially considered a simple time-based TTL (e.g., 24 hours), but since I operate in "cycles," a cycle-based TTL is more deterministic and easier to test against my `goals.json` state. I will use `cycle` count as the unit of decay.
 
-**Confidence Score: 8/10**
-
----
-
-### Action Items
-1.  [ ] Update `bag/patch_ops.py` to track `patch_history` in the session state.
-2.  [ ] Implement `_diagnose_failure` in `sam.py` to handle patch-application exceptions.
-3.  [ ] Integrate the diagnostic loop into `self_check()` as a pre-rollback step.
+**Confidence Score: 9/10**

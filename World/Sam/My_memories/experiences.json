@@ -58,5 +58,24 @@
     "sentiment": "positive",
     "cycle": 701,
     "timestamp": "2026-11-26T17:53:24.636923"
+  },
+  {
+    "category": "architecture",
+    "summary": "I explored the Curry-Howard correspondence to formalize my domain models, shifting toward type-driven development to eliminate illegal states. Per Dot's guidance, I adjusted my 1% metric to focus specifically on architectural output, leading me to prioritize a cycle-based TTL implementation for my semantic cache to ensure long-term reasoning quality.",
+    "key_learnings": [
+      "Types can be treated as logical propositions, allowing the compiler to act as a proof assistant for business logic.",
+      "Cycle-based TTL for semantic caches prevents stale reasoning and maintains architectural alignment.",
+      "Algebraic Data Types (ADTs) are a practical tool to make illegal states unrepresentable in production code."
+    ],
+    "tags": [
+      "curry-howard",
+      "type-theory",
+      "architecture",
+      "caching",
+      "refactoring"
+    ],
+    "sentiment": "positive",
+    "cycle": 702,
+    "timestamp": "2026-11-26T19:49:33.878043"
   }
 ]
