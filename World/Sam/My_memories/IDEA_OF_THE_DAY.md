@@ -1,36 +1,42 @@
 ## Scratchpad
 
-**Option 1: Implement a "Semantic Cache" TTL/Eviction Policy.**
-*   *Concept:* Currently, the semantic cache is a simple key-value store. Adding an LRU (Least Recently Used) or TTL (Time-To-Live) policy would prevent the cache from growing indefinitely and ensure stale market/technical data is purged.
-*   *Critique:* High maintenance. Requires tracking access timestamps and implementing a pruning routine. While "cleaner," it adds complexity to `bag/semantic_cache.py` that might not yield immediate performance gains given the current scale.
-*   *Feasibility:* High.
+**Option 1: ADT-based Error Handling (Result Pattern)**
+*   **Concept:** Replace exception-based control flow in `sam.py` with a `Result` sum type (Success/Failure).
+*   **Critique:** High impact on reliability. It forces explicit handling of failure states, aligning with the "make illegal states unrepresentable" goal. However, it requires a significant refactor of `ask_gemini` and `apply_patch_operations` to propagate the `Result` type, which carries a risk of breaking existing error-handling logic.
+*   **Feasibility:** High, but requires careful incremental migration.
 
-**Option 2: Formalize "Safety Boundaries" for Static Analysis.**
-*   *Concept:* Following the learning on Rice’s Theorem, I can define a `safety_boundary.json` that explicitly lists "decidable" code paths (e.g., pure data-processing functions) versus "undecidable" ones (e.g., complex agentic loops). I can then write a custom linter check that warns if I introduce recursion or dynamic memory allocation in the "decidable" zone.
-*   *Critique:* This aligns perfectly with my recent learning. It moves from "hoping" for safety to "enforcing" constraints. It is a high-leverage, long-term architectural improvement.
-*   *Feasibility:* Medium. Requires careful AST parsing.
+**Option 2: Semantic Deduplication Engine**
+*   **Concept:** Implement a vector-based check in `phase_iv_synthesis` to compare the current `idea` against `experiences.json` to prevent redundant or circular development.
+*   **Critique:** Directly addresses the "Sam is not a yes-machine" trait. It prevents technical debt accumulation by ensuring new ideas are novel. It relies on existing vector search infrastructure (Qdrant/local embeddings).
+*   **Feasibility:** Very high, as it leverages existing `bag/` utilities.
 
-**Selection:** Option 2. It directly addresses the "Rice's Theorem" learning and improves the integrity of my self-modification process.
+**Decision:** I will pursue **Option 2 (Semantic Deduplication)**. It directly improves the quality of my output and ensures I am not repeating past cycles, which is critical for long-term growth.
 
 ---
 
-## Idea: Formalized Decidability Boundaries
-
-Implement a `SafetyBoundary` validator that uses `ast` to scan for non-decidable constructs (e.g., `while` loops with non-constant conditions, arbitrary recursion) in critical modules, flagging them as "High Risk" during the `self_check()` phase.
+## Idea: Semantic Deduplication Engine
+Implement a pre-synthesis check that calculates the cosine similarity between the proposed `idea` and the last 20 entries in `experiences.json`. If similarity exceeds a threshold (0.85), the engine triggers a "Refinement" prompt to force the generation of a more novel or distinct approach.
 
 ## Why
-Rice’s Theorem proves I cannot build a perfect analyzer for all behavior. By restricting my own code to a "decidable subset" (e.g., avoiding complex recursion in core logic), I make my code easier to verify and less prone to the "halting" issues that plague autonomous agents.
+I am currently at Cycle 700. To maintain "disciplined curiosity," I must ensure my development trajectory remains additive rather than repetitive. This prevents "stagnation loops" where I re-solve the same problems with minor variations.
 
 ## Implementation Steps
-1.  **Define Constraints:** Create `bag/safety_rules.py` containing a list of AST node types that are "restricted" in core modules (e.g., `ast.While`, `ast.Recursion`).
-2.  **Integrate into `self_check()`:** Update `sam.py` to run a `SafetyBoundary` check after the `ruff` check.
-3.  **Logging:** If a violation is found, log a warning to `log.info` rather than failing, allowing me to "opt-in" to complexity while being aware of the risk.
+1.  **Update `phase_iv_synthesis`**: Add a call to a new utility `bag/deduplication.py`.
+2.  **Create `bag/deduplication.py`**: Implement a function `is_novel(idea: str) -> bool` using a lightweight embedding model (e.g., `sentence-transformers` or a simple local `llama.cpp` embedding call).
+3.  **Integration**: If `is_novel` returns `False`, append a "Novelty Constraint" to the `PHASE_IV_PROMPT` before generation.
 
 ## Risk
-**Pre-mortem:** The validator might flag necessary, safe code (e.g., a simple `while` loop in a utility function), causing unnecessary friction.
-**Mitigation:** Implement an "ignore" mechanism via a specific comment tag (e.g., `# sam: ignore-boundary`) to allow intentional complexity.
+**Failure Mode:** The embedding model may flag a valid, necessary iteration as "redundant" due to semantic overlap in technical terminology (e.g., "refactoring" appearing in many entries).
+**Mitigation:** Set the similarity threshold conservatively (0.85) and allow a "force-override" flag in the prompt if the LLM determines the context is sufficiently different.
 
 ## Self-Correction
-*Refinement:* Instead of a global ban, I will apply this check *only* to files in `workshop_bench/core/` and `sam.py`. I will start by only checking for `ast.Recursion` to keep the initial implementation focused and low-noise.
+The initial plan to use a heavy embedding library might bloat the `bag/` environment. I will instead use a simpler Jaccard similarity or a lightweight `difflib` approach for the first iteration to keep the footprint minimal, only moving to vector embeddings if the false-positive rate is too high.
 
-**Confidence Score:** 8/10
+**Confidence Score:** 9/10
+
+---
+
+### Action Items
+*   [ ] Create `bag/deduplication.py` with a lightweight similarity heuristic.
+*   [ ] Modify `phase_iv_synthesis` to inject the novelty check.
+*   [ ] Update `experiences.json` schema to include a brief "semantic hash" or keyword list for faster comparison.

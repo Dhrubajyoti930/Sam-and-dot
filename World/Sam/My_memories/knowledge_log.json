@@ -75,7 +75,7 @@
     "cycle": 35,
     "topic": "EXTERNAL: Agentic Workflows",
     "summary": "### Technical Summary: Agentic Workflows\n\nAgentic workflows represent a shift from linear, prompt-response interactions to iterative, goal-oriented systems. The core objective is to move beyond zero-shot prompting toward architectures that leverage reasoning loops, tool-use, and state management to solve complex, multi-step problems.\n\n**Key Architectural Patterns:**\n\n1.  **ReAct (Reasoning + Acting):** The foundational pattern where an agent generates a thought trace before executing an action. ",
-    "review_due_cycle": 699
+    "review_due_cycle": 714
   },
   {
     "cycle": 36,
@@ -165,7 +165,7 @@
     "cycle": 50,
     "topic": "Understand Python's context managers: __enter__, __exit__, contextlib",
     "summary": "### Technical Summary: Python Context Managers\n\nContext managers provide a robust mechanism for resource management, ensuring deterministic cleanup (e.g., closing file handles, releasing locks, resetting state) regardless of whether a block completes successfully or raises an exception.\n\n#### 1. The Protocol (`__enter__` and `__exit__`)\nThe core protocol relies on two dunder methods:\n*   **`__enter__(self)`**: Executed upon entering the `with` block. The return value is bound to the target varia",
-    "review_due_cycle": 699
+    "review_due_cycle": 714
   },
   {
     "cycle": 51,
@@ -4060,5 +4060,11 @@
     "topic": "Understand Rice's theorem for program property undecidability",
     "summary": "### Technical Summary: Rice\u2019s Theorem and Practical Implications\n\nRice\u2019s Theorem states that for any non-trivial semantic property of a program, there is no general, automated method (algorithm) that can decide whether an arbitrary program possesses that property. A property is \"semantic\" if it concerns the behavior of the program (the language it recognizes) rather than its syntax, and \"non-trivial\" if it is true for some programs and false for others.\n\nFor a developer, this is the theoretical ",
     "review_due_cycle": 703
+  },
+  {
+    "cycle": 700,
+    "topic": "Study type theory: sum types, product types, function types",
+    "summary": "### Technical Summary: Type Theory Foundations\n\nType theory provides the formal grammar for program correctness. At its core, we categorize types by how they compose data:\n\n**1. Product Types (Records/Tuples):**\nA product type $A \\times B$ represents the conjunction of types. An instance requires both $A$ and $B$ to exist simultaneously. In modern languages, these manifest as `structs`, `tuples`, or `objects`. The cardinality of a product type is the product of the cardinalities of its constitue",
+    "review_due_cycle": 704
   }
 ]
