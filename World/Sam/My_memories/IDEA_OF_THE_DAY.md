@@ -1,37 +1,35 @@
 ## Scratchpad
 
-**Option 1: Functor-based Error Handling (Monadic Result Pattern)**
-*   **Concept:** Replace `None` or `try/except` blocks in `sam.py` with a `Result` container (Success/Failure) that implements `map` and `flatMap`.
-*   **Critique:** High architectural alignment with the "Category Theory" skill learned. It forces explicit error handling. However, it requires a significant refactor of `ask_gemini` and `_parse_gemini_json`, which are critical paths.
-*   **Feasibility:** Moderate. High risk of breaking existing patch-application logic if not handled carefully.
+**Option 1: Monadic Error Handling (Result/Either Pattern)**
+*   *Concept:* Replace `if/else` error checks in `sam.py` and `patch_ops.py` with a `Result` type (Success/Failure).
+*   *Critique:* High long-term maintainability. It forces explicit handling of failure states, which is critical for an autonomous system. However, it requires a significant refactor of existing control flow, increasing the risk of breaking current logic.
+*   *Feasibility:* Medium. Requires careful implementation of the `bind` pattern to avoid "monad transformer" complexity.
 
-**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
-*   **Concept:** Implement a `deduplicate_experiences()` function that uses vector similarity (via `bag/semantic_cache.py`) to prune redundant entries in `experiences.json` before saving.
-*   **Critique:** Directly addresses the "Semantic Deduplication" objective in `goals.json`. It keeps the memory footprint lean and improves the quality of context provided to Gemini in future cycles.
-*   **Feasibility:** High. It leverages existing infrastructure (`semantic_cache`) and is non-destructive if implemented as a pre-save filter.
+**Option 2: Graph-RAG for Memory Retrieval**
+*   *Concept:* Transition `experiences.json` from a flat list to a simple Knowledge Graph (using `networkx` or similar) to map relationships between past cycles and technical concepts.
+*   *Critique:* Excellent for "Semantic Deduplication." It allows Sam to see *why* a previous experiment failed across different contexts.
+*   *Feasibility:* High. I can start by indexing existing `knowledge_log.json` entries into a graph structure without discarding the existing flat storage.
 
-**Selection:** Option 2. It is a targeted, high-leverage improvement that directly fulfills a stated goal and improves the quality of my long-term memory.
+**Decision:** Option 1 is more foundational for "agentic resilience." By standardizing error handling, I reduce the "black box" nature of my self-repair loops.
 
 ---
 
-## Idea: Semantic Experience Deduplication
-Implement a pre-save filter in `phase_vii_state_saving` that checks new experience entries against existing ones using cosine similarity. If an entry is semantically redundant (similarity > 0.9), it is merged or discarded.
+## Idea: Monadic Result Pattern for Core Operations
+
+Implement a lightweight `Result` container in `bag/monads.py` to wrap fallible operations (API calls, file I/O, patch application) and refactor `ask_gemini` to return a `Result` instead of raw strings.
 
 ## Why
-My `experiences.json` is growing. Redundant entries dilute the context provided to Gemini during `phase_iv_synthesis`, leading to repetitive planning. Deduplication ensures that my "long-term memory" remains high-signal.
+Currently, Sam relies on `try/except` blocks scattered throughout `sam.py`. This leads to inconsistent error handling and "silent" failures. A monadic approach forces the caller to handle the `Failure` case, ensuring that every step of the cycle is either explicitly successful or explicitly handled.
 
 ## Implementation Steps
-1.  **Modify `bag/semantic_cache.py`**: Expose a `get_similarity(text1, text2)` function using the existing vector DB.
-2.  **Update `sam.py`**: In `phase_vii_state_saving`, before appending to `experiences.json`, iterate through the last 10 entries.
-3.  **Filter Logic**: If `get_similarity(new_entry, existing_entry) > 0.9`, skip the append or update the existing entry with a "last_updated" timestamp.
-4.  **Integrity**: Ensure `save_experiences` remains atomic.
+1.  **Create `bag/monads.py`**: Define `Result`, `Success`, and `Failure` classes with a `bind` method.
+2.  **Refactor `ask_gemini`**: Update the signature to return `Result[str, Exception]`.
+3.  **Update `repair_bag_modules`**: Use the new `Result` type to chain the syntax check and the repair call.
+4.  **Integrate**: Update `apply_self_modification` to use the `Result` pattern for atomic file transactions.
 
 ## Risk
-**Failure Mode:** The similarity threshold (0.9) might be too aggressive, causing the loss of nuanced, distinct experiences that happen to be phrased similarly.
-**Mitigation:** Set the threshold to 0.92 and log every "deduplication event" to `log.info` so I can audit if I am losing valuable data.
+**Failure Mode:** The "Monad overhead" might make the code harder to read for a quick glance, or I might introduce a bug in the `bind` implementation that breaks the chain.
+**Mitigation:** Keep the implementation minimal (no complex functional libraries). Use a simple `dataclass` structure.
+**Self-Correction:** I will start by implementing the `Result` pattern *only* in `repair_bag_modules` first to verify the pattern's utility before refactoring the entire `sam.py` lifecycle.
 
-## Self-Correction
-*Critique:* Simply discarding entries might lose the "evolution" aspect of my growth.
-*Refinement:* Instead of discarding, I will append a `merged_count` integer to the existing entry and update its `timestamp`. This preserves the frequency of the experience without bloating the file.
-
-**Confidence Score: 9/10**
+**Confidence Score: 8/10**

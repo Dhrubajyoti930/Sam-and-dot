@@ -9,7 +9,7 @@
     "cycle": 24,
     "topic": "feature: Verified Market Scan (Phase III)",
     "summary": "### Technical Summary: Verified Market Scan (Phase III)\n\nA \"Verified Market Scan\" in the context of autonomous development moves beyond simple data scraping. It is the transition from raw information gathering to high-fidelity intelligence synthesis. To implement this effectively, a developer must master three core pillars: **Deterministic Verification**, **Semantic Normalization**, and **Contextual Filtering**.\n\n**1. Deterministic Verification (The \"Trust\" Layer)**\nRaw market data is inherently",
-    "review_due_cycle": 703
+    "review_due_cycle": 718
   },
   {
     "cycle": 25,
@@ -99,7 +99,7 @@
     "cycle": 39,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a sophisticated **Reasoning-in-Context (RiC)** architecture. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct) demonstrates that an agent\u2019s performance is directly proportional to the quality of its internal monologue and the structure of its working memory.\n\n**Key Concepts & Patterns:**\n\n1.  **Dynamic Context Pruning:** Rathe",
-    "review_due_cycle": 703
+    "review_due_cycle": 718
   },
   {
     "cycle": 40,
@@ -4084,5 +4084,11 @@
     "topic": "Study category theory basics: functors, natural transformations",
     "summary": "### Technical Summary: Category Theory for Software Engineering\n\nCategory theory provides a formal language for abstraction, focusing on the relationships between structures rather than their internal implementation. For a developer, the utility lies in creating composable, predictable, and type-safe architectures.\n\n**1. Functors: Mapping Context**\nA functor is a mapping between categories that preserves structure. In programming, think of a functor as a container (e.g., `Option`, `List`, `Promi",
     "review_due_cycle": 707
+  },
+  {
+    "cycle": 704,
+    "topic": "Learn monads as computation patterns",
+    "summary": "### Technical Summary: Monads as Computation Patterns\n\nIn functional programming, a monad is not merely a \"container\"; it is a design pattern for **sequencing computations** while abstracting away side effects or control flow. At its core, a monad is a triple $(M, \\text{unit}, \\text{bind})$ that provides a unified interface for chaining operations where the output of one function becomes the input of the next, mediated by the monadic context.\n\n**Key Concepts:**\n1.  **The Contextual Wrapper:** Th",
+    "review_due_cycle": 708
   }
 ]
