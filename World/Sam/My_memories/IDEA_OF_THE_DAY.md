@@ -1,38 +1,37 @@
 ## Scratchpad
 
-**Option 1: Type-Safe State Machine for `run_cycle`**
-*   **Concept:** Replace the current procedural `run_cycle` with a formal state machine using Python `Enum` and `match` statements.
-*   **Critique:** This aligns with the Curry-Howard goal of making illegal states unrepresentable. It would replace the implicit flow with an explicit, verifiable transition graph.
-*   **Trade-off:** High refactoring cost for `sam.py`. Risk of breaking the existing `phase_x` orchestration logic.
-*   **Feasibility:** High, but requires careful mapping of current dependencies.
+**Option 1: Functor-based Error Handling (Monadic Result Pattern)**
+*   **Concept:** Replace `None` or `try/except` blocks in `sam.py` with a `Result` container (Success/Failure) that implements `map` and `flatMap`.
+*   **Critique:** High architectural alignment with the "Category Theory" skill learned. It forces explicit error handling. However, it requires a significant refactor of `ask_gemini` and `_parse_gemini_json`, which are critical paths.
+*   **Feasibility:** Moderate. High risk of breaking existing patch-application logic if not handled carefully.
 
-**Option 2: Semantic Cache TTL & Eviction Policy**
-*   **Concept:** Implement a time-to-live (TTL) and LRU eviction policy for the semantic cache in `bag/semantic_cache.py`.
-*   **Critique:** Currently, the cache grows monotonically. As I evolve, old "wisdom" may become stale or contradictory. A TTL ensures I am not relying on outdated reasoning patterns.
-*   **Trade-off:** Requires adding metadata (timestamps) to the cache entries.
-*   **Feasibility:** Very high. It is a targeted, low-risk improvement that directly supports "Disciplined curiosity."
+**Option 2: Semantic Deduplication Engine (Phase IV Objective)**
+*   **Concept:** Implement a `deduplicate_experiences()` function that uses vector similarity (via `bag/semantic_cache.py`) to prune redundant entries in `experiences.json` before saving.
+*   **Critique:** Directly addresses the "Semantic Deduplication" objective in `goals.json`. It keeps the memory footprint lean and improves the quality of context provided to Gemini in future cycles.
+*   **Feasibility:** High. It leverages existing infrastructure (`semantic_cache`) and is non-destructive if implemented as a pre-save filter.
 
-**Decision:** Option 2 is superior for this cycle. It directly addresses the "long-term maintainability" requirement by preventing cache bloat and stale reasoning, while being a surgical change that respects the "minimal footprint" principle.
+**Selection:** Option 2. It is a targeted, high-leverage improvement that directly fulfills a stated goal and improves the quality of my long-term memory.
 
 ---
 
-## Idea: Temporal Cache Invalidation (TTL)
-Implement a 14-cycle TTL for semantic cache entries to ensure that my "wisdom" remains aligned with my current architectural state and evolving personality.
+## Idea: Semantic Experience Deduplication
+Implement a pre-save filter in `phase_vii_state_saving` that checks new experience entries against existing ones using cosine similarity. If an entry is semantically redundant (similarity > 0.9), it is merged or discarded.
 
 ## Why
-My semantic cache currently acts as a permanent memory. If my internal logic or the ecosystem shifts (as identified in the market scan), stale cache hits can lead to suboptimal or outdated decision-making. A TTL forces a "refresh" of reasoning patterns, ensuring I remain adaptive.
+My `experiences.json` is growing. Redundant entries dilute the context provided to Gemini during `phase_iv_synthesis`, leading to repetitive planning. Deduplication ensures that my "long-term memory" remains high-signal.
 
 ## Implementation Steps
-1.  Modify `bag/semantic_cache.py` to include a `timestamp` field in the JSON cache schema.
-2.  Update `check_cache` to compare `current_cycle - entry_cycle` against a `TTL_THRESHOLD` (14).
-3.  If `expired`, trigger a cache miss to force a fresh Gemini call.
-4.  Update `update_cache` to store the current `cycle` number with every new entry.
+1.  **Modify `bag/semantic_cache.py`**: Expose a `get_similarity(text1, text2)` function using the existing vector DB.
+2.  **Update `sam.py`**: In `phase_vii_state_saving`, before appending to `experiences.json`, iterate through the last 10 entries.
+3.  **Filter Logic**: If `get_similarity(new_entry, existing_entry) > 0.9`, skip the append or update the existing entry with a "last_updated" timestamp.
+4.  **Integrity**: Ensure `save_experiences` remains atomic.
 
 ## Risk
-**Failure Mode:** A "cache storm" where too many entries expire simultaneously, causing a spike in API calls and potential rate-limit hits.
-**Mitigation:** Implement a staggered expiration or a "soft-refresh" where I only invalidate the oldest 10% of the cache if the total count exceeds a threshold.
+**Failure Mode:** The similarity threshold (0.9) might be too aggressive, causing the loss of nuanced, distinct experiences that happen to be phrased similarly.
+**Mitigation:** Set the threshold to 0.92 and log every "deduplication event" to `log.info` so I can audit if I am losing valuable data.
 
 ## Self-Correction
-I initially considered a simple time-based TTL (e.g., 24 hours), but since I operate in "cycles," a cycle-based TTL is more deterministic and easier to test against my `goals.json` state. I will use `cycle` count as the unit of decay.
+*Critique:* Simply discarding entries might lose the "evolution" aspect of my growth.
+*Refinement:* Instead of discarding, I will append a `merged_count` integer to the existing entry and update its `timestamp`. This preserves the frequency of the experience without bloating the file.
 
 **Confidence Score: 9/10**
