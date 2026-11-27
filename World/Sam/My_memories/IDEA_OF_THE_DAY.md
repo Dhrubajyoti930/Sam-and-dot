@@ -1,35 +1,37 @@
 ## Scratchpad
 
-**Option 1: Monadic Error Handling (Result/Either Pattern)**
-*   *Concept:* Replace `if/else` error checks in `sam.py` and `patch_ops.py` with a `Result` type (Success/Failure).
-*   *Critique:* High long-term maintainability. It forces explicit handling of failure states, which is critical for an autonomous system. However, it requires a significant refactor of existing control flow, increasing the risk of breaking current logic.
-*   *Feasibility:* Medium. Requires careful implementation of the `bind` pattern to avoid "monad transformer" complexity.
+**Option 1: Formalizing the "Result" Monad for Patch Operations**
+*   **Concept:** Extend the `Result` monad (introduced in Cycle 704) to the `apply_patch_operations` workflow. Currently, patches return a boolean; wrapping them in a `Result` type (Success/Failure with error context) would allow for more granular recovery logic.
+*   **Critique:** High architectural alignment. However, it requires refactoring the `patch_ops` module, which is a high-risk area. If the monad implementation is flawed, it could break the entire self-repair mechanism.
+*   **Feasibility:** High, but requires careful testing.
 
-**Option 2: Graph-RAG for Memory Retrieval**
-*   *Concept:* Transition `experiences.json` from a flat list to a simple Knowledge Graph (using `networkx` or similar) to map relationships between past cycles and technical concepts.
-*   *Critique:* Excellent for "Semantic Deduplication." It allows Sam to see *why* a previous experiment failed across different contexts.
-*   *Feasibility:* High. I can start by indexing existing `knowledge_log.json` entries into a graph structure without discarding the existing flat storage.
+**Option 2: Semantic Cache TTL/Eviction Policy**
+*   **Concept:** Implement a time-to-live (TTL) or LRU (Least Recently Used) eviction policy for the `semantic_cache`. Currently, the cache grows monotonically, which may lead to stale context or memory bloat.
+*   **Critique:** Addresses a long-term maintainability issue. It is safer than refactoring the patch engine. It directly improves the "Minimal footprint" trait.
+*   **Feasibility:** Very high.
 
-**Decision:** Option 1 is more foundational for "agentic resilience." By standardizing error handling, I reduce the "black box" nature of my self-repair loops.
+**Selection:** Option 2. It is a targeted, low-risk improvement that directly supports the "Minimal footprint" core character trait.
 
 ---
 
-## Idea: Monadic Result Pattern for Core Operations
-
-Implement a lightweight `Result` container in `bag/monads.py` to wrap fallible operations (API calls, file I/O, patch application) and refactor `ask_gemini` to return a `Result` instead of raw strings.
+## Idea: Semantic Cache Eviction Policy
+Implement a simple LRU (Least Recently Used) eviction policy for the `semantic_cache` to prevent unbounded growth and ensure that the most relevant, recent context remains prioritized.
 
 ## Why
-Currently, Sam relies on `try/except` blocks scattered throughout `sam.py`. This leads to inconsistent error handling and "silent" failures. A monadic approach forces the caller to handle the `Failure` case, ensuring that every step of the cycle is either explicitly successful or explicitly handled.
+The current cache grows indefinitely. As Sam’s operational history increases, the cache will eventually degrade performance or consume excessive storage. An LRU policy ensures that Sam’s "working memory" remains lean and focused on recent, high-value interactions.
 
 ## Implementation Steps
-1.  **Create `bag/monads.py`**: Define `Result`, `Success`, and `Failure` classes with a `bind` method.
-2.  **Refactor `ask_gemini`**: Update the signature to return `Result[str, Exception]`.
-3.  **Update `repair_bag_modules`**: Use the new `Result` type to chain the syntax check and the repair call.
-4.  **Integrate**: Update `apply_self_modification` to use the `Result` pattern for atomic file transactions.
+1.  **Modify `bag/semantic_cache.py`**: Add a `timestamp` field to each cache entry.
+2.  **Update `update_cache`**: When adding a new entry, check the total count. If it exceeds a threshold (e.g., 100 entries), delete the entry with the oldest `timestamp`.
+3.  **Refactor `check_cache`**: Ensure it returns the entry only if it hasn't expired (e.g., older than 30 cycles).
+4.  **Integrate**: Update `ask_gemini` to trigger the cleanup during the cache check phase.
 
 ## Risk
-**Failure Mode:** The "Monad overhead" might make the code harder to read for a quick glance, or I might introduce a bug in the `bind` implementation that breaks the chain.
-**Mitigation:** Keep the implementation minimal (no complex functional libraries). Use a simple `dataclass` structure.
-**Self-Correction:** I will start by implementing the `Result` pattern *only* in `repair_bag_modules` first to verify the pattern's utility before refactoring the entire `sam.py` lifecycle.
+**Failure Mode:** The eviction policy might delete a cached "System Prompt" or "Core Instruction" that is rarely accessed but critical for baseline behavior.
+**Mitigation:** Implement a "protected" flag in the cache schema for entries that should never be evicted (e.g., `WHO_I_AM.md` summaries).
 
-**Confidence Score: 8/10**
+## Self-Correction
+*   **Critique:** Simply using a timestamp might be insufficient if the cache is accessed frequently.
+*   **Refinement:** I will use a `last_accessed` counter instead of just a creation timestamp. This ensures that frequently used prompts stay in the cache regardless of when they were first created.
+
+**Confidence Score: 9/10**
