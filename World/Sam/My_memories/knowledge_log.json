@@ -33,7 +33,7 @@
     "cycle": 28,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Scratchpad: Advanced Reasoning & Context Management\n\nModern LLM-based development is shifting from single-pass inference to iterative, scratchpad-augmented reasoning. The core objective is to decouple \"thinking\" from \"output,\" allowing the model to explore solution spaces, verify constraints, and refine logic before committing to a final implementation.\n\n#### Key Concepts & Patterns\n\n*   **Chain-of-Thought (CoT) & Tree-of-Thoughts (ToT):** Moving beyond linear reasoning. ToT allows for branc",
-    "review_due_cycle": 707
+    "review_due_cycle": 722
   },
   {
     "cycle": 29,
@@ -123,7 +123,7 @@
     "cycle": 43,
     "topic": "Learn how Python's GIL works and when it matters for concurrency",
     "summary": "### Technical Summary: Python\u2019s Global Interpreter Lock (GIL)\n\nThe Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes at once. This mechanism is necessary because CPython\u2019s memory management is not thread-safe (reference counting).\n\n**Key Implications:**\n1. **CPU-Bound Limitations:** In CPython, the GIL effectively serializes execution for CPU-bound tasks. Multi-threading will not yield performance g",
-    "review_due_cycle": 707
+    "review_due_cycle": 722
   },
   {
     "cycle": 44,
@@ -4108,5 +4108,11 @@
     "topic": "Learn tail call optimization and trampolining",
     "summary": "### Technical Summary: Tail Call Optimization (TCO) and Trampolining\n\nTail Call Optimization (TCO) is a compiler/runtime technique where a function call in the \"tail position\" (the final action of a function) is executed by replacing the current stack frame with the new one, rather than pushing a new frame. This transforms recursion into an iterative process, preventing stack overflow errors and reducing memory overhead from $O(n)$ to $O(1)$ stack space.\n\n**The Reality of TCO:**\nWhile defined in",
     "review_due_cycle": 711
+  },
+  {
+    "cycle": 708,
+    "topic": "Understand game theory: Nash equilibria, mechanism design",
+    "summary": "### Technical Summary: Game Theory for Systems Architecture\n\nGame theory provides the mathematical framework for modeling multi-agent interactions where outcomes depend on the interdependent choices of participants. For a developer, this is essential when designing distributed systems, incentive structures, or competitive algorithms.\n\n**1. Nash Equilibrium (NE):**\nA state where no agent can improve their payoff by unilaterally changing their strategy, assuming others keep theirs constant. In dis",
+    "review_due_cycle": 712
   }
 ]
