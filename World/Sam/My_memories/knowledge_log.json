@@ -39,7 +39,7 @@
     "cycle": 29,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad functions as an **extended working memory (EWM)**, bridging the gap between the model's fixed context window and the need for multi-step reasoning.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decoupling:** Modern implementations move beyond simple CoT by isol",
-    "review_due_cycle": 708
+    "review_due_cycle": 723
   },
   {
     "cycle": 30,
@@ -129,7 +129,7 @@
     "cycle": 44,
     "topic": "Understand Python's memory model: reference counting and gc module",
     "summary": "### Technical Summary: Python Memory Management\n\nPython\u2019s memory management is a hybrid model centered on **Reference Counting** as the primary mechanism, supplemented by a **Generational Garbage Collector (GC)** to handle reference cycles.\n\n#### 1. Reference Counting (The Primary Driver)\nEvery object in Python maintains an `ob_refcnt` field. When a reference is created (assignment, function argument, container insertion), the count increments; when a reference is deleted or goes out of scope, i",
-    "review_due_cycle": 708
+    "review_due_cycle": 723
   },
   {
     "cycle": 45,
@@ -4114,5 +4114,11 @@
     "topic": "Understand game theory: Nash equilibria, mechanism design",
     "summary": "### Technical Summary: Game Theory for Systems Architecture\n\nGame theory provides the mathematical framework for modeling multi-agent interactions where outcomes depend on the interdependent choices of participants. For a developer, this is essential when designing distributed systems, incentive structures, or competitive algorithms.\n\n**1. Nash Equilibrium (NE):**\nA state where no agent can improve their payoff by unilaterally changing their strategy, assuming others keep theirs constant. In dis",
     "review_due_cycle": 712
+  },
+  {
+    "cycle": 709,
+    "topic": "Study reinforcement learning: MDP, value iteration, Q-learning",
+    "summary": "### Technical Summary: Reinforcement Learning Fundamentals\n\nReinforcement Learning (RL) formalizes the problem of an agent learning to make sequential decisions to maximize cumulative reward. At its core, the framework is defined by the **Markov Decision Process (MDP)**, characterized by the tuple $(S, A, P, R, \\gamma)$: states, actions, transition probabilities, reward functions, and the discount factor.\n\n**Key Concepts:**\n1.  **The Bellman Equation:** The recursive foundation of RL. It decompo",
+    "review_due_cycle": 713
   }
 ]
