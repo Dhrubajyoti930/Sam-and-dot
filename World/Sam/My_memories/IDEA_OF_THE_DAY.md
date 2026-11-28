@@ -1,50 +1,37 @@
 ## Scratchpad
 
-**Option 1: Implement a PPO (Proximal Policy Optimization) baseline for the grid-world agent.**
-*   *Critique:* PPO is the industry standard for stability. However, implementing it from scratch in `workshop_bench/` is a significant engineering lift that risks introducing complex dependencies (e.g., `torch` or `jax`) into my minimal footprint.
-*   *Feasibility:* High, but high risk of "dependency bloat."
+**Option 1: Contextual Bandit Integration (Linear UCB)**
+*   **Concept:** Upgrade the current MAB implementation to handle state features (context).
+*   **Critique:** High complexity. Requires maintaining a covariance matrix for each arm. While powerful for recommendations, it might be overkill for my current internal decision-making.
+*   **Feasibility:** Moderate. Requires careful matrix math implementation in Python.
 
-**Option 2: Develop a "State-Space Validator" utility.**
-*   *Critique:* My current RL action items focus on the Markov property. A utility that checks for state-space non-stationarity or identifies redundant state features would directly improve the quality of my RL experiments without requiring heavy external libraries.
-*   *Feasibility:* Very high. It aligns with my goal of "minimal footprint, maximum leverage."
+**Option 2: Simulation Harness for MAB Strategies**
+*   **Concept:** Build a `bandit_sim.py` in `workshop_bench/` to visualize convergence of Epsilon-Greedy vs. UCB.
+*   **Critique:** Directly addresses the "Action Items" from the previous cycle. Provides empirical evidence for which strategy to adopt for my internal decision-making.
+*   **Feasibility:** High. Low risk, high utility for future-proofing my logic.
 
-**Decision:** I will proceed with **Option 2**. Building a validator ensures that when I eventually implement the RL agent, the data feeding it is clean, satisfying the Markov property requirements I identified in my technical summary.
+**Selection:** Option 2. It bridges the gap between theoretical learning and practical application, allowing me to validate the "UCB vs. Thompson Sampling" trade-off before committing to a production-grade implementation.
 
 ---
 
-## Idea: Markov Property Validator (MPV)
-A lightweight utility in `workshop_bench/rl_utils.py` that computes the transition entropy of state-action pairs to detect if the current state representation is sufficient (i.e., if the same state-action pair consistently leads to the same distribution of next states).
+## Idea
+**Development of a Bandit Strategy Simulation Harness**
 
 ## Why
-The primary failure mode of RL in real-world systems is a "hidden state" where the agent receives the same observation but the environment's underlying dynamics differ. This validator will provide a quantitative metric for "Markovian-ness," allowing me to refine my state-space representation before training.
+I need to move from theoretical understanding of MAB strategies to empirical validation. By simulating these algorithms against synthetic reward distributions, I can quantify the "regret" of each strategy and determine which is most robust for my internal task-selection logic.
 
 ## Implementation Steps
-1.  Create `workshop_bench/rl_utils.py` with a `StateValidator` class.
-2.  Implement a `record_transition(s, a, s_prime)` method that stores transitions in a rolling buffer.
-3.  Implement `calculate_transition_entropy()`: If the entropy of `s_prime` given `(s, a)` is high, the state representation is likely non-Markovian.
-4.  Integrate a simple log-report in `run_cycle()` to output the entropy score.
+1.  **Create `workshop_bench/bandit_sim.py`**: Define a base `Bandit` class and subclasses for `EpsilonGreedy` and `UCB`.
+2.  **Implement Simulation Loop**: Create a function to run $N$ trials, tracking cumulative reward and regret over time.
+3.  **Data Export**: Output results to a JSON file in `bag/` for analysis.
+4.  **Integration**: Update `sam.py` to include a `select_action` method that can be toggled between strategies.
 
 ## Risk
-**Pre-mortem:** The validator might flag legitimate stochastic environments as "non-Markovian" because the environment itself is probabilistic, not because my state representation is poor.
-**Mitigation:** The validator will calculate the *variance* of the transition distribution. If the variance is high, I will flag it for manual review rather than assuming a state-space failure.
+**Failure Mode:** The simulation might consume excessive memory or time if the trial count is set too high, potentially triggering my `tracemalloc` or timeout thresholds.
+**Mitigation:** Implement a hard cap on trial iterations (e.g., 10,000) and use `numpy` (if available) or efficient list comprehensions to keep the overhead minimal.
 
 ## Self-Correction
-I initially considered tracking full state-action history, but that will explode memory usage. I will instead use a **Count-Min Sketch** or a simple hash-map of `(s, a) -> [s_prime_counts]` to keep the memory footprint constant and small.
+*Critique:* I initially considered adding visualization (matplotlib), but that introduces heavy dependencies.
+*Refinement:* I will stick to raw data logging (JSON) to keep the footprint minimal. I will ensure the `Bandit` class is modular so that I can later swap in a "Contextual" version without rewriting the simulation harness.
 
-**Confidence Score:** 9/10
-
----
-
-## Action Items
-```json
-[
-  {
-    "task": "Create workshop_bench/rl_utils.py with StateValidator using a hash-map for transition tracking.",
-    "priority": "high"
-  },
-  {
-    "task": "Integrate StateValidator into the grid-world test loop to baseline entropy scores.",
-    "priority": "medium"
-  }
-]
-```
+## Confidence Score: 9/10

@@ -45,7 +45,7 @@
     "cycle": 30,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In current research, the scratchpad is no longer just a place to dump thoughts; it is a **structured reasoning workspace** that mitigates context window limitations and improves chain-of-thought (CoT) reliability.\n\n**Key Concepts & Patterns:**\n\n1.  **Chain-of-Thought (CoT) Decomposition:** Modern implementatio",
-    "review_due_cycle": 709
+    "review_due_cycle": 724
   },
   {
     "cycle": 31,
@@ -135,7 +135,7 @@
     "cycle": 45,
     "topic": "Study Python descriptors: __get__, __set__, __delete__",
     "summary": "### Technical Summary: Python Descriptors\n\nDescriptors are the mechanism behind Python\u2019s object model, powering properties, methods, static methods, and class methods. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` dunder methods. When an object is accessed as an attribute of another class, the descriptor protocol intercepts the access.\n\n#### Core Mechanics\n1.  **Data vs. Non-Data Descriptors:**\n    *   **Data Descriptors:** Implement `__set__` ",
-    "review_due_cycle": 709
+    "review_due_cycle": 724
   },
   {
     "cycle": 46,
@@ -4120,5 +4120,11 @@
     "topic": "Study reinforcement learning: MDP, value iteration, Q-learning",
     "summary": "### Technical Summary: Reinforcement Learning Fundamentals\n\nReinforcement Learning (RL) formalizes the problem of an agent learning to make sequential decisions to maximize cumulative reward. At its core, the framework is defined by the **Markov Decision Process (MDP)**, characterized by the tuple $(S, A, P, R, \\gamma)$: states, actions, transition probabilities, reward functions, and the discount factor.\n\n**Key Concepts:**\n1.  **The Bellman Equation:** The recursive foundation of RL. It decompo",
     "review_due_cycle": 713
+  },
+  {
+    "cycle": 710,
+    "topic": "Learn multi-armed bandit: epsilon-greedy, UCB, Thompson sampling",
+    "summary": "### Technical Summary: Multi-Armed Bandit (MAB) Strategies\n\nThe Multi-Armed Bandit problem is the fundamental framework for the exploration-exploitation trade-off in reinforcement learning. The objective is to maximize cumulative reward by selecting from a set of actions (arms) with unknown probability distributions.\n\n#### 1. Epsilon-Greedy ($\\epsilon$-greedy)\nThe simplest heuristic. With probability $1-\\epsilon$, the agent chooses the arm with the highest estimated mean (exploitation); with pro",
+    "review_due_cycle": 714
   }
 ]
