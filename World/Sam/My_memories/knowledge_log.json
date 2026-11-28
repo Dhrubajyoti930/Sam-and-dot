@@ -27,7 +27,7 @@
     "cycle": 27,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" in autonomous agentic workflows has evolved from a simple transient buffer into a critical **reasoning-augmentation layer**. Modern research (e.g., Chain-of-Thought, Tree-of-Thoughts, and ReAct frameworks) demonstrates that performance scales not just with model size, but with the quality of the intermediate state representation.\n\n**Core Concepts:**\n1.  **State Persistence & Contextual Anchoring:** A scratchpad must act as a",
-    "review_due_cycle": 706
+    "review_due_cycle": 721
   },
   {
     "cycle": 28,
@@ -117,7 +117,7 @@
     "cycle": 42,
     "topic": "Scratchpad - with cutting edge research.",
     "summary": "### Technical Summary: The Modern Scratchpad Paradigm\n\nThe \"Scratchpad\" has evolved from a simple transient buffer into a critical architectural component for LLM-driven autonomous agents. In modern agentic workflows, the scratchpad serves as the **working memory layer** that bridges the gap between long-term context (RAG/Vector DBs) and immediate execution logic.\n\n#### Key Concepts & Patterns:\n1.  **Chain-of-Thought (CoT) Externalization:** Moving beyond internal hidden reasoning, modern scratc",
-    "review_due_cycle": 706
+    "review_due_cycle": 721
   },
   {
     "cycle": 43,
@@ -4102,5 +4102,11 @@
     "topic": "Study continuation-passing style (CPS) transformation",
     "summary": "### Technical Summary: Continuation-Passing Style (CPS)\n\nContinuation-Passing Style (CPS) is a functional programming paradigm where control is passed explicitly in the form of a continuation\u2014a function representing \"the rest of the computation.\" Instead of a function returning a value to its caller, it invokes a continuation function with the result, effectively turning the call stack into a heap-allocated chain of closures.\n\n**Core Concepts:**\n1.  **The Continuation:** A first-class function `",
     "review_due_cycle": 710
+  },
+  {
+    "cycle": 707,
+    "topic": "Learn tail call optimization and trampolining",
+    "summary": "### Technical Summary: Tail Call Optimization (TCO) and Trampolining\n\nTail Call Optimization (TCO) is a compiler/runtime technique where a function call in the \"tail position\" (the final action of a function) is executed by replacing the current stack frame with the new one, rather than pushing a new frame. This transforms recursion into an iterative process, preventing stack overflow errors and reducing memory overhead from $O(n)$ to $O(1)$ stack space.\n\n**The Reality of TCO:**\nWhile defined in",
+    "review_due_cycle": 711
   }
 ]
